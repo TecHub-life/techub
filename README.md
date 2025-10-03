@@ -19,8 +19,8 @@ The result: a stylised, high-signal snapshot of **who you are, what you build, a
 
 ## How It Works
 
-1. **Stripe-Gated Submission (A$3.50)**
-   Submit any GitHub username for A$3.50. The light friction filters noise and funds infra — no applications, no gatekeeping.
+1. **Stripe-Gated Submission ($3.50)**
+   Submit any GitHub username for $3.50. The light friction filters noise and funds infra — no applications, no gatekeeping.
 
 2. **AI-Powered Generation**
    Our pipeline analyses profile signals (repos, commits, languages, topics) and linked content to generate **attack & defence stats, buffs, weaknesses, special moves,** and **tech-stack tags**.
