@@ -28,4 +28,6 @@ Redirect on update: false (Redirect users to the 'Setup URL' after installations
 Where can this GitHub App be installed?: Any account
 
 https://github.com/settings/apps/techub-life
+
+Background color: #051c5f
 ```
