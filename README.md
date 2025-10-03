@@ -6,7 +6,7 @@
 
 Part discovery engine, part vibe board, part trading card game for builders.
 
-Created by **Jared Hooker ([@GameDevJared89](https://github.com/GameDevJared89))** and **Dean Lofts ([@loftwah](https://github.com/loftwah))**.
+Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** and **Dean Lofts ([@loftwah](https://x.com/loftwah))**.
 
 ---
 
