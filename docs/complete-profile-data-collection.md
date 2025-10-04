@@ -2,11 +2,13 @@
 
 ## Overview
 
-We now collect **ALL** publicly visible GitHub profile information, including extended data that requires additional API calls and GraphQL queries.
+We now collect **ALL** publicly visible GitHub profile information, including extended data that
+requires additional API calls and GraphQL queries.
 
 ## What We Collect
 
 ### Basic Profile Information
+
 - ✅ **Name**: Full display name
 - ✅ **Login**: GitHub username/handle
 - ✅ **Avatar URL**: Profile picture
@@ -22,18 +24,21 @@ We now collect **ALL** publicly visible GitHub profile information, including ex
 - ✅ **Updated At**: Last profile update
 
 ### Stats
+
 - ✅ **Followers**: Follower count
 - ✅ **Following**: Following count
 - ✅ **Public Repos**: Public repository count
 - ✅ **Public Gists**: Public gist count
 
 ### Repository Information
+
 - ✅ **Top Repositories**: 5 most starred non-fork repos
 - ✅ **Pinned Repositories**: Up to 6 pinned repos (via GraphQL)
 - ✅ **Active Repositories**: 5 recent public repos user contributed to
 - ✅ **Languages**: Language breakdown across all repos
 
 ### Extended Profile Data
+
 - ✅ **Profile README**: Full README from username/username repo
 - ✅ **Organizations**: All public organizations (with avatars and descriptions)
 - ✅ **Social Accounts**: Connected social media (Twitter/X, Bluesky, LinkedIn, etc.)
@@ -63,7 +68,7 @@ We now collect **ALL** publicly visible GitHub profile information, including ex
     created_at: "2014-01-01T00:00:00Z",
     updated_at: "2025-08-25T08:40:32Z"
   },
-  
+
   organizations: [
     {
       login: "EddieHubCommunity",
@@ -73,7 +78,7 @@ We now collect **ALL** publicly visible GitHub profile information, including ex
       html_url: "https://github.com/EddieHubCommunity"
     }
   ],
-  
+
   social_accounts: [
     {
       provider: "TWITTER",
@@ -86,7 +91,7 @@ We now collect **ALL** publicly visible GitHub profile information, including ex
       display_name: null
     }
   ],
-  
+
   pinned_repositories: [
     {
       name: "linux-for-pirates",
@@ -98,7 +103,7 @@ We now collect **ALL** publicly visible GitHub profile information, including ex
       topics: ["book", "cloud", "devops", "linux", "education"]
     }
   ],
-  
+
   active_repositories: [
     {
       name: "techub",
@@ -110,7 +115,7 @@ We now collect **ALL** publicly visible GitHub profile information, including ex
       topics: ["ai", "profiles", "card-game"]
     }
   ],
-  
+
   top_repositories: [...],
   languages: { "Ruby" => 21, "Shell" => 18, "Python" => 17 },
   profile_readme: "Full README content...",
@@ -248,6 +253,7 @@ Organizations
 ## Future Enhancements
 
 Consider adding:
+
 - Contribution graph data
 - Achievement badges
 - Sponsor information
@@ -258,7 +264,8 @@ Consider adding:
 
 ## Summary
 
-We now collect **100% of publicly visible profile data** from GitHub, providing a complete picture of each user's public presence, including:
+We now collect **100% of publicly visible profile data** from GitHub, providing a complete picture
+of each user's public presence, including:
 
 - 17 profile fields (up from 13)
 - Organizations with full details
@@ -267,4 +274,3 @@ We now collect **100% of publicly visible profile data** from GitHub, providing 
 - Complete activity history
 
 All data is stored in the database and available for processing, analytics, and display.
-

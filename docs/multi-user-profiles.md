@@ -2,7 +2,8 @@
 
 ## Overview
 
-The TecHub profile system is designed to handle **any GitHub user**, not just a single hardcoded user. All profile data is stored in the database and can be accessed dynamically.
+The TecHub profile system is designed to handle **any GitHub user**, not just a single hardcoded
+user. All profile data is stored in the database and can be accessed dynamically.
 
 ## Database Storage
 
@@ -20,7 +21,7 @@ create_table "profiles" do |t|
   t.datetime "last_synced_at"              # Last refresh timestamp
   t.datetime "created_at"
   t.datetime "updated_at"
-  
+
   t.index ["github_login"], unique: true
 end
 ```
@@ -85,6 +86,7 @@ https://techub.dev/username
 ```
 
 Examples:
+
 - `https://techub.dev/loftwah`
 - `https://techub.dev/dhh`
 - `https://techub.dev/matz`
@@ -101,11 +103,13 @@ Examples:
 ### Smart Caching
 
 Profiles are automatically cached for 1 hour to:
+
 - Reduce GitHub API calls
 - Improve response times
 - Stay within rate limits
 
 To force a refresh:
+
 ```bash
 bin/rails 'profiles:refresh[username]'
 ```
@@ -121,6 +125,7 @@ sqlite3 storage/development.sqlite3 "SELECT github_login, name, last_synced_at F
 ### Add a New Profile
 
 Visit the user's profile URL or run:
+
 ```bash
 bin/rails 'profiles:refresh[username]'
 ```
@@ -172,6 +177,7 @@ profile.last_synced_at && profile.last_synced_at > 1.hour.ago
 ## API Rate Limits
 
 Each profile sync makes several GitHub API calls:
+
 - User data (REST API)
 - Repositories (REST API)
 - User events (REST API)
@@ -181,6 +187,7 @@ Each profile sync makes several GitHub API calls:
 **Total: ~8-10 API calls per sync**
 
 GitHub rate limits:
+
 - Unauthenticated: 60 requests/hour
 - Authenticated (App): 5,000 requests/hour
 - Authenticated (User OAuth): 5,000 requests/hour
@@ -190,6 +197,7 @@ With caching, you can sync ~500 profiles per hour safely.
 ## Future Enhancements
 
 Consider:
+
 1. Background job for automatic profile refreshes
 2. Profile search/directory page
 3. Compare profiles feature
@@ -202,6 +210,7 @@ Consider:
 The home page (`/`) is currently hardcoded to show "loftwah". To make it dynamic:
 
 ### Option 1: Show Current User's Profile
+
 ```ruby
 # In PagesController#home
 def home
@@ -214,6 +223,7 @@ end
 ```
 
 ### Option 2: Show Featured Profile
+
 ```ruby
 def home
   featured_username = ENV.fetch("FEATURED_PROFILE", "loftwah")
@@ -223,6 +233,7 @@ end
 ```
 
 ### Option 3: Show Directory/Leaderboard
+
 ```ruby
 def home
   @featured_profiles = Profile.order(created_at: :desc).limit(10)
@@ -237,7 +248,6 @@ end
 ✅ Profile URLs work for any GitHub user  
 ✅ Smart caching reduces API calls  
 ✅ Easy to switch between users  
-✅ Future-proof architecture  
+✅ Future-proof architecture
 
 The system is **ready for multi-user from day one**!
-

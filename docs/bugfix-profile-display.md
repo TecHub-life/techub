@@ -2,16 +2,19 @@
 
 ## Problem
 
-After implementing the enhanced profile features, the page was rendering but most data fields were empty:
+After implementing the enhanced profile features, the page was rendering but most data fields were
+empty:
+
 - Name was empty
 - Handle showed just "@" with no username
-- Followers, Following, and Repos counts were all empty  
+- Followers, Following, and Repos counts were all empty
 - All repository sections (pinned, active, top) showed empty cards
 - Only languages and recent activity stats were displaying
 
 ## Root Cause
 
-The JSON data from the database uses **string keys**, but the view templates were trying to access nested hashes with **symbol keys**.
+The JSON data from the database uses **string keys**, but the view templates were trying to access
+nested hashes with **symbol keys**.
 
 ```ruby
 # What we were doing
@@ -29,7 +32,8 @@ profile[:name]  # nil - because the actual key is "name", not :name
 
 ## Solution
 
-Changed from `symbolize_keys` to `deep_symbolize_keys` to recursively convert all nested hash keys to symbols:
+Changed from `symbolize_keys` to `deep_symbolize_keys` to recursively convert all nested hash keys
+to symbols:
 
 ```ruby
 # Files changed:
@@ -52,8 +56,10 @@ profile[:name]  # "Dean Lofts" ✅
 
 ## Files Modified
 
-1. `app/controllers/pages_controller.rb` - Changed `symbolize_keys` to `deep_symbolize_keys` (2 places)
-2. `app/controllers/profiles_controller.rb` - Changed `symbolize_keys` to `deep_symbolize_keys` (1 place)
+1. `app/controllers/pages_controller.rb` - Changed `symbolize_keys` to `deep_symbolize_keys` (2
+   places)
+2. `app/controllers/profiles_controller.rb` - Changed `symbolize_keys` to `deep_symbolize_keys` (1
+   place)
 
 ## Verification
 
@@ -66,6 +72,7 @@ bin/rails runner "profile = Profile.find_by(github_login: 'loftwah'); data = pro
 ## Result
 
 All profile data now displays correctly:
+
 - ✅ Name: "Dean Lofts"
 - ✅ Handle: "@loftwah"
 - ✅ Followers: 1,140
@@ -80,4 +87,3 @@ All profile data now displays correctly:
 ## Testing
 
 All 40 tests pass with no failures or errors.
-
