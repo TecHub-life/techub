@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html data-controller="theme">
+  <head>
+    <title><%= content_for(:title) || "Techub" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" href="/android-chrome-192x192.png" sizes="192x192" type="image/png">
+    <link rel="icon" href="/android-chrome-512x512.png" sizes="512x512" type="image/png">
+
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-slate-50 text-slate-900 antialiased transition dark:bg-slate-950 dark:text-slate-100">
+    <%= render "shared/header" %>
+    <main class="pt-24">
+      <% flash.each do |key, value| %>
+        <div class="mx-auto mb-4 max-w-3xl rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+          <%= value %>
+        </div>
+      <% end %>
+      <%= yield %>
+    </main>
+    <%= render "shared/footer" %>
+  </body>
+</html>

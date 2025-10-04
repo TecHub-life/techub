@@ -1,0 +1,10 @@
+<footer class="border-t border-slate-200 bg-white/70 py-8 text-sm text-slate-500 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-400">
+  <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 md:flex-row md:items-center md:justify-between">
+    <p>© <%= Time.current.year %> TecHub — crafted by Jared Hooker & Dean Lofts.</p>
+    <div class="flex flex-wrap items-center gap-4">
+      <a href="https://github.com/loftwah" target="_blank" rel="noopener" class="hover:text-slate-900 dark:hover:text-slate-100">GitHub</a>
+      <a href="https://x.com/loftwah" target="_blank" rel="noopener" class="hover:text-slate-900 dark:hover:text-slate-100">Twitter</a>
+      <%= link_to "Docs", docs_path, class: "hover:text-slate-900 dark:hover:text-slate-100" %>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,49 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editor cruft
+.DS_Store
+.cursorrules
+.cursorignore
+.vscode/
+
+# Dependencies
+/.bundle
+node_modules/
+
+# Logs, temp files, and storage
+log/*
+tmp/*
+storage/*
+!/log/.keep
+!/tmp/.keep
+!/storage/.keep
+/tmp/pids/*
+!/tmp/pids/
+/tmp/cache/*
+!/tmp/cache/
+/tmp/storage/*
+!/tmp/storage/.keep
+
+# Assets
+/app/assets/builds/*
+!/app/assets/builds/.keep
+/public/assets
+
+# Credentials and keys
+config/master.key
+config/credentials/*.key
+techub-life.2025-10-02.private-key.pem
+
+# Debug
+.byebug_history
+
+# Downloaded avatar images
+/public/avatars/*
+!/public/avatars/.keep
+
+# Downloaded profile README images
+/public/profile_images/*
+!/public/profile_images/.keep
