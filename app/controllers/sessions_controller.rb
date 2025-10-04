@@ -22,7 +22,7 @@ class SessionsController < ApplicationController
 
     session.delete(:github_oauth_state)
 
-    token_result = Github::UserOauthService.call(code: params[:code], redirect_uri: auth_github_callback_url)
+    token_result = Github::UserOauthService.call(code: params[:code], redirect_uri: Github::Configuration.callback_url(default: auth_github_callback_url))
     unless token_result.success?
       Rails.logger.error("GitHub OAuth failed: #{token_result.error}")
       redirect_to root_path, alert: "GitHub login failed"
@@ -59,7 +59,7 @@ class SessionsController < ApplicationController
 
   def oauth_authorize_url(state)
     client_id = Github::Configuration.client_id
-    redirect_uri = auth_github_callback_url
+    redirect_uri = Github::Configuration.callback_url(default: auth_github_callback_url)
     scope = %w[read:user user:email].join(" ")
 
     URI::HTTPS.build(

@@ -57,6 +57,26 @@ module Github
 
           @repositories
         end
+
+        def readme(_repo)
+          raise Octokit::NotFound
+        end
+
+        def user_events(_login, per_page: 100)
+          []
+        end
+
+        def post(_path, _body)
+          { data: { user: { pinnedItems: { nodes: [] } } } }
+        end
+
+        def repository(_full_name)
+          raise Octokit::NotFound
+        end
+
+        def organizations(_login)
+          []
+        end
       end.new(user_payload, repositories)
 
       result = Github::ProfileSummaryService.call(login: "loftwah", client: client)

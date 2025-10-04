@@ -38,6 +38,11 @@ module Github
         end
       end
 
+      def callback_url(default:)
+        env_key = Rails.env.production? ? "GITHUB_CALLBACK_URL_PROD" : "GITHUB_CALLBACK_URL_DEV"
+        fetch_config(:callback_url, env: env_key) || default
+      end
+
       def reset!
         @private_key = nil
       end

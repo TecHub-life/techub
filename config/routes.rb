@@ -17,4 +17,7 @@ Rails.application.routes.draw do
   namespace :github do
     post "/webhooks", to: "webhooks#receive"
   end
+
+  # Dynamic profile routes - must be last to avoid conflicts
+  get "/:username", to: "profiles#show", as: :profile
 end

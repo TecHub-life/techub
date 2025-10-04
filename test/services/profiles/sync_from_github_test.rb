@@ -12,7 +12,13 @@ module Profiles
         },
         summary: "Sharpest builder",
         top_repositories: [],
-        languages: { "Ruby" => 3 }
+        pinned_repositories: [],
+        active_repositories: [],
+        organizations: [],
+        social_accounts: [],
+        languages: { "Ruby" => 3 },
+        profile_readme: nil,
+        recent_activity: nil
       }
 
       Github::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
@@ -22,7 +28,8 @@ module Profiles
         profile = result.value
         assert_equal "loftwah", profile.github_login
         assert_equal "Sharpest builder", profile.summary
-        assert_equal "https://github.com/loftwah.png", profile.avatar_url
+        # Avatar should be either the local path or the GitHub URL (depending on download success)
+        assert_match(/loftwah\.png$/, profile.avatar_url)
       end
     end
   end

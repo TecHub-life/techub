@@ -7,9 +7,9 @@ module Github
 
     def call
       response = Octokit.exchange_code_for_token(
+        code,
         Github::Configuration.client_id,
         Github::Configuration.client_secret,
-        code,
         redirect_uri: redirect_uri
       )
 

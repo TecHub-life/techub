@@ -4,6 +4,8 @@
 /.git/
 /.gitignore
 
+techub-life.2025-10-02.private-key.pem
+
 # Ignore bundler config.
 /.bundle
 

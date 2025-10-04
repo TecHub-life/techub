@@ -4,15 +4,18 @@ class PagesController < ApplicationController
 
     if @profile.present?
       @profile_summary = @profile.summary
-      @profile_payload = @profile.data.symbolize_keys
+      @profile_payload = @profile.data.deep_symbolize_keys
     else
       result = Profiles::SyncFromGithub.call(login: "loftwah")
 
       if result.success?
         @profile = result.value
         @profile_summary = @profile.summary
-        @profile_payload = @profile.data.symbolize_keys
+        @profile_payload = @profile.data.deep_symbolize_keys
       else
+        Rails.logger.error(
+          "Home profile load failed: #{result.error.class} - #{result.error.message}"
+        )
         flash.now[:alert] = "Unable to load profile insights right now."
       end
     end

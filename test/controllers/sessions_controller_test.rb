@@ -25,13 +25,15 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     user = User.create!(github_id: 1, login: "loftwah", access_token: "token")
 
-    Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
-      Github::FetchAuthenticatedUser.stub :call, ServiceResult.success({ user: { id: 1, login: "loftwah", name: "Lofty", avatar_url: "https://github.com/loftwah.png" }, emails: [] }) do
-        Users::UpsertFromGithub.stub :call, ServiceResult.success(user) do
-          get auth_github_callback_path(code: "xyz", state: state)
+    Github::Configuration.stub :callback_url, auth_github_callback_url do
+      Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
+        Github::FetchAuthenticatedUser.stub :call, ServiceResult.success({ user: { id: 1, login: "loftwah", name: "Lofty", avatar_url: "https://github.com/loftwah.png" }, emails: [] }) do
+          Users::UpsertFromGithub.stub :call, ServiceResult.success(user) do
+            get auth_github_callback_path(code: "xyz", state: state)
 
-          assert_redirected_to root_path
-          assert_equal user.id, session[:current_user_id]
+            assert_redirected_to root_path
+            assert_equal user.id, session[:current_user_id]
+          end
         end
       end
     end

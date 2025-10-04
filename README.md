@@ -23,7 +23,8 @@ stays operable from a laptop.
    bin/setup --skip-server
    ```
 
-   This runs `bundle check`, installs npm packages, prepares the application + Solid Queue databases, and clears temp files.
+   This runs `bundle check`, installs npm packages, prepares the application + Solid Queue
+   databases, and clears temp files.
 
 2. Boot the full stack (web, CSS watcher, Solid Queue workers, recurring scheduler):
 
@@ -45,7 +46,9 @@ Copy `.env.example` to `.env` and fill in the values. Key settings:
 - `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` for user OAuth.
 - `GITHUB_WEBHOOK_SECRET` to verify incoming webhook signatures.
 - `GITHUB_CALLBACK_URL_DEV` / `GITHUB_CALLBACK_URL_PROD` describe the redirect URLs you register
-  with GitHub.
+  with GitHub. Set the dev value to your actual forwarded host (for example
+  `http://127.0.0.1:3000/auth/github/callback` or the Codespaces URL) so OAuth redirects match the
+  GitHub App settings.
 - `RESEND_API_KEY` reserved for future email notifications.
 
 The PEM dropped in the repo (`techub-life.2025-10-02.private-key.pem`) can be referenced via
@@ -64,7 +67,11 @@ github:
   app_id: 123456
   client_id: your-oauth-client-id
   client_secret: your-oauth-client-secret
-  private_key_path: techub-life.2025-10-02.private-key.pem
+  private_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    paste-your-app-private-key-here
+    -----END RSA PRIVATE KEY-----
+  installation_id: your-installation-id
 
 active_record_encryption:
   primary_key: <%= `openssl rand -hex 32`.strip %>
@@ -75,6 +82,11 @@ active_record_encryption:
 `.env` overrides still work for local experiments or CI providers that inject secrets as environment
 variables. The test suite falls back to deterministic dummy encryption keys so it runs out of the
 box.
+
+The installation id comes from the GitHub UI (`https://github.com/settings/installations/<id>`);
+store it in credentials as shown above or set `GITHUB_INSTALLATION_ID` in your `.env`. If you would
+rather point at a file than paste the key, use the optional `GITHUB_PRIVATE_KEY_PATH` environment
+variable.
 
 ## GitHub App & OAuth Flow
 

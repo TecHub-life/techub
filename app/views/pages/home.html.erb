@@ -1,107 +1,359 @@
-<section class="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 lg:flex-row">
-  <div class="flex-1 space-y-8">
-    <div class="space-y-4">
-      <p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300">
-        AI-powered trading cards for builders
-      </p>
-      <h1 class="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-        TecHub turns open source signal into collectible trading cards.
-      </h1>
-      <p class="text-lg text-slate-600 dark:text-slate-300">
-        Feed us a GitHub profile, we ship back a playable card with handcrafted flavour.
-        A directory you can search, remix, and build on.
-      </p>
-      <div class="flex flex-wrap items-center gap-4">
-        <% if current_user %>
-          <span class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-500">
-            Signed in as <%= current_user.login %>
-          </span>
-          <%= button_to "Sign out", session_path, method: :delete, class: "inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" %>
-        <% else %>
-          <%= link_to "Authenticate with GitHub", auth_github_path, class: "inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" %>
-          <span class="text-sm text-slate-500 dark:text-slate-300">
-            Start with GitHub Login; we will never post without consent.
-          </span>
-        <% end %>
-      </div>
+<section class="mx-auto max-w-6xl px-4 py-12">
+  <div class="space-y-4 mb-8">
+    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100">
+      TecHub - GitHub Profile Demo
+    </h1>
+    <p class="text-lg text-slate-600 dark:text-slate-300">
+      Gathering and displaying comprehensive GitHub profile information.
+    </p>
+    <div class="flex items-center gap-4">
+      <% if current_user %>
+        <span class="text-sm text-slate-700 dark:text-slate-300">
+          Signed in as <strong><%= current_user.login %></strong>
+        </span>
+        <%= button_to "Sign out", session_path, method: :delete, class: "text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" %>
+      <% else %>
+        <%= link_to "Sign in with GitHub", auth_github_path, class: "inline-block bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-700" %>
+      <% end %>
     </div>
-
-    <% if @profile_summary.present? %>
-      <div class="rounded-3xl border border-slate-200 bg-white/60 p-6 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/60">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-          Loftwah in a nutshell
-        </h2>
-        <p class="mt-3 text-base leading-relaxed text-slate-700 dark:text-slate-200">
-          <%= @profile_summary %>
-        </p>
-      </div>
-    <% end %>
   </div>
 
-  <div class="flex w-full max-w-lg flex-col gap-6">
-    <div class="overflow-hidden rounded-3xl border border-slate-200 shadow-xl shadow-slate-900/10 dark:border-slate-700">
-      <%= image_tag "techub-hero.jpg", alt: "TecHub hero", class: "h-full w-full object-cover" %>
-    </div>
-    <% if @profile_payload.present? %>
-      <div class="rounded-3xl border border-slate-200 bg-white/80 p-6 backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
-        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          Signature moves
-        </h3>
-        <ul class="mt-4 grid grid-cols-1 gap-4">
-          <% Array(@profile_payload[:top_repositories]).first(3).each do |repo| %>
-            <li class="rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900/70 dark:hover:border-slate-600">
-              <div class="flex items-start justify-between">
-                <div>
-                  <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+  <% if @profile_payload.present? %>
+    <% profile = @profile_payload[:profile] %>
+    
+    <div class="grid gap-8 lg:grid-cols-3">
+      <!-- Profile Info -->
+      <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+          <% avatar_path = @profile.avatar_url.presence || profile[:avatar_url] %>
+          <img src="<%= avatar_path %>" alt="<%= profile[:login] %>" class="w-32 h-32 rounded-full mb-4">
+          
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+            <%= profile[:name] || profile[:login] %>
+          </h2>
+          
+          <p class="text-slate-600 dark:text-slate-400 mb-4">
+            @<%= profile[:login] %>
+          </p>
+          
+          <% if profile[:bio].present? %>
+            <p class="text-slate-700 dark:text-slate-300 mb-4">
+              <%= profile[:bio] %>
+            </p>
+          <% end %>
+          
+          <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+            <% if profile[:location].present? %>
+              <p><strong>Location:</strong> <%= profile[:location] %></p>
+            <% end %>
+            
+            <% if profile[:company].present? %>
+              <p><strong>Company:</strong> <%= profile[:company] %></p>
+            <% end %>
+            
+            <% if profile[:email].present? %>
+              <p>
+                <strong>Email:</strong>
+                <a href="mailto:<%= profile[:email] %>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                  <%= profile[:email] %>
+                </a>
+              </p>
+            <% end %>
+            
+            <% if profile[:blog].present? %>
+              <p>
+                <strong>Website:</strong> 
+                <a href="<%= profile[:blog] %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                  <%= profile[:blog] %>
+                </a>
+              </p>
+            <% end %>
+            
+            <% if profile[:twitter_username].present? %>
+              <p>
+                <strong>Twitter:</strong>
+                <a href="https://twitter.com/<%= profile[:twitter_username] %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                  @<%= profile[:twitter_username] %>
+                </a>
+              </p>
+            <% end %>
+            
+            <% if profile[:hireable] %>
+              <p class="text-green-600 dark:text-green-400">
+                <strong>💼 Available for hire</strong>
+              </p>
+            <% end %>
+          </div>
+          
+          <div class="mt-6 grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p class="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <%= profile[:followers] %>
+              </p>
+              <p class="text-xs text-slate-600 dark:text-slate-400">Followers</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <%= profile[:following] %>
+              </p>
+              <p class="text-xs text-slate-600 dark:text-slate-400">Following</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <%= profile[:public_repos] %>
+              </p>
+              <p class="text-xs text-slate-600 dark:text-slate-400">Repos</p>
+            </div>
+          </div>
+          
+          <% if profile[:public_gists] && profile[:public_gists] > 0 %>
+            <div class="mt-4 text-center">
+              <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                <%= profile[:public_gists] %> Public Gists
+              </p>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- Languages -->
+        <% if @profile_payload[:languages].present? && @profile_payload[:languages].any? %>
+          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+              Top Languages
+            </h3>
+            <div class="space-y-2">
+              <% @profile_payload[:languages].first(5).each do |language, count| %>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-slate-700 dark:text-slate-300"><%= language %></span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= count %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- Social Accounts -->
+        <% if @profile_payload[:social_accounts].present? && @profile_payload[:social_accounts].any? %>
+          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+              Social
+            </h3>
+            <div class="space-y-2">
+              <% @profile_payload[:social_accounts].each do |account| %>
+                <a href="<%= account[:url] %>" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                  <span class="font-medium"><%= account[:provider].capitalize %></span>
+                  <% if account[:display_name].present? %>
+                    <span class="text-slate-600 dark:text-slate-400">- <%= account[:display_name] %></span>
+                  <% end %>
+                </a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- Organizations -->
+        <% if @profile_payload[:organizations].present? && @profile_payload[:organizations].any? %>
+          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+              Organizations
+            </h3>
+            <div class="space-y-3">
+              <% @profile_payload[:organizations].each do |org| %>
+                <a href="<%= org[:html_url] %>" target="_blank" rel="noopener" class="flex items-center gap-3 group">
+                  <img src="<%= org[:avatar_url] %>" alt="<%= org[:login] %>" class="w-10 h-10 rounded">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                      <%= org[:name] || org[:login] %>
+                    </p>
+                    <% if org[:description].present? %>
+                      <p class="text-xs text-slate-600 dark:text-slate-400 truncate">
+                        <%= org[:description] %>
+                      </p>
+                    <% end %>
+                  </div>
+                </a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- Recent Activity -->
+        <% if @profile_payload[:recent_activity].present? %>
+          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+              Recent Activity
+            </h3>
+            <% activity = @profile_payload[:recent_activity].is_a?(Hash) ? @profile_payload[:recent_activity].with_indifferent_access : @profile_payload[:recent_activity] %>
+            
+            <% if activity[:last_active].present? %>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                Last active: <%= Time.parse(activity[:last_active].to_s).strftime('%b %d, %Y') %>
+              </p>
+            <% end %>
+            
+            <% if activity[:total_events] && activity[:total_events] > 0 %>
+              <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">
+                <strong><%= activity[:total_events] %></strong> events in the last 90 days
+              </p>
+            <% end %>
+            
+            <% if activity[:event_breakdown].present? %>
+              <div class="space-y-1 mb-4">
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Event Types</p>
+                <% activity[:event_breakdown].sort_by { |k, v| -v }.first(5).each do |event_type, count| %>
+                  <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-600 dark:text-slate-400"><%= event_type.gsub('Event', '') %></span>
+                    <span class="text-slate-900 dark:text-slate-100"><%= count %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            
+            <% if @profile_payload[:active_repositories].present? && @profile_payload[:active_repositories].any? %>
+              <div>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Active in (Public)</p>
+                <div class="space-y-2">
+                  <% @profile_payload[:active_repositories].each do |repo| %>
+                    <div class="text-xs">
+                      <a href="<%= repo[:html_url] %>" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                        <%= repo[:full_name] %>
+                      </a>
+                      <% if repo[:description].present? %>
+                        <p class="text-slate-600 dark:text-slate-400 mt-0.5"><%= repo[:description].truncate(60) %></p>
+                      <% end %>
+                      <div class="flex items-center gap-2 mt-0.5 text-slate-500 dark:text-slate-400">
+                        <span>⭐ <%= repo[:stargazers_count] %></span>
+                        <% if repo[:language].present? %>
+                          <span><%= repo[:language] %></span>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% elsif activity[:recent_repos].present? && activity[:recent_repos].any? %>
+              <div>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Active in</p>
+                <div class="space-y-1">
+                  <% activity[:recent_repos].first(5).each do |repo| %>
+                    <p class="text-xs text-slate-700 dark:text-slate-300"><%= repo %></p>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Profile README -->
+        <% if @profile_payload[:profile_readme].present? %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+              Profile README
+            </h3>
+            <div class="prose dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300">
+              <%= simple_format(@profile_payload[:profile_readme][0..5000]) %>
+              <% if @profile_payload[:profile_readme].length > 5000 %>
+                <p class="text-slate-500 dark:text-slate-400 italic mt-4">
+                  ... (showing first 5000 characters)
+                </p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- Pinned Repositories -->
+        <% if @profile_payload[:pinned_repositories].present? && @profile_payload[:pinned_repositories].any? %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+              Pinned Repositories
+            </h3>
+            <div class="grid gap-4 md:grid-cols-2">
+              <% @profile_payload[:pinned_repositories].each do |repo| %>
+                <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                  <a href="<%= repo[:html_url] %>" target="_blank" class="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400">
                     <%= repo[:name] %>
-                  </p>
+                  </a>
                   <% if repo[:description].present? %>
-                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
                       <%= repo[:description] %>
                     </p>
                   <% end %>
+                  <div class="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span>⭐ <%= repo[:stargazers_count] %></span>
+                    <% if repo[:forks_count] && repo[:forks_count] > 0 %>
+                      <span>🔀 <%= repo[:forks_count] %></span>
+                    <% end %>
+                    <% if repo[:language].present? %>
+                      <span><%= repo[:language] %></span>
+                    <% end %>
+                  </div>
+                  <% if repo[:topics].present? && Array(repo[:topics]).any? %>
+                    <div class="flex flex-wrap gap-1 mt-2">
+                      <% Array(repo[:topics]).first(5).each do |topic| %>
+                        <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">
+                          <%= topic %>
+                        </span>
+                      <% end %>
+                    </div>
+                  <% end %>
                 </div>
-                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  ⭐ <%= repo[:stargazers_count] %>
-                </span>
-              </div>
-              <div class="mt-3 flex flex-wrap items-center gap-2">
-                <% repo[:topics].each do |topic| %>
-                  <span class="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    <%= topic %>
-                  </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- Top Repositories -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+            Top Repositories by Stars
+          </h3>
+          <div class="space-y-4">
+            <% Array(@profile_payload[:top_repositories]).first(5).each do |repo| %>
+              <div class="border-l-4 border-slate-300 dark:border-slate-600 pl-4">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <a href="<%= repo[:html_url] %>" target="_blank" class="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400">
+                      <%= repo[:name] %>
+                    </a>
+                    <% if repo[:description].present? %>
+                      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        <%= repo[:description] %>
+                      </p>
+                    <% end %>
+                    <div class="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                      <span>⭐ <%= repo[:stargazers_count] %></span>
+                      <% if repo[:forks_count] && repo[:forks_count] > 0 %>
+                        <span>🔀 <%= repo[:forks_count] %></span>
+                      <% end %>
+                      <% if repo[:language].present? %>
+                        <span><%= repo[:language] %></span>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+                <% if repo[:topics].present? && Array(repo[:topics]).any? %>
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    <% Array(repo[:topics]).each do |topic| %>
+                      <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 rounded">
+                        <%= topic %>
+                      </span>
+                    <% end %>
+                  </div>
                 <% end %>
               </div>
-            </li>
-          <% end %>
-        </ul>
+            <% end %>
+          </div>
+        </div>
       </div>
-    <% end %>
-  </div>
-</section>
-
-<section class="border-t border-slate-100 bg-slate-50/50 py-12 dark:border-slate-800 dark:bg-slate-950/30">
-  <div class="mx-auto grid max-w-6xl gap-8 px-4 lg:grid-cols-3">
-    <div class="space-y-2">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Why cards?</h3>
-      <p class="text-sm text-slate-600 dark:text-slate-300">
-        Cards distil the vibe, signal, and story of a builder at a glance.
-        TecHub does the heavy lifting to surface the narrative automatically.
+    </div>
+  <% else %>
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+      <p class="text-yellow-800 dark:text-yellow-200">
+        No profile data available. Please check the logs for errors.
       </p>
     </div>
-    <div class="space-y-2">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">SolidQueue + Scheduling</h3>
-      <p class="text-sm text-slate-600 dark:text-slate-300">
-        Your GitHub stats stay fresh thanks to Solid Queue jobs and recurring refreshes.
-        Everything runs with the new Rails 8 scheduler.
-      </p>
-    </div>
-    <div class="space-y-2">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Composable services</h3>
-      <p class="text-sm text-slate-600 dark:text-slate-300">
-        Every integration ships as a service object with success/failure responses.
-        They are simple to test and reuse across the app.
-      </p>
-    </div>
-  </div>
+  <% end %>
 </section>

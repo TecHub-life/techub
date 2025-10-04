@@ -12,7 +12,13 @@ module Github
       return jwt if jwt.failure?
 
       client = Octokit::Client.new(bearer_token: jwt.value)
-      token_response = client.create_app_installation_access_token(installation_id, permissions: permissions)
+
+      # Only pass permissions if explicitly set, otherwise GitHub may return 500
+      token_response = if permissions.present?
+        client.create_app_installation_access_token(installation_id, permissions: permissions)
+      else
+        client.create_app_installation_access_token(installation_id)
+      end
 
       success(
         {
