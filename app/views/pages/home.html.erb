@@ -1,0 +1,107 @@
+<section class="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 lg:flex-row">
+  <div class="flex-1 space-y-8">
+    <div class="space-y-4">
+      <p class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300">
+        AI-powered trading cards for builders
+      </p>
+      <h1 class="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+        TecHub turns open source signal into collectible trading cards.
+      </h1>
+      <p class="text-lg text-slate-600 dark:text-slate-300">
+        Feed us a GitHub profile, we ship back a playable card with handcrafted flavour.
+        A directory you can search, remix, and build on.
+      </p>
+      <div class="flex flex-wrap items-center gap-4">
+        <% if current_user %>
+          <span class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-500">
+            Signed in as <%= current_user.login %>
+          </span>
+          <%= button_to "Sign out", session_path, method: :delete, class: "inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" %>
+        <% else %>
+          <%= link_to "Authenticate with GitHub", auth_github_path, class: "inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" %>
+          <span class="text-sm text-slate-500 dark:text-slate-300">
+            Start with GitHub Login; we will never post without consent.
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <% if @profile_summary.present? %>
+      <div class="rounded-3xl border border-slate-200 bg-white/60 p-6 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/60">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+          Loftwah in a nutshell
+        </h2>
+        <p class="mt-3 text-base leading-relaxed text-slate-700 dark:text-slate-200">
+          <%= @profile_summary %>
+        </p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="flex w-full max-w-lg flex-col gap-6">
+    <div class="overflow-hidden rounded-3xl border border-slate-200 shadow-xl shadow-slate-900/10 dark:border-slate-700">
+      <%= image_tag "techub-hero.jpg", alt: "TecHub hero", class: "h-full w-full object-cover" %>
+    </div>
+    <% if @profile_payload.present? %>
+      <div class="rounded-3xl border border-slate-200 bg-white/80 p-6 backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Signature moves
+        </h3>
+        <ul class="mt-4 grid grid-cols-1 gap-4">
+          <% Array(@profile_payload[:top_repositories]).first(3).each do |repo| %>
+            <li class="rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900/70 dark:hover:border-slate-600">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <%= repo[:name] %>
+                  </p>
+                  <% if repo[:description].present? %>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      <%= repo[:description] %>
+                    </p>
+                  <% end %>
+                </div>
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  ⭐ <%= repo[:stargazers_count] %>
+                </span>
+              </div>
+              <div class="mt-3 flex flex-wrap items-center gap-2">
+                <% repo[:topics].each do |topic| %>
+                  <span class="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <%= topic %>
+                  </span>
+                <% end %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<section class="border-t border-slate-100 bg-slate-50/50 py-12 dark:border-slate-800 dark:bg-slate-950/30">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 lg:grid-cols-3">
+    <div class="space-y-2">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Why cards?</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Cards distil the vibe, signal, and story of a builder at a glance.
+        TecHub does the heavy lifting to surface the narrative automatically.
+      </p>
+    </div>
+    <div class="space-y-2">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">SolidQueue + Scheduling</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Your GitHub stats stay fresh thanks to Solid Queue jobs and recurring refreshes.
+        Everything runs with the new Rails 8 scheduler.
+      </p>
+    </div>
+    <div class="space-y-2">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Composable services</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Every integration ships as a service object with success/failure responses.
+        They are simple to test and reuse across the app.
+      </p>
+    </div>
+  </div>
+</section>

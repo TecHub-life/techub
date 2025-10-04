@@ -1,0 +1,13 @@
+{
+  "name": "techub",
+  "private": true,
+  "devDependencies": {
+    "@prettier/plugin-xml": "^3.3.2",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8"
+  },
+  "scripts": {
+    "prettier:check": "prettier --check .",
+    "prettier:write": "prettier --write ."
+  }
+}

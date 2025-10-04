@@ -1,6 +1,7 @@
 # TecHub Components
 
-Part of what I learned with TechDeck is that I should build out each component of the application as a stand alone thing, with a known input and output.
+Part of what I learned with TechDeck is that I should build out each component of the application as
+a stand alone thing, with a known input and output.
 
 ## GitHub
 
