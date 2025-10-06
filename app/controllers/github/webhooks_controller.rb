@@ -6,6 +6,7 @@ module Github
     # 2. The WebhookVerificationService validates signatures using secure comparison
     # 3. Webhooks don't use browser sessions or CSRF tokens
     # 4. All webhook requests must include valid HMAC signatures to be processed
+    # @codeql-disable-next-line csrf-protection-disabled
     skip_before_action :verify_authenticity_token
 
     def receive
