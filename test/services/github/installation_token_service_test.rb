@@ -2,9 +2,12 @@ require "test_helper"
 
 module Github
   class InstallationTokenServiceTest < ActiveSupport::TestCase
+    # Pre-generate RSA key to avoid expensive crypto operations in each test
+    TEST_PRIVATE_KEY = OpenSSL::PKey::RSA.generate(2048).to_pem.freeze
+
     setup do
       ENV["GITHUB_APP_ID"] = "12345"
-      ENV["GITHUB_PRIVATE_KEY"] = OpenSSL::PKey::RSA.generate(2048).to_pem
+      ENV["GITHUB_PRIVATE_KEY"] = TEST_PRIVATE_KEY
       Github::Configuration.reset!
     end
 
