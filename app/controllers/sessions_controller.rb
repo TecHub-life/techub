@@ -1,4 +1,7 @@
 class SessionsController < ApplicationController
+  # CSRF protection is intentionally disabled for destroy action with JSON requests
+  # This is safe because logout doesn't perform state-changing operations
+  # and JSON requests are typically from API clients that don't use CSRF tokens
   skip_before_action :verify_authenticity_token, only: :destroy, if: -> { request.format.json? }
 
   def start
