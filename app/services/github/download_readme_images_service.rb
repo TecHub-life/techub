@@ -69,8 +69,27 @@ module Github
     attr_reader :readme_content, :login
 
     def download_image(url, profile_dir)
-      # Generate a filename based on the URL
+      # Validate URL before processing
       uri = URI.parse(url)
+
+      # Only allow HTTP and HTTPS protocols
+      unless %w[http https].include?(uri.scheme)
+        Rails.logger.warn("Invalid URL scheme for image download: #{url}")
+        return nil
+      end
+
+      # Validate hostname to prevent SSRF attacks
+      unless uri.host && !uri.host.empty?
+        Rails.logger.warn("Invalid hostname for image download: #{url}")
+        return nil
+      end
+
+      # Block private/internal IP addresses
+      if private_ip?(uri.host)
+        Rails.logger.warn("Blocked private IP address for image download: #{url}")
+        return nil
+      end
+
       extension = File.extname(uri.path).presence || ".png"
 
       # Use hash of URL to create unique but consistent filename
@@ -80,15 +99,61 @@ module Github
       # Skip if already downloaded
       return "/profile_images/#{login}/#{filename}" if File.exist?(local_file_path)
 
-      # Download the image
-      URI.open(url, "rb", read_timeout: 10) do |image|
-        File.binwrite(local_file_path, image.read)
+      # Download the image with additional security measures
+      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+        request = Net::HTTP::Get.new(uri)
+        request["User-Agent"] = "TechHub/1.0"
+
+        response = http.request(request)
+
+        # Validate response
+        unless response.is_a?(Net::HTTPSuccess)
+          Rails.logger.warn("Failed to download image #{url}: HTTP #{response.code}")
+          return nil
+        end
+
+        # Validate content type
+        content_type = response["content-type"]
+        unless content_type&.start_with?("image/")
+          Rails.logger.warn("Invalid content type for image download: #{url} (#{content_type})")
+          return nil
+        end
+
+        # Limit file size (5MB max)
+        if response["content-length"] && response["content-length"].to_i > 5.megabytes
+          Rails.logger.warn("Image too large for download: #{url}")
+          return nil
+        end
+
+        File.binwrite(local_file_path, response.body)
       end
 
       "/profile_images/#{login}/#{filename}"
-    rescue OpenURI::HTTPError, SocketError, Timeout::Error => e
+    rescue Net::HTTPError, SocketError, Timeout::Error, URI::InvalidURIError => e
       Rails.logger.warn("Failed to download image #{url}: #{e.message}")
       nil
+    end
+
+    def private_ip?(hostname)
+      # Resolve hostname to IP address
+      ip = Resolv.getaddress(hostname)
+
+      # Check for private IP ranges
+      private_ranges = [
+        IPAddr.new("10.0.0.0/8"),
+        IPAddr.new("172.16.0.0/12"),
+        IPAddr.new("192.168.0.0/16"),
+        IPAddr.new("127.0.0.0/8"),
+        IPAddr.new("169.254.0.0/16"),
+        IPAddr.new("::1/128"),
+        IPAddr.new("fc00::/7"),
+        IPAddr.new("fe80::/10")
+      ]
+
+      private_ranges.any? { |range| range.include?(ip) }
+    rescue Resolv::ResolvError
+      # If we can't resolve the hostname, err on the side of caution
+      true
     end
   end
 end
