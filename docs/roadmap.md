@@ -1,19 +1,47 @@
 # Roadmap
 
-## Now
+## Completed ✅
 
-- Finalise Loftwah's profile card presentation and wire it into the home page cache refresh flow.
-- Polish OAuth onboarding copy and error states so GitHub sign-in feels trustworthy.
-- Capture webhook payload metadata (workflow runs) and expose it in logs for debugging.
+- **GitHub Integration Module**: Complete GitHub App authentication, OAuth flows, webhook handling
+- **Profile Data Collection**: Comprehensive GitHub profile data gathering (repos, languages,
+  activity, README)
+- **Multi-User Support**: Dynamic profile access for any GitHub username
+- **Data Storage**: Structured database schema with JSON columns and related tables
+- **Local Development**: Rails 8 + SQLite + Solid Queue + Kamal deployment ready
 
-## Next
+## Now (Phase 1: AI Foundation)
 
-- Expand the directory into an actual listing fed by scheduled profile refreshes and search filters.
-- Persist webhook insights so we can build leaderboards without re-fetching from GitHub.
-- Ship a minimal admin dashboard for curating feature drops and card highlights.
+- Set up Google Gemini integration with Flash 2.5 model for image generation
+- Configure object storage (S3/GCS) for generated card images and assets
+- Design AI prompts for trading card stats generation (attack/defense, buffs, weaknesses)
+- Create Gemini client service with proper error handling and rate limiting
 
-## Later
+## Next (Phase 2: AI Profile Processing)
 
-- Integrate Stripe Checkout for paid card requests once the submission flow stabilises.
-- Introduce notification emails (Resend) when cards are refreshed or new ones go live.
-- Explore partner-facing analytics (export, API) once the data model hardens.
+- Build AI profile analysis service to transform GitHub data into trading card stats
+- Implement card image generation using Gemini Flash 2.5
+- Create trading card data structure and templates
+- Test AI generation pipeline with existing profile data (loftwah, dhh, matz, torvalds)
+
+## Soon (Phase 3: Card Presentation)
+
+- Build trading card rendering system (HTML/CSS templates)
+- Implement card export functionality (images, PDFs)
+- Create card directory with search and filtering
+- Add card sharing and embedding features
+
+## Later (Phase 4: Production Features)
+
+- **Integrate Stripe Checkout for $3.50 card generation requests** (core requirement)
+- Implement notification emails (Resend) for card completion
+- Build admin dashboard for card curation and analytics
+- Add API endpoints for programmatic card access
+- Create physical card printing pipeline for limited edition decks
+
+## Future (Phase 5: Advanced Features)
+
+- Leaderboards and trending cards
+- Card trading and collection features
+- Advanced analytics and insights
+- Partner integrations and API marketplace
+- Mobile app for card collection and sharing
