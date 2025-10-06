@@ -3,9 +3,9 @@ require "test_helper"
 module Github
   class DownloadReadmeImagesServiceTest < ActiveSupport::TestCase
     setup do
-      @login = "testuser"
-      @profile_dir = Rails.root.join("public", "profile_images", @login)
-      FileUtils.rm_rf(@profile_dir) if File.exist?(@profile_dir)
+      @login = "testuser-#{SecureRandom.hex(4)}"
+      @profile_dir = Rails.root.join("tmp", "test_profile_images", @login)
+      FileUtils.mkdir_p(@profile_dir)
     end
 
     teardown do
