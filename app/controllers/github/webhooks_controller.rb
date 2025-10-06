@@ -1,8 +1,11 @@
 module Github
   class WebhooksController < ApplicationController
     # CSRF protection is intentionally disabled for webhook endpoints
-    # GitHub webhooks are authenticated using HMAC signatures instead of CSRF tokens
-    # The webhook verification service validates the X-Hub-Signature-256 header
+    # This is safe because:
+    # 1. GitHub webhooks are authenticated using HMAC signatures (X-Hub-Signature-256 header)
+    # 2. The WebhookVerificationService validates signatures using secure comparison
+    # 3. Webhooks don't use browser sessions or CSRF tokens
+    # 4. All webhook requests must include valid HMAC signatures to be processed
     skip_before_action :verify_authenticity_token
 
     def receive
