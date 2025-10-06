@@ -26,7 +26,7 @@ module Profiles
 
         assert result.success?
         profile = result.value
-        assert_equal "loftwah", profile.github_login
+        assert_equal "loftwah", profile.login
         assert_equal "Sharpest builder", profile.summary
         # Avatar should be either the local path or the GitHub URL (depending on download success)
         assert_match(/loftwah\.png$/, profile.avatar_url)

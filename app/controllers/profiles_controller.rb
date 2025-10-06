@@ -2,7 +2,7 @@ class ProfilesController < ApplicationController
   def show
     username = params[:username].downcase
 
-    @profile = Profile.find_by(github_login: username)
+    @profile = Profile.find_by(login: username)
 
     if @profile.present?
       # Use cached data if it's recent (less than 1 hour old)
@@ -29,7 +29,15 @@ class ProfilesController < ApplicationController
 
   def load_profile_data
     @profile_summary = @profile.summary
-    @profile_payload = @profile.data.deep_symbolize_keys
+    # Load structured data directly from associations
+    @top_repositories = @profile.top_repositories
+    @pinned_repositories = @profile.pinned_repositories
+    @active_repositories = @profile.active_repositories
+    @organizations = @profile.profile_organizations
+    @social_accounts = @profile.profile_social_accounts
+    @languages = @profile.profile_languages.order(count: :desc)
+    @recent_activity = @profile.profile_activity
+    @profile_readme = @profile.profile_readme
   end
 
   def refresh_and_load_profile(username)

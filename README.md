@@ -25,8 +25,9 @@ stays operable from a laptop.
 
    This runs `bundle check`, installs npm packages, prepares the application + Solid Queue
    databases, and clears temp files.
-   
-Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** and **Dean Lofts ([@loftwah](https://x.com/loftwah))**.
+
+Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** and **Dean Lofts
+([@loftwah](https://x.com/loftwah))**.
 
 2. Boot the full stack (web, CSS watcher, Solid Queue workers, recurring scheduler):
 
