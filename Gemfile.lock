@@ -75,6 +75,25 @@ GEM
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
     ast (2.4.3)
+    aws-eventstream (1.4.0)
+    aws-partitions (1.1168.0)
+    aws-sdk-core (3.233.0)
+      aws-eventstream (~> 1, >= 1.3.0)
+      aws-partitions (~> 1, >= 1.992.0)
+      aws-sigv4 (~> 1.9)
+      base64
+      bigdecimal
+      jmespath (~> 1, >= 1.6.1)
+      logger
+    aws-sdk-kms (1.113.0)
+      aws-sdk-core (~> 3, >= 3.231.0)
+      aws-sigv4 (~> 1.5)
+    aws-sdk-s3 (1.199.1)
+      aws-sdk-core (~> 3, >= 3.231.0)
+      aws-sdk-kms (~> 1)
+      aws-sigv4 (~> 1.5)
+    aws-sigv4 (1.12.1)
+      aws-eventstream (~> 1, >= 1.0.2)
     base64 (0.3.0)
     bcrypt_pbkdf (1.1.1)
     bcrypt_pbkdf (1.1.1-arm64-darwin)
@@ -96,8 +115,18 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
+    commonmarker (2.4.1)
+      rb_sys (~> 0.9)
+    commonmarker (2.4.1-aarch64-linux)
+    commonmarker (2.4.1-aarch64-linux-musl)
+    commonmarker (2.4.1-x86_64-darwin)
+    commonmarker (2.4.1-x86_64-linux)
+    commonmarker (2.4.1-x86_64-linux-musl)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.4)
+    crack (1.0.0)
+      bigdecimal
+      rexml
     crass (1.0.6)
     date (3.4.1)
     debug (1.11.0)
@@ -128,6 +157,7 @@ GEM
       raabro (~> 1.4)
     globalid (1.3.0)
       activesupport (>= 6.1)
+    hashdiff (1.1.2)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     importmap-rails (2.2.2)
@@ -142,6 +172,7 @@ GEM
     jbuilder (2.14.1)
       actionview (>= 7.0.0)
       activesupport (>= 7.0.0)
+    jmespath (1.6.2)
     json (2.13.2)
     jwt (3.1.2)
       base64
@@ -269,6 +300,9 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.3.0)
+    rake-compiler-dock (1.9.1)
+    rb_sys (0.9.117)
+      rake-compiler-dock (= 1.9.1)
     rdoc (6.15.0)
       erb
       psych (>= 4.0.0)
@@ -386,6 +420,10 @@ GEM
       activemodel (>= 6.0.0)
       bindex (>= 0.4.0)
       railties (>= 6.0.0)
+    webmock (3.25.0)
+      addressable (>= 2.8.0)
+      crack (>= 0.3.2)
+      hashdiff (>= 0.4.0, < 2.0.0)
     websocket (1.2.11)
     websocket-driver (0.8.0)
       base64
@@ -407,9 +445,11 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  aws-sdk-s3
   bootsnap
   brakeman
   capybara
+  commonmarker
   debug
   dotenv-rails
   faraday-retry
@@ -434,6 +474,7 @@ DEPENDENCIES
   turbo-rails
   tzinfo-data
   web-console
+  webmock
 
 BUNDLED WITH
    2.6.9

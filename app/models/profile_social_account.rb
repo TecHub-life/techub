@@ -6,7 +6,7 @@ class ProfileSocialAccount < ApplicationRecord
   scope :by_provider, ->(provider) { where(provider: provider.upcase) }
 
   def display_name
-    self.display_name.presence || extract_username_from_url
+    self[:display_name].presence || extract_username_from_url
   end
 
   def username
@@ -25,6 +25,20 @@ class ProfileSocialAccount < ApplicationRecord
       url.match(%r{bsky\.app/profile/([^/?]+)})&.[](1)
     when "LINKEDIN"
       url.match(%r{linkedin\.com/in/([^/?]+)})&.[](1)
+    when "FACEBOOK"
+      url.match(%r{facebook\.com/([^/?]+)})&.[](1)
+    when "INSTAGRAM"
+      url.match(%r{instagram\.com/([^/?]+)})&.[](1)
+    when "YOUTUBE"
+      url.match(%r{youtube\.com/(?:c/|channel/|user/)?([^/?]+)})&.[](1)
+    when "REDDIT"
+      url.match(%r{reddit\.com/u(?:ser)?/([^/?]+)})&.[](1)
+    when "TWITCH"
+      url.match(%r{twitch\.tv/([^/?]+)})&.[](1)
+    when "MASTODON"
+      url.match(%r{([^/]+)\.social/([^/?]+)})&.[](2) || url.match(%r{mastodon\.social/([^/?]+)})&.[](1)
+    when "NPM"
+      url.match(%r{npmjs\.com/~([^/?]+)})&.[](1)
     else
       nil
     end

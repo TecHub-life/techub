@@ -2,6 +2,7 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 require "minitest/mock"
+require "webmock/minitest"
 
 module ActiveSupport
   class TestCase
@@ -13,6 +14,9 @@ module ActiveSupport
 
     # Use transactional fixtures for faster database operations
     self.use_transactional_tests = true
+
+    # Disable all external HTTP requests in tests by default
+    WebMock.disable_net_connect!(allow_localhost: true)
 
     # Add more helper methods to be used by all tests here...
   end

@@ -57,13 +57,30 @@ module Github
         login: login
       )
 
-      if result.success?
+      content = if result.success?
         result.value[:content]
       else
         content
       end
+
+      # Fix encoding issues with smart quotes and special characters
+      fix_encoding(content)
     rescue Octokit::NotFound
       nil
+    end
+
+    def fix_encoding(content)
+      return nil if content.nil?
+
+      content
+        .encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+        .gsub(/[\u2018\u2019\u201B]/, "'")  # smart single quotes
+        .gsub(/[\u201C\u201D\u201E]/, '"')  # smart double quotes
+        .gsub(/\u2013/, "-")                # en dash
+        .gsub(/\u2014/, "--")               # em dash
+        .gsub(/\u2026/, "...")              # ellipsis
+        .gsub(/\uFFFD/, "'")                # replacement character
+        .gsub(/'{2,}/, "'")                 # multiple apostrophes to single
     end
 
     def fetch_recent_activity(github_client)

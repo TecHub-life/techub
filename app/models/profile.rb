@@ -9,7 +9,11 @@ class Profile < ApplicationRecord
 
   # Validations
   validates :github_id, presence: true, uniqueness: true
-  validates :login, presence: true, uniqueness: true
+  validates :login, presence: true, uniqueness: { case_sensitive: false }
+
+  before_validation do
+    self.login = login.to_s.downcase
+  end
 
   # Scopes
   scope :for_login, ->(login) { where(login: login.downcase) }
@@ -27,6 +31,16 @@ class Profile < ApplicationRecord
 
   def active_repositories
     profile_repositories.where(repository_type: "active")
+  end
+
+  def active_repositories_filtered
+    # Filter active repositories to only show user's own repos or org repos
+    user_orgs = organization_logins
+    profile_repositories.where(repository_type: "active").select do |repo|
+      # repo.full_name is in format "owner/repo"
+      owner = repo.full_name.split("/").first
+      owner == login || user_orgs.include?(owner)
+    end
   end
 
   # Language methods

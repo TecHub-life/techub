@@ -41,7 +41,8 @@ requires additional API calls and GraphQL queries.
 
 - ✅ **Profile README**: Full README from username/username repo
 - ✅ **Organizations**: All public organizations (with avatars and descriptions)
-- ✅ **Social Accounts**: Connected social media (Twitter/X, Bluesky, LinkedIn, etc.)
+- ✅ **Social Accounts**: Connected social media (Twitter/X, Bluesky, LinkedIn, Facebook, Instagram,
+  YouTube, Reddit, Twitch, Mastodon, npm)
 - ✅ **Recent Activity**: Event breakdown and activity stats
 
 ## Example Data Structure
@@ -127,6 +128,18 @@ requires additional API calls and GraphQL queries.
   }
 }
 ```
+
+## GitHub Permissions Required
+
+### OAuth Scopes (User Authentication)
+
+- **`read:user`**: Access to user profile data, followers, and following counts
+- **`user:email`**: Access to user's email addresses (if publicly visible)
+
+### GitHub App Permissions (API Access)
+
+- **Email addresses**: Read access to user email addresses
+- **Followers**: Read access to follower lists and counts
 
 ## API Calls Made
 

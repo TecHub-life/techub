@@ -1,10 +1,26 @@
 <!DOCTYPE html>
 <html data-controller="theme">
   <head>
-    <title><%= content_for(:title) || "Techub" %></title>
+    <title><%= content_for(:title) || "TecHub - GitHub Profile Analytics" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics. Visualize your coding journey or explore any developer\'s public contributions.' %>">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<%= request.original_url %>">
+    <meta property="og:title" content="<%= content_for(:title) || 'TecHub - GitHub Profile Analytics' %>">
+    <meta property="og:description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics.' %>">
+    <meta property="og:image" content="<%= asset_url('techub-og.jpg') %>">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="<%= request.original_url %>">
+    <meta property="twitter:title" content="<%= content_for(:title) || 'TecHub - GitHub Profile Analytics' %>">
+    <meta property="twitter:description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics.' %>">
+    <meta property="twitter:image" content="<%= asset_url('techub-og.jpg') %>">
+    
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 

@@ -21,6 +21,7 @@ gem "jbuilder"
 gem "jwt"
 gem "faraday-retry"
 gem "octokit"
+gem "commonmarker" # GitHub-flavored markdown
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
@@ -41,6 +42,9 @@ gem "kamal", require: false
 
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
 gem "thruster", require: false
+
+# S3 client for Active Storage (DigitalOcean Spaces compatible)
+gem "aws-sdk-s3"
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
@@ -68,4 +72,5 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  gem "webmock"
 end

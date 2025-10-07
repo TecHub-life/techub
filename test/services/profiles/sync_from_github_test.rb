@@ -22,6 +22,8 @@ module Profiles
       }
 
       Github::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
+        # Avoid real HTTP for avatar download during test
+        Github::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/loftwah.png") do
         result = Profiles::SyncFromGithub.call(login: "loftwah")
 
         assert result.success?
@@ -30,6 +32,7 @@ module Profiles
         assert_equal "Sharpest builder", profile.summary
         # Avatar should be either the local path or the GitHub URL (depending on download success)
         assert_match(/loftwah\.png$/, profile.avatar_url)
+        end
       end
     end
   end

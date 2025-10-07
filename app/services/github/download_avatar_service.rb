@@ -35,7 +35,7 @@ module Github
       local_path = Rails.root.join("public", "avatars", filename)
 
       # Download the avatar with additional security measures
-      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 2, read_timeout: 3) do |http|
         request = Net::HTTP::Get.new(uri)
         request["User-Agent"] = "TechHub/1.0"
 
