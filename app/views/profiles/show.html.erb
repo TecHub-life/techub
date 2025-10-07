@@ -242,12 +242,7 @@
               Profile README
             </h3>
             <div class="prose dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300">
-              <%= render_markdown(@profile_readme.content[0..5000]) %>
-              <% if @profile_readme.content.length > 5000 %>
-                <p class="text-slate-500 dark:text-slate-400 italic mt-4">
-                  ... (showing first 5000 characters)
-                </p>
-              <% end %>
+              <%= render_markdown(@profile_readme.content) %>
             </div>
           </div>
         <% end %>
