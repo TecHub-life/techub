@@ -9,7 +9,11 @@ class Profile < ApplicationRecord
 
   # Validations
   validates :github_id, presence: true, uniqueness: true
-  validates :login, presence: true, uniqueness: true
+  validates :login, presence: true, uniqueness: { case_sensitive: false }
+
+  before_validation do
+    self.login = login.to_s.downcase
+  end
 
   # Scopes
   scope :for_login, ->(login) { where(login: login.downcase) }

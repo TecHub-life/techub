@@ -32,7 +32,7 @@ module Profiles
 
       # Update basic profile data
       profile.assign_attributes(
-        login: payload[:profile][:login],
+        login: payload[:profile][:login].to_s.downcase,
         name: payload[:profile][:name],
         avatar_url: local_avatar_path || avatar_url,
         bio: payload[:profile][:bio],
