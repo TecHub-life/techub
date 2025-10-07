@@ -29,6 +29,16 @@ class Profile < ApplicationRecord
     profile_repositories.where(repository_type: "active")
   end
 
+  def active_repositories_filtered
+    # Filter active repositories to only show user's own repos or org repos
+    user_orgs = organization_logins
+    profile_repositories.where(repository_type: "active").select do |repo|
+      # repo.full_name is in format "owner/repo"
+      owner = repo.full_name.split("/").first
+      owner == login || user_orgs.include?(owner)
+    end
+  end
+
   # Language methods
   def language_breakdown
     profile_languages.order(count: :desc).pluck(:name, :count).to_h

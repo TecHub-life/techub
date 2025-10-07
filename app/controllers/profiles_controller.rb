@@ -1,4 +1,9 @@
 class ProfilesController < ApplicationController
+  def index
+    # Redirect to home if accessed without username
+    redirect_to root_path
+  end
+
   def show
     username = params[:username].downcase
 
@@ -17,12 +22,19 @@ class ProfilesController < ApplicationController
       refresh_and_load_profile(username)
     end
 
-    # Render the home template (same UI, different data)
-    render "pages/home"
+    respond_to do |format|
+      format.html { render "profiles/show" }
+      format.json { render_json_profile }
+    end
   rescue => e
     Rails.logger.error("Profile load failed for #{username}: #{e.class} - #{e.message}")
-    flash.now[:alert] = "Unable to load profile for @#{username}. Please check the username and try again."
-    render "pages/home"
+    respond_to do |format|
+      format.html do
+        flash.now[:alert] = "Unable to load profile for @#{username}. Please check the username and try again."
+        render "profiles/show"
+      end
+      format.json { render json: { error: "Unable to load profile" }, status: :unprocessable_entity }
+    end
   end
 
   private
@@ -56,5 +68,53 @@ class ProfilesController < ApplicationController
         "Unable to load profile for @#{username} right now. Please try again later."
       end
     end
+  end
+
+  def render_json_profile
+    render json: {
+      profile: {
+        login: @profile.login,
+        name: @profile.name,
+        bio: @profile.bio,
+        location: @profile.location,
+        email: @profile.email,
+        blog: @profile.blog,
+        twitter_username: @profile.twitter_username,
+        company: @profile.company,
+        avatar_url: @profile.avatar_url,
+        github_url: @profile.html_url,
+        public_repos: @profile.public_repos,
+        public_gists: @profile.public_gists,
+        followers: @profile.followers,
+        following: @profile.following,
+        created_at: @profile.github_created_at,
+        updated_at: @profile.github_updated_at,
+        last_synced_at: @profile.last_synced_at
+      },
+      summary: @profile_summary,
+      languages: @languages&.map { |lang| { name: lang.name, count: lang.count } },
+      social_accounts: @social_accounts&.map { |sa| { provider: sa.provider, url: sa.url, display_name: sa.display_name } },
+      organizations: @organizations&.map { |org| { login: org.login, name: org.name, description: org.description, avatar_url: org.avatar_url } },
+      top_repositories: @top_repositories&.map { |repo| repository_json(repo) },
+      pinned_repositories: @pinned_repositories&.map { |repo| repository_json(repo) },
+      active_repositories: @active_repositories&.map { |repo| repository_json(repo) },
+      recent_activity: @recent_activity&.as_json,
+      readme: @profile_readme&.as_json
+    }
+  end
+
+  def repository_json(repo)
+    {
+      name: repo.name,
+      full_name: repo.full_name,
+      description: repo.description,
+      html_url: repo.html_url,
+      language: repo.language,
+      stargazers_count: repo.stargazers_count,
+      forks_count: repo.forks_count,
+      topics: repo.repository_topics.map(&:name),
+      created_at: repo.github_created_at,
+      updated_at: repo.github_updated_at
+    }
   end
 end

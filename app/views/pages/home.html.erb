@@ -1,359 +1,317 @@
-<section class="mx-auto max-w-6xl px-4 py-12">
-  <div class="space-y-4 mb-8">
-    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100">
-      TecHub - GitHub Profile Demo
-    </h1>
-    <p class="text-lg text-slate-600 dark:text-slate-300">
-      Gathering and displaying comprehensive GitHub profile information.
+<!-- Hero Section -->
+<section class="relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950"></div>
+  
+  <div class="relative mx-auto max-w-6xl px-4 py-20 sm:py-32">
+    <div class="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+      <!-- Left: Hero Content -->
+      <div class="space-y-8">
+        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+          </span>
+          GitHub Profile Analytics Platform
+        </div>
+
+        <h1 class="text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-7xl">
+          Discover Developer
+          <span class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
+            Insights
+          </span>
+        </h1>
+
+        <p class="text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
+          Comprehensive GitHub profile analytics, repository insights, and developer statistics. 
+          Visualize your coding journey or explore any developer's public contributions.
+        </p>
+
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <% if current_user %>
+            <%= link_to raw_profile_path(current_user.login), class: "inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-700 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" do %>
+              <span>View My Profile</span>
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            <% end %>
+          <% else %>
+            <%= link_to auth_github_path, class: "inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-700 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" do %>
+              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              <span>Sign in with GitHub</span>
+            <% end %>
+          <% end %>
+          
+          <a href="#examples" class="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-200 bg-white px-8 py-4 text-lg font-semibold text-slate-900 transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
+            <span>See Examples</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </a>
+        </div>
+
+        <div class="flex items-center gap-8 pt-4 text-sm text-slate-600 dark:text-slate-400">
+          <div class="flex items-center gap-2">
+            <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span>Free Forever</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span>Open Source</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="h-5 w-5 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span>JSON API</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Logo/Visual -->
+      <div class="hidden lg:flex items-center justify-center">
+        <div class="relative">
+          <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-20 blur-3xl"></div>
+          <%= image_tag "android-chrome-512x512.jpg", alt: "TecHub Logo", class: "relative w-full max-w-md rounded-2xl border-4 border-white/10 dark:border-slate-700/50 bg-white/5 dark:bg-slate-800/30 p-8 drop-shadow-2xl" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-20 bg-white dark:bg-slate-900">
+  <div class="mx-auto max-w-6xl px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 sm:text-4xl mb-4">
+        Everything You Need to Know
+      </h2>
+      <p class="text-lg text-slate-600 dark:text-slate-400">
+        Comprehensive GitHub analytics and insights at your fingertips
+      </p>
+    </div>
+
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <!-- Feature 1 -->
+      <div class="group rounded-2xl border border-slate-200 bg-slate-50 p-8 transition hover:border-blue-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-blue-700">
+        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <h3 class="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">Profile Overview</h3>
+        <p class="text-slate-600 dark:text-slate-400">Complete profile information including bio, location, social links, and GitHub statistics.</p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="group rounded-2xl border border-slate-200 bg-slate-50 p-8 transition hover:border-indigo-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-indigo-700">
+        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+        </div>
+        <h3 class="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">Repository Analytics</h3>
+        <p class="text-slate-600 dark:text-slate-400">Deep insights into repositories with stars, forks, languages, and activity trends.</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="group rounded-2xl border border-slate-200 bg-slate-50 p-8 transition hover:border-purple-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-purple-700">
+        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <h3 class="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">Language Breakdown</h3>
+        <p class="text-slate-600 dark:text-slate-400">Visual representation of programming languages used across all repositories.</p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="group rounded-2xl border border-slate-200 bg-slate-50 p-8 transition hover:border-green-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-green-700">
+        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">Recent Activity</h3>
+        <p class="text-slate-600 dark:text-slate-400">Track recent commits, contributions, and repository updates in real-time.</p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="group rounded-2xl border border-slate-200 bg-slate-50 p-8 transition hover:border-orange-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-orange-700">
+        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <h3 class="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">Organizations</h3>
+        <p class="text-slate-600 dark:text-slate-400">View all organizations and their contributions to the open source community.</p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="group rounded-2xl border border-slate-200 bg-slate-50 p-8 transition hover:border-red-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-red-700">
+        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+        </div>
+        <h3 class="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">JSON API</h3>
+        <p class="text-slate-600 dark:text-slate-400">Access all profile data programmatically with our RESTful JSON API.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Examples Section -->
+<section id="examples" class="py-20 bg-slate-50 dark:bg-slate-950">
+  <div class="mx-auto max-w-6xl px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 sm:text-4xl mb-4">
+        Try It Out
+      </h2>
+      <p class="text-lg text-slate-600 dark:text-slate-400">
+        Check out these example profiles to see what TecHub can do
+      </p>
+    </div>
+
+    <div class="grid gap-8 md:grid-cols-2">
+      <!-- Example 1: loftwah -->
+      <div class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg transition hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10"></div>
+        <div class="relative p-8">
+          <div class="mb-6 flex items-center gap-4">
+            <%= image_tag "loftwah.jpg", alt: "loftwah", class: "h-16 w-16 rounded-full border-2 border-slate-200 dark:border-slate-700" %>
+            <div>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">@loftwah</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400">Dean Lofts</p>
+            </div>
+          </div>
+          <p class="mb-6 text-slate-600 dark:text-slate-400">
+            DevOps engineer and open source contributor with expertise in Rails, Docker, and cloud infrastructure.
+          </p>
+          <div class="flex gap-3">
+            <%= link_to raw_profile_path("loftwah"), class: "inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" do %>
+              <span>View Profile</span>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            <% end %>
+            <%= link_to raw_profile_path("loftwah", format: :json), class: "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              <span>JSON</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Example 2: jrh89 -->
+      <div class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg transition hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10"></div>
+        <div class="relative p-8">
+          <div class="mb-6 flex items-center gap-4">
+            <%= image_tag "jared.jpg", alt: "jrh89", class: "h-16 w-16 rounded-full border-2 border-slate-200 dark:border-slate-700" %>
+            <div>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">@jrh89</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400">Jared Hooker</p>
+            </div>
+          </div>
+          <p class="mb-6 text-slate-600 dark:text-slate-400">
+            Co-creator of TecHub, passionate about developer tools and open source collaboration.
+          </p>
+          <div class="flex gap-3">
+            <%= link_to raw_profile_path("jrh89"), class: "inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" do %>
+              <span>View Profile</span>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            <% end %>
+            <%= link_to raw_profile_path("jrh89", format: :json), class: "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              <span>JSON</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Try Your Own -->
+    <div class="mt-12 text-center">
+      <div class="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+        <h3 class="mb-4 text-2xl font-bold text-slate-900 dark:text-slate-100">Try Any GitHub Username</h3>
+        <p class="mb-6 text-slate-600 dark:text-slate-400">
+          Simply visit <code class="rounded bg-slate-100 px-2 py-1 text-sm text-slate-900 dark:bg-slate-800 dark:text-slate-100">/raw_profiles/&lt;username&gt;</code> to view any profile
+        </p>
+        <form id="profileSearch" class="flex gap-3">
+          <input
+            type="text"
+            id="usernameInput"
+            placeholder="Enter GitHub username..."
+            class="flex-1 rounded-full border border-slate-300 bg-white px-6 py-3 text-slate-900 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500"
+            required
+          />
+          <button
+            type="submit"
+            class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-8 py-3 font-semibold text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+          >
+            <span>View Profile</span>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </form>
+        <script>
+          document.getElementById('profileSearch').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('usernameInput').value.trim();
+            if (username) {
+              window.location.href = '/raw_profiles/' + encodeURIComponent(username);
+            }
+          });
+        </script>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-white dark:bg-slate-900">
+  <div class="mx-auto max-w-4xl px-4 text-center">
+    <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 sm:text-4xl mb-4">
+      Ready to Explore Developer Profiles?
+    </h2>
+    <p class="text-xl text-slate-600 dark:text-slate-400 mb-8">
+      Start by viewing any GitHub profile or sign in to see your own analytics
     </p>
-    <div class="flex items-center gap-4">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
       <% if current_user %>
-        <span class="text-sm text-slate-700 dark:text-slate-300">
-          Signed in as <strong><%= current_user.login %></strong>
-        </span>
-        <%= button_to "Sign out", session_path, method: :delete, class: "text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" %>
+        <%= link_to raw_profile_path(current_user.login), class: "inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-700 hover:shadow-xl dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" do %>
+          <span>View My Profile</span>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        <% end %>
       <% else %>
-        <%= link_to "Sign in with GitHub", auth_github_path, class: "inline-block bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-700" %>
+        <%= link_to auth_github_path, class: "inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-700 hover:shadow-xl dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" do %>
+          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          <span>Sign in with GitHub</span>
+        <% end %>
+      <% end %>
+      <%= link_to docs_path, class: "inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-200 bg-white px-8 py-4 text-lg font-semibold text-slate-900 transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800" do %>
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>API Documentation</span>
       <% end %>
     </div>
   </div>
-
-  <% if @profile_payload.present? %>
-    <% profile = @profile_payload[:profile] %>
-    
-    <div class="grid gap-8 lg:grid-cols-3">
-      <!-- Profile Info -->
-      <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-          <% avatar_path = @profile.avatar_url.presence || profile[:avatar_url] %>
-          <img src="<%= avatar_path %>" alt="<%= profile[:login] %>" class="w-32 h-32 rounded-full mb-4">
-          
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
-            <%= profile[:name] || profile[:login] %>
-          </h2>
-          
-          <p class="text-slate-600 dark:text-slate-400 mb-4">
-            @<%= profile[:login] %>
-          </p>
-          
-          <% if profile[:bio].present? %>
-            <p class="text-slate-700 dark:text-slate-300 mb-4">
-              <%= profile[:bio] %>
-            </p>
-          <% end %>
-          
-          <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-            <% if profile[:location].present? %>
-              <p><strong>Location:</strong> <%= profile[:location] %></p>
-            <% end %>
-            
-            <% if profile[:company].present? %>
-              <p><strong>Company:</strong> <%= profile[:company] %></p>
-            <% end %>
-            
-            <% if profile[:email].present? %>
-              <p>
-                <strong>Email:</strong>
-                <a href="mailto:<%= profile[:email] %>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                  <%= profile[:email] %>
-                </a>
-              </p>
-            <% end %>
-            
-            <% if profile[:blog].present? %>
-              <p>
-                <strong>Website:</strong> 
-                <a href="<%= profile[:blog] %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                  <%= profile[:blog] %>
-                </a>
-              </p>
-            <% end %>
-            
-            <% if profile[:twitter_username].present? %>
-              <p>
-                <strong>Twitter:</strong>
-                <a href="https://twitter.com/<%= profile[:twitter_username] %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                  @<%= profile[:twitter_username] %>
-                </a>
-              </p>
-            <% end %>
-            
-            <% if profile[:hireable] %>
-              <p class="text-green-600 dark:text-green-400">
-                <strong>💼 Available for hire</strong>
-              </p>
-            <% end %>
-          </div>
-          
-          <div class="mt-6 grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                <%= profile[:followers] %>
-              </p>
-              <p class="text-xs text-slate-600 dark:text-slate-400">Followers</p>
-            </div>
-            <div>
-              <p class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                <%= profile[:following] %>
-              </p>
-              <p class="text-xs text-slate-600 dark:text-slate-400">Following</p>
-            </div>
-            <div>
-              <p class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                <%= profile[:public_repos] %>
-              </p>
-              <p class="text-xs text-slate-600 dark:text-slate-400">Repos</p>
-            </div>
-          </div>
-          
-          <% if profile[:public_gists] && profile[:public_gists] > 0 %>
-            <div class="mt-4 text-center">
-              <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                <%= profile[:public_gists] %> Public Gists
-              </p>
-            </div>
-          <% end %>
-        </div>
-        
-        <!-- Languages -->
-        <% if @profile_payload[:languages].present? && @profile_payload[:languages].any? %>
-          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Top Languages
-            </h3>
-            <div class="space-y-2">
-              <% @profile_payload[:languages].first(5).each do |language, count| %>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-slate-700 dark:text-slate-300"><%= language %></span>
-                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= count %></span>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-        <!-- Social Accounts -->
-        <% if @profile_payload[:social_accounts].present? && @profile_payload[:social_accounts].any? %>
-          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Social
-            </h3>
-            <div class="space-y-2">
-              <% @profile_payload[:social_accounts].each do |account| %>
-                <a href="<%= account[:url] %>" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                  <span class="font-medium"><%= account[:provider].capitalize %></span>
-                  <% if account[:display_name].present? %>
-                    <span class="text-slate-600 dark:text-slate-400">- <%= account[:display_name] %></span>
-                  <% end %>
-                </a>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-        <!-- Organizations -->
-        <% if @profile_payload[:organizations].present? && @profile_payload[:organizations].any? %>
-          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Organizations
-            </h3>
-            <div class="space-y-3">
-              <% @profile_payload[:organizations].each do |org| %>
-                <a href="<%= org[:html_url] %>" target="_blank" rel="noopener" class="flex items-center gap-3 group">
-                  <img src="<%= org[:avatar_url] %>" alt="<%= org[:login] %>" class="w-10 h-10 rounded">
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
-                      <%= org[:name] || org[:login] %>
-                    </p>
-                    <% if org[:description].present? %>
-                      <p class="text-xs text-slate-600 dark:text-slate-400 truncate">
-                        <%= org[:description] %>
-                      </p>
-                    <% end %>
-                  </div>
-                </a>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-        <!-- Recent Activity -->
-        <% if @profile_payload[:recent_activity].present? %>
-          <div class="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Recent Activity
-            </h3>
-            <% activity = @profile_payload[:recent_activity].is_a?(Hash) ? @profile_payload[:recent_activity].with_indifferent_access : @profile_payload[:recent_activity] %>
-            
-            <% if activity[:last_active].present? %>
-              <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                Last active: <%= Time.parse(activity[:last_active].to_s).strftime('%b %d, %Y') %>
-              </p>
-            <% end %>
-            
-            <% if activity[:total_events] && activity[:total_events] > 0 %>
-              <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">
-                <strong><%= activity[:total_events] %></strong> events in the last 90 days
-              </p>
-            <% end %>
-            
-            <% if activity[:event_breakdown].present? %>
-              <div class="space-y-1 mb-4">
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Event Types</p>
-                <% activity[:event_breakdown].sort_by { |k, v| -v }.first(5).each do |event_type, count| %>
-                  <div class="flex justify-between items-center text-sm">
-                    <span class="text-slate-600 dark:text-slate-400"><%= event_type.gsub('Event', '') %></span>
-                    <span class="text-slate-900 dark:text-slate-100"><%= count %></span>
-                  </div>
-                <% end %>
-              </div>
-            <% end %>
-            
-            <% if @profile_payload[:active_repositories].present? && @profile_payload[:active_repositories].any? %>
-              <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Active in (Public)</p>
-                <div class="space-y-2">
-                  <% @profile_payload[:active_repositories].each do |repo| %>
-                    <div class="text-xs">
-                      <a href="<%= repo[:html_url] %>" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
-                        <%= repo[:full_name] %>
-                      </a>
-                      <% if repo[:description].present? %>
-                        <p class="text-slate-600 dark:text-slate-400 mt-0.5"><%= repo[:description].truncate(60) %></p>
-                      <% end %>
-                      <div class="flex items-center gap-2 mt-0.5 text-slate-500 dark:text-slate-400">
-                        <span>⭐ <%= repo[:stargazers_count] %></span>
-                        <% if repo[:language].present? %>
-                          <span><%= repo[:language] %></span>
-                        <% end %>
-                      </div>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            <% elsif activity[:recent_repos].present? && activity[:recent_repos].any? %>
-              <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Active in</p>
-                <div class="space-y-1">
-                  <% activity[:recent_repos].first(5).each do |repo| %>
-                    <p class="text-xs text-slate-700 dark:text-slate-300"><%= repo %></p>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
-      
-      <!-- Main Content -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Profile README -->
-        <% if @profile_payload[:profile_readme].present? %>
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Profile README
-            </h3>
-            <div class="prose dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300">
-              <%= simple_format(@profile_payload[:profile_readme][0..5000]) %>
-              <% if @profile_payload[:profile_readme].length > 5000 %>
-                <p class="text-slate-500 dark:text-slate-400 italic mt-4">
-                  ... (showing first 5000 characters)
-                </p>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-        <!-- Pinned Repositories -->
-        <% if @profile_payload[:pinned_repositories].present? && @profile_payload[:pinned_repositories].any? %>
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Pinned Repositories
-            </h3>
-            <div class="grid gap-4 md:grid-cols-2">
-              <% @profile_payload[:pinned_repositories].each do |repo| %>
-                <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                  <a href="<%= repo[:html_url] %>" target="_blank" class="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400">
-                    <%= repo[:name] %>
-                  </a>
-                  <% if repo[:description].present? %>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                      <%= repo[:description] %>
-                    </p>
-                  <% end %>
-                  <div class="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span>⭐ <%= repo[:stargazers_count] %></span>
-                    <% if repo[:forks_count] && repo[:forks_count] > 0 %>
-                      <span>🔀 <%= repo[:forks_count] %></span>
-                    <% end %>
-                    <% if repo[:language].present? %>
-                      <span><%= repo[:language] %></span>
-                    <% end %>
-                  </div>
-                  <% if repo[:topics].present? && Array(repo[:topics]).any? %>
-                    <div class="flex flex-wrap gap-1 mt-2">
-                      <% Array(repo[:topics]).first(5).each do |topic| %>
-                        <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">
-                          <%= topic %>
-                        </span>
-                      <% end %>
-                    </div>
-                  <% end %>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-        <!-- Top Repositories -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-            Top Repositories by Stars
-          </h3>
-          <div class="space-y-4">
-            <% Array(@profile_payload[:top_repositories]).first(5).each do |repo| %>
-              <div class="border-l-4 border-slate-300 dark:border-slate-600 pl-4">
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <a href="<%= repo[:html_url] %>" target="_blank" class="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400">
-                      <%= repo[:name] %>
-                    </a>
-                    <% if repo[:description].present? %>
-                      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        <%= repo[:description] %>
-                      </p>
-                    <% end %>
-                    <div class="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                      <span>⭐ <%= repo[:stargazers_count] %></span>
-                      <% if repo[:forks_count] && repo[:forks_count] > 0 %>
-                        <span>🔀 <%= repo[:forks_count] %></span>
-                      <% end %>
-                      <% if repo[:language].present? %>
-                        <span><%= repo[:language] %></span>
-                      <% end %>
-                    </div>
-                  </div>
-                </div>
-                <% if repo[:topics].present? && Array(repo[:topics]).any? %>
-                  <div class="flex flex-wrap gap-2 mt-2">
-                    <% Array(repo[:topics]).each do |topic| %>
-                      <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 rounded">
-                        <%= topic %>
-                      </span>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      </div>
-    </div>
-  <% else %>
-    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-      <p class="text-yellow-800 dark:text-yellow-200">
-        No profile data available. Please check the logs for errors.
-      </p>
-    </div>
-  <% end %>
 </section>

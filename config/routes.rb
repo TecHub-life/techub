@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     post "/webhooks", to: "webhooks#receive"
   end
 
-  # Dynamic profile routes - must be last to avoid conflicts
-  get "/:username", to: "profiles#show", as: :profile
+  # Raw profile routes
+  get "/raw_profiles", to: "profiles#index", as: :raw_profiles
+  get "/raw_profiles/:username", to: "profiles#show", as: :raw_profile
 end

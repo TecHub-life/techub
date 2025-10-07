@@ -6,7 +6,7 @@ class ProfileSocialAccount < ApplicationRecord
   scope :by_provider, ->(provider) { where(provider: provider.upcase) }
 
   def display_name
-    self.display_name.presence || extract_username_from_url
+    self[:display_name].presence || extract_username_from_url
   end
 
   def username

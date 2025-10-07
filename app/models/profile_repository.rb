@@ -10,6 +10,10 @@ class ProfileRepository < ApplicationRecord
   scope :most_starred, -> { order(stargazers_count: :desc) }
   scope :recently_updated, -> { order(github_updated_at: :desc) }
 
+  def topics
+    repository_topics
+  end
+
   def topics_list
     repository_topics.pluck(:name)
   end
