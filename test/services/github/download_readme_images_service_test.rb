@@ -51,6 +51,10 @@ module Github
         ![Alt text](https://example.com/image.png)
       MARKDOWN
 
+      # Stub external image fetch
+      stub_request(:get, "https://example.com/image.png").
+        to_return(status: 200, body: "PNGDATA", headers: { "Content-Type" => "image/png" })
+
       result = DownloadReadmeImagesService.call(
         readme_content: content,
         login: @login
@@ -64,6 +68,10 @@ module Github
     test "detects HTML images" do
       content = '<img src="https://example.com/test.jpg" alt="Test">'
 
+      # Stub external image fetch
+      stub_request(:get, "https://example.com/test.jpg").
+        to_return(status: 200, body: "JPGDATA", headers: { "Content-Type" => "image/jpeg" })
+
       result = DownloadReadmeImagesService.call(
         readme_content: content,
         login: @login
@@ -76,6 +84,10 @@ module Github
     test "creates profile-specific directory" do
       content = "![test](https://example.com/fake.png)"
 
+      # Stub external image fetch
+      stub_request(:get, "https://example.com/fake.png").
+        to_return(status: 200, body: "PNGDATA", headers: { "Content-Type" => "image/png" })
+
       DownloadReadmeImagesService.call(
         readme_content: content,
         login: @login
@@ -86,6 +98,10 @@ module Github
 
     test "handles download failures gracefully" do
       content = "![test](https://invalid-url-that-does-not-exist.com/image.png)"
+
+      # Stub to simulate HTTP failure instead of real network
+      stub_request(:get, "https://invalid-url-that-does-not-exist.com/image.png").
+        to_return(status: 404, body: "Not found", headers: { "Content-Type" => "text/plain" })
 
       result = DownloadReadmeImagesService.call(
         readme_content: content,
