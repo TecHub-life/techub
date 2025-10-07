@@ -291,10 +291,12 @@ The app uses GitHub App authentication for higher rate limits and better reliabi
 ## GitHub Permissions & Access
 
 ### OAuth Scopes (User Authentication)
+
 - **`read:user`**: Access to user profile data, followers, and following counts
 - **`user:email`**: Access to user's email addresses (if publicly visible)
 
 ### GitHub App Permissions (API Access)
+
 - **Email addresses**: Read access to user email addresses
 - **Followers**: Read access to follower lists and counts
 

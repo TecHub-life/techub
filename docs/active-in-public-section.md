@@ -2,7 +2,8 @@
 
 ## Overview
 
-The "Active in Public" section displays repositories that the user has recently contributed to based on their public GitHub activity events.
+The "Active in Public" section displays repositories that the user has recently contributed to based
+on their public GitHub activity events.
 
 ## How It Works
 
@@ -25,7 +26,8 @@ The section shows **any public repository** the user has contributed to, includi
 
 ### Filtering Options
 
-By default, all public repositories where the user has been active are shown. However, you can filter to only show repositories owned by the user or their organizations using:
+By default, all public repositories where the user has been active are shown. However, you can
+filter to only show repositories owned by the user or their organizations using:
 
 ```ruby
 # In the controller or view
@@ -33,6 +35,7 @@ By default, all public repositories where the user has been active are shown. Ho
 ```
 
 This will only include repositories where:
+
 - The repository owner matches the user's GitHub login, OR
 - The repository owner is one of the user's public organizations
 
@@ -41,12 +44,14 @@ This will only include repositories where:
 For user `loftwah` who is a member of organizations `TecHub-life` and `example-org`:
 
 **Without filtering** (shows all):
+
 - `TecHub-life/techub` ✅ (user's org)
 - `loftwah/devops-refresher` ✅ (user's repo)
 - `stakater/Reloader` ✅ (third-party contribution)
 - `gcui-art/suno-api` ✅ (third-party contribution)
 
 **With filtering** (filtered to own/org repos):
+
 - `TecHub-life/techub` ✅ (user's org)
 - `loftwah/devops-refresher` ✅ (user's repo)
 - `stakater/Reloader` ❌ (not owned by user or their org)
@@ -57,6 +62,7 @@ For user `loftwah` who is a member of organizations `TecHub-life` and `example-o
 ### Database Schema
 
 Active repositories are stored in the `profile_repositories` table with:
+
 - `repository_type: "active"`
 - `full_name`: The full repository name (`owner/repo-name`)
 - Standard repository metadata (description, stars, language, etc.)
@@ -149,9 +155,12 @@ To display active repositories:
 
 When building prompts for AI tools or analyzing profile data:
 
-**Important**: The "Active in Public" section may include repositories that the user does **not** own. These are public repositories where the user has contributed code, opened issues, or participated in discussions.
+**Important**: The "Active in Public" section may include repositories that the user does **not**
+own. These are public repositories where the user has contributed code, opened issues, or
+participated in discussions.
 
 To determine ownership:
+
 1. Check if the repository owner (first part of `full_name`) matches the user's `login`
 2. Check if the repository owner matches any of the user's organization `login` values
 3. If neither, it's a third-party contribution
@@ -159,7 +168,7 @@ To determine ownership:
 Example filtering in a prompt:
 
 ```
-When analyzing this user's work, note that repositories in "Active in Public" 
+When analyzing this user's work, note that repositories in "Active in Public"
 include both owned and contributed projects. The user owns:
 - Repositories where owner = "loftwah"
 - Repositories where owner = "TecHub-life" (user's org)
@@ -170,8 +179,8 @@ Third-party contributions should be noted separately.
 ## Future Enhancements
 
 Potential improvements:
+
 - Add a UI toggle to show/hide third-party contributions
 - Display a badge or indicator for "owned" vs "contributed"
 - Track contribution type (commits, PRs, issues) per repository
 - Add time-based filtering (active this week, this month, etc.)
-

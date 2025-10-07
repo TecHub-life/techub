@@ -21,4 +21,8 @@ Rails.application.routes.draw do
   # Raw profile routes
   get "/raw_profiles", to: "profiles#index", as: :raw_profiles
   get "/raw_profiles/:username", to: "profiles#show", as: :raw_profile
+
+  # Friendly profile routes expected by tests
+  get "/profiles", to: "profiles#index", as: :profiles
+  get "/profiles/:username", to: "profiles#show", as: :profile
 end
