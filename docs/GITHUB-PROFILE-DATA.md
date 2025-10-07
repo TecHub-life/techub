@@ -103,7 +103,7 @@ CREATE TABLE profile_languages (
 ```sql
 CREATE TABLE profile_social_accounts (
   profile_id INTEGER NOT NULL,
-  provider VARCHAR NOT NULL,            -- 'TWITTER', 'BLUESKY', etc.
+  provider VARCHAR NOT NULL,            -- 'TWITTER', 'BLUESKY', 'FACEBOOK', 'INSTAGRAM', 'YOUTUBE', 'REDDIT', 'TWITCH', 'MASTODON', 'NPM', etc.
   url VARCHAR,                          -- Social media URL
   display_name VARCHAR                  -- Display name on platform
 );
@@ -287,6 +287,16 @@ The app uses GitHub App authentication for higher rate limits and better reliabi
 - **Sync Frequency**: Profiles are synced when accessed if older than 1 hour
 - **Manual Refresh**: `bin/rails 'profiles:refresh[username]'`
 - **Bulk Refresh**: `bin/rails profiles:refresh_all`
+
+## GitHub Permissions & Access
+
+### OAuth Scopes (User Authentication)
+- **`read:user`**: Access to user profile data, followers, and following counts
+- **`user:email`**: Access to user's email addresses (if publicly visible)
+
+### GitHub App Permissions (API Access)
+- **Email addresses**: Read access to user email addresses
+- **Followers**: Read access to follower lists and counts
 
 ## Privacy & Security
 
