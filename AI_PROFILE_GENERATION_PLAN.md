@@ -21,6 +21,9 @@
   - Text: `short_bio`, `long_bio`, `buff`, `buff_description`, `weakness`, `weakness_description`,
     `vibe`, `vibe_description`, `special_move`, `special_move_description`, `flavor_text`, `tags`
     (exactly 6), `avatar_description`.
+  - Game stats and traits: `attack` (int 60–99), `defense` (int 60–99), `speed` (int 60–99),
+    `playing_card` (e.g., "Ace of ♣"), `spirit_animal` (from allowlist), `archetype` (from
+    allowlist).
   - Images: 1:1, 16:9, 3:1 (if we can), 9:16; plus an OpenGraph image for link previews.
   - Structured metadata: `summary`, `languages`, `social_accounts`, `organizations`,
     `top_repositories`, `pinned_repositories`, `active_repositories`, `recent_activity`, and
@@ -55,6 +58,24 @@ recent_activity: (this is great, but we have to ensure we only talk about reposi
 
 readme:
   content: (this is great for telling us about the user and generating our profile)
+
+# Optional inputs to control stats/traits generation and account-level overrides
+overrides: (apply these exact values if provided; they take precedence over AI/random)
+  attack: (int 60-99)
+  defense: (int 60-99)
+  speed: (int 60-99)
+  playing_card: "Ace of ♣"
+  spirit_animal: "Wedge-tailed Eagle"
+  archetype: "The Hero"
+
+# Optional allowlists to constrain model choice (if omitted, sensible defaults apply)
+allowed_spirit_animals: ["Wedge-tailed Eagle", "Red Fox", "Dolphin", "Orca", "Barn Owl"]
+allowed_archetypes: ["The Hero", "The Sage", "The Explorer", "The Creator"]
+# If provided, cards must be one of these 52 values, formatted as "<Rank> of <SuitSymbol>"
+allowed_playing_cards: ["Ace of ♣", "2 of ♣", "3 of ♣", "4 of ♣", "5 of ♣", "6 of ♣", "7 of ♣", "8 of ♣", "9 of ♣", "10 of ♣", "Jack of ♣", "Queen of ♣", "King of ♣",
+  "Ace of ♦", "2 of ♦", "3 of ♦", "4 of ♦", "5 of ♦", "6 of ♦", "7 of ♦", "8 of ♦", "9 of ♦", "10 of ♦", "Jack of ♦", "Queen of ♦", "King of ♦",
+  "Ace of ♥", "2 of ♥", "3 of ♥", "4 of ♥", "5 of ♥", "6 of ♥", "7 of ♥", "8 of ♥", "9 of ♥", "10 of ♥", "Jack of ♥", "Queen of ♥", "King of ♥",
+  "Ace of ♠", "2 of ♠", "3 of ♠", "4 of ♠", "5 of ♠", "6 of ♠", "7 of ♠", "8 of ♠", "9 of ♠", "10 of ♠", "Jack of ♠", "Queen of ♠", "King of ♠"]
 ```
 
 - Additional notes to enforce:
@@ -92,6 +113,16 @@ readme:
 - flavor_text: cool tagline (e.g., "Architecting tomorrow's cloud, today.")
 - tags: exactly six tags that match their profile.
 
+#### 3.1) What we want to generate (game stats and traits)
+
+- attack: integer 60–99. Higher → more aggressive coding style or impact potential.
+- defense: integer 60–99. Higher → stability, testing rigor, reliability.
+- speed: integer 60–99. Higher → delivery pace, responsiveness, shipping velocity.
+- playing_card: exactly one from a standard 52-card deck, formatted "<Rank> of <SuitSymbol>" where
+  Rank ∈ {Ace, 2..10, Jack, Queen, King} and SuitSymbol ∈ {♣, ♦, ♥, ♠}.
+- spirit_animal: single Title Case string chosen from an allowlist when provided.
+- archetype: single Title Case string chosen from an allowlist when provided.
+
 #### 4) Images we want to generate
 
 - 1x1 image
@@ -119,6 +150,13 @@ These images must be usable in the card we generate. Ensure our database can sto
 - flavor_text: ≤80 chars.
 - tags: exactly 6, lowercase kebab-case, 1–3 words each, unique.
 
+Stats and traits constraints:
+
+- attack / defense / speed: integers in [60, 99].
+- playing_card: must match pattern "^(Ace|[2-9]|10|Jack|Queen|King) of [♣♦♥♠]$".
+- spirit_animal: Title Case; must be in `allowed_spirit_animals` if provided.
+- archetype: Title Case; must be in `allowed_archetypes` if provided.
+
 #### 7) Storage
 
 - Development: local filesystem.
@@ -139,8 +177,9 @@ These images must be usable in the card we generate. Ensure our database can sto
 - `users`(id, github_login, name, location, blog, twitter_username, created_at, updated_at)
 - `ai_profiles`(id, user_id, short_bio, long_bio, buff, buff_description, weakness,
   weakness_description, vibe, vibe_description, special_move, special_move_description, flavor_text,
-  tags JSONB[6], avatar_description, summary, languages JSONB, blog_digest JSONB, model_name,
-  prompt_version, created_at, updated_at)
+  tags JSONB[6], avatar_description, summary, languages JSONB, blog_digest JSONB, attack SMALLINT,
+  defense SMALLINT, speed SMALLINT, playing_card VARCHAR, spirit_animal VARCHAR, archetype VARCHAR,
+  model_name, prompt_version, created_at, updated_at)
 - `social_accounts`(id, user_id, platform, handle, url)
 - `organizations`(id, user_id, org_login, org_name, org_url)
 - `repositories`(id, user_id, repo_full_name, owner_login, is_pinned, is_top, is_active,
@@ -149,6 +188,12 @@ These images must be usable in the card we generate. Ensure our database can sto
 - `assets`(id, user_id, kind
   enum['avatar_original','image_1x1','image_16x9','image_3x1','image_9x16','og'], storage_key,
   width, height, content_hash, created_at)
+
+Optional overrides table (for account-level locks and auditing):
+
+- `ai_profile_overrides`(id, user_id, attack SMALLINT NULL, defense SMALLINT NULL, speed SMALLINT
+  NULL, playing_card VARCHAR NULL, spirit_animal VARCHAR NULL, archetype VARCHAR NULL, created_at,
+  updated_at)
 
 #### 9) Model and structured output (Gemini 2.5 Flash)
 
@@ -177,7 +222,13 @@ Output schema (Type/Object form) for profile synthesis response:
     "special_move": { "type": "STRING" },
     "special_move_description": { "type": "STRING" },
     "flavor_text": { "type": "STRING" },
-    "tags": { "type": "ARRAY", "items": { "type": "STRING" } }
+    "tags": { "type": "ARRAY", "items": { "type": "STRING" } },
+    "attack": { "type": "INTEGER", "description": "60-99" },
+    "defense": { "type": "INTEGER", "description": "60-99" },
+    "speed": { "type": "INTEGER", "description": "60-99" },
+    "playing_card": { "type": "STRING", "description": "<Rank> of <SuitSymbol>" },
+    "spirit_animal": { "type": "STRING" },
+    "archetype": { "type": "STRING" }
   },
   "required": [
     "short_bio",
@@ -191,7 +242,13 @@ Output schema (Type/Object form) for profile synthesis response:
     "special_move",
     "special_move_description",
     "flavor_text",
-    "tags"
+    "tags",
+    "attack",
+    "defense",
+    "speed",
+    "playing_card",
+    "spirit_animal",
+    "archetype"
   ],
   "propertyOrdering": [
     "short_bio",
@@ -205,7 +262,13 @@ Output schema (Type/Object form) for profile synthesis response:
     "special_move",
     "special_move_description",
     "flavor_text",
-    "tags"
+    "tags",
+    "attack",
+    "defense",
+    "speed",
+    "playing_card",
+    "spirit_animal",
+    "archetype"
   ]
 }
 ```
@@ -256,7 +319,7 @@ Profile synthesis (single-call structured JSON) — see Structured output and Te
     "role": "system",
     "parts": [
       {
-        "text": "You create engaging, third-person developer profiles grounded in provided public data. Follow the constraints exactly. Only include repositories owned by the user or organizations they belong to. Do not claim employment. Output valid JSON matching the provided schema. Reply with JSON only."
+        "text": "You create engaging, third-person developer profiles grounded in provided public data. Follow the constraints exactly. Only include repositories owned by the user or organizations they belong to. Do not claim employment. Apply any provided overrides exactly as given. Choose attack/defense/speed as integers in 60–99. Pick playing_card from the standard 52-card deck formatted '<Rank> of <SuitSymbol>' using suits ♣ ♦ ♥ ♠. When allowlists are provided for spirit_animal/archetype, pick from those; otherwise choose reasonable, non-controversial options. Output valid JSON matching the provided schema. Reply with JSON only."
       }
     ]
   },
@@ -265,7 +328,7 @@ Profile synthesis (single-call structured JSON) — see Structured output and Te
       "role": "user",
       "parts": [
         {
-          "text": "{ \n  \"profile\": { \"login\": \"...\", \"name\": \"...\", \"bio\": \"...\", \"location\": \"...\", \"blog\": \"...\", \"twitter_username\": \"...\", \"avatar_url\": \"...\", \"public_repos\": 42, \"public_gists\": 3, \"followers\": 120, \"following\": 88 },\n  \"summary\": \"...\",\n  \"languages\": [{\"name\":\"TypeScript\",\"ratio\":0.52},{\"name\":\"Go\",\"ratio\":0.21}],\n  \"social_accounts\": [{\"platform\":\"twitter\",\"handle\":\"...\",\"url\":\"...\"}],\n  \"organizations\": [{\"login\":\"acme\",\"name\":\"Acme Org\"}],\n  \"top_repositories\": [...],\n  \"pinned_repositories\": [...],\n  \"active_repositories\": [...],\n  \"recent_activity\": [...],\n  \"readme\": { \"content\": \"...\" },\n  \"avatar_description\": \"...\",\n  \"blog_digest\": { \"summary\": \"...\", \"topics\": [\"...\"] }\n}"
+          "text": "{ \n  \"profile\": { \"login\": \"...\", \"name\": \"...\", \"bio\": \"...\", \"location\": \"...\", \"blog\": \"...\", \"twitter_username\": \"...\", \"avatar_url\": \"...\", \"public_repos\": 42, \"public_gists\": 3, \"followers\": 120, \"following\": 88 },\n  \"summary\": \"...\",\n  \"languages\": [{\"name\":\"TypeScript\",\"ratio\":0.52},{\"name\":\"Go\",\"ratio\":0.21}],\n  \"social_accounts\": [{\"platform\":\"twitter\",\"handle\":\"...\",\"url\":\"...\"}],\n  \"organizations\": [{\"login\":\"acme\",\"name\":\"Acme Org\"}],\n  \"top_repositories\": [...],\n  \"pinned_repositories\": [...],\n  \"active_repositories\": [...],\n  \"recent_activity\": [...],\n  \"readme\": { \"content\": \"...\" },\n  \"avatar_description\": \"...\",\n  \"blog_digest\": { \"summary\": \"...\", \"topics\": [\"...\"] },\n  \"overrides\": { \"playing_card\": \"Ace of ♣\" },\n  \"allowed_spirit_animals\": [\"Wedge-tailed Eagle\", \"Red Fox\"],\n  \"allowed_archetypes\": [\"The Hero\", \"The Explorer\"]\n}"
         }
       ]
     }
@@ -350,7 +413,8 @@ Schema; follow the constraints and limitations described in the official docs.
 4. Fetch README; if blog exists, crawl and summarize to a compact digest for context (planning only
    at this stage).
 5. Generate `avatar_description` (vision) with `gemini-2.5-flash`.
-6. Generate all text fields via a single structured-output call with `gemini-2.5-flash`.
+6. Generate all text fields and game stats/traits via a single structured-output call with
+   `gemini-2.5-flash` (applying overrides when provided).
 7. Generate images (1:1, 16:9, 3:1 if we can, 9:16) with `gemini-2.5-flash`.
 8. Generate OG image via Playwright/Puppeteer route.
 9. Upload assets to DO Spaces; create `assets` records with dimensions and hashes.
@@ -370,6 +434,15 @@ Schema; follow the constraints and limitations described in the official docs.
   instructions.
 - Mention only repos/activity that pass ownership filter.
 - Third-person voice; no emojis; avoid unverifiable claims.
+
+Additional validation for stats/traits and overrides:
+
+- attack / defense / speed: must be integers in [60, 99]; if out of range, re-ask.
+- playing_card: must be one of the 52 valid cards and match the format.
+- spirit_animal / archetype: must be in allowlists when provided; otherwise accept as Title Case
+  strings from our curated sets.
+- Overrides precedence: if `overrides` provides any of these fields, we store and display exactly
+  the override value and do not let the model or randomization change it.
 
 #### 16) References (keep these URLs)
 
