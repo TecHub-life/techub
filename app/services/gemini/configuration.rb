@@ -7,6 +7,11 @@ module Gemini
         MODEL
       end
 
+      # Image-capable model (aka Nano Banana / Gemini 2.5 Flash Image)
+      def image_model
+        ENV["GEMINI_IMAGE_MODEL"].presence || cred_lookup([ :gemini, :image_model ], [ :google, :gemini, :image_model ]) || "gemini-2.5-flash-image"
+      end
+
       # Provider selector: "vertex" (default) or "ai_studio"
       def provider
         (ENV["GEMINI_PROVIDER"].presence || cred_lookup([ :gemini, :provider ], [ :google, :gemini, :provider ]) || "vertex").to_s
@@ -23,7 +28,7 @@ module Gemini
 
       # AI Studio settings
       def api_key
-        ENV["GEMINI_API_KEY"].presence || cred_lookup([ :gemini, :api_key ], [ :google, :ai_studio, :api_key ])
+        ENV["GEMINI_API_KEY"].presence || cred_lookup([ :gemini, :api_key ], [ :google, :ai_studio, :api_key ], [ :google, :api_key ])
       end
 
       def api_base

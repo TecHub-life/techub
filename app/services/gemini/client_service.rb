@@ -13,6 +13,19 @@ module Gemini
     def call
       Gemini::Configuration.validate!
 
+      if Gemini::Configuration.provider == "ai_studio"
+        base_url = Gemini::Configuration.api_base
+        api_key = Gemini::Configuration.api_key
+        conn = Faraday.new(url: base_url) do |f|
+          f.request :json
+          f.response :json, content_type: /json/
+          f.adapter Faraday.default_adapter
+        end
+        conn.headers["x-goog-api-key"] = api_key
+        conn.headers["Accept"] = "application/json"
+        return success(conn, metadata: { provider: :ai_studio, base_url: base_url })
+      end
+
       token_result = obtain_access_token
       return token_result if token_result.failure?
 
@@ -28,7 +41,7 @@ module Gemini
       conn.headers["Authorization"] = "Bearer #{token}"
       conn.headers["x-goog-user-project"] = project_id if project_id
       conn.headers["Accept"] = "application/json"
-      success(conn, metadata: { project_id: project_id, location: location })
+      success(conn, metadata: { provider: :vertex, project_id: project_id, location: location })
     rescue StandardError => e
       failure(e)
     end

@@ -7,4 +7,13 @@ class GeminiController < ApplicationController
       render json: { ok: false, error: result.error&.message, meta: result.metadata }, status: :service_unavailable
     end
   end
+
+  def image
+    result = Gemini::ImageGenerationHealthcheckService.call
+    if result.success?
+      render json: { ok: true, model: result.value[:model] }, status: :ok
+    else
+      render json: { ok: false, error: result.error&.message, meta: result.metadata }, status: :service_unavailable
+    end
+  end
 end

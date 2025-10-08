@@ -11,7 +11,11 @@ module Gemini
 
       conn = client_result.value
       # Perform a minimal generateContent request; this verifies model availability and auth
-      gen_path = "/v1/projects/#{project_id}/locations/#{location}/publishers/google/models/#{Gemini::Configuration.model}:generateContent"
+      gen_path = if Gemini::Configuration.provider == "ai_studio"
+        "/v1beta/models/#{Gemini::Configuration.model}:generateContent"
+      else
+        "/v1/projects/#{project_id}/locations/#{location}/publishers/google/models/#{Gemini::Configuration.model}:generateContent"
+      end
       payload = {
         contents: [ { role: "user", parts: [ { text: "ping" } ] } ],
         generationConfig: { maxOutputTokens: 1, temperature: 0.0 }

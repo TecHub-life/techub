@@ -12,6 +12,7 @@ Rails.application.routes.draw do
 
   # Gemini healthcheck
   get "/up/gemini", to: "gemini#up"
+  get "/up/gemini/image", to: "gemini#image"
 
   get "/auth/github", to: "sessions#start", as: :auth_github
   get "/auth/github/callback", to: "sessions#callback", as: :auth_github_callback
