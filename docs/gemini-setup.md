@@ -63,3 +63,37 @@ GEMINI_LOCATION=us-central1
 ```bash
 curl -s http://localhost:3000/up/gemini/image  # expect 200 once enabled
 ```
+
+---
+
+### Known limits and gotchas (read this once)
+
+- Endpoints we use programmatically
+  - API key path: `POST /v1beta/models/gemini-2.5-flash:generateContent` (text/JSON/vision) and
+    `POST /v1beta/models/gemini-2.5-flash-image:generateContent` (image gen) — see
+    [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation)
+  - Vertex path:
+    `POST /v1/projects/{project}/locations/{location}/publishers/google/models/{model}:generateContent`
+    — image section for Gemini 2.5 Flash is documented at
+    [cloud.google.com](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash#image)
+- Regions
+  - Gemini 2.5 Flash (image section) lists availability in `us-central1` (check doc above). If a
+    region 404s, switch to `us-central1`.
+- Preview gating
+  - Vertex image gen (“Flash Image”/nano‑banana) may require enabling the preview model and org
+    policy allowlists. If blocked (400/404), use the API key path which works immediately once your
+    key is active.
+- Payload shapes (common cases)
+  - Text/JSON: `contents: [{role:"user", parts:[{text:"..."}]}]` with optional
+    `response_mime_type/application/json` or schema (structured output).
+  - Vision (describe): add `{inline_data:{mime_type:"image/png", data: base64}}` to parts.
+  - Image gen: prompt only; image bytes are returned in
+    `candidates[0].content.parts[].inlineData.data` (base64) per
+    [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation).
+- Costs/quotas
+  - Image output uses ~1290 tokens per 1024×1024 image (see token table on
+    [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation)). Respect model‑level
+    rate limits.
+- Fallback logic (already wired)
+  - If Vertex image gen fails due to policy/preview, our checks/routes can use the API key path
+    instead. You don’t need to change code.
