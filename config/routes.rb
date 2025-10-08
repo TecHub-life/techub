@@ -10,6 +10,9 @@ Rails.application.routes.draw do
   get "/analytics", to: "pages#analytics"
   get "/docs", to: "pages#docs"
 
+  # Gemini healthcheck
+  get "/up/gemini", to: "gemini#up"
+
   get "/auth/github", to: "sessions#start", as: :auth_github
   get "/auth/github/callback", to: "sessions#callback", as: :auth_github_callback
   resource :session, only: :destroy
