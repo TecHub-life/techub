@@ -178,6 +178,90 @@ For each profile sync, TecHub makes the following API calls:
 4. **Repository Categorization**: Repos are categorized as 'top', 'pinned', or 'active'
 5. **Activity Analysis**: Recent events are analyzed for activity patterns
 
+## Example Data Structure
+
+```ruby
+{
+  profile: {
+    id: 123456,
+    login: "loftwah",
+    name: "Dean Lofts",
+    avatar_url: "https://github.com/loftwah.png",
+    bio: "DevOps Engineer & Music Producer",
+    company: "TecHub",
+    location: "Perth, Australia",
+    blog: "https://deanlofts.xyz",
+    email: "dean@deanlofts.xyz",
+    twitter_username: "loftwah",
+    hireable: true,
+    html_url: "https://github.com/loftwah",
+    followers: 1140,
+    following: 524,
+    public_repos: 356,
+    public_gists: 10,
+    created_at: "2014-01-01T00:00:00Z",
+    updated_at: "2025-08-25T08:40:32Z"
+  },
+
+  organizations: [
+    {
+      login: "EddieHubCommunity",
+      name: "EddieHub Community",
+      avatar_url: "https://avatars.githubusercontent.com/u/...",
+      description: "An inclusive open source community",
+      html_url: "https://github.com/EddieHubCommunity"
+    }
+  ],
+
+  social_accounts: [
+    {
+      provider: "TWITTER",
+      url: "https://x.com/loftwah",
+      display_name: "@loftwah"
+    },
+    {
+      provider: "BLUESKY",
+      url: "https://bsky.app/profile/loftwah.com",
+      display_name: nil
+    }
+  ],
+
+  pinned_repositories: [
+    {
+      name: "linux-for-pirates",
+      description: "A book about Linux, in the theme of Pirates!",
+      html_url: "https://github.com/loftwah/linux-for-pirates",
+      stargazers_count: 142,
+      forks_count: 18,
+      language: "Astro",
+      topics: ["book", "cloud", "devops", "linux", "education"]
+    }
+  ],
+
+  active_repositories: [
+    {
+      name: "techub",
+      full_name: "TecHub-life/techub",
+      description: "TecHub is TechDeck, but for GitHub",
+      html_url: "https://github.com/TecHub-life/techub",
+      stargazers_count: 2,
+      language: "Ruby",
+      topics: ["ai", "profiles", "card-game"]
+    }
+  ],
+
+  top_repositories: [...],
+  languages: { "Ruby" => 21, "Shell" => 18, "Python" => 17 },
+  profile_readme: "Full README content...",
+  recent_activity: {
+    total_events: 169,
+    event_breakdown: { "PushEvent" => 101, "PullRequestEvent" => 29 },
+    recent_repos: ["TecHub-life/techub", "loftwah/linux-for-pirates"],
+    last_active: "2025-10-03T00:00:00Z"
+  }
+}
+```
+
 ## Profile Model Methods
 
 ### Repository Access
@@ -357,6 +441,22 @@ profile.data_completeness     # Completeness metrics hash
 
 ## Design Considerations
 
+### For UI Layout
+
+**Sidebar (Left Column)**
+
+- Profile card with avatar, name, handle, bio, contact details, hireable badge, and headline stats
+- Top languages highlighting the leading five languages
+- Social account links surfaced when available
+- Organizations list with avatars and short descriptions
+- Recent activity snapshot with last active date, totals, and active repositories
+
+**Main Content (Right Column)**
+
+- Profile README preview limited to the first 5000 characters
+- Pinned repositories in a two-column grid with stars, forks, language, and topics
+- Top repositories by stars including full descriptions and links
+
 ### For Trading Card Design
 
 1. **Avatar**: Always available (local or GitHub URL)
@@ -393,6 +493,23 @@ Based on this data structure, here are design opportunities for the next phase:
 6. **README Integration**: Display profile README content
 7. **Data Completeness Indicators**: Show profile completeness scores
 8. **Trending Profiles**: Based on recent activity and engagement
+9. **Contribution Graph Layer**: Pull contribution calendar data for visualizations
+10. **Achievement Highlights**: Surface GitHub achievements and sponsor badges
+11. **Collaboration Metrics**: Track pull request, issue engagement, and code review activity
+12. **Repository Contribution Mix**: Show percentage contributions across top repositories
 
-This comprehensive data structure provides a solid foundation for building rich, engaging profile
-experiences that go beyond basic GitHub profile information.
+## Benefits
+
+- Complete public profile picture with standardized fields
+- Rich context from organizations, languages, and social links
+- Accurate real-time stats for followers, repositories, and activity
+- Better discovery via robust filtering and metadata coverage
+- Professional signals including hireable status and contact details
+- Easy cross-platform reach through connected social accounts
+
+## Summary
+
+TecHub now captures 100% of the publicly visible GitHub profile surface area, storing it in a
+structured schema that powers analytics, design explorations, and downstream product experiences.
+With consistent APIs, curated layouts, and clear next steps, the platform is ready for richer views
+and smarter recommendations built on this comprehensive dataset.
