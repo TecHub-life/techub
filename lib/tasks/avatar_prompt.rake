@@ -87,4 +87,24 @@ namespace :gemini do
       puts "\nMetadata: #{result.metadata}"
     end
   end
+
+  desc "Generate a short narrative using a stored profile: rake gemini:profile_story[login]"
+  task :profile_story, [ :login ] => :environment do |_, args|
+    login = args[:login] || ENV["LOGIN"]
+    unless login.present?
+      warn "Usage: rake gemini:profile_story[github_login]"
+      exit 1
+    end
+
+    result = Profiles::StoryFromProfile.call(login: login)
+
+    if result.failure?
+      warn "Story generation failed: #{result.error.message}"
+      warn "Metadata: #{result.metadata}" if result.metadata.present?
+      exit 1
+    end
+
+    puts "Micro-story for #{login}:\n\n#{result.value}"
+    puts "\nMetadata: #{result.metadata}" unless result.metadata.blank?
+  end
 end

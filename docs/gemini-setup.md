@@ -68,6 +68,20 @@ see which features informed each prompt.
 
 ---
 
+### Quick story demo
+
+Once a profile record exists locally, you can spin up a short narrative that proves text
+generation as well:
+
+```bash
+bundle exec rake gemini:profile_story[loftwah]
+```
+
+The command uses `Profiles::StoryFromProfile` to build a ~120 word micro-story grounded in the
+profile's summary, languages, repositories, organisations, and social handles.
+
+---
+
 ### Optional: Vertex setup (only if you need Vertex)
 
 1. Encrypted credentials (service account JSON)
