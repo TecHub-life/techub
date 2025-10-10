@@ -289,12 +289,13 @@
         <% end %>
         
         <!-- Top Repositories -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-            Top Repositories by Stars
-          </h3>
-          <div class="space-y-4">
-            <% @top_repositories.first(5).each do |repo| %>
+        <% if @top_repositories&.any? %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+              Top Repositories by Stars
+            </h3>
+            <div class="space-y-4">
+              <% @top_repositories.first(5).each do |repo| %>
               <div class="border-l-4 border-slate-300 dark:border-slate-600 pl-4">
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
@@ -327,9 +328,10 @@
                   </div>
                 <% end %>
               </div>
-            <% end %>
+              <% end %>
+            </div>
           </div>
-        </div>
+        <% end %>
       </div>
     </div>
   <% else %>
