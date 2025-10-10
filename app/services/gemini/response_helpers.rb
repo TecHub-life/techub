@@ -53,6 +53,39 @@ module Gemini
         end
       end
 
+      # Try to extract the first balanced JSON object from noisy output (e.g., warnings + JSON)
+      extracted = extract_first_json_object(value)
+      return extracted if extracted
+
+      nil
+    end
+
+    # Heuristic: find first balanced { ... } block and parse it as JSON
+    def extract_first_json_object(text)
+      s = text.to_s
+      start_idx = nil
+      depth = 0
+      s.each_char.with_index do |ch, i|
+        if ch == "{"
+          start_idx ||= i
+          depth += 1
+        elsif ch == "}" && start_idx
+          depth -= 1
+          if depth == 0
+            candidate = s[start_idx..i]
+            begin
+              obj = JSON.parse(candidate)
+              return obj if obj.is_a?(Hash)
+            rescue JSON::ParserError
+              # keep scanning for next block
+            ensure
+              # reset to look for next object
+              start_idx = nil
+              depth = 0
+            end
+          end
+        end
+      end
       nil
     end
   end
