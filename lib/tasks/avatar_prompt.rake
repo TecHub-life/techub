@@ -1,5 +1,5 @@
 namespace :gemini do
-  desc "Describe a GitHub avatar and build TecHub-styled prompts. Usage: rake gemini:avatar_prompt[login] or LOGIN=loftwah STYLE='Neon anime hero energy' rake gemini:avatar_prompt"
+  desc "Describe a GitHub avatar and build prompts. Usage: rake gemini:avatar_prompt[login] or LOGIN=loftwah STYLE='Neon-lit anime portrait' rake gemini:avatar_prompt"
   task :avatar_prompt, [ :login, :avatar_path, :style ] => :environment do |_, args|
     login = args[:login] || ENV["LOGIN"]
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]

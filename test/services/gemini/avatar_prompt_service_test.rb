@@ -26,15 +26,16 @@ module Gemini
         prompts = result.value[:image_prompts]
         assert_equal %w[1x1 16x9 3x1 9x16], prompts.keys
         prompts.each_value do |prompt|
-          assert_match(/TecHub/i, prompt, "Expected prompt to reference TecHub styling")
+          assert_match(/Capture the TecHub vibe/i, prompt)
+          assert_match(/Illustrate a/, prompt)
           assert_includes prompt, "A playful avatar with teal gradients."
-          assert_includes prompt, "Key observations – facial features: Round glasses, undercut fade."
+          assert_includes prompt, "Key traits: facial features: Round glasses, undercut fade."
         end
 
         assert_equal prompts["1x1"], result.value[:image_prompt], "primary prompt should mirror 1x1 variant"
         assert_equal "ai_studio", result.metadata[:provider]
         assert_equal "TecHub", result.metadata[:theme]
-        assert_match(/neon anime hero/i, result.metadata[:style_profile])
+        assert_equal "neon-lit anime portrait with confident tech leader energy", result.metadata[:style_profile]
       end
     end
 

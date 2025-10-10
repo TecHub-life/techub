@@ -14,7 +14,7 @@ module Gemini
       File.delete(@avatar_path) if File.exist?(@avatar_path)
     end
 
-    test "returns description when Gemini responds with text" do
+    test "returns description when Gemini responds with structured text" do
       stubs = Faraday::Adapter::Test::Stubs.new do |stub|
         stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |env|
           assert_equal "application/json", env.request_headers["Content-Type"]
@@ -71,6 +71,68 @@ module Gemini
           assert_includes result.value, "Vivid teal and magenta accents"
           assert_equal "ai_studio", result.metadata[:provider]
           assert_equal "Optimistic open-source champion.", result.metadata.dig(:structured, "mood")
+          refute result.metadata[:fallback_used], "fallback should not be used"
+        end
+      end
+
+      stubs.verify_stubbed_calls
+    end
+
+    test "falls back to plain text when structured payload truncated" do
+      call_count = 0
+      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
+          call_count += 1
+          if call_count == 1
+            [
+              200,
+              { "content-type" => "application/json" },
+              {
+                "candidates" => [
+                  {
+                    "content" => {
+                      "parts" => [
+                        { "text" => "{\n  " }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          else
+            [
+              200,
+              { "content-type" => "application/json" },
+              {
+                "candidates" => [
+                  {
+                    "content" => {
+                      "parts" => [
+                        { "text" => "A bald developer with a copper beard smiles in a suit and blue tie. Cool navy lighting and glowing network lines frame the portrait, signalling confident leadership." }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          end
+        end
+      end
+
+      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
+        f.request :json
+        f.response :json
+        f.adapter :test, stubs
+      end
+
+      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
+        Gemini::Configuration.stub :provider, "ai_studio" do
+          result = Gemini::AvatarDescriptionService.call(avatar_path: @avatar_path.to_s)
+
+          assert result.success?, "expected fallback to succeed"
+          assert_match(/copper beard/, result.value)
+          assert result.metadata[:fallback_used], "expected fallback flag in metadata"
+          assert_equal "ai_studio", result.metadata[:provider]
         end
       end
 

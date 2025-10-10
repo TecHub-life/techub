@@ -1,6 +1,6 @@
 module Gemini
   class AvatarPromptService < ApplicationService
-    DEFAULT_STYLE_PROFILE = "Futuristic neon anime hero energy with high-contrast lighting and collaborative tech motifs".freeze
+    DEFAULT_STYLE_PROFILE = "neon-lit anime portrait with confident tech leader energy".freeze
 
     IMAGE_VARIANTS = {
       "1x1" => {
@@ -82,15 +82,19 @@ module Gemini
     end
 
     def build_variant_prompt(description, salient_details, variant, primary_variant)
-      details_sentence = salient_details.any? ? "Key observations – #{salient_details.join('; ')}." : ""
+      details_sentence = if salient_details.any?
+        "Key traits: #{salient_details.join('; ')}."
+      else
+        ""
+      end
+
+      theme_line = prompt_theme.present? ? "Capture the #{prompt_theme} vibe." : ""
 
       <<~PROMPT.squish
-        Create TecHub #{primary_variant ? 'portrait artwork' : 'supporting artwork'} inspired by the user's GitHub avatar.
-        Preserve the defining traits: #{description}.
+        Illustrate a #{primary_variant ? 'heroic portrait' : 'companion scene'} based on this reference: #{description}
         #{details_sentence}
-        Channel a #{style_profile.downcase} aesthetic with brilliant color pops, cinematic lighting, and confident anime-inspired line-work.
-        Composition notes for this #{variant[:aspect_ratio]} frame: #{variant[:guidance]}
-        Focus on expressive character imagery only—no card frames, text, or logos. Infuse TecHub visual DNA such as layered holographic HUDs, collaborative code glyphs, and motion-infused energy ribbons.
+        Style focus: #{style_profile}. #{theme_line}
+        Composition cue (#{variant[:aspect_ratio]}): #{variant[:guidance]}
       PROMPT
     end
 

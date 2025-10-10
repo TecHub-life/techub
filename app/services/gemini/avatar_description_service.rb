@@ -7,6 +7,11 @@ module Gemini
       Only describe elements that are plainly visible. Avoid filler, guesses, or trailing fragments.
     PROMPT
 
+    FALLBACK_PROMPT = <<~PROMPT.squish.freeze
+      Describe the person's appearance in this image in 2-3 complete sentences.
+      Mention face, expression, clothing, colours, background, and overall vibe.
+    PROMPT
+
     DEFAULT_PROMPT = <<~PROMPT.squish.freeze
       Observe the avatar and populate the response schema with grounded details.
       - description: 2-3 complete sentences (each ≥12 words) summarising appearance, attire, setting, and overall vibe.
@@ -54,14 +59,28 @@ module Gemini
       end
 
       description, structured_payload = extract_description(response.body)
-      if description.blank?
-        return failure(StandardError.new("Gemini response did not include a description"), metadata: { body: response.body, structured: structured_payload })
-      end
-
       metadata = {
         http_status: response.status,
         provider: provider
       }
+
+      if description.blank?
+        fallback_result = describe_with_plain_text(conn, provider, image_payload, mime_type)
+        return fallback_result if fallback_result.failure?
+
+        description = fallback_result.value
+        structured_payload ||= fallback_result.metadata[:structured]
+        metadata[:fallback_used] = true
+        metadata[:fallback_http_status] = fallback_result.metadata[:http_status]
+      end
+
+      if description.blank?
+        return failure(
+          StandardError.new("Gemini response did not include a description"),
+          metadata: { body: response.body, structured: structured_payload }
+        )
+      end
+
       metadata[:structured] = structured_payload if structured_payload.present?
 
       success(description.strip, metadata: metadata)
@@ -230,6 +249,66 @@ module Gemini
     rescue JSON::ParserError
       cleaned = text.to_s.gsub(/,\s*(?=[}\]])/, "")
       JSON.parse(cleaned)
+    end
+
+    def describe_with_plain_text(conn, provider, image_payload, mime_type)
+      response = conn.post(endpoint_path(provider), fallback_payload(image_payload, mime_type))
+
+      unless (200..299).include?(response.status)
+        return failure(
+          StandardError.new("Gemini fallback description request failed"),
+          metadata: { http_status: response.status, body: response.body }
+        )
+      end
+
+      text = extract_plain_text(response.body)
+      text = sanitize_description(text) || text&.strip
+
+      if text.blank?
+        return failure(
+          StandardError.new("Gemini fallback response did not include a description"),
+          metadata: { http_status: response.status, body: response.body }
+        )
+      end
+
+      success(text, metadata: { http_status: response.status, structured: nil })
+    rescue Faraday::Error => e
+      failure(e)
+    end
+
+    def fallback_payload(image_payload, mime_type)
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: FALLBACK_PROMPT },
+              { inline_data: { mime_type: mime_type, data: image_payload } }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 200
+        }
+      }
+    end
+
+    def extract_plain_text(body)
+      data = normalize_to_hash(body)
+      return if data.blank?
+
+      candidates = dig_value(data, :candidates)
+      return if candidates.blank?
+
+      first_candidate = candidates.first
+      content = dig_value(first_candidate, :content)
+      return if content.blank?
+
+      parts = dig_value(content, :parts)
+      return if parts.blank?
+
+      parts.filter_map { |part| dig_value(part, :text) }.map(&:strip).reject(&:blank?).join(" ")
     end
 
     def normalize_to_hash(body)
