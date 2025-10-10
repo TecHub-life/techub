@@ -269,16 +269,19 @@ module Gemini
         return text["description"].to_s.strip
       end
 
-      if text.to_s.strip.start_with?("{") && text.to_s.include?("}")
+      stripped = text.to_s.strip
+      if stripped.start_with?("{") && stripped.include?("}")
         json = parse_relaxed_json(text) rescue nil
         return json["description"].to_s.strip if json.is_a?(Hash) && json["description"].present?
       end
 
-      cleaned = text.to_s.strip
-      # Ensure sentences end with periods and avoid trailing conjunctions.
+      # If the text looks like the start of JSON but isn't complete (e.g. "{"), treat as empty
+      return nil if stripped.start_with?("{") && !stripped.include?("}")
+
+      cleaned = stripped
       cleaned = cleaned.gsub(/\s+/, " ")
       cleaned = cleaned.split(/(?<=[.?!])\s*/).map(&:strip).reject(&:blank?).join(" ")
-      cleaned.length >= 30 ? cleaned : nil
+      cleaned.presence
     end
 
     def parse_relaxed_json(text)

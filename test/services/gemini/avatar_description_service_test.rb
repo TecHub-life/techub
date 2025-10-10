@@ -1,17 +1,19 @@
 require "test_helper"
+require "securerandom"
 
 module Gemini
   class AvatarDescriptionServiceTest < ActiveSupport::TestCase
     SAMPLE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==".freeze
 
     setup do
-      @avatar_path = Rails.root.join("tmp", "avatar-description-test.png")
+      unique = "avatar-description-test-#{Process.pid}-#{SecureRandom.hex(6)}.png"
+      @avatar_path = Rails.root.join("tmp", unique)
       FileUtils.mkdir_p(@avatar_path.dirname)
       File.binwrite(@avatar_path, Base64.decode64(SAMPLE_PNG_BASE64))
     end
 
     teardown do
-      File.delete(@avatar_path) if File.exist?(@avatar_path)
+      FileUtils.rm_f(@avatar_path)
     end
 
     test "returns description when Gemini responds with structured text" do
