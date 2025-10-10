@@ -25,9 +25,15 @@ module Gemini
         "9x16" => "prompt vertical"
       }
 
+      structured_description = {
+        "description" => "Detailed description.",
+        "mood" => "Playful collaborator."
+      }
+
       prompt_result = ServiceResult.success(
         {
           avatar_description: "Detailed description.",
+          structured_description: structured_description,
           image_prompt: prompts["1x1"],
           image_prompts: prompts
         },
@@ -81,6 +87,7 @@ module Gemini
 
       assert result.success?
       assert_equal "Detailed description.", result.value[:avatar_description]
+      assert_equal structured_description, result.value[:structured_description]
       assert_equal prompts, result.value[:prompts]
       assert_equal Rails.root.join("tmp", "generated_suite", @login).to_s, result.value[:output_dir]
       assert_equal 4, result.value[:images].length

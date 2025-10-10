@@ -1,5 +1,5 @@
 namespace :gemini do
-  desc "Describe a GitHub avatar and build TecHub-styled prompts. Usage: rake gemini:avatar_prompt[login] or LOGIN=loftwah STYLE='Neon Shonen' rake gemini:avatar_prompt"
+  desc "Describe a GitHub avatar and build TecHub-styled prompts. Usage: rake gemini:avatar_prompt[login] or LOGIN=loftwah STYLE='Neon anime hero energy' rake gemini:avatar_prompt"
   task :avatar_prompt, [ :login, :avatar_path, :style ] => :environment do |_, args|
     login = args[:login] || ENV["LOGIN"]
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
@@ -28,7 +28,20 @@ namespace :gemini do
       exit 1
     end
 
-    puts "Avatar description:\n#{result.value[:avatar_description]}"
+    structured = result.value[:structured_description]
+    if structured.present?
+      puts "Avatar description:\n#{structured['description']}"
+      detail_pairs = structured.except("description")
+      unless detail_pairs.empty?
+        puts "\nKey details:"
+        detail_pairs.each do |key, value|
+          puts "- #{key.tr('_', ' ')}: #{value}"
+        end
+      end
+    else
+      puts "Avatar description:\n#{result.value[:avatar_description]}"
+    end
+
     puts "\nTecHub image prompts:"
     result.value[:image_prompts].each do |variant, prompt|
       puts "\n[#{variant}]"

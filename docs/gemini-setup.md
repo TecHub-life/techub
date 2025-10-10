@@ -39,7 +39,7 @@ Gemini-backed description plus TecHub-flavoured prompts:
 ```bash
 bundle exec rake gemini:avatar_prompt[loftwah]
 # supply a custom path or tweak the style profile
-bundle exec rake gemini:avatar_prompt AVATAR_PATH=public/avatars/loftwah.png STYLE="Neon shonen hacker"
+bundle exec rake gemini:avatar_prompt AVATAR_PATH=public/avatars/loftwah.png STYLE="Neon anime hero energy"
 ```
 
 > **zsh tip**: wrap the task name in quotes (or escape the brackets) so the shell doesn't treat `[]`
@@ -48,13 +48,14 @@ bundle exec rake gemini:avatar_prompt AVATAR_PATH=public/avatars/loftwah.png STY
 The task composes `Gemini::AvatarDescriptionService` and
 `Gemini::AvatarPromptService`, printing the avatar description and four ratio-ready prompts
 (1×1, 16×9, 3×1, 9×16). Failures include debug metadata so you can inspect Gemini responses quickly.
+Prompts emphasise expressive character art only—no card frames, typography, or logo overlays.
 
 To prove the full pipeline (description → prompts → images), run:
 
 ```bash
 bundle exec rake gemini:avatar_generate[loftwah]
 # optional overrides
-bundle exec rake gemini:avatar_generate[loftwah, "Death Note energy", public/avatars/loftwah.png, tmp/generated]
+bundle exec rake gemini:avatar_generate[loftwah, "Neon anime hero energy", public/avatars/loftwah.png, tmp/generated]
 ```
 
 This drives `Gemini::AvatarImageSuiteService`, generating PNGs for the four aspect ratios via
@@ -62,7 +63,7 @@ This drives `Gemini::AvatarImageSuiteService`, generating PNGs for the four aspe
 paths for easy preview and re-use.
 
 > **zsh tip**: quote the whole rake invocation when passing multiple arguments, e.g.
-> `bundle exec rake "gemini:avatar_generate[loftwah,Death Note energy]"`.
+> `bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy]"`.
 
 ---
 

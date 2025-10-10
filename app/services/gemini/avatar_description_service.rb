@@ -153,35 +153,83 @@ module Gemini
       parts = dig_value(content, :parts)
       return [ nil, nil ] if parts.blank?
 
-      text_segments = parts.filter_map { |part| dig_value(part, :text) }.map(&:strip).reject(&:blank?)
-      return [ nil, nil ] if text_segments.blank?
+      structured_payload = extract_structured_payload(parts)
 
-      structured_payload = parse_structured_payload(text_segments)
+      text_segments = parts.filter_map { |part| dig_value(part, :text) }.map(&:strip).reject(&:blank?)
       description_text = structured_payload && structured_payload["description"]
-      description_text ||= text_segments.join(" ").strip
+
+      if description_text.blank? && text_segments.present?
+        joined = text_segments.join(" ").strip
+        parsed_description, parsed_payload = attempt_json_parse(joined)
+        structured_payload ||= parsed_payload
+        description_text ||= parsed_description
+        description_text ||= joined
+      end
+
       [ sanitize_description(description_text), structured_payload ]
     end
 
-    def parse_structured_payload(segments)
-      segments.each do |segment|
-        begin
-          json = JSON.parse(segment)
-          return json if json.is_a?(Hash) && json["description"].present?
-        rescue JSON::ParserError
-          next
-        end
+    def extract_structured_payload(parts)
+      parts.each do |part|
+        hash = deep_stringify(part)
+        next unless hash
+
+        struct_value = hash["structValue"] || hash["struct_value"]
+        return struct_value if valid_structured_payload?(struct_value)
+
+        json_value = hash["jsonValue"] || hash["json_value"]
+        return json_value if valid_structured_payload?(json_value)
       end
       nil
+    end
+
+    def attempt_json_parse(text)
+      return [ nil, nil ] if text.blank?
+
+      json = parse_relaxed_json(text)
+      return [ json["description"], json ] if valid_structured_payload?(json)
+
+      [ nil, nil ]
+    rescue JSON::ParserError
+      [ nil, nil ]
+    end
+
+    def deep_stringify(part)
+      return unless part.is_a?(Hash)
+
+      part.each_with_object({}) do |(key, value), acc|
+        acc[key.to_s] = value.is_a?(Hash) ? deep_stringify(value) : value
+      end
+    end
+
+    def valid_structured_payload?(payload)
+      payload.is_a?(Hash) && payload["description"].present?
     end
 
     def sanitize_description(text)
       return if text.blank?
 
-      cleaned = text.strip
+      if text.is_a?(Hash) && text["description"].present?
+        return text["description"].to_s.strip
+      end
+
+      if text.to_s.strip.start_with?("{") && text.to_s.include?("}")
+        json = parse_relaxed_json(text) rescue nil
+        return json["description"].to_s.strip if json.is_a?(Hash) && json["description"].present?
+      end
+
+      cleaned = text.to_s.strip
       # Ensure sentences end with periods and avoid trailing conjunctions.
       cleaned = cleaned.gsub(/\s+/, " ")
       cleaned = cleaned.split(/(?<=[.?!])\s*/).map(&:strip).reject(&:blank?).join(" ")
-      cleaned.length >= 40 ? cleaned : nil
+      cleaned.length >= 30 ? cleaned : nil
+    end
+
+    def parse_relaxed_json(text)
+      JSON.parse(text.to_s)
+    rescue JSON::ParserError
+      cleaned = text.to_s.gsub(/,\s*(?=[}\]])/, "")
+      JSON.parse(cleaned)
     end
 
     def normalize_to_hash(body)

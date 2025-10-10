@@ -74,8 +74,8 @@ module Gemini
       end
     end
 
-    def build_payload(provider)
-      payload = {
+    def build_payload(_provider)
+      {
         contents: [
           {
             role: "user",
@@ -84,20 +84,10 @@ module Gemini
             ]
           }
         ],
-        responseMimeType: mime_type,
         generationConfig: {
           temperature: temperature
-        },
-        imageGenerationConfig: {
-          aspectRatio: aspect_ratio
         }
       }
-      payload.delete(:responseMimeType) if provider == "ai_studio" && !supports_response_mime_type?
-      payload
-    end
-
-    def supports_response_mime_type?
-      true
     end
 
     def extract_image_data(body)

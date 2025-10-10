@@ -37,6 +37,7 @@ module Gemini
       return prompts_result if prompts_result.failure?
 
       description = prompts_result.value[:avatar_description]
+      structured = prompts_result.value[:structured_description]
       prompts = prompts_result.value[:image_prompts]
 
       generated = {}
@@ -62,6 +63,7 @@ module Gemini
         {
           login: login,
           avatar_description: description,
+          structured_description: structured,
           prompts: prompts,
           images: generated,
           output_dir: output_dir.join(login).to_s

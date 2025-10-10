@@ -1,6 +1,6 @@
 module Gemini
   class AvatarPromptService < ApplicationService
-    DEFAULT_STYLE_PROFILE = "Futuristic neon anime hero with Death Note level drama, high-contrast color lighting, and collaborative tech motifs".freeze
+    DEFAULT_STYLE_PROFILE = "Futuristic neon anime hero energy with high-contrast lighting and collaborative tech motifs".freeze
 
     IMAGE_VARIANTS = {
       "1x1" => {
@@ -37,13 +37,17 @@ module Gemini
       description_result = description_service.call(avatar_path: avatar_path)
       return description_result if description_result.failure?
 
-      description = description_result.value
-      structured = description_result.metadata&.[](:structured) || {}
+      raw_description = description_result.value
+      structured = normalize_structured(description_result.metadata&.[](:structured)) ||
+        parse_structured_from_string(raw_description)
+      description = structured&.[]("description") || strip_json_artifacts(raw_description)
+
       prompts = build_prompts(description, structured)
 
       success(
         {
           avatar_description: description,
+          structured_description: structured,
           image_prompt: prompts["1x1"],
           image_prompts: prompts
         },
@@ -81,13 +85,50 @@ module Gemini
       details_sentence = salient_details.any? ? "Key observations – #{salient_details.join('; ')}." : ""
 
       <<~PROMPT.squish
-        Create a #{prompt_theme} #{primary_variant ? 'trading card portrait' : 'companion artwork'} inspired by the user's GitHub avatar.
+        Create TecHub #{primary_variant ? 'portrait artwork' : 'supporting artwork'} inspired by the user's GitHub avatar.
         Preserve the defining traits: #{description}.
         #{details_sentence}
-        Channel a #{style_profile.downcase} aesthetic with brilliant color pops, cinematic lighting, and confident anime line-work.
+        Channel a #{style_profile.downcase} aesthetic with brilliant color pops, cinematic lighting, and confident anime-inspired line-work.
         Composition notes for this #{variant[:aspect_ratio]} frame: #{variant[:guidance]}
-        Incorporate TecHub visual DNA: layered holographic HUDs, collaborative code glyphs, and motion-infused energy ribbons.
+        Focus on expressive character imagery only—no card frames, text, or logos. Infuse TecHub visual DNA such as layered holographic HUDs, collaborative code glyphs, and motion-infused energy ribbons.
       PROMPT
+    end
+
+    def normalize_structured(structured)
+      return unless structured.is_a?(Hash)
+
+      structured.each_with_object({}) do |(key, value), acc|
+        acc[key.to_s] = value.is_a?(String) ? value.strip : value
+      end
+    end
+
+    def parse_structured_from_string(raw_description)
+      return unless raw_description.is_a?(String) && raw_description.strip.start_with?("{")
+
+      json = parse_relaxed_json(raw_description)
+      normalize_structured(json) if json.is_a?(Hash) && json["description"].present?
+    rescue JSON::ParserError
+      nil
+    end
+
+    def strip_json_artifacts(text)
+      return "" if text.nil?
+
+      value = text.to_s.strip
+      return value unless value.start_with?("{") && value.include?("}")
+
+      attempt = parse_structured_from_string(value)
+      return attempt["description"] if attempt
+
+      cleaned = value.gsub(/\{.*\}/m, "").strip
+      cleaned.empty? ? value : cleaned
+    end
+
+    def parse_relaxed_json(text)
+      JSON.parse(text.to_s)
+    rescue JSON::ParserError
+      cleaned = text.to_s.gsub(/,\s*(?=[}\]])/, "")
+      JSON.parse(cleaned)
     end
   end
 end

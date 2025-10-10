@@ -8,7 +8,7 @@ module Gemini
       stubs = Faraday::Adapter::Test::Stubs.new do |stub|
         stub.post("/v1beta/models/gemini-2.5-flash-image:generateContent") do |env|
           body = JSON.parse(env.body)
-          assert_equal "1:1", body.dig("imageGenerationConfig", "aspectRatio")
+          assert_equal 0.4, body.dig("generationConfig", "temperature")
           assert_includes body.dig("contents", 0, "parts", 0, "text"), "portrait"
 
           response_body = {
