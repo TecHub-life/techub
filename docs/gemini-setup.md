@@ -26,6 +26,8 @@ Docs:
   [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation)
 - Gemini 2.5 Flash (Vertex image section):
   [cloud.google.com](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash#image)
+- ADR 0001: LLM cost control via eligibility gate and profile fallback:
+  docs/adr/0001-llm-cost-control-eligibility-gate.md
 
 ---
 
@@ -88,9 +90,9 @@ REQUIRE_ELIGIBILITY=true ELIGIBILITY_THRESHOLD=4 bundle exec rake "gemini:avatar
 ```
 
 If the profile fails the gate, generation exits early with a clear error and signal breakdown in
-metadata. When the gate passes, description is attempted via Gemini; on failure or weak output,
-the prompt service synthesizes a description from the stored `Profile` context and proceeds to
-image generation.
+metadata. When the gate passes, description is attempted via Gemini; on failure or weak output, the
+prompt service synthesizes a description from the stored `Profile` context and proceeds to image
+generation.
 
 > **zsh tip**: quote the whole rake invocation when passing multiple arguments, e.g.
 > `bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy]"`.

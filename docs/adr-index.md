@@ -18,6 +18,13 @@ developers.
 **Summary**: Decision to disable CSRF protection for GitHub webhook endpoints using HMAC signature
 verification instead.
 
+### [ADR-0001: LLM cost control via eligibility gate and profile fallback](./adr/0001-llm-cost-control-eligibility-gate.md)
+
+**Status**: Accepted  
+**Date**: 2025-10-10  
+**Summary**: Require a minimum-quality profile before running Gemini; if eligible, attempt LLM and
+fallback to profile context on failures.
+
 ## ADR Template
 
 When creating new ADRs, use this template:
