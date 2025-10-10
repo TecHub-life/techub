@@ -1,6 +1,7 @@
 module Profiles
   class StoryFromProfile < ApplicationService
-    MAX_OUTPUT_TOKENS = 400
+    MAX_OUTPUT_TOKENS = 350
+    FALLBACK_MAX_TOKENS = 700
     TEMPERATURE = 0.65
 
     def initialize(login:, profile: nil)
@@ -21,20 +22,26 @@ module Profiles
 
       conn = client_result.value
       provider = Gemini::Configuration.provider
-      response = conn.post(endpoint_path(provider), build_payload(prompt))
 
-      unless (200..299).include?(response.status)
-        return failure(StandardError.new("Gemini story generation failed"), metadata: { http_status: response.status, body: response.body })
+      primary_result = request_story(conn, provider, prompt, MAX_OUTPUT_TOKENS)
+      return primary_result if primary_result.failure?
+
+      story = primary_result.value[:story]
+      finish_reason = primary_result.value[:finish_reason]
+      metadata = primary_result.metadata.merge(prompt: prompt)
+
+      if finish_reason == "MAX_TOKENS"
+        fallback_result = request_story(conn, provider, prompt, FALLBACK_MAX_TOKENS)
+        if fallback_result.success?
+          story = fallback_result.value[:story]
+          finish_reason = fallback_result.value[:finish_reason]
+          metadata = fallback_result.metadata.merge(prompt: prompt, fallback_used: true, fallback_http_status: fallback_result.metadata[:http_status])
+        else
+          return fallback_result
+        end
       end
 
-      story = extract_story(response.body)&.strip
-      return failure(StandardError.new("Gemini story response was empty"), metadata: { body: response.body }) if story.blank?
-
-      success(story, metadata: {
-        http_status: response.status,
-        provider: provider,
-        prompt: prompt
-      })
+      success(story, metadata: metadata.merge(finish_reason: finish_reason))
     rescue Faraday::Error => e
       failure(e)
     end
@@ -57,14 +64,14 @@ module Profiles
 
     def build_prompt(context)
       <<~PROMPT.squish
-        Write a playful 120-word micro-story about #{context[:name]} (GitHub: #{context[:login]}).
+        Write a playful micro-story (100-140 words) about #{context[:name]} (GitHub: #{context[:login]}).
         Celebrate their open-source adventures using these details:
         Summary: #{context[:summary].presence || "n/a"}.
         Favourite languages: #{context[:languages].presence&.join(", ") || "unknown"}.
         Notable repositories: #{context[:top_repositories].presence&.join(", ") || "none listed"}.
         Communities: #{context[:organizations].presence&.join(", ") || "independent"}.
         Social handles: #{context[:social_handles].presence&.join(", ") || "n/a"}.
-        Keep the tone bright, include one surprising twist, and finish with a short rallying tagline in quotes.
+        Keep the tone bright, include one surprising twist, and finish with a short rallying tagline in quotes (max six words).
       PROMPT
     end
 
@@ -78,7 +85,7 @@ module Profiles
       end
     end
 
-    def build_payload(prompt)
+    def build_payload(prompt, max_tokens)
       {
         contents: [
           {
@@ -90,9 +97,35 @@ module Profiles
         ],
         generationConfig: {
           temperature: TEMPERATURE,
-          maxOutputTokens: MAX_OUTPUT_TOKENS
+          maxOutputTokens: max_tokens
         }
       }
+    end
+
+    def request_story(conn, provider, prompt, max_tokens)
+      response = conn.post(endpoint_path(provider), build_payload(prompt, max_tokens))
+
+      unless (200..299).include?(response.status)
+        return failure(
+          StandardError.new("Gemini story generation failed"),
+          metadata: { http_status: response.status, body: response.body }
+        )
+      end
+
+      story, finish_reason = extract_story(response.body)
+      story = sanitize_story(story)
+
+      if story.blank?
+        return failure(
+          StandardError.new("Gemini story response was empty"),
+          metadata: { http_status: response.status, body: response.body }
+        )
+      end
+
+      success(
+        { story: story, finish_reason: finish_reason },
+        metadata: { http_status: response.status, provider: provider, finish_reason: finish_reason }
+      )
     end
 
     def language_names(record)
@@ -150,16 +183,19 @@ module Profiles
 
     def extract_story(body)
       data = normalize_to_hash(body)
-      return unless data
+      return [ nil, nil ] unless data
 
       candidate = Array(dig_value(data, :candidates)).first
-      return unless candidate
+      return [ nil, nil ] unless candidate
 
       content = dig_value(candidate, :content)
-      return unless content
+      finish_reason = dig_value(candidate, :finishReason)
+      return [ nil, finish_reason ] unless content
 
       parts = Array(dig_value(content, :parts))
-      parts.filter_map { |part| dig_value(part, :text) }.join("\n").strip
+      text = parts.filter_map { |part| dig_value(part, :text) }.join("\n").strip
+
+      [ text, finish_reason ]
     end
 
     def normalize_to_hash(body)
@@ -178,6 +214,13 @@ module Profiles
       return nil unless source.respond_to?(:[])
 
       source[key] || source[key.to_s]
+    end
+
+    def sanitize_story(text)
+      return if text.blank?
+
+      cleaned = text.to_s.gsub(/\s+/, " ").strip
+      cleaned.empty? ? nil : cleaned
     end
   end
 end
