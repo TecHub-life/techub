@@ -2,6 +2,27 @@
 
 require "open3"
 
+ENV["RUBOCOP_CACHE_ROOT"] ||= "tmp/rubocop"
+ENV["PARALLEL_WORKERS"] ||= "1"
+
+def banner
+  # rubocop:disable Layout/TrailingWhitespace
+  <<~'BANNER'
+
+  _____                   _  _            _      
+ |_   _|   ___     __    | || |   _  _   | |__   
+   | |    / -_)   / _|   | __ |  | +| |  | '_ \  
+  _|_|_   \___|   \__|_  |_||_|   \_,_|  |_.__/  
+_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""| 
+"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-' 
+
+techub.life • AI-powered GitHub trading cards
+  BANNER
+  # rubocop:enable Layout/TrailingWhitespace
+end
+
+puts banner
+
 def run!(label)
   puts "\n== #{label} =="
   success = yield
@@ -26,3 +47,4 @@ run!("prettier") { system("npm run --silent prettier:check") }
 run!("test") { system("bin/rails test") }
 
 puts "\nAll green!"
+puts "techub.life"

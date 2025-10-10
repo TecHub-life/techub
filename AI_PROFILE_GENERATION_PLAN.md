@@ -84,6 +84,22 @@ allowed_playing_cards: ["Ace of ♣", "2 of ♣", "3 of ♣", "4 of ♣", "5 of 
     consistency.
   - Ask the model to describe the user’s avatar to get a reusable text description.
 
+#### 1.1) Account eligibility gate (free access guardrail)
+
+- Card submissions are now free; we depend on an eligibility check to keep the directory signal-rich
+  and to block obvious spam/bot accounts before any AI spend.
+- Compute an `eligibility_score` (0–5) for every GitHub account before generation:
+  - +1 if the account age is ≥60 days (`profile.created_at`).
+  - +1 if there are ≥3 public, non-archived repositories with pushes inside the past 12 months.
+  - +1 if followers ≥3 OR following ≥3 (social proof).
+  - +1 if the profile has meaningful context: non-empty bio, README content, or ≥1 pinned repo.
+  - +1 if `recent_activity` includes ≥5 public events in the past 90 days.
+- Accept the submission when `eligibility_score ≥ 3`. Otherwise:
+  - Persist a declined state with the failing signals.
+  - Return actionable copy (“Grow your GitHub footprint and try again”) so builders know how to get
+    approved.
+- Maintain allow/block overrides for edge cases (e.g., well-known maintainers with private work).
+
 #### 2.1) Blog crawling (if `profile.blog` exists)
 
 - Respect the blog URL if provided; fetch the homepage and obvious in-domain content sources (for
