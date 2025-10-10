@@ -41,6 +41,8 @@
 
 ## Future (Phase 5: Advanced Features)
 
+- PR backfill: split oversized profile orchestration into smaller services and add direct tests for
+  remaining GitHub helpers so every ServiceResult has a matching spec
 - Leaderboards and trending cards
 - Card trading and collection features
 - Advanced analytics and insights
