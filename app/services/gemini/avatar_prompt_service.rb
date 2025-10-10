@@ -27,7 +27,8 @@ module Gemini
       style_profile: DEFAULT_STYLE_PROFILE,
       description_service: Gemini::AvatarDescriptionService,
       provider: nil,
-      profile_context: nil # optional: { name:, summary:, languages:[], top_repositories:[], organizations:[] }
+      profile_context: nil, # optional: { name:, summary:, languages:[], top_repositories:[], organizations:[] }
+      include_profile_traits: true
     )
       @avatar_path = avatar_path
       @prompt_theme = prompt_theme
@@ -35,6 +36,7 @@ module Gemini
       @description_service = description_service
       @provider_override = provider
       @profile_context = profile_context
+      @include_profile_traits = include_profile_traits
     end
 
     def call
@@ -138,13 +140,15 @@ module Gemini
     end
 
     def build_variant_prompt(description, salient_details, variant, primary_variant)
-      traits_line = salient_details.any? ? "Key traits: #{salient_details.join('; ')}." : ""
+      traits_line = salient_details.any? ? "Key visual traits: #{salient_details.join('; ')}." : ""
+      profile_traits = include_profile_traits_line
       theme_line = prompt_theme.present? ? "Mood: #{prompt_theme}." : ""
 
       <<~PROMPT.squish
         Portrait prompt: #{primary_variant ? 'primary hero shot' : 'alternate framing'}.
         Subject description: #{description}
         #{traits_line}
+        #{profile_traits}
         Visual style: #{style_profile}. #{theme_line}
         Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]}
       PROMPT
@@ -185,6 +189,26 @@ module Gemini
     rescue JSON::ParserError
       cleaned = text.to_s.gsub(/,\s*(?=[}\]])/, "")
       JSON.parse(cleaned)
+    end
+
+    def include_profile_traits_line
+      return "" unless @include_profile_traits && profile_context_present?
+
+      # Non-visual, no text/logos: just semantic anchors for style; cap length
+      langs = Array(profile_context[:languages]).first(3)
+      repos = Array(profile_context[:top_repositories]).first(2)
+      orgs = Array(profile_context[:organizations]).first(2)
+
+      parts = []
+      parts << "languages: #{langs.join(', ')}" if langs.any?
+      parts << "repos: #{repos.join(', ')}" if repos.any?
+      parts << "orgs: #{orgs.join(', ')}" if orgs.any?
+
+      line = parts.join("; ")
+      return "" if line.empty?
+
+      capped = line[0, 120]
+      "Profile traits (no text/logos): #{capped}."
     end
   end
 end
