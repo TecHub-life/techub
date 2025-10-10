@@ -91,14 +91,17 @@ module Gemini
       assert_equal prompts, result.value[:prompts]
       assert_equal Rails.root.join("tmp", "generated_suite", @login).to_s, result.value[:output_dir]
       assert_equal 4, result.value[:images].length
-      assert_equal [
-        {
-          avatar_path: @avatar_path,
-          prompt_theme: "TecHub",
-          style_profile: Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE,
-          provider: nil
-        }
-      ], prompt_service.calls
+
+      # Verify prompt service call without being strict about optional keys
+      assert_equal 1, prompt_service.calls.size
+      base_call = {
+        avatar_path: @avatar_path,
+        prompt_theme: "TecHub",
+        style_profile: Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE,
+        provider: nil
+      }
+      assert base_call.to_a - prompt_service.calls.first.to_a == []
+
       expected_image_calls = Gemini::AvatarImageSuiteService::VARIANTS.map do |key, variant|
         {
           prompt: prompts[key],

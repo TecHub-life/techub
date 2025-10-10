@@ -37,7 +37,8 @@ module Gemini
         avatar_path: description_path,
         prompt_theme: prompt_theme,
         style_profile: style_profile,
-        provider: provider_override
+        provider: provider_override,
+        profile_context: profile_context_for(login)
       )
       return prompts_result if prompts_result.failure?
 
@@ -86,6 +87,50 @@ module Gemini
       return Pathname.new(avatar_path) if avatar_path.present?
 
       Rails.root.join("public", "avatars", "#{login}.png")
+    end
+
+    def profile_context_for(login)
+      record = Profile.includes(:profile_repositories, :profile_organizations, :profile_social_accounts, :profile_languages).find_by(login: login.downcase) rescue nil
+      return {} unless record
+
+      {
+        name: record.respond_to?(:name) ? (record.name.presence || record.login) : record.login,
+        summary: record.respond_to?(:summary) ? record.summary.to_s.strip : "",
+        languages: fetch_names(record, :profile_languages, :name, limit: 5),
+        top_repositories: fetch_repo_names(record),
+        organizations: fetch_org_names(record)
+      }
+    end
+
+    def fetch_names(record, assoc, field, limit: 3)
+      collection = record.respond_to?(assoc) ? record.public_send(assoc) : []
+      if collection.respond_to?(:limit)
+        collection.limit(limit).pluck(field)
+      else
+        Array(collection).first(limit).map { |o| o.respond_to?(field) ? o.public_send(field) : nil }.compact
+      end
+    end
+
+    def fetch_repo_names(record)
+      collection = record.respond_to?(:profile_repositories) ? record.profile_repositories : []
+      if collection.respond_to?(:where)
+        collection.where(repository_type: "top").order(stargazers_count: :desc).limit(3).pluck(:name)
+      else
+        Array(collection)
+          .select { |repo| repo.respond_to?(:repository_type) ? repo.repository_type == "top" : true }
+          .first(3)
+          .map { |repo| repo.respond_to?(:name) ? repo.name : nil }
+          .compact
+      end
+    end
+
+    def fetch_org_names(record)
+      collection = record.respond_to?(:profile_organizations) ? record.profile_organizations : []
+      if collection.respond_to?(:limit)
+        collection.limit(3).pluck(:name, :login).map { |name, login| name.presence || login }
+      else
+        Array(collection).first(3).map { |org| org.respond_to?(:name) ? (org.name.presence || (org.respond_to?(:login) ? org.login : nil)) : nil }.compact
+      end
     end
 
     def filename_with_suffix(filename)

@@ -26,13 +26,15 @@ module Gemini
       prompt_theme: "TecHub",
       style_profile: DEFAULT_STYLE_PROFILE,
       description_service: Gemini::AvatarDescriptionService,
-      provider: nil
+      provider: nil,
+      profile_context: nil # optional: { name:, summary:, languages:[], top_repositories:[], organizations:[] }
     )
       @avatar_path = avatar_path
       @prompt_theme = prompt_theme
       @style_profile = style_profile
       @description_service = description_service
       @provider_override = provider
+      @profile_context = profile_context
     end
 
     def call
@@ -40,12 +42,27 @@ module Gemini
         avatar_path: avatar_path,
         provider: provider_override
       )
-      return description_result if description_result.failure?
 
-      raw_description = description_result.value
-      structured = normalize_structured(description_result.metadata&.[](:structured)) ||
-        parse_structured_from_string(raw_description)
-      description = structured&.[]("description") || strip_json_artifacts(raw_description)
+      description = nil
+      structured = nil
+      metadata = (description_result.metadata || {}).dup
+
+      if description_result.success?
+        raw_description = description_result.value
+        structured = normalize_structured(description_result.metadata&.[](:structured)) ||
+          parse_structured_from_string(raw_description)
+        description = structured&.[]("description") || strip_json_artifacts(raw_description)
+      end
+
+      if weak_description?(description)
+        if profile_context_present?
+          description, structured = synthesize_from_profile(profile_context)
+          metadata[:fallback_profile_used] = true if description.present?
+        else
+          # No profile context available; bubble the original failure if we have one
+          return description_result.failure? ? description_result : failure(StandardError.new("Avatar description unavailable"), metadata: metadata)
+        end
+      end
 
       prompts = build_prompts(description, structured)
 
@@ -56,7 +73,7 @@ module Gemini
           image_prompt: prompts["1x1"],
           image_prompts: prompts
         },
-        metadata: (description_result.metadata || {}).merge(
+        metadata: metadata.merge(
           theme: prompt_theme,
           style_profile: style_profile
         )
@@ -65,7 +82,41 @@ module Gemini
 
     private
 
-    attr_reader :avatar_path, :prompt_theme, :style_profile, :description_service, :provider_override
+    attr_reader :avatar_path, :prompt_theme, :style_profile, :description_service, :provider_override, :profile_context
+
+    def weak_description?(text)
+      value = text.to_s.strip
+      return true if value.empty?
+      return true if value == "{" # incomplete JSON fragment seen in flaky outputs
+      value.length < 12 # guard against too-short fragments
+    end
+
+    def profile_context_present?
+      profile_context.is_a?(Hash) && profile_context.any?
+    end
+
+    def synthesize_from_profile(context)
+      ctx = context.is_a?(Hash) ? context : {}
+      name = ctx[:name].presence || "the developer"
+      summary = ctx[:summary].to_s.strip
+      langs = Array(ctx[:languages]).first(3).join(", ")
+      repos = Array(ctx[:top_repositories]).first(2).join(", ")
+      orgs = Array(ctx[:organizations]).first(2).join(", ")
+
+      parts = []
+      parts << summary if summary.present?
+      parts << "Languages: #{langs}." if langs.present?
+      parts << "Notable repos: #{repos}." if repos.present?
+      parts << "Communities: #{orgs}." if orgs.present?
+
+      synthesized = if parts.any?
+        "Portrait of #{name}. #{parts.join(' ')}"
+      else
+        "Portrait of #{name}."
+      end
+
+      [ synthesized, { "description" => synthesized } ]
+    end
 
     def build_prompts(description, structured)
       salient = structured_details(structured)
