@@ -5,19 +5,19 @@ module Gemini
     IMAGE_VARIANTS = {
       "1x1" => {
         aspect_ratio: "1:1",
-        guidance: "Tight heroic bust portrait, direct eye contact, luminous rim lighting, subtle circuit motifs."
+        guidance: "Hero portrait framing, direct eye contact, luminous rim lighting, subtle circuit motifs."
       },
       "16x9" => {
         aspect_ratio: "16:9",
-        guidance: "Cinematic waist-up shot with dynamic TecHub command center background and energy streaks."
+        guidance: "Cinematic waist-up view in a futuristic control space with ambient glow and interface panels."
       },
       "3x1" => {
         aspect_ratio: "3:1",
-        guidance: "Ultra-wide banner capturing the subject leading a technicolor data stream, perfect for cover art."
+        guidance: "Ultra-wide sweep with the subject guiding flowing light trails across a skyline."
       },
       "9x16" => {
         aspect_ratio: "9:16",
-        guidance: "Poster-style vertical composition with powerful stance, cascading code glyphs, and spotlight glow."
+        guidance: "Poster-style vertical composition with dynamic stance and spotlight halo."
       }
     }.freeze
 
@@ -82,19 +82,15 @@ module Gemini
     end
 
     def build_variant_prompt(description, salient_details, variant, primary_variant)
-      details_sentence = if salient_details.any?
-        "Key traits: #{salient_details.join('; ')}."
-      else
-        ""
-      end
-
-      theme_line = prompt_theme.present? ? "Capture the #{prompt_theme} vibe." : ""
+      traits_line = salient_details.any? ? "Key traits: #{salient_details.join('; ')}." : ""
+      theme_line = prompt_theme.present? ? "Mood: #{prompt_theme}." : ""
 
       <<~PROMPT.squish
-        Illustrate a #{primary_variant ? 'heroic portrait' : 'companion scene'} based on this reference: #{description}
-        #{details_sentence}
-        Style focus: #{style_profile}. #{theme_line}
-        Composition cue (#{variant[:aspect_ratio]}): #{variant[:guidance]}
+        Portrait prompt: #{primary_variant ? 'primary hero shot' : 'alternate framing'}.
+        Subject description: #{description}
+        #{traits_line}
+        Visual style: #{style_profile}. #{theme_line}
+        Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]}
       PROMPT
     end
 

@@ -1,7 +1,7 @@
 module Profiles
   class StoryFromProfile < ApplicationService
-    MAX_OUTPUT_TOKENS = 350
-    FALLBACK_MAX_TOKENS = 700
+    MAX_OUTPUT_TOKENS = 600
+    FALLBACK_MAX_TOKENS = 900
     TEMPERATURE = 0.65
 
     def initialize(login:, profile: nil)
@@ -64,14 +64,14 @@ module Profiles
 
     def build_prompt(context)
       <<~PROMPT.squish
-        Write a playful micro-story (100-140 words) about #{context[:name]} (GitHub: #{context[:login]}).
+        Write an energetic micro-story (140-180 words) about #{context[:name]} (GitHub: #{context[:login]}).
         Celebrate their open-source adventures using these details:
         Summary: #{context[:summary].presence || "n/a"}.
         Favourite languages: #{context[:languages].presence&.join(", ") || "unknown"}.
         Notable repositories: #{context[:top_repositories].presence&.join(", ") || "none listed"}.
         Communities: #{context[:organizations].presence&.join(", ") || "independent"}.
         Social handles: #{context[:social_handles].presence&.join(", ") || "n/a"}.
-        Keep the tone bright, include one surprising twist, and finish with a short rallying tagline in quotes (max six words).
+        Keep the tone bright, weave in one surprising sci-fi or nautical twist, and end with a rallying tagline in quotes (max six words).
       PROMPT
     end
 

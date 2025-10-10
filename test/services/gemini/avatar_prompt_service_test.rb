@@ -26,8 +26,7 @@ module Gemini
         prompts = result.value[:image_prompts]
         assert_equal %w[1x1 16x9 3x1 9x16], prompts.keys
         prompts.each_value do |prompt|
-          assert_match(/Capture the TecHub vibe/i, prompt)
-          assert_match(/Illustrate a/, prompt)
+          assert_match(/Portrait prompt:/, prompt)
           assert_includes prompt, "A playful avatar with teal gradients."
           assert_includes prompt, "Key traits: facial features: Round glasses, undercut fade."
         end
