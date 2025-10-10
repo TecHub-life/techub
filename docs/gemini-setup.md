@@ -31,6 +31,41 @@ Docs:
 
 ---
 
+### Avatar description & TecHub prompt demo
+
+Once an avatar image is stored locally (e.g., via `Profiles::SyncFromGithub`), you can generate a
+Gemini-backed description plus TecHub-flavoured prompts:
+
+```bash
+bundle exec rake gemini:avatar_prompt[loftwah]
+# supply a custom path or tweak the style profile
+bundle exec rake gemini:avatar_prompt AVATAR_PATH=public/avatars/loftwah.png STYLE="Neon shonen hacker"
+```
+
+> **zsh tip**: wrap the task name in quotes (or escape the brackets) so the shell doesn't treat `[]`
+> specially, e.g. `bundle exec rake "gemini:avatar_prompt[loftwah]"`.
+
+The task composes `Gemini::AvatarDescriptionService` and
+`Gemini::AvatarPromptService`, printing the avatar description and four ratio-ready prompts
+(1×1, 16×9, 3×1, 9×16). Failures include debug metadata so you can inspect Gemini responses quickly.
+
+To prove the full pipeline (description → prompts → images), run:
+
+```bash
+bundle exec rake gemini:avatar_generate[loftwah]
+# optional overrides
+bundle exec rake gemini:avatar_generate[loftwah, "Death Note energy", public/avatars/loftwah.png, tmp/generated]
+```
+
+This drives `Gemini::AvatarImageSuiteService`, generating PNGs for the four aspect ratios via
+`Gemini::ImageGenerationService` and writing them to `public/generated/<login>/`. The command prints
+paths for easy preview and re-use.
+
+> **zsh tip**: quote the whole rake invocation when passing multiple arguments, e.g.
+> `bundle exec rake "gemini:avatar_generate[loftwah,Death Note energy]"`.
+
+---
+
 ### Optional: Vertex setup (only if you need Vertex)
 
 1. Encrypted credentials (service account JSON)
