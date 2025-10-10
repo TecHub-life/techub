@@ -2,6 +2,7 @@ require "base64"
 
 module Gemini
   class AvatarDescriptionService < ApplicationService
+    include Gemini::ResponseHelpers
     TOKEN_STEPS = [ 400, 700, 1000, 1300, 1600 ].freeze
     SYSTEM_PROMPT = <<~PROMPT.freeze
       You are a meticulous visual analyst for Techub trading cards.
@@ -57,7 +58,15 @@ module Gemini
       token_limits = TOKEN_STEPS.include?(max_output_tokens) ? TOKEN_STEPS : ([ max_output_tokens ] + TOKEN_STEPS).uniq.sort
 
       token_limits.each_with_index do |limit, idx|
-        response = conn.post(endpoint_path(provider), build_payload(provider, image_payload, mime_type, limit))
+        response = conn.post(
+          Gemini::Endpoints.text_generate_path(
+            provider: provider,
+            model: Gemini::Configuration.model,
+            project_id: Gemini::Configuration.project_id,
+            location: Gemini::Configuration.location
+          ),
+          build_payload(provider, image_payload, mime_type, limit)
+        )
 
         unless (200..299).include?(response.status)
           return failure(
@@ -117,15 +126,7 @@ module Gemini
       nil
     end
 
-    def endpoint_path(provider)
-      if provider == "ai_studio"
-        "/v1beta/models/#{Gemini::Configuration.model}:generateContent"
-      else
-        project = Gemini::Configuration.project_id
-        location = Gemini::Configuration.location
-        "/v1/projects/#{project}/locations/#{location}/publishers/google/models/#{Gemini::Configuration.model}:generateContent"
-      end
-    end
+    # endpoint computed via Gemini::Endpoints
 
     def build_payload(provider, image_payload, mime_type, token_limit)
       {
@@ -270,7 +271,15 @@ module Gemini
     end
 
     def describe_with_plain_text(conn, provider, image_payload, mime_type, token_limit)
-      response = conn.post(endpoint_path(provider), fallback_payload(image_payload, mime_type, token_limit))
+      response = conn.post(
+        Gemini::Endpoints.text_generate_path(
+          provider: provider,
+          model: Gemini::Configuration.model,
+          project_id: Gemini::Configuration.project_id,
+          location: Gemini::Configuration.location
+        ),
+        fallback_payload(image_payload, mime_type, token_limit)
+      )
 
       unless (200..299).include?(response.status)
         return failure(
@@ -329,22 +338,6 @@ module Gemini
       parts.filter_map { |part| dig_value(part, :text) }.map(&:strip).reject(&:blank?).join(" ")
     end
 
-    def normalize_to_hash(body)
-      return body if body.is_a?(Hash)
-
-      if body.respond_to?(:to_hash)
-        body.to_hash
-      elsif body.present?
-        JSON.parse(body)
-      end
-    rescue JSON::ParserError
-      nil
-    end
-
-    def dig_value(source, key)
-      return nil unless source.respond_to?(:[])
-
-      source[key] || source[key.to_s]
-    end
+    # normalize_to_hash, dig_value provided by Gemini::ResponseHelpers
   end
 end

@@ -43,7 +43,7 @@ module Github
         end
       end
 
-      Rails.logger.info("Downloaded #{downloaded_images.length} images for #{login}'s profile README")
+      StructuredLogger.info(message: "Downloaded README images", login: login, count: downloaded_images.length)
 
       success(
         {
@@ -53,7 +53,7 @@ module Github
         }
       )
     rescue StandardError => e
-      Rails.logger.error("Failed to download README images for #{login}: #{e.message}")
+      StructuredLogger.error(message: "Failed to download README images", login: login, error: e.message)
       # Return original content if download fails
       success(
         {
@@ -74,19 +74,19 @@ module Github
 
       # Only allow HTTP and HTTPS protocols
       unless %w[http https].include?(uri.scheme)
-        Rails.logger.warn("Invalid URL scheme for image download: #{url}")
+        StructuredLogger.warn(message: "Invalid URL scheme for image download", url: url)
         return nil
       end
 
       # Validate hostname to prevent SSRF attacks
       unless uri.host && !uri.host.empty?
-        Rails.logger.warn("Invalid hostname for image download: #{url}")
+        StructuredLogger.warn(message: "Invalid hostname for image download", url: url)
         return nil
       end
 
       # Block private/internal IP addresses
       if private_ip?(uri.host)
-        Rails.logger.warn("Blocked private IP address for image download: #{url}")
+        StructuredLogger.warn(message: "Blocked private IP address for image download", url: url)
         return nil
       end
 
@@ -108,20 +108,20 @@ module Github
 
         # Validate response
         unless response.is_a?(Net::HTTPSuccess)
-          Rails.logger.warn("Failed to download image #{url}: HTTP #{response.code}")
+          StructuredLogger.warn(message: "Failed to download image", url: url, http_code: response.code)
           return nil
         end
 
         # Validate content type
         content_type = response["content-type"]
-        unless content_type&.start_with?("image/")
-          Rails.logger.warn("Invalid content type for image download: #{url} (#{content_type})")
+        unless content_type&
+          StructuredLogger.warn(message: "Invalid content type for image download", url: url, content_type: content_type)
           return nil
         end
 
         # Limit file size (5MB max)
         if response["content-length"] && response["content-length"].to_i > 5.megabytes
-          Rails.logger.warn("Image too large for download: #{url}")
+          StructuredLogger.warn(message: "Image too large for download", url: url)
           return nil
         end
 
@@ -130,7 +130,7 @@ module Github
 
       "/profile_images/#{login}/#{filename}"
     rescue Net::HTTPError, SocketError, Timeout::Error, URI::InvalidURIError => e
-      Rails.logger.warn("Failed to download image #{url}: #{e.message}")
+      StructuredLogger.warn(message: "Failed to download image", url: url, error: e.message)
       nil
     end
 

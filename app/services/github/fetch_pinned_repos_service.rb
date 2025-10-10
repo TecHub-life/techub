@@ -65,7 +65,7 @@ module Github
 
       success(serialized_repos)
     rescue => e
-      Rails.logger.error("Failed to fetch pinned repos for #{login}: #{e.message}")
+      StructuredLogger.error(message: "Failed to fetch pinned repos", login: login, error: e.message)
       success([]) # Return empty array on failure rather than failing completely
     end
 

@@ -122,8 +122,8 @@ module Github
             topics: Array(repo[:topics]),
             owner_login: repo.dig(:owner, :login)
           }
-        rescue Octokit::Error => e
-          Rails.logger.debug("Could not fetch active repo #{repo_full_name}: #{e.message}")
+    rescue Octokit::Error => e
+      StructuredLogger.debug(message: "Could not fetch active repo", repo: repo_full_name, error: e.message)
           next
         end
       end
@@ -143,7 +143,7 @@ module Github
         }
       end
     rescue Octokit::Error => e
-      Rails.logger.debug("Could not fetch organizations for #{login}: #{e.message}")
+      StructuredLogger.debug(message: "Could not fetch organizations", login: login, error: e.message)
       []
     end
 
@@ -173,7 +173,7 @@ module Github
         }
       end
     rescue => e
-      Rails.logger.debug("Could not fetch social accounts for #{login}: #{e.message}")
+      StructuredLogger.debug(message: "Could not fetch social accounts", login: login, error: e.message)
       []
     end
 

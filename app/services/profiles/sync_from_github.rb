@@ -8,15 +8,21 @@ module Profiles
       result = Github::ProfileSummaryService.call(login: login, client: user_octokit_client)
 
       if result.failure? && user_octokit_client.present?
-        Rails.logger.warn(
-          "Profile sync via user token failed for #{login}: #{result.error.class} - #{result.error.message}; retrying with app client"
+        StructuredLogger.warn(
+          message: "Profile sync via user token failed; retrying with app client",
+          login: login,
+          error_class: result.error.class.name,
+          error: result.error.message
         )
         result = Github::ProfileSummaryService.call(login: login)
       end
 
       if result.failure?
-        Rails.logger.error(
-          "Profile sync failed for #{login}: #{result.error.class} - #{result.error.message}"
+        StructuredLogger.error(
+          message: "Profile sync failed",
+          login: login,
+          error_class: result.error.class.name,
+          error: result.error.message
         )
         return result
       end
@@ -65,7 +71,7 @@ module Profiles
         success(profile)
       else
         error = StandardError.new(profile.errors.full_messages.to_sentence)
-        Rails.logger.error("Profile sync save failed for #{login}: #{error.message}")
+        StructuredLogger.error(message: "Profile sync save failed", login: login, error: error.message)
         failure(error)
       end
     end
@@ -87,7 +93,7 @@ module Profiles
       if avatar_result.success?
         avatar_result.value
       else
-        Rails.logger.warn("Failed to download avatar for #{login}: #{avatar_result.error.message}")
+        StructuredLogger.warn(message: "Failed to download avatar", login: login, error: avatar_result.error.message)
         nil
       end
     end

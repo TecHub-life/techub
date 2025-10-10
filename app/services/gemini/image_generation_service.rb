@@ -2,6 +2,7 @@ require "base64"
 
 module Gemini
   class ImageGenerationService < ApplicationService
+    include Gemini::ResponseHelpers
     DEFAULT_TEMPERATURE = 0.4
     DEFAULT_MIME_TYPE = "image/png".freeze
 
@@ -31,7 +32,15 @@ module Gemini
       return client_result if client_result.failure?
 
       conn = client_result.value
-      response = conn.post(endpoint_path(provider), build_payload(provider))
+      response = conn.post(
+        Gemini::Endpoints.image_generate_path(
+          provider: provider,
+          image_model: Gemini::Configuration.image_model,
+          project_id: Gemini::Configuration.project_id,
+          location: Gemini::Configuration.location
+        ),
+        build_payload(provider)
+      )
 
       unless (200..299).include?(response.status)
         return failure(
@@ -67,15 +76,7 @@ module Gemini
 
     attr_reader :prompt, :aspect_ratio, :output_path, :temperature, :mime_type, :provider_override
 
-    def endpoint_path(provider)
-      if provider == "ai_studio"
-        "/v1beta/models/#{Gemini::Configuration.image_model}:generateContent"
-      else
-        project = Gemini::Configuration.project_id
-        location = Gemini::Configuration.location
-        "/v1/projects/#{project}/locations/#{location}/publishers/google/models/#{Gemini::Configuration.image_model}:generateContent"
-      end
-    end
+    # endpoint computed via Gemini::Endpoints
 
     def build_payload(_provider)
       {
@@ -112,23 +113,7 @@ module Gemini
       dig_value(inline, :data) if inline
     end
 
-    def normalize_to_hash(body)
-      return body if body.is_a?(Hash)
-
-      if body.respond_to?(:to_hash)
-        body.to_hash
-      elsif body.present?
-        JSON.parse(body)
-      end
-    rescue JSON::ParserError
-      nil
-    end
-
-    def dig_value(source, key)
-      return nil unless source.respond_to?(:[])
-
-      source[key] || source[key.to_s]
-    end
+    # normalize_to_hash, dig_value provided by Gemini::ResponseHelpers
 
     def write_file(decoded_bytes)
       path = Pathname.new(output_path)

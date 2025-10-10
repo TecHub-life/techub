@@ -1,5 +1,6 @@
 module Profiles
   class StoryFromProfile < ApplicationService
+    include Gemini::ResponseHelpers
     TOKEN_STEPS = [ 900, 1300, 1700, 2100, 2500, 2900 ].freeze
     TOKEN_INCREMENT = 400
     MAX_TOKEN_LIMIT = 4_100
@@ -125,15 +126,7 @@ module Profiles
       PROMPT
     end
 
-    def endpoint_path(provider)
-      if provider == "ai_studio"
-        "/v1beta/models/#{Gemini::Configuration.model}:generateContent"
-      else
-        project = Gemini::Configuration.project_id
-        location = Gemini::Configuration.location
-        "/v1/projects/#{project}/locations/#{location}/publishers/google/models/#{Gemini::Configuration.model}:generateContent"
-      end
-    end
+    # endpoint computed via Gemini::Endpoints
 
     def build_payload(prompt, max_tokens)
       {
@@ -162,7 +155,15 @@ module Profiles
     end
 
     def request_story(conn, provider, prompt, max_tokens, attempt_index)
-      response = conn.post(endpoint_path(provider), build_payload(prompt, max_tokens))
+      response = conn.post(
+        Gemini::Endpoints.text_generate_path(
+          provider: provider,
+          model: Gemini::Configuration.model,
+          project_id: Gemini::Configuration.project_id,
+          location: Gemini::Configuration.location
+        ),
+        build_payload(prompt, max_tokens)
+      )
 
       unless (200..299).include?(response.status)
         return failure(
