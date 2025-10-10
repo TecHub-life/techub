@@ -38,8 +38,8 @@
 - [x] Robust parsing: tolerate fenced JSON, trailing commas, noisy output
 - [x] Truncation handling: retry on MAX_TOKENS; fail-fast on no text parts
 - [ ] Define avatar description quality rules (empty, fragment, non-text)
-- [ ] Implement profile-backed prompt fallback when description is weak
-- [ ] Instrument retries/attempts and log fallback_used for monitoring
+- [x] Implement profile-backed prompt fallback when description is weak
+- [x] Instrument retries/attempts and log fallback_used for monitoring
 - [ ] Tests: noise/fenced JSON, fragment cases, fallback path coverage
 
 ## Next (Phase 2: AI Profile Processing)
