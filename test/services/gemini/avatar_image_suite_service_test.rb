@@ -91,17 +91,20 @@ module Gemini
       assert_equal prompts, result.value[:prompts]
       assert_equal Rails.root.join("tmp", "generated_suite", @login).to_s, result.value[:output_dir]
       assert_equal 4, result.value[:images].length
-      assert_equal(
-        [
-          { avatar_path: @avatar_path, prompt_theme: "TecHub", style_profile: Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE }
-        ],
-        prompt_service.calls
-      )
+      assert_equal [
+        {
+          avatar_path: @avatar_path,
+          prompt_theme: "TecHub",
+          style_profile: Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE,
+          provider: nil
+        }
+      ], prompt_service.calls
       expected_image_calls = Gemini::AvatarImageSuiteService::VARIANTS.map do |key, variant|
         {
           prompt: prompts[key],
           aspect_ratio: variant[:aspect_ratio],
-          output_path: Rails.root.join("tmp", "generated_suite", @login, variant[:filename])
+          output_path: Rails.root.join("tmp", "generated_suite", @login, variant[:filename]),
+          provider: nil
         }
       end
       assert_equal expected_image_calls, image_service.calls

@@ -5,15 +5,16 @@ module Gemini
   class ClientService < ApplicationService
     SCOPE = [ "https://www.googleapis.com/auth/cloud-platform" ].freeze
 
-    def initialize(project_id: Gemini::Configuration.project_id, location: Gemini::Configuration.location)
+    def initialize(project_id: Gemini::Configuration.project_id, location: Gemini::Configuration.location, provider: Gemini::Configuration.provider)
       @project_id = project_id
       @location = location
+      @provider = provider
     end
 
     def call
-      Gemini::Configuration.validate!
+      Gemini::Configuration.validate!(provider)
 
-      if Gemini::Configuration.provider == "ai_studio"
+      if provider == "ai_studio"
         base_url = Gemini::Configuration.api_base
         api_key = Gemini::Configuration.api_key
         conn = Faraday.new(url: base_url) do |f|
@@ -48,7 +49,7 @@ module Gemini
 
     private
 
-    attr_reader :project_id, :location
+    attr_reader :project_id, :location, :provider
 
     def obtain_access_token
       creds_json = Gemini::Configuration.application_credentials_json

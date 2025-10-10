@@ -48,5 +48,18 @@ module Gemini
         assert_equal "nope", result.error.message
       end
     end
+
+    test "passes provider override to description service" do
+      calls = []
+      Gemini::AvatarDescriptionService.stub :call, ->(**kwargs) do
+        calls << kwargs
+        ServiceResult.failure(StandardError.new("forced stop"))
+      end do
+        Gemini::AvatarPromptService.call(avatar_path: "public/avatars/demo.png", provider: "ai_studio")
+      end
+
+      assert_equal 1, calls.size
+      assert_equal "ai_studio", calls.first[:provider]
+    end
   end
 end

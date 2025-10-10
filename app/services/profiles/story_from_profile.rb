@@ -1,12 +1,14 @@
 module Profiles
   class StoryFromProfile < ApplicationService
-    MAX_OUTPUT_TOKENS = 600
-    FALLBACK_MAX_TOKENS = 900
+    TOKEN_STEPS = [ 900, 1300, 1700, 2100, 2500, 2900 ].freeze
+    TOKEN_INCREMENT = 400
+    MAX_TOKEN_LIMIT = 4_100
     TEMPERATURE = 0.65
 
-    def initialize(login:, profile: nil)
+    def initialize(login:, profile: nil, provider: nil)
       @login = login
       @profile = profile
+      @provider_override = provider
     end
 
     def call
@@ -17,38 +19,21 @@ module Profiles
       context = build_context(record)
       prompt = build_prompt(context)
 
-      client_result = Gemini::ClientService.call
-      return client_result if client_result.failure?
+      provider = story_provider
+      generation_result = generate_story_with_provider(provider, prompt)
+      return generation_result if generation_result.success?
 
-      conn = client_result.value
-      provider = Gemini::Configuration.provider
+      error = generation_result.error || StandardError.new("Gemini story generation failed")
+      metadata = (generation_result.metadata || {}).merge(provider: provider, prompt: prompt)
 
-      primary_result = request_story(conn, provider, prompt, MAX_OUTPUT_TOKENS)
-      return primary_result if primary_result.failure?
-
-      story = primary_result.value[:story]
-      finish_reason = primary_result.value[:finish_reason]
-      metadata = primary_result.metadata.merge(prompt: prompt)
-
-      if finish_reason == "MAX_TOKENS"
-        fallback_result = request_story(conn, provider, prompt, FALLBACK_MAX_TOKENS)
-        if fallback_result.success?
-          story = fallback_result.value[:story]
-          finish_reason = fallback_result.value[:finish_reason]
-          metadata = fallback_result.metadata.merge(prompt: prompt, fallback_used: true, fallback_http_status: fallback_result.metadata[:http_status])
-        else
-          return fallback_result
-        end
-      end
-
-      success(story, metadata: metadata.merge(finish_reason: finish_reason))
+      failure(error, metadata: metadata)
     rescue Faraday::Error => e
       failure(e)
     end
 
     private
 
-    attr_reader :login, :profile
+    attr_reader :login, :profile, :provider_override
 
     def build_context(record)
       {
@@ -62,16 +47,81 @@ module Profiles
       }
     end
 
+    def story_provider
+      provider_override.presence || Gemini::Configuration.provider
+    end
+
+    def generate_story_with_provider(provider, prompt)
+      client_result = Gemini::ClientService.call(provider: provider)
+      return client_result if client_result.failure?
+
+      conn = client_result.value
+
+      attempts = []
+      story_payload = nil
+
+      token_limits = TOKEN_STEPS.dup
+      attempt_index = 0
+
+      while attempt_index < token_limits.length
+        token_limit = token_limits[attempt_index]
+
+        attempt_result = request_story(conn, provider, prompt, token_limit, attempt_index)
+        return attempt_result if attempt_result.failure?
+
+        attempts << attempt_result.metadata.merge(limit: token_limit)
+        story_payload = attempt_result.value
+        attempt_index += 1
+
+        if story_payload[:partial]
+          if token_limits.length == attempt_index && token_limit < MAX_TOKEN_LIMIT
+            next_limit = [ token_limit + TOKEN_INCREMENT, MAX_TOKEN_LIMIT ].min
+            token_limits << next_limit if next_limit > token_limit
+          end
+          next
+        end
+
+        break unless story_payload[:finish_reason] == "MAX_TOKENS" || story_payload[:story].to_s.split.size < 130
+      end
+
+      if story_payload.nil? || story_payload[:story].blank?
+        return failure(
+          StandardError.new("Gemini story response was empty"),
+          metadata: {
+            provider: provider,
+            prompt: prompt,
+            attempts: attempts
+          }
+        )
+      end
+
+      story_output = format_story_output(story_payload)
+      metadata = {
+        provider: story_payload[:provider],
+        prompt: prompt,
+        finish_reason: story_payload[:finish_reason],
+        attempts: attempts
+      }
+
+      success(story_output, metadata: metadata)
+    rescue Faraday::Error => e
+      failure(e)
+    end
+
     def build_prompt(context)
       <<~PROMPT.squish
-        Write an energetic micro-story (140-180 words) about #{context[:name]} (GitHub: #{context[:login]}).
-        Celebrate their open-source adventures using these details:
-        Summary: #{context[:summary].presence || "n/a"}.
-        Favourite languages: #{context[:languages].presence&.join(", ") || "unknown"}.
-        Notable repositories: #{context[:top_repositories].presence&.join(", ") || "none listed"}.
-        Communities: #{context[:organizations].presence&.join(", ") || "independent"}.
-        Social handles: #{context[:social_handles].presence&.join(", ") || "n/a"}.
-        Keep the tone bright, weave in one surprising sci-fi or nautical twist, and end with a rallying tagline in quotes (max six words).
+        You are writing a celebratory 140-180 word micro-story about #{context[:name]} (GitHub: #{context[:login]}).
+        Facts to weave in naturally:
+        - Summary: #{context[:summary].presence || "n/a"}
+        - Favourite languages: #{context[:languages].presence&.join(", ") || "unknown"}
+        - Notable repositories: #{context[:top_repositories].presence&.join(", ") || "none listed"}
+        - Communities: #{context[:organizations].presence&.join(", ") || "independent"}
+        - Social handles: #{context[:social_handles].presence&.join(", ") || "n/a"}
+        Style guidelines:
+        - Three lively paragraphs: origin spark, present-day impact, playful future.
+        - Include one surprising sci-fi or nautical twist grounded in their work.
+        - End with a rallying tagline (2-6 words) in double quotes on a new line.
+        Respond as JSON with keys `story` (full paragraphs) and `tagline` (without surrounding punctuation except quotes).
       PROMPT
     end
 
@@ -97,34 +147,44 @@ module Profiles
         ],
         generationConfig: {
           temperature: TEMPERATURE,
-          maxOutputTokens: max_tokens
+          maxOutputTokens: max_tokens,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "object",
+            properties: {
+              story: { type: "string" },
+              tagline: { type: "string" }
+            },
+            required: %w[story tagline]
+          }
         }
       }
     end
 
-    def request_story(conn, provider, prompt, max_tokens)
+    def request_story(conn, provider, prompt, max_tokens, attempt_index)
       response = conn.post(endpoint_path(provider), build_payload(prompt, max_tokens))
 
       unless (200..299).include?(response.status)
         return failure(
           StandardError.new("Gemini story generation failed"),
-          metadata: { http_status: response.status, body: response.body }
+          metadata: { http_status: response.status, body: response.body, attempt: attempt_index }
         )
       end
 
-      story, finish_reason = extract_story(response.body)
-      story = sanitize_story(story)
+      payload = extract_story_payload(response.body)
+      story_blank = payload[:story].blank?
+      finish_reason = payload[:finish_reason]
 
-      if story.blank?
+      if story_blank && finish_reason != "MAX_TOKENS"
         return failure(
           StandardError.new("Gemini story response was empty"),
-          metadata: { http_status: response.status, body: response.body }
+          metadata: { http_status: response.status, body: response.body, attempt: attempt_index }
         )
       end
 
       success(
-        { story: story, finish_reason: finish_reason },
-        metadata: { http_status: response.status, provider: provider, finish_reason: finish_reason }
+        payload.merge(provider: provider, partial: (finish_reason == "MAX_TOKENS") || story_blank),
+        metadata: { http_status: response.status, provider: provider, finish_reason: finish_reason, attempt: attempt_index, partial: (finish_reason == "MAX_TOKENS") || story_blank }
       )
     end
 
@@ -181,21 +241,38 @@ module Profiles
       end
     end
 
-    def extract_story(body)
+    def extract_story_payload(body)
       data = normalize_to_hash(body)
-      return [ nil, nil ] unless data
+      return { story: nil, tagline: nil, finish_reason: nil } unless data
 
       candidate = Array(dig_value(data, :candidates)).first
-      return [ nil, nil ] unless candidate
-
-      content = dig_value(candidate, :content)
       finish_reason = dig_value(candidate, :finishReason)
-      return [ nil, finish_reason ] unless content
 
-      parts = Array(dig_value(content, :parts))
-      text = parts.filter_map { |part| dig_value(part, :text) }.join("\n").strip
+      structured_content = dig_value(candidate, :content)
+      parts = Array(dig_value(structured_content, :parts))
 
-      [ text, finish_reason ]
+      # Join all text parts together; some providers emit multiple parts
+      raw_text = parts.filter_map { |part| dig_value(part, :text) }.join
+
+      # First attempt: strict/relaxed JSON parse
+      parsed = normalize_to_hash(raw_text) || parse_relaxed_json(raw_text) || {}
+
+      story = sanitize_story(parsed["story"])
+      tagline = parsed["tagline"]
+
+      # Fallback: provider ignored schema and returned plain text paragraphs
+      if story.blank?
+        fallback_story, fallback_tagline = split_story_and_tagline_from_text(raw_text)
+        story = sanitize_story(fallback_story)
+        tagline ||= fallback_tagline
+      end
+
+      {
+        story: story,
+        tagline: tagline,
+        finish_reason: finish_reason,
+        provider: nil
+      }
     end
 
     def normalize_to_hash(body)
@@ -210,6 +287,35 @@ module Profiles
       nil
     end
 
+    def parse_relaxed_json(text)
+      value = text.to_s
+      return nil if value.strip.empty?
+
+      begin
+        return JSON.parse(value)
+      rescue JSON::ParserError
+        # try stripped trailing commas in objects/arrays
+      end
+
+      begin
+        cleaned = value.gsub(/,\s*(?=[}\]])/, "")
+        return JSON.parse(cleaned)
+      rescue JSON::ParserError
+        # try fenced code block
+      end
+
+      if value =~ /```(?:json)?\s*([\s\S]*?)\s*```/i
+        fenced = $1
+        begin
+          return JSON.parse(fenced)
+        rescue JSON::ParserError
+          # ignore and fall through
+        end
+      end
+
+      nil
+    end
+
     def dig_value(source, key)
       return nil unless source.respond_to?(:[])
 
@@ -219,8 +325,35 @@ module Profiles
     def sanitize_story(text)
       return if text.blank?
 
-      cleaned = text.to_s.gsub(/\s+/, " ").strip
+      cleaned = text.to_s.strip
       cleaned.empty? ? nil : cleaned
+    end
+
+    def split_story_and_tagline_from_text(text)
+      value = text.to_s.strip
+      return [ nil, nil ] if value.empty?
+
+      # Prefer a trailing quoted line as tagline
+      if value =~ /\n\s*"([^"]{4,200})"\s*\z/
+        tagline = $1
+        story_text = value.sub(/\n\s*"([^"]{4,200})"\s*\z/, "").strip
+        return [ story_text, tagline ]
+      end
+
+      # If the model returned JSON-looking text without quotes, keep as story
+      [ value, nil ]
+    end
+    def format_story_output(payload)
+      return "" unless payload
+
+      story = payload[:story].to_s.strip
+      tagline = payload[:tagline].to_s.strip
+
+      return story if tagline.blank?
+
+      normalized_tagline = tagline.delete_prefix('"').delete_suffix('"')
+      tagged_story = story.end_with?("\n") ? story : "#{story}\n"
+      %(#{tagged_story}\n"#{normalized_tagline}")
     end
   end
 end

@@ -14,7 +14,9 @@ module Gemini
       prompt_theme: "TecHub",
       style_profile: AvatarPromptService::DEFAULT_STYLE_PROFILE,
       prompt_service: AvatarPromptService,
-      image_service: ImageGenerationService
+      image_service: ImageGenerationService,
+      provider: nil,
+      filename_suffix: nil
     )
       @login = login
       @avatar_path = avatar_path
@@ -23,6 +25,8 @@ module Gemini
       @style_profile = style_profile
       @prompt_service = prompt_service
       @image_service = image_service
+      @provider_override = provider
+      @filename_suffix = filename_suffix
     end
 
     def call
@@ -32,7 +36,8 @@ module Gemini
       prompts_result = prompt_service.call(
         avatar_path: description_path,
         prompt_theme: prompt_theme,
-        style_profile: style_profile
+        style_profile: style_profile,
+        provider: provider_override
       )
       return prompts_result if prompts_result.failure?
 
@@ -48,11 +53,12 @@ module Gemini
           return failure(StandardError.new("Missing prompt for #{key} variant"), metadata: { prompts: prompts.keys })
         end
 
-        variant_output_path = output_dir.join(login, variant[:filename])
+        variant_output_path = output_dir.join(login, filename_with_suffix(variant[:filename]))
         result = image_service.call(
           prompt: prompt,
           aspect_ratio: variant[:aspect_ratio],
-          output_path: variant_output_path
+          output_path: variant_output_path,
+          provider: provider_override
         )
         return result if result.failure?
 
@@ -74,12 +80,20 @@ module Gemini
 
     private
 
-    attr_reader :login, :avatar_path, :output_dir, :prompt_theme, :style_profile, :prompt_service, :image_service
+    attr_reader :login, :avatar_path, :output_dir, :prompt_theme, :style_profile, :prompt_service, :image_service, :provider_override, :filename_suffix
 
     def source_avatar_path
       return Pathname.new(avatar_path) if avatar_path.present?
 
       Rails.root.join("public", "avatars", "#{login}.png")
+    end
+
+    def filename_with_suffix(filename)
+      return filename unless filename_suffix.to_s.strip.present?
+
+      base = File.basename(filename, File.extname(filename))
+      ext = File.extname(filename)
+      "#{base}-#{filename_suffix}#{ext}"
     end
   end
 end

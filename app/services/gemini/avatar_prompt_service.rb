@@ -25,16 +25,21 @@ module Gemini
       avatar_path:,
       prompt_theme: "TecHub",
       style_profile: DEFAULT_STYLE_PROFILE,
-      description_service: Gemini::AvatarDescriptionService
+      description_service: Gemini::AvatarDescriptionService,
+      provider: nil
     )
       @avatar_path = avatar_path
       @prompt_theme = prompt_theme
       @style_profile = style_profile
       @description_service = description_service
+      @provider_override = provider
     end
 
     def call
-      description_result = description_service.call(avatar_path: avatar_path)
+      description_result = description_service.call(
+        avatar_path: avatar_path,
+        provider: provider_override
+      )
       return description_result if description_result.failure?
 
       raw_description = description_result.value
@@ -60,7 +65,7 @@ module Gemini
 
     private
 
-    attr_reader :avatar_path, :prompt_theme, :style_profile, :description_service
+    attr_reader :avatar_path, :prompt_theme, :style_profile, :description_service, :provider_override
 
     def build_prompts(description, structured)
       salient = structured_details(structured)

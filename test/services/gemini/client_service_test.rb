@@ -23,5 +23,36 @@ module Gemini
         end
       end
     end
+
+    test "builds Faraday client with api key for ai studio" do
+      ENV["GEMINI_PROVIDER"] = "ai_studio"
+      ENV["GEMINI_API_KEY"] = "api-key-123"
+
+      result = Gemini::ClientService.call
+      assert result.success?
+      conn = result.value
+      assert_equal "https://generativelanguage.googleapis.com/v1beta", conn.url_prefix.to_s
+      assert_equal "api-key-123", conn.headers["x-goog-api-key"]
+      assert_nil conn.headers["Authorization"], "AI Studio client should not set bearer token"
+    ensure
+      ENV.delete("GEMINI_PROVIDER")
+      ENV.delete("GEMINI_API_KEY")
+    end
+
+    test "allows overriding provider to ai studio even when configuration defaults to vertex" do
+      ENV.delete("GEMINI_PROVIDER")
+      ENV["GEMINI_API_KEY"] = "override-key"
+
+      Gemini::Configuration.stub :provider, "vertex" do
+        result = Gemini::ClientService.call(provider: "ai_studio")
+        assert result.success?
+        conn = result.value
+        assert_equal "https://generativelanguage.googleapis.com/v1beta", conn.url_prefix.to_s
+        assert_equal "override-key", conn.headers["x-goog-api-key"]
+        assert_nil conn.headers["Authorization"]
+      end
+    ensure
+      ENV.delete("GEMINI_API_KEY")
+    end
   end
 end

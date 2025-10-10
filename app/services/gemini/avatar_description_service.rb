@@ -2,6 +2,7 @@ require "base64"
 
 module Gemini
   class AvatarDescriptionService < ApplicationService
+    TOKEN_STEPS = [ 400, 700, 1000, 1300, 1600 ].freeze
     SYSTEM_PROMPT = <<~PROMPT.freeze
       You are a meticulous visual analyst for Techub trading cards.
       Only describe elements that are plainly visible. Avoid filler, guesses, or trailing fragments.
@@ -26,11 +27,12 @@ module Gemini
     DEFAULT_TEMPERATURE = 0.15
     DEFAULT_MAX_OUTPUT_TOKENS = 400
 
-    def initialize(avatar_path:, prompt: DEFAULT_PROMPT, temperature: DEFAULT_TEMPERATURE, max_output_tokens: DEFAULT_MAX_OUTPUT_TOKENS)
+    def initialize(avatar_path:, prompt: DEFAULT_PROMPT, temperature: DEFAULT_TEMPERATURE, max_output_tokens: DEFAULT_MAX_OUTPUT_TOKENS, provider: nil)
       @avatar_path = avatar_path
       @prompt = prompt
       @temperature = temperature
       @max_output_tokens = max_output_tokens
+      @provider_override = provider
     end
 
     def call
@@ -43,47 +45,56 @@ module Gemini
       return failure(StandardError.new("Unsupported mime type for avatar image")) unless mime_type&.start_with?("image/")
 
       image_payload = Base64.strict_encode64(File.binread(resolved_path))
-      provider = Gemini::Configuration.provider
+      provider = provider_override.presence || Gemini::Configuration.provider
 
-      client_result = Gemini::ClientService.call
+      client_result = Gemini::ClientService.call(provider: provider)
       return client_result if client_result.failure?
 
       conn = client_result.value
-      response = conn.post(endpoint_path(provider), build_payload(provider, image_payload, mime_type))
+      attempts = []
 
-      unless (200..299).include?(response.status)
-        return failure(
-          StandardError.new("Gemini avatar description request failed"),
-          metadata: { http_status: response.status, body: response.body }
-        )
+      # Progressive retries with higher token limits
+      token_limits = TOKEN_STEPS.include?(max_output_tokens) ? TOKEN_STEPS : ([ max_output_tokens ] + TOKEN_STEPS).uniq.sort
+
+      token_limits.each_with_index do |limit, idx|
+        response = conn.post(endpoint_path(provider), build_payload(provider, image_payload, mime_type, limit))
+
+        unless (200..299).include?(response.status)
+          return failure(
+            StandardError.new("Gemini avatar description request failed"),
+            metadata: { http_status: response.status, body: response.body }
+          )
+        end
+
+        description, structured_payload = extract_description(response.body)
+        finish_reason = extract_finish_reason(response.body)
+        attempts << { http_status: response.status, finish_reason: finish_reason, limit: limit }
+
+        if description.present?
+          meta = { http_status: response.status, provider: provider, attempts: attempts }
+          meta[:structured] = structured_payload if structured_payload.present?
+          return success(description.strip, metadata: meta)
+        end
+
+        # If truncated, try next, otherwise break to fallback
+        break unless finish_reason == "MAX_TOKENS"
+        next if idx < token_limits.length - 1
       end
 
-      description, structured_payload = extract_description(response.body)
-      metadata = {
-        http_status: response.status,
-        provider: provider
-      }
-
-      if description.blank?
-        fallback_result = describe_with_plain_text(conn, provider, image_payload, mime_type)
-        return fallback_result if fallback_result.failure?
-
-        description = fallback_result.value
-        structured_payload ||= fallback_result.metadata[:structured]
-        metadata[:fallback_used] = true
-        metadata[:fallback_http_status] = fallback_result.metadata[:http_status]
+      # Plain-text fallback with small retries
+      [ 150, 250, 350 ].each do |limit|
+        fallback_result = describe_with_plain_text(conn, provider, image_payload, mime_type, limit)
+        if fallback_result.success? && fallback_result.value.to_s.strip.present?
+          meta = { http_status: fallback_result.metadata[:http_status], provider: provider, attempts: attempts, fallback_used: true }
+          meta[:structured] = fallback_result.metadata[:structured] if fallback_result.metadata[:structured]
+          return success(fallback_result.value.strip, metadata: meta)
+        end
       end
 
-      if description.blank?
-        return failure(
-          StandardError.new("Gemini response did not include a description"),
-          metadata: { body: response.body, structured: structured_payload }
-        )
-      end
-
-      metadata[:structured] = structured_payload if structured_payload.present?
-
-      success(description.strip, metadata: metadata)
+      failure(
+        StandardError.new("Gemini response did not include a description"),
+        metadata: { attempts: attempts }
+      )
     rescue Faraday::Error => e
       failure(e)
     rescue StandardError => e
@@ -92,7 +103,7 @@ module Gemini
 
     private
 
-    attr_reader :avatar_path, :prompt, :temperature, :max_output_tokens
+    attr_reader :avatar_path, :prompt, :temperature, :max_output_tokens, :provider_override
 
     def resolve_path(input_path)
       path = Pathname.new(input_path.to_s)
@@ -116,7 +127,7 @@ module Gemini
       end
     end
 
-    def build_payload(provider, image_payload, mime_type)
+    def build_payload(provider, image_payload, mime_type, token_limit)
       {
         systemInstruction: {
           parts: [ { text: SYSTEM_PROMPT } ]
@@ -132,7 +143,7 @@ module Gemini
         ],
         generationConfig: {
           temperature: temperature,
-          maxOutputTokens: max_output_tokens,
+          maxOutputTokens: token_limit,
           responseMimeType: "application/json",
           responseSchema: response_schema
         }
@@ -186,6 +197,13 @@ module Gemini
       end
 
       [ sanitize_description(description_text), structured_payload ]
+    end
+
+    def extract_finish_reason(body)
+      data = normalize_to_hash(body)
+      return nil if data.blank?
+      candidate = Array(dig_value(data, :candidates)).first
+      dig_value(candidate, :finishReason)
     end
 
     def extract_structured_payload(parts)
@@ -251,8 +269,8 @@ module Gemini
       JSON.parse(cleaned)
     end
 
-    def describe_with_plain_text(conn, provider, image_payload, mime_type)
-      response = conn.post(endpoint_path(provider), fallback_payload(image_payload, mime_type))
+    def describe_with_plain_text(conn, provider, image_payload, mime_type, token_limit)
+      response = conn.post(endpoint_path(provider), fallback_payload(image_payload, mime_type, token_limit))
 
       unless (200..299).include?(response.status)
         return failure(
@@ -276,7 +294,7 @@ module Gemini
       failure(e)
     end
 
-    def fallback_payload(image_payload, mime_type)
+    def fallback_payload(image_payload, mime_type, token_limit)
       {
         contents: [
           {
@@ -289,7 +307,7 @@ module Gemini
         ],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 200
+          maxOutputTokens: token_limit
         }
       }
     end

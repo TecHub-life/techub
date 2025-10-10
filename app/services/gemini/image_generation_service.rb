@@ -10,24 +10,27 @@ module Gemini
       aspect_ratio:,
       output_path: nil,
       temperature: DEFAULT_TEMPERATURE,
-      mime_type: DEFAULT_MIME_TYPE
+      mime_type: DEFAULT_MIME_TYPE,
+      provider: nil
     )
       @prompt = prompt
       @aspect_ratio = aspect_ratio
       @output_path = output_path
       @temperature = temperature
       @mime_type = mime_type
+      @provider_override = provider
     end
 
     def call
       raise ArgumentError, "Prompt cannot be blank" if prompt.blank?
       raise ArgumentError, "Aspect ratio cannot be blank" if aspect_ratio.blank?
 
-      client_result = Gemini::ClientService.call
+      provider = provider_override.presence || Gemini::Configuration.provider
+
+      client_result = Gemini::ClientService.call(provider: provider)
       return client_result if client_result.failure?
 
       conn = client_result.value
-      provider = Gemini::Configuration.provider
       response = conn.post(endpoint_path(provider), build_payload(provider))
 
       unless (200..299).include?(response.status)
@@ -62,7 +65,7 @@ module Gemini
 
     private
 
-    attr_reader :prompt, :aspect_ratio, :output_path, :temperature, :mime_type
+    attr_reader :prompt, :aspect_ratio, :output_path, :temperature, :mime_type, :provider_override
 
     def endpoint_path(provider)
       if provider == "ai_studio"
