@@ -36,6 +36,8 @@
     <link rel="icon" href="/android-chrome-192x192.png" sizes="192x192" type="image/png">
     <link rel="icon" href="/android-chrome-512x512.png" sizes="512x512" type="image/png">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
@@ -43,7 +45,7 @@
 
   <body class="min-h-screen bg-slate-50 text-slate-900 antialiased transition dark:bg-slate-950 dark:text-slate-100">
     <%= render "shared/header" %>
-    <main class="mt-4 sm:mt-0 sm:pt-12">
+    <main class="mt-12 sm:pt-12">
       <% flash.each do |key, value| %>
         <div class="mx-auto mb-4 max-w-3xl rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
           <%= value %>
