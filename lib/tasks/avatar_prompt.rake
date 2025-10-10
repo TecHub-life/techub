@@ -76,12 +76,17 @@ namespace :gemini do
     output_dir = args[:output_dir] || ENV["OUTPUT_DIR"] || Rails.root.join("public", "generated").to_s
     provider = args[:provider] || ENV["PROVIDER"]
 
+    require_eligibility = [ "1", "true", "yes" ].include?(ENV["REQUIRE_ELIGIBILITY"].to_s.downcase)
+    eligibility_threshold = (ENV["ELIGIBILITY_THRESHOLD"] || Eligibility::GithubProfileScoreService::DEFAULT_THRESHOLD).to_i
+
     result = Gemini::AvatarImageSuiteService.call(
       login: login,
       avatar_path: avatar_path,
       output_dir: output_dir,
       style_profile: style_profile,
-      provider: provider
+      provider: provider,
+      require_profile_eligibility: require_eligibility,
+      eligibility_threshold: eligibility_threshold
     )
 
     if result.failure?
@@ -172,6 +177,9 @@ namespace :gemini do
       avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
       output_dir = args[:output_dir] || ENV["OUTPUT_DIR"] || Rails.root.join("public", "generated").to_s
 
+      require_eligibility = [ "1", "true", "yes" ].include?(ENV["REQUIRE_ELIGIBILITY"].to_s.downcase)
+      eligibility_threshold = (ENV["ELIGIBILITY_THRESHOLD"] || Eligibility::GithubProfileScoreService::DEFAULT_THRESHOLD).to_i
+
       PROVIDER_ORDER.each do |provider|
         puts "\n=== Avatar generate via #{provider} ==="
         result = Gemini::AvatarImageSuiteService.call(
@@ -180,7 +188,9 @@ namespace :gemini do
           output_dir: output_dir,
           style_profile: style_profile,
           provider: provider,
-          filename_suffix: provider
+          filename_suffix: provider,
+          require_profile_eligibility: require_eligibility,
+          eligibility_threshold: eligibility_threshold
         )
 
         if result.success?

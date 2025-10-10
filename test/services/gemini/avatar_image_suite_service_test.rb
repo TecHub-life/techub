@@ -131,10 +131,22 @@ module Gemini
 
     test "falls back to profile description when avatar description fails and still generates images" do
       # Create profile context so prompt service can synthesize a description
-      profile = Profile.create!(github_id: 123456, login: @login, name: "Loftwah", summary: "Experienced Ruby engineer building OSS.")
+      profile = Profile.create!(
+        github_id: 123456,
+        login: @login,
+        name: "Loftwah",
+        summary: "Experienced Ruby engineer building OSS.",
+        github_created_at: 1.year.ago,
+        followers: 5,
+        following: 1,
+        bio: "DevOps engineer"
+      )
       ProfileLanguage.create!(profile: profile, name: "Ruby", count: 60)
       ProfileLanguage.create!(profile: profile, name: "JavaScript", count: 40)
-      ProfileRepository.create!(profile: profile, name: "techub", repository_type: "top", stargazers_count: 420)
+      ProfileRepository.create!(profile: profile, name: "alpha", full_name: "#{@login}/alpha", repository_type: "top", stargazers_count: 120, github_updated_at: 2.months.ago)
+      ProfileRepository.create!(profile: profile, name: "bravo", full_name: "#{@login}/bravo", repository_type: "top", stargazers_count: 80, github_updated_at: 3.months.ago)
+      ProfileRepository.create!(profile: profile, name: "charlie", full_name: "#{@login}/charlie", repository_type: "top", stargazers_count: 40, github_updated_at: 5.months.ago)
+      ProfileActivity.create!(profile: profile, total_events: 6, last_active: 1.week.ago)
       ProfileOrganization.create!(profile: profile, login: "techorghub", name: "TechOrgHub")
 
       # Use a unique avatar path for this test to avoid races; ensure it exists
@@ -190,7 +202,8 @@ module Gemini
         avatar_path: local_avatar_path,
         output_dir: Rails.root.join("tmp", "generated_suite"),
         prompt_service: delegated_prompt_service,
-        image_service: image_service
+        image_service: image_service,
+        require_profile_eligibility: true
       )
 
       result = service.call
