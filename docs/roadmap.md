@@ -8,14 +8,18 @@
 - **Multi-User Support**: Dynamic profile access for any GitHub username
 - **Data Storage**: Structured database schema with JSON columns and related tables
 - **Local Development**: Rails 8 + SQLite + Solid Queue + Kamal deployment ready
+- **Gemini Provider Parity**: Text, vision, and image gen via AI Studio and Vertex with verify tasks
+- **Robustness**: Lenient JSON parsing, truncation retries, and stable CI across branches
+- **CI Hygiene**: Single-run per change (push main, PR on branches) with concurrency cancellation
 
 ## Now (Phase 1: AI Foundation)
 
 - Implement the free submission funnel with GitHub eligibility scoring and decline messaging
-- Set up Google Gemini integration with Flash 2.5 model for image generation
 - Configure object storage (S3/GCS) for generated card images and assets
 - Design AI prompts for trading card stats generation (attack/defense, buffs, weaknesses)
 - Create Gemini client service with proper error handling and rate limiting
+- Add profile-backed prompt fallback when avatar description is weak/partial
+- Telemetry for provider, attempts, fallback_used, and finish_reason in metadata
 
 ## Next (Phase 2: AI Profile Processing)
 
