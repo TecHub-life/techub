@@ -1,76 +1,84 @@
 # Roadmap
 
-## Completed ✅
+## Shipped (baseline)
 
-- **GitHub Integration Module**: Complete GitHub App authentication, OAuth flows, webhook handling
-- **Profile Data Collection**: Comprehensive GitHub profile data gathering (repos, languages,
-  activity, README)
-- **Multi-User Support**: Dynamic profile access for any GitHub username
-- **Data Storage**: Structured database schema with JSON columns and related tables
-- **Local Development**: Rails 8 + SQLite + Solid Queue + Kamal deployment ready
-- **Gemini Provider Parity**: Text, vision, and image gen via AI Studio and Vertex with verify tasks
-- **Robustness**: Lenient JSON parsing, truncation retries, and stable CI across branches
-- **CI Hygiene**: Single-run per change (push main, PR on branches) with concurrency cancellation
+- GitHub auth + profile ingestion (repos, languages, orgs, README)
+- Rails 8 + SQLite + Solid Queue + Kamal baseline ready
+- Gemini provider parity (AI Studio + Vertex) for text, vision, image gen
+- Verify tasks for prompts/images/stories (both providers)
+- Robust parsing + retries (fenced/trailing JSON, MAX_TOKENS handling)
+- CI hygiene (push: main, PR: all branches) with concurrency cancel
+- Profile-backed prompt fallback when avatar description is weak
+- Provider-separated image outputs in `public/generated/<login>` with suffix
 
-## Now (Phase 1: AI Foundation)
+## PR Plan (actionable, bite-sized)
 
-- Implement the free submission funnel with GitHub eligibility scoring and decline messaging
-- Configure object storage (S3/GCS) for generated card images and assets
-- Design AI prompts for trading card stats generation (attack/defense, buffs, weaknesses)
-- Create Gemini client service with proper error handling and rate limiting
-- Add profile-backed prompt fallback when avatar description is weak/partial
-- Telemetry for provider, attempts, fallback_used, and finish_reason in metadata
+PR 01 — Description quality spec + telemetry (DONE)
+- Define weak/fragmentary rules (blank, "{", < length threshold)
+- Emit metadata: finish_reason, attempts, fallback_used, provider
+- Tests cover noisy/fenced/fragment JSON
 
-### PR Checklist (execution order)
+PR 02 — Profile traits in prompts (DONE)
+- Add single “Profile traits (no text/logos)” line (capped, non-visual)
+- Keep composition/style unchanged; behind include_profile_traits flag
+- Tests assert traits appear/cap, and don’t leak into composition/style
 
-- [x] PR 01: Add Gemini client, config/env validation, healthchecks — Completed
-- [x] PR 02: Implement AvatarDescriptionService (vision) using service result pattern — Completed
-- [ ] PR 03: Implement ProfileSynthesisService (structured output) with schema + ordering — Pending
-- [ ] PR 04: Add validators for lengths/traits + re-ask loop on violations — Pending
-- [ ] PR 05: Minimal DB migrations for ai_profiles + assets (text fields + metadata) — Pending
-- [ ] PR 06: Avatar fetch-and-store to DO Spaces + hash/dimensions — Pending
-- [ ] PR 07: PipelineOrchestrator service composing steps with success/failure results — Pending
-- [ ] PR 08: OG image route (1200x630) + screenshot job and storage — Pending
+PR 03 — Verify artifacts and UX
+- Save prompts + metadata JSON per provider under `public/generated/<login>/meta`
+- Verify tasks print exact inputs used; add `--verbose` toggle
+- Docs updated: how to compare provider outputs and artifacts
 
-### Hardening and Fallbacks
+PR 04 — Image storage: S3/GCS
+- Add storage adapter (env-driven), uploader, and public URL helpers
+- Fallback to local if creds absent; docs for credentials and paths
+- Tests: uploader unit + integration (stubbed)
 
-- [x] CI: avoid double runs; add PR trigger, concurrency cancellation
-- [x] Robust parsing: tolerate fenced JSON, trailing commas, noisy output
-- [x] Truncation handling: retry on MAX_TOKENS; fail-fast on no text parts
-- [ ] Define avatar description quality rules (empty, fragment, non-text)
-- [x] Implement profile-backed prompt fallback when description is weak
-- [x] Instrument retries/attempts and log fallback_used for monitoring
-- [ ] Tests: noise/fenced JSON, fragment cases, fallback path coverage
+PR 05 — Post-processing job (ImageMagick)
+- Optimize, strip metadata, and size variants after generation
+- Solid Queue job; idempotent; recorded in metadata
+- Tests: job unit + verify idempotence
 
-## Next (Phase 2: AI Profile Processing)
+PR 06 — Mission Control (jobs UI)
+- Views for Solid Queue queues/jobs; basic filtering
+- Health endpoints and links from README
+- Docs: operations runbook
 
-- Build AI profile analysis service to transform GitHub data into trading card stats
-- Implement card image generation using Gemini Flash 2.5
-- Create trading card data structure and templates
-- Test AI generation pipeline with existing profile data (loftwah, dhh, matz, torvalds)
-- Add ImageMagick-based post-processing to optimise generated images (size, format, metadata)
+PR 07 — Card schema + template skeleton
+- DB schema for cards; map profile → card fields (stats, tags)
+- Base HTML/CSS template (no on-image text from prompts)
+- Tests: schema + template rendering smoke tests
 
-## Soon (Phase 3: Card Presentation)
+PR 08 — Screenshot worker (Puppeteer/Playwright)
+- Headless screenshot of card route; output stored with images
+- Job wiring + retries; artifacts linked in metadata
+- Tests: job unit + golden-dimension checks
 
-- Build trading card rendering system (HTML/CSS templates)
-- Implement card export functionality (images, PDFs)
-- Create card directory with search and filtering
-- Add card sharing and embedding features
+PR 09 — Profile synthesis service + validators
+- `ProfileSynthesisService` for structured card data (title, tags, traits)
+- Validators and re-ask loop for violations
+- Tests: rule coverage + re-ask loop
 
-## Later (Phase 4: Production Features)
+PR 10 — OG image route + share pipeline
+- Route that renders a shareable card preview
+- Background job to pre-generate OG assets
+- Tests: route + job integration
 
-- Build eligibility override tooling (manual approvals, appeal notes, audit history)
-- Implement notification emails (Resend) for card completion
-- Build admin dashboard for card curation and analytics
-- Add API endpoints for programmatic card access
-- Create physical card printing pipeline for limited edition decks
+PR 11 — Observability
+- Structured logs for provider responses (status, model, tokens)
+- Dashboard doc for rate-limit/error monitoring
+- Tests: log keys present in service results
 
-## Future (Phase 5: Advanced Features)
+## Operational policies
 
-- PR backfill: split oversized profile orchestration into smaller services and add direct tests for
-  remaining GitHub helpers so every ServiceResult has a matching spec
-- Leaderboards and trending cards
-- Card trading and collection features
-- Advanced analytics and insights
-- Partner integrations and API marketplace
-- Mobile app for card collection and sharing
+- Prompts never request on-image text or logos; traits are non-visual anchors only
+- Provider flakiness must not break pipelines: retries + profile fallback path
+- All AI calls return `ServiceResult` with rich metadata for auditing
+
+## Backlog
+
+- Eligibility funnel + decline messaging
+- Admin dashboard and moderation
+- Notifications (Resend) on completion
+- API endpoints for programmatic card access
+- Physical printing pipeline
+- Leaderboards/trending, marketplace integrations, mobile client
