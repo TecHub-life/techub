@@ -1,7 +1,7 @@
 ### PR Checklist
 
 - [ ] PR 01: Add Gemini client, config/env validation, and healthchecks — In Progress
-- [ ] PR 02: Implement AvatarDescriptionService (vision) using service result pattern — Pending
+- [x] PR 02: Implement AvatarDescriptionService (vision) using service result pattern — Completed
 - [ ] PR 03: Implement ProfileSynthesisService (structured output) with schema + ordering — Pending
 - [ ] PR 04: Add validators for lengths/traits + re-ask loop on violations — Pending
 - [ ] PR 05: Minimal DB migrations for ai_profiles + assets (text fields + metadata) — Pending

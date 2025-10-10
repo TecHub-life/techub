@@ -27,7 +27,7 @@ class ProfilesController < ApplicationController
       format.json { render_json_profile }
     end
   rescue => e
-    Rails.logger.error("Profile load failed for #{username}: #{e.class} - #{e.message}")
+    StructuredLogger.error(message: "Profile load failed", username: username, error_class: e.class.name, error: e.message)
     respond_to do |format|
       format.html do
         flash.now[:alert] = "Unable to load profile for @#{username}. Please check the username and try again."
@@ -59,9 +59,7 @@ class ProfilesController < ApplicationController
       @profile = result.value
       load_profile_data
     else
-      Rails.logger.error(
-        "Profile sync failed for #{username}: #{result.error.class} - #{result.error.message}"
-      )
+      StructuredLogger.error(message: "Profile sync failed", username: username, error_class: result.error.class.name, error: result.error.message)
       flash.now[:alert] = if result.error.is_a?(Octokit::NotFound)
         "GitHub user @#{username} not found."
       else

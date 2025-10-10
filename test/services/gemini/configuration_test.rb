@@ -23,6 +23,12 @@ module Gemini
       end
     end
 
+    test "auto selects ai studio when api key present" do
+      Rails.application.stub :credentials, CredentialsStub.new({ gemini: { api_key: "auto-key" } }) do
+        assert_equal "ai_studio", Gemini::Configuration.provider
+      end
+    end
+
     test "reads google top-level keys" do
       creds = {
         google: {
@@ -81,6 +87,12 @@ module Gemini
       end
       Rails.application.stub :credentials, CredentialsStub.new({ gemini: { api_key: "k" } }) do
         assert_equal true, Gemini::Configuration.validate!
+      end
+    end
+
+    test "validate! accepts provider override" do
+      Rails.application.stub :credentials, CredentialsStub.new({ gemini: { api_key: "inline-key" } }) do
+        assert_equal true, Gemini::Configuration.validate!("ai_studio")
       end
     end
   end

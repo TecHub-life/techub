@@ -23,6 +23,7 @@
 - Implement card image generation using Gemini Flash 2.5
 - Create trading card data structure and templates
 - Test AI generation pipeline with existing profile data (loftwah, dhh, matz, torvalds)
+- Add ImageMagick-based post-processing to optimise generated images (size, format, metadata)
 
 ## Soon (Phase 3: Card Presentation)
 

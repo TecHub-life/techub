@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
   before_action :load_current_user
+  before_action :set_current_request_context
 
   helper_method :current_user
 
@@ -17,5 +18,15 @@ class ApplicationController < ActionController::Base
 
   def current_user
     @current_user
+  end
+
+  def set_current_request_context
+    Current.request_id = request.request_id
+    Current.user_id = current_user&.id
+    Current.ip = request.remote_ip
+    Current.user_agent = request.user_agent
+    Current.path = request.path
+    Current.method = request.request_method
+    Current.session_id = session.id.private_id rescue nil
   end
 end

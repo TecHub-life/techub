@@ -9,11 +9,9 @@ google:
 
 Use `EDITOR="cursor --wait" bin/rails credentials:edit`.
 
-2. Local env for dev
-
-```bash
-GEMINI_PROVIDER=ai_studio
-```
+2. Local env for dev  
+   _(provider auto-detects: we now prefer Vertex when a project is configured; AI Studio is used
+   when only an API key is present. You can always force via `GEMINI_PROVIDER`.)_
 
 3. Verify healthchecks
 
@@ -28,6 +26,89 @@ Docs:
   [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation)
 - Gemini 2.5 Flash (Vertex image section):
   [cloud.google.com](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash#image)
+
+---
+
+### Avatar description & TecHub prompt demo
+
+Once an avatar image is stored locally (e.g., via `Profiles::SyncFromGithub`), you can generate a
+Gemini-backed description plus TecHub-flavoured prompts:
+
+```bash
+bundle exec rake "gemini:avatar_prompt[loftwah]"
+# run both providers back-to-back
+bundle exec rake "gemini:avatar_prompt:verify[loftwah]"
+# force a provider per run
+bundle exec rake "gemini:avatar_prompt[loftwah,,,vertex]"
+# supply a custom path or tweak the style profile
+bundle exec rake gemini:avatar_prompt AVATAR_PATH=public/avatars/loftwah.png STYLE="Neon-lit anime portrait"
+# or add PROVIDER=ai_studio/vertex to the env for any task
+PROVIDER=ai_studio bundle exec rake "gemini:avatar_prompt[loftwah]"
+```
+
+> **zsh tip**: wrap the task name in quotes (or escape the brackets) so the shell doesn't treat `[]`
+> specially, e.g. `bundle exec rake "gemini:avatar_prompt[loftwah]"`.
+
+The task composes `Gemini::AvatarDescriptionService` and `Gemini::AvatarPromptService`, printing the
+avatar description and four ratio-ready prompts (1×1, 16×9, 3×1, 9×16). Failures include debug
+metadata so you can inspect Gemini responses quickly. Prompts simply restate the avatar description
+plus structured traits, giving image models a grounded brief without extra UI instructions.
+
+To prove the full pipeline (description → prompts → images), run:
+
+```bash
+bundle exec rake "gemini:avatar_generate[loftwah]"
+# override the provider just for this run
+bundle exec rake "gemini:avatar_generate[loftwah,,,public/generated,ai_studio]"
+# check both providers and write outputs into public/generated/<login>
+bundle exec rake "gemini:avatar_generate:verify[loftwah]"
+# optional overrides
+bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy,public/avatars/loftwah.png,public/generated]"
+```
+
+This drives `Gemini::AvatarImageSuiteService`, generating PNGs for the four aspect ratios via
+`Gemini::ImageGenerationService` and writing them to `public/generated/<login>/`. When both
+providers are used together (verify task), files are suffixed by provider to avoid overwrites, e.g.
+`avatar-1x1-ai_studio.png` and `avatar-1x1-vertex.png`. The command prints paths for easy preview
+and re-use, and echoes the structured traits alongside the summary so you can see which features
+informed each prompt.
+
+> **zsh tip**: quote the whole rake invocation when passing multiple arguments, e.g.
+> `bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy]"`.
+
+---
+
+### Quick story demo
+
+Once a profile record exists locally, you can spin up a short narrative that proves text generation
+as well:
+
+```bash
+bundle exec rake "gemini:profile_story[loftwah]"
+# choose provider explicitly when testing
+bundle exec rake "gemini:profile_story[loftwah,ai_studio]"
+# or slam both providers in one go
+bundle exec rake "gemini:profile_story:verify[loftwah]"
+```
+
+The command uses `Profiles::StoryFromProfile` to build a ~120 word micro-story grounded in the
+profile's summary, languages, repositories, organisations, and social handles.
+
+---
+
+### All-in-one verification
+
+Run prompts, images (8 total, 4 per provider), and stories for both providers in one go:
+
+```bash
+bundle exec rake "gemini:verify_all[loftwah,,,public/generated]"
+```
+
+Outputs:
+
+- Avatar prompts printed per provider
+- 8 images written to `public/generated/<login>/avatar-<ratio>-<provider>.png`
+- Two micro-stories (one per provider) printed to the console
 
 ---
 
@@ -56,7 +137,10 @@ GEMINI_LOCATION=us-central1
 - Vertex AI User (roles/aiplatform.user)
 - Service Usage Consumer (roles/serviceusage.serviceUsageConsumer)
 
-4. Enable the preview model (Gemini 2.5 Flash Image) and ensure org policy allows it.
+4. Image generation on Vertex
+   - Gemini 2.5 Flash includes an image generation section. Some orgs/projects require enabling the
+     preview image model and allowing it via org policy. If blocked (400/404), run with AI Studio
+     until Vertex is enabled.
 
 5. Verify
 
@@ -97,3 +181,20 @@ curl -s http://localhost:3000/up/gemini/image  # expect 200 once enabled
 - Fallback logic (already wired)
   - If Vertex image gen fails due to policy/preview, our checks/routes can use the API key path
     instead. You don’t need to change code.
+
+---
+
+### Using generated images in docs
+
+Once images are generated into `public/generated/<login>/`, you can reference them in Markdown. For
+example, to include both providers side-by-side for `loftwah`:
+
+```md
+![1x1 AI Studio](../public/generated/loftwah/avatar-1x1-ai_studio.png)
+![1x1 Vertex](../public/generated/loftwah/avatar-1x1-vertex.png)
+```
+
+Tip:
+
+- Commit the files under `public/generated/<login>/` if you want them to render on GitHub.
+- Use provider-suffixed filenames to make comparisons explicit in your docs.

@@ -14,7 +14,7 @@ module Gemini
 
       # Provider selector: "vertex" (default) or "ai_studio"
       def provider
-        (ENV["GEMINI_PROVIDER"].presence || cred_lookup([ :gemini, :provider ], [ :google, :gemini, :provider ]) || "vertex").to_s
+        explicit_provider.presence || inferred_provider
       end
 
       # Vertex settings
@@ -46,8 +46,10 @@ module Gemini
       end
 
       # Validates that required config is present for the selected provider
-      def validate!
-        case provider
+      def validate!(provider_override = nil)
+        target = provider_override.presence || provider
+
+        case target
         when "vertex"
           # Vertex can work with GCE/GKE/GCloud ADC without explicit file; require project_id at minimum
           raise KeyError, "Missing Gemini configuration for project_id" if project_id.blank?
@@ -66,6 +68,18 @@ module Gemini
       end
 
       private
+
+      def explicit_provider
+        ENV["GEMINI_PROVIDER"].presence || cred_lookup([ :gemini, :provider ], [ :google, :gemini, :provider ])
+      end
+
+      def inferred_provider
+        # Prefer Vertex when both are configured; AI Studio when only API key is present
+        return "vertex" if project_id.present?
+        return "ai_studio" if api_key.present?
+
+        "vertex"
+      end
 
       def cred_lookup(*paths)
         creds = Rails.application.credentials

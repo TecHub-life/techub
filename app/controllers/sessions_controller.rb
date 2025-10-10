@@ -22,7 +22,7 @@ class SessionsController < ApplicationController
 
     token_result = Github::UserOauthService.call(code: params[:code], redirect_uri: Github::Configuration.callback_url(default: auth_github_callback_url))
     unless token_result.success?
-      Rails.logger.error("GitHub OAuth failed: #{token_result.error}")
+      StructuredLogger.error(message: "GitHub OAuth failed", error: token_result.error)
       redirect_to root_path, alert: "GitHub login failed"
       return
     end
@@ -31,7 +31,7 @@ class SessionsController < ApplicationController
 
     fetch_result = Github::FetchAuthenticatedUser.call(access_token: access_token)
     unless fetch_result.success?
-      Rails.logger.error("GitHub user fetch failed: #{fetch_result.error}")
+      StructuredLogger.error(message: "GitHub user fetch failed", error: fetch_result.error)
       redirect_to root_path, alert: "Failed to fetch GitHub profile"
       return
     end
@@ -39,7 +39,7 @@ class SessionsController < ApplicationController
     user_payload = fetch_result.value[:user]
     upsert_result = Users::UpsertFromGithub.call(user_payload: user_payload, access_token: access_token)
     unless upsert_result.success?
-      Rails.logger.error("User upsert failed: #{upsert_result.error}")
+      StructuredLogger.error(message: "User upsert failed", error: upsert_result.error)
       redirect_to root_path, alert: "Unable to persist GitHub user"
       return
     end
