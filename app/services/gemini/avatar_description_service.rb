@@ -77,12 +77,21 @@ module Gemini
 
         description, structured_payload = extract_description(response.body)
         finish_reason = extract_finish_reason(response.body)
+        has_text_parts = response_has_text_parts?(response.body)
         attempts << { http_status: response.status, finish_reason: finish_reason, limit: limit }
 
         if description.present?
           meta = { http_status: response.status, provider: provider, attempts: attempts }
           meta[:structured] = structured_payload if structured_payload.present?
           return success(description.strip, metadata: meta)
+        end
+
+        # If provider returned no text parts at all and wasn't truncated, treat as hard failure
+        if !has_text_parts && finish_reason != "MAX_TOKENS"
+          return failure(
+            StandardError.new("Gemini response did not include a description"),
+            metadata: { http_status: response.status, body: response.body, attempts: attempts }
+          )
         end
 
         # If truncated, try next, otherwise break to fallback
@@ -207,6 +216,15 @@ module Gemini
       dig_value(candidate, :finishReason)
     end
 
+    def response_has_text_parts?(body)
+      data = normalize_to_hash(body)
+      return false if data.blank?
+      candidate = Array(dig_value(data, :candidates)).first
+      content = dig_value(candidate, :content)
+      parts = Array(dig_value(content, :parts))
+      parts.any? { |part| dig_value(part, :text).present? }
+    end
+
     def extract_structured_payload(parts)
       parts.each do |part|
         hash = deep_stringify(part)
@@ -251,16 +269,19 @@ module Gemini
         return text["description"].to_s.strip
       end
 
-      if text.to_s.strip.start_with?("{") && text.to_s.include?("}")
+      stripped = text.to_s.strip
+      if stripped.start_with?("{") && stripped.include?("}")
         json = parse_relaxed_json(text) rescue nil
         return json["description"].to_s.strip if json.is_a?(Hash) && json["description"].present?
       end
 
-      cleaned = text.to_s.strip
-      # Ensure sentences end with periods and avoid trailing conjunctions.
+      # If the text looks like the start of JSON but isn't complete (e.g. "{"), treat as empty
+      return nil if stripped.start_with?("{") && !stripped.include?("}")
+
+      cleaned = stripped
       cleaned = cleaned.gsub(/\s+/, " ")
       cleaned = cleaned.split(/(?<=[.?!])\s*/).map(&:strip).reject(&:blank?).join(" ")
-      cleaned.length >= 30 ? cleaned : nil
+      cleaned.presence
     end
 
     def parse_relaxed_json(text)

@@ -28,7 +28,7 @@ module Gemini
         prompts.each_value do |prompt|
           assert_match(/Portrait prompt:/, prompt)
           assert_includes prompt, "A playful avatar with teal gradients."
-          assert_includes prompt, "Key traits: facial features: Round glasses, undercut fade."
+          assert_includes prompt, "Key visual traits: facial features: Round glasses, undercut fade."
         end
 
         assert_equal prompts["1x1"], result.value[:image_prompt], "primary prompt should mirror 1x1 variant"

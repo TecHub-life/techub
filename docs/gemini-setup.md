@@ -26,6 +26,8 @@ Docs:
   [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation)
 - Gemini 2.5 Flash (Vertex image section):
   [cloud.google.com](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash#image)
+- ADR 0001: LLM cost control via eligibility gate and profile fallback:
+  docs/adr/0001-llm-cost-control-eligibility-gate.md
 
 ---
 
@@ -72,6 +74,25 @@ providers are used together (verify task), files are suffixed by provider to avo
 `avatar-1x1-ai_studio.png` and `avatar-1x1-vertex.png`. The command prints paths for easy preview
 and re-use, and echoes the structured traits alongside the summary so you can see which features
 informed each prompt.
+
+Eligibility gate (optional but recommended):
+
+You can require a minimum-quality profile before spending tokens on generation. This gate uses
+`Eligibility::GithubProfileScoreService` (signals: account age, repo activity, social proof,
+meaningful profile, recent events). Enable it for the generate tasks via env vars:
+
+```bash
+# Require eligibility and use default threshold (3 signals)
+REQUIRE_ELIGIBILITY=true bundle exec rake "gemini:avatar_generate[loftwah]"
+
+# Adjust threshold if you want to be stricter/looser
+REQUIRE_ELIGIBILITY=true ELIGIBILITY_THRESHOLD=4 bundle exec rake "gemini:avatar_generate[loftwah]"
+```
+
+If the profile fails the gate, generation exits early with a clear error and signal breakdown in
+metadata. When the gate passes, description is attempted via Gemini; on failure or weak output, the
+prompt service synthesizes a description from the stored `Profile` context and proceeds to image
+generation.
 
 > **zsh tip**: quote the whole rake invocation when passing multiple arguments, e.g.
 > `bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy]"`.
