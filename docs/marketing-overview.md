@@ -21,8 +21,9 @@ what you build, and why you matter**.
 
 ## How It Works
 
-1. **Stripe-Gated Submission ($3.50)** Submit any GitHub username for $3.50. The light friction
-   filters noise and funds infra — no applications, no gatekeeping.
+1. **Free Submission (GitHub signal check)** Submit any GitHub username for free. We run an
+   eligibility check (age, repos, followers, activity) to keep bots out and make sure there's enough
+   public signal to build a meaningful card.
 
 2. **AI-Powered Generation** Our pipeline analyses profile signals (repos, commits, languages,
    topics) and linked content to generate **attack & defence stats, buffs, weaknesses, special
@@ -58,11 +59,11 @@ Curious? Start with **@loftwah** to preview how cards look and feel.
 
 ---
 
-## Why A$3.50?
+## Why GitHub Eligibility?
 
-**Tree Fiddy.** It’s not a paywall — it’s healthy friction. A$3.50 filters for intent, covers
-AI/infra costs, and funds future expansions like **physical cards, custom packs,** and **deeper
-analytics**. No applications. No gatekeeping. **Pay → get carded → join the stack.**
+Staying free means we vet accounts instead of charging. Eligibility scoring looks at GitHub signal —
+account age, repository depth, social proof, and recent activity — so we spend AI budget on genuine
+builders. Miss the mark? Grow your footprint, come back, and we’ll pick it up from there.
 
 ---
 

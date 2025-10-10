@@ -11,6 +11,7 @@
 
 ## Now (Phase 1: AI Foundation)
 
+- Implement the free submission funnel with GitHub eligibility scoring and decline messaging
 - Set up Google Gemini integration with Flash 2.5 model for image generation
 - Configure object storage (S3/GCS) for generated card images and assets
 - Design AI prompts for trading card stats generation (attack/defense, buffs, weaknesses)
@@ -32,7 +33,7 @@
 
 ## Later (Phase 4: Production Features)
 
-- **Integrate Stripe Checkout for $3.50 card generation requests** (core requirement)
+- Build eligibility override tooling (manual approvals, appeal notes, audit history)
 - Implement notification emails (Resend) for card completion
 - Build admin dashboard for card curation and analytics
 - Add API endpoints for programmatic card access
@@ -40,6 +41,8 @@
 
 ## Future (Phase 5: Advanced Features)
 
+- PR backfill: split oversized profile orchestration into smaller services and add direct tests for
+  remaining GitHub helpers so every ServiceResult has a matching spec
 - Leaderboards and trending cards
 - Card trading and collection features
 - Advanced analytics and insights

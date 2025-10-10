@@ -7,7 +7,8 @@ external services and credentials.
 
 TecHub is an AI-powered collectible trading card system for GitHub developer profiles. It creates
 stylized trading cards based on GitHub profile data, repositories, contributions, and activity.
-Users can submit GitHub usernames for $3.50 to generate their trading card.
+Users submit GitHub usernames for free, and we gate access with a lightweight GitHub profile health
+check to keep the directory high-signal.
 
 ## Prerequisites
 

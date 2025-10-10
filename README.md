@@ -1,5 +1,16 @@
 # TecHub
 
+```
+   _____                   _  _            _
+  |_   _|   ___     __    | || |   _  _   | |__
+    | |    / -_)   / _|   | __ |  | +| |  | '_ \
+  _|_|_   \___|   \__|_  |_||_|   \_,_|  |_.__/
+_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|
+"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'
+```
+
+[techub.life](https://techub.life) — AI-powered trading cards for GitHub profiles.
+
 Rails 8 application powering AI-assisted trading cards for GitHub profiles. It bundles the GitHub
 App + OAuth flows, Solid Queue scheduling, Tailwind UI, and Kamal deployment so the whole experience
 stays operable from a laptop.
@@ -154,6 +165,7 @@ Secrets live in `.kamal/secrets`; populate them via environment variables or you
 
 - `docs/marketing-overview.md` preserves the pre-Rails marketing write-up.
 - `docs/roadmap.md` tracks upcoming milestones so we can thin-slice future work.
+- `docs/development-workflow.md` captures our “one feature per PR” and `ServiceResult` conventions.
 - `components/` and `pages/` contain early ideation notes.
 
 Questions? Drop an issue or DM @loftwah. Happy shipping!
