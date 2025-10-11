@@ -93,6 +93,37 @@ PR 12 — Docker Compose validation + healthchecks
 - Docs: how to run locally via Compose and verify health
 - CI: optional compose-based smoke test target
 
+PR 13 — Ownership & limits (My Profiles)
+
+- Data model: link `User` ↔ `Profile` ownership (claim + list)
+- UI: “My Profiles” page with add/remove
+- Policy: enforce per-user cap (default 5)
+- Docs: auth-and-ownership, workflow updates
+
+PR 14 — Eligibility gate in pipeline
+
+- Enable `require_profile_eligibility` in the generation pipeline/job
+- Surface decline reasons (signals) in UI and JSON
+- Docs: eligibility policy + cost control
+
+PR 15 — Avatar uploads & unified assets
+
+- Upload avatars via Active Storage (DO Spaces) like other assets
+- Record avatar `ProfileAssets` rows with public URLs
+- Update views to prefer CDN URLs
+
+PR 16 — Full pipeline job orchestration
+
+- Add `Profiles::GeneratePipelineJob` (sync → images → synth → screenshots → optimize)
+- Retries/backoff and status logging; visible in Mission Control
+- Tests: job success/failure paths, idempotence
+
+PR 17 — Billing feature flag (Stripe-ready)
+
+- Introduce `STRIPE_ENABLED` flag and entitlement checks around generation
+- Stub billing service/interfaces for later Stripe drop-in
+- Docs: configuration and upgrade path
+
 ## Operational policies
 
 - Prompts never request on-image text or logos; traits are non-visual anchors only
