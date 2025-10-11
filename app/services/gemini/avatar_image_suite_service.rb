@@ -81,7 +81,32 @@ module Gemini
         )
         return result if result.failure?
 
-        generated[key] = result.value.merge(aspect_ratio: variant[:aspect_ratio])
+        payload = result.value.merge(aspect_ratio: variant[:aspect_ratio])
+
+        if upload_enabled?
+          upload = Storage::ActiveStorageUploadService.call(
+            path: payload[:output_path],
+            content_type: payload[:mime_type],
+            filename: File.basename(variant_output_path)
+          )
+          return upload if upload.failure?
+          payload[:public_url] = upload.value[:public_url]
+        end
+
+        generated[key] = payload
+
+        # Record assets for later lookup (unified storage for URLs)
+        begin
+          record_variant_asset(
+            kind: variant_kind(key),
+            local_path: payload[:output_path],
+            public_url: payload[:public_url],
+            mime_type: payload[:mime_type],
+            provider: provider_for_artifacts
+          )
+        rescue StandardError
+          # best-effort; ignore recording failures
+        end
       end
 
       # Best-effort: persist prompts + metadata artifacts next to outputs
@@ -213,6 +238,38 @@ module Gemini
       base = File.basename(filename, File.extname(filename))
       ext = File.extname(filename)
       "#{base}-#{filename_suffix}#{ext}"
+    end
+
+    def upload_enabled?
+      flag = ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase
+      env_enabled = [ "1", "true", "yes" ].include?(flag)
+      env_enabled || Rails.env.production?
+    end
+
+    def record_variant_asset(kind:, local_path:, public_url:, mime_type:, provider: nil)
+      profile = Profile.find_by(login: login.downcase) rescue nil
+      return unless profile
+
+      ProfileAssets::RecordService.call(
+        profile: profile,
+        kind: kind,
+        local_path: local_path,
+        public_url: public_url,
+        mime_type: mime_type,
+        provider: provider
+      )
+    rescue StandardError
+      # best-effort; do not fail generation due to asset record
+    end
+
+    def variant_kind(key)
+      case key.to_s
+      when "1x1" then "avatar_1x1"
+      when "16x9" then "avatar_16x9"
+      when "3x1" then "avatar_3x1"
+      when "9x16" then "avatar_9x16"
+      else key.to_s
+      end
     end
 
     # Persist prompts and metadata artifacts for auditability

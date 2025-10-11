@@ -25,6 +25,13 @@ verification instead.
 **Summary**: Require a minimum-quality profile before running Gemini; if eligible, attempt LLM and
 fallback to profile context on failures.
 
+### [ADR-0002: Screenshot generation driver — Node Puppeteer](./adr/0002-screenshots-driver-puppeteer-node.md)
+
+**Status**: Accepted  
+**Date**: 2025-10-11  
+**Summary**: Standardize on Node Puppeteer for rendering and capturing OG/card images; tests bypass
+browser; containers use system Chromium.
+
 ## ADR Template
 
 When creating new ADRs, use this template:

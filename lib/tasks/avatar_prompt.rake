@@ -94,7 +94,9 @@ namespace :gemini do
     puts "Avatar description:\n#{result.value[:avatar_description]}"
     puts "\nSaved image variants to #{result.value[:output_dir]}:"
     result.value[:images].each do |variant, payload|
-      puts "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+      line = "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+      line += " [url: #{payload[:public_url]}]" if payload[:public_url].present?
+      puts line
     end
     unless result.metadata.blank?
       puts "\nMetadata: #{result.metadata}"
@@ -208,7 +210,9 @@ namespace :gemini do
           end
           images = result.value[:images] || {}
           images.each do |variant, payload|
-            puts "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+            line = "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+            line += " [url: #{payload[:public_url]}]" if payload[:public_url].present?
+            puts line
           end
         else
           warn "Provider #{provider} FAILED: #{result.error.message}"

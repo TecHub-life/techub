@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_06_110623) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_11_000002) do
   create_table "profile_activities", force: :cascade do |t|
     t.integer "profile_id", null: false
     t.integer "total_events", default: 0
@@ -21,6 +21,42 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_110623) do
     t.datetime "updated_at", null: false
     t.index ["last_active"], name: "index_profile_activities_on_last_active"
     t.index ["profile_id"], name: "index_profile_activities_on_profile_id"
+  end
+
+  create_table "profile_assets", force: :cascade do |t|
+    t.integer "profile_id", null: false
+    t.string "kind", null: false
+    t.string "provider"
+    t.string "mime_type"
+    t.integer "width"
+    t.integer "height"
+    t.string "local_path"
+    t.string "public_url"
+    t.datetime "generated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["profile_id", "kind"], name: "index_profile_assets_on_profile_id_and_kind", unique: true
+    t.index ["profile_id"], name: "index_profile_assets_on_profile_id"
+  end
+
+  create_table "profile_cards", force: :cascade do |t|
+    t.integer "profile_id", null: false
+    t.string "title"
+    t.string "tagline"
+    t.integer "attack", default: 0
+    t.integer "defense", default: 0
+    t.integer "speed", default: 0
+    t.string "vibe"
+    t.string "special_move"
+    t.string "spirit_animal"
+    t.string "archetype"
+    t.json "tags", default: []
+    t.string "style_profile"
+    t.string "theme"
+    t.datetime "generated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["profile_id"], name: "index_profile_cards_on_profile_id", unique: true
   end
 
   create_table "profile_languages", force: :cascade do |t|
@@ -135,6 +171,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_06_110623) do
   end
 
   add_foreign_key "profile_activities", "profiles"
+  add_foreign_key "profile_assets", "profiles"
+  add_foreign_key "profile_cards", "profiles"
   add_foreign_key "profile_languages", "profiles"
   add_foreign_key "profile_organizations", "profiles"
   add_foreign_key "profile_readmes", "profiles"

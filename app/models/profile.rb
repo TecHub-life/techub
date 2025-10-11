@@ -6,6 +6,8 @@ class Profile < ApplicationRecord
   has_many :profile_languages, dependent: :destroy
   has_one :profile_activity, dependent: :destroy
   has_one :profile_readme, dependent: :destroy
+  has_one :profile_card, dependent: :destroy
+  has_many :profile_assets, dependent: :destroy
 
   # Validations
   validates :github_id, presence: true, uniqueness: true

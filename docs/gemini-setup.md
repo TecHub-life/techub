@@ -157,6 +157,26 @@ metadata for stories).
 
 ---
 
+### Image publishing (production) and local dev
+
+- Development/CI: image files are written to `public/generated/<login>/` only.
+- Production: when Active Storage is configured for DigitalOcean Spaces (see `config/storage.yml`
+  and `config/environments/production.rb`), generated images are uploaded after local write and a
+  `public_url` is included in results.
+- Toggle in any environment with `GENERATED_IMAGE_UPLOAD=1` to force upload.
+
+Rake output shows remote URLs when available:
+
+```bash
+VERBOSE=1 bundle exec rake "gemini:avatar_generate:verify"
+# ...
+- 1x1 (image/png) -> public/generated/loftwah/avatar-1x1.png [url: https://cdn.example/...]
+```
+
+Artifacts JSON remain on disk under `public/generated/<login>/meta/`.
+
+---
+
 ### Optional: Vertex setup (only if you need Vertex)
 
 1. Encrypted credentials (service account JSON)

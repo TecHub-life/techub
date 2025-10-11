@@ -51,15 +51,21 @@ PR 06 — Mission Control (jobs UI)
 
 PR 07 — Card schema + template skeleton
 
-- DB schema for cards; map profile → card fields (stats, tags)
-- Base HTML/CSS template (no on-image text from prompts)
-- Tests: schema + template rendering smoke tests
+- DB schema for cards; map profile → card fields (stats, tags) (DONE)
+- Base HTML/CSS template (no on-image text from prompts) (DONE)
+- SynthesizeCardService to compute attributes from signals (DONE)
+- Rake task to persist cards (DONE)
+- Tests: service unit + controller views (DONE)
 
 PR 08 — Screenshot worker (Puppeteer/Playwright)
 
-- Headless screenshot of card route; output stored with images
-- Job wiring + retries; artifacts linked in metadata
-- Tests: job unit + golden-dimension checks
+- CLI + service (DONE): `script/screenshot.js` + `Screenshots::CaptureCardService` +
+  `rake screenshots:capture` capture fixed-size views to PNG.
+- Routes + views (DONE): `/cards/:login/(og|card|simple)` with 1200x630 and 1280x720 frames; use
+  generated art when available.
+- Background job + retries (NEXT): Solid Queue job to run screenshots asynchronously; link artifacts
+  in metadata.
+- Tests: service unit (DONE) + golden-dimension checks (NEXT)
 
 PR 09 — Profile synthesis service + validators
 
@@ -78,6 +84,14 @@ PR 11 — Observability
 - Structured logs for provider responses (status, model, tokens)
 - Dashboard doc for rate-limit/error monitoring
 - Tests: log keys present in service results
+
+PR 12 — Docker Compose validation + healthchecks
+
+- Single image runtime: web and jobs run from the same container image
+- docker-compose.yml for local proof with services: web, worker, db
+- Healthchecks: Rails app, Solid Queue, Chromium/Puppeteer readiness
+- Docs: how to run locally via Compose and verify health
+- CI: optional compose-based smoke test target
 
 ## Operational policies
 
