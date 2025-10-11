@@ -62,6 +62,7 @@ module Gemini
       description = prompts_result.value[:avatar_description]
       structured = prompts_result.value[:structured_description]
       prompts = prompts_result.value[:image_prompts]
+      provider_for_artifacts = (prompts_result.metadata || {})[:provider] || provider_override
 
       generated = {}
 
@@ -82,6 +83,15 @@ module Gemini
 
         generated[key] = result.value.merge(aspect_ratio: variant[:aspect_ratio])
       end
+
+      # Best-effort: persist prompts + metadata artifacts next to outputs
+      write_artifacts(
+        provider_for_artifacts,
+        description: description,
+        structured: structured,
+        prompts: prompts,
+        metadata: prompts_result.metadata
+      )
 
       success(
         {
@@ -203,6 +213,27 @@ module Gemini
       base = File.basename(filename, File.extname(filename))
       ext = File.extname(filename)
       "#{base}-#{filename_suffix}#{ext}"
+    end
+
+    # Persist prompts and metadata artifacts for auditability
+    def write_artifacts(provider, description:, structured:, prompts:, metadata: {})
+      provider_key = provider.to_s.strip.presence || "unknown"
+      base_dir = output_dir.join(login, "meta")
+      FileUtils.mkdir_p(base_dir)
+
+      prompts_payload = {
+        avatar_description: description,
+        structured_description: structured,
+        prompts: prompts
+      }
+
+      meta_payload = metadata || {}
+
+      File.write(base_dir.join("prompts-#{provider_key}.json"), JSON.pretty_generate(prompts_payload))
+      File.write(base_dir.join("meta-#{provider_key}.json"), JSON.pretty_generate(meta_payload))
+    rescue StandardError => e
+      # Best-effort; do not fail generation due to artifact write
+      StructuredLogger.warn(message: "Failed to write artifacts", login: login, provider: provider_key, error: e.message) if defined?(StructuredLogger)
     end
   end
 end

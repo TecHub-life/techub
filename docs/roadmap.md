@@ -25,7 +25,7 @@ PR 02 — Profile traits in prompts (DONE)
 - Keep composition/style unchanged; behind include_profile_traits flag
 - Tests assert traits appear/cap, and don’t leak into composition/style
 
-PR 03 — Verify artifacts and UX
+PR 03 — Verify artifacts and UX (DONE)
 
 - Save prompts + metadata JSON per provider under `public/generated/<login>/meta`
 - Verify tasks print exact inputs used; add `--verbose` toggle

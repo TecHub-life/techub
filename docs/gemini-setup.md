@@ -133,6 +133,29 @@ Outputs:
 
 ---
 
+### Artifacts and VERBOSE mode
+
+When generating images via the suite, the exact inputs are persisted for audit and comparison:
+
+- Path: `public/generated/<login>/meta/`
+  - `prompts-<provider>.json` — includes `avatar_description`, `structured_description`, and
+    `prompts` per variant.
+  - `meta-<provider>.json` — includes service metadata such as `provider`, `finish_reason`,
+    `attempts`, `theme`, and `style_profile`.
+
+For side-by-side debugging without re-running calls, enable verbose output in verify tasks:
+
+```bash
+VERBOSE=1 bundle exec rake "gemini:avatar_prompt:verify[loftwah]"
+VERBOSE=1 bundle exec rake "gemini:avatar_generate:verify[loftwah]"
+VERBOSE=1 bundle exec rake "gemini:profile_story:verify[loftwah]"
+```
+
+Verbose mode prints the provider, theme, style profile, and the exact prompts used (plus rich
+metadata for stories).
+
+---
+
 ### Optional: Vertex setup (only if you need Vertex)
 
 1. Encrypted credentials (service account JSON)
@@ -195,6 +218,9 @@ curl -s http://localhost:3000/up/gemini/image  # expect 200 once enabled
   - Image gen: prompt only; image bytes are returned in
     `candidates[0].content.parts[].inlineData.data` (base64) per
     [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation).
+  - Aspect ratio: the API does not currently accept an explicit ratio in our payload; we encode
+    composition and desired ratio in the prompt. Expect minor variance in output sizing across
+    providers/models.
 - Costs/quotas
   - Image output uses ~1290 tokens per 1024×1024 image (see token table on
     [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation)). Respect model‑level
