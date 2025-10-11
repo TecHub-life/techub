@@ -34,10 +34,11 @@ Docs:
 ### Avatar description & TecHub prompt demo
 
 Once an avatar image is stored locally (e.g., via `Profiles::SyncFromGithub`), you can generate a
-Gemini-backed description plus TecHub-flavoured prompts:
+Gemini-backed description plus TecHub-flavoured prompts. The `login` defaults to `loftwah` if not
+provided (override via arg or `LOGIN=...`):
 
 ```bash
-bundle exec rake "gemini:avatar_prompt[loftwah]"
+bundle exec rake "gemini:avatar_prompt"
 # run both providers back-to-back
 bundle exec rake "gemini:avatar_prompt:verify[loftwah]"
 # force a provider per run
@@ -59,11 +60,11 @@ plus structured traits, giving image models a grounded brief without extra UI in
 To prove the full pipeline (description → prompts → images), run:
 
 ```bash
-bundle exec rake "gemini:avatar_generate[loftwah]"
+bundle exec rake "gemini:avatar_generate"
 # override the provider just for this run
 bundle exec rake "gemini:avatar_generate[loftwah,,,public/generated,ai_studio]"
 # check both providers and write outputs into public/generated/<login>
-bundle exec rake "gemini:avatar_generate:verify[loftwah]"
+bundle exec rake "gemini:avatar_generate:verify"
 # optional overrides
 bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy,public/avatars/loftwah.png,public/generated]"
 ```
@@ -105,11 +106,11 @@ Once a profile record exists locally, you can spin up a short narrative that pro
 as well:
 
 ```bash
-bundle exec rake "gemini:profile_story[loftwah]"
+bundle exec rake "gemini:profile_story"
 # choose provider explicitly when testing
 bundle exec rake "gemini:profile_story[loftwah,ai_studio]"
 # or slam both providers in one go
-bundle exec rake "gemini:profile_story:verify[loftwah]"
+bundle exec rake "gemini:profile_story:verify"
 ```
 
 The command uses `Profiles::StoryFromProfile` to build a ~120 word micro-story grounded in the
@@ -122,7 +123,7 @@ profile's summary, languages, repositories, organisations, and social handles.
 Run prompts, images (8 total, 4 per provider), and stories for both providers in one go:
 
 ```bash
-bundle exec rake "gemini:verify_all[loftwah,,,public/generated]"
+bundle exec rake "gemini:verify_all[,,,public/generated]"
 ```
 
 Outputs:

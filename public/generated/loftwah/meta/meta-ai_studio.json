@@ -1,0 +1,32 @@
+{
+  "http_status": 200,
+  "provider": "ai_studio",
+  "attempts": [
+    {
+      "http_status": 200,
+      "finish_reason": "MAX_TOKENS",
+      "limit": 400
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "MAX_TOKENS",
+      "limit": 700
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "STOP",
+      "limit": 1000
+    }
+  ],
+  "structured": {
+    "description": "The avatar features a man with a bald head and a prominent reddish-brown beard, dressed in formal business attire. He is positioned against a dark blue background adorned with an abstract, glowing network pattern, suggesting a modern and technologically oriented setting. The overall presentation conveys a sense of professional competence and approachable confidence, making it suitable for a corporate or tech-focused profile image.",
+    "facial_features": "The man has a bald head, a full and well-groomed reddish-brown beard, and dark, thick eyebrows. His eyes are open and looking directly forward, and his ears are visible.",
+    "expression": "He displays a pleasant and confident expression, characterized by a slight, friendly smile that reveals his upper teeth.",
+    "attire": "The man is wearing a crisp white collared shirt, a dark black suit jacket, and a light blue tie with subtle horizontal stripes.",
+    "palette": "The dominant colors include the dark blue of the background, the black of the suit, the white of the shirt, and the light blue of the tie and background network elements. Skin tones are natural, and the beard is a rich reddish-brown.",
+    "background": "The background is a deep blue, featuring an abstract pattern of glowing light blue lines and interconnected dots, which resembles a digital network or a constellation.",
+    "mood": "Professional and tech-savvy."
+  },
+  "theme": "TecHub",
+  "style_profile": "neon-lit anime portrait with confident tech leader energy"
+}

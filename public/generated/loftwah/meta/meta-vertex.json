@@ -1,0 +1,27 @@
+{
+  "http_status": 200,
+  "provider": "vertex",
+  "attempts": [
+    {
+      "http_status": 200,
+      "finish_reason": "MAX_TOKENS",
+      "limit": 400
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "STOP",
+      "limit": 700
+    }
+  ],
+  "structured": {
+    "description": "A man with a bald head and a full, reddish-brown beard is depicted from the chest up, wearing a formal suit and tie. He is smiling warmly and looking directly at the viewer, set against a dark blue background with a glowing network pattern. The overall presentation suggests a professional yet approachable individual in a technologically themed environment.",
+    "facial_features": "The avatar has a bald head, a full reddish-brown beard, and visible eyebrows. His eyes are open and looking forward.",
+    "expression": "The avatar displays a friendly and approachable expression with a wide smile showing teeth.",
+    "attire": "He is wearing a black suit jacket over a white collared shirt, complemented by a light blue patterned tie.",
+    "palette": "The dominant colors are dark blue, black, white, and shades of brown for the beard, with bright blue accents from the tie and background network. The lighting is even and bright on the subject's face.",
+    "background": "The background is a dark blue field with a glowing, interconnected network pattern of light blue lines and dots.",
+    "mood": "Professional and approachable"
+  },
+  "theme": "TecHub",
+  "style_profile": "neon-lit anime portrait with confident tech leader energy"
+}
