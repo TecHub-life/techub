@@ -14,6 +14,9 @@ Ownership and accounts
   - Claim their own GitHub profile (match by login).
   - Add secondary GitHub logins they own.
   - Request ownership or removal of public profiles (verification flow; see FAQ).
+- Limits: enforce a per-user cap (e.g., 5 profiles) once ownership is implemented.
+- Eligibility: enforce `Eligibility::GithubProfileScoreService` threshold on new claims to control
+  costs.
 
 Actions after claim
 

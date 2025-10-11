@@ -166,6 +166,8 @@ Secrets live in `.kamal/secrets`; populate them via environment variables or you
 - `docs/marketing-overview.md` preserves the pre-Rails marketing write-up.
 - `docs/roadmap.md` tracks upcoming milestones so we can thin-slice future work.
 - `docs/development-workflow.md` captures our “one feature per PR” and `ServiceResult` conventions.
+- `docs/application-workflow.md` describes the end-to-end app flow (auth, sync, AI, screenshots,
+  storage) and async orchestration.
 - `components/` and `pages/` contain early ideation notes.
 
 Questions? Drop an issue or DM @loftwah. Happy shipping!
