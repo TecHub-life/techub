@@ -6,8 +6,10 @@ require "webmock/minitest"
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors, threshold: 10)
+    # Run tests in parallel unless explicitly disabled (helps in sandboxed envs)
+    unless ENV["DISABLE_PARALLEL_TESTS"] == "1"
+      parallelize(workers: :number_of_processors, threshold: 10)
+    end
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all

@@ -41,6 +41,11 @@ namespace :credentials do
             "client_x509_cert_url": ""
           }
         JSON
+      },
+      "mission_control" => {
+        "jobs" => {
+          "http_basic" => "user:password"
+        }
       }
     }
 

@@ -34,10 +34,11 @@ Docs:
 ### Avatar description & TecHub prompt demo
 
 Once an avatar image is stored locally (e.g., via `Profiles::SyncFromGithub`), you can generate a
-Gemini-backed description plus TecHub-flavoured prompts:
+Gemini-backed description plus TecHub-flavoured prompts. The `login` defaults to `loftwah` if not
+provided (override via arg or `LOGIN=...`):
 
 ```bash
-bundle exec rake "gemini:avatar_prompt[loftwah]"
+bundle exec rake "gemini:avatar_prompt"
 # run both providers back-to-back
 bundle exec rake "gemini:avatar_prompt:verify[loftwah]"
 # force a provider per run
@@ -59,11 +60,11 @@ plus structured traits, giving image models a grounded brief without extra UI in
 To prove the full pipeline (description → prompts → images), run:
 
 ```bash
-bundle exec rake "gemini:avatar_generate[loftwah]"
+bundle exec rake "gemini:avatar_generate"
 # override the provider just for this run
 bundle exec rake "gemini:avatar_generate[loftwah,,,public/generated,ai_studio]"
 # check both providers and write outputs into public/generated/<login>
-bundle exec rake "gemini:avatar_generate:verify[loftwah]"
+bundle exec rake "gemini:avatar_generate:verify"
 # optional overrides
 bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy,public/avatars/loftwah.png,public/generated]"
 ```
@@ -105,11 +106,11 @@ Once a profile record exists locally, you can spin up a short narrative that pro
 as well:
 
 ```bash
-bundle exec rake "gemini:profile_story[loftwah]"
+bundle exec rake "gemini:profile_story"
 # choose provider explicitly when testing
 bundle exec rake "gemini:profile_story[loftwah,ai_studio]"
 # or slam both providers in one go
-bundle exec rake "gemini:profile_story:verify[loftwah]"
+bundle exec rake "gemini:profile_story:verify"
 ```
 
 The command uses `Profiles::StoryFromProfile` to build a ~120 word micro-story grounded in the
@@ -122,7 +123,7 @@ profile's summary, languages, repositories, organisations, and social handles.
 Run prompts, images (8 total, 4 per provider), and stories for both providers in one go:
 
 ```bash
-bundle exec rake "gemini:verify_all[loftwah,,,public/generated]"
+bundle exec rake "gemini:verify_all[,,,public/generated]"
 ```
 
 Outputs:
@@ -130,6 +131,49 @@ Outputs:
 - Avatar prompts printed per provider
 - 8 images written to `public/generated/<login>/avatar-<ratio>-<provider>.png`
 - Two micro-stories (one per provider) printed to the console
+
+---
+
+### Artifacts and VERBOSE mode
+
+When generating images via the suite, the exact inputs are persisted for audit and comparison:
+
+- Path: `public/generated/<login>/meta/`
+  - `prompts-<provider>.json` — includes `avatar_description`, `structured_description`, and
+    `prompts` per variant.
+  - `meta-<provider>.json` — includes service metadata such as `provider`, `finish_reason`,
+    `attempts`, `theme`, and `style_profile`.
+
+For side-by-side debugging without re-running calls, enable verbose output in verify tasks:
+
+```bash
+VERBOSE=1 bundle exec rake "gemini:avatar_prompt:verify[loftwah]"
+VERBOSE=1 bundle exec rake "gemini:avatar_generate:verify[loftwah]"
+VERBOSE=1 bundle exec rake "gemini:profile_story:verify[loftwah]"
+```
+
+Verbose mode prints the provider, theme, style profile, and the exact prompts used (plus rich
+metadata for stories).
+
+---
+
+### Image publishing (production) and local dev
+
+- Development/CI: image files are written to `public/generated/<login>/` only.
+- Production: when Active Storage is configured for DigitalOcean Spaces (see `config/storage.yml`
+  and `config/environments/production.rb`), generated images are uploaded after local write and a
+  `public_url` is included in results.
+- Toggle in any environment with `GENERATED_IMAGE_UPLOAD=1` to force upload.
+
+Rake output shows remote URLs when available:
+
+```bash
+VERBOSE=1 bundle exec rake "gemini:avatar_generate:verify"
+# ...
+- 1x1 (image/png) -> public/generated/loftwah/avatar-1x1.png [url: https://cdn.example/...]
+```
+
+Artifacts JSON remain on disk under `public/generated/<login>/meta/`.
 
 ---
 
@@ -195,6 +239,9 @@ curl -s http://localhost:3000/up/gemini/image  # expect 200 once enabled
   - Image gen: prompt only; image bytes are returned in
     `candidates[0].content.parts[].inlineData.data` (base64) per
     [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation).
+  - Aspect ratio: the API does not currently accept an explicit ratio in our payload; we encode
+    composition and desired ratio in the prompt. Expect minor variance in output sizing across
+    providers/models.
 - Costs/quotas
   - Image output uses ~1290 tokens per 1024×1024 image (see token table on
     [ai.google.dev](https://ai.google.dev/gemini-api/docs/image-generation)). Respect model‑level

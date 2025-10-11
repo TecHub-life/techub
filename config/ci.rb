@@ -4,6 +4,8 @@ require "open3"
 
 ENV["RUBOCOP_CACHE_ROOT"] ||= "tmp/rubocop"
 ENV["PARALLEL_WORKERS"] ||= "1"
+# Disable parallel tests in CI/sandboxed environments to avoid DRb socket issues
+ENV["DISABLE_PARALLEL_TESTS"] ||= "1"
 
 def banner
   # rubocop:disable Layout/TrailingWhitespace

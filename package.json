@@ -3,11 +3,13 @@
   "private": true,
   "devDependencies": {
     "@prettier/plugin-xml": "^3.3.2",
+    "puppeteer": "^23.6.1",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8"
   },
   "scripts": {
     "prettier:check": "prettier --check .",
-    "prettier:write": "prettier --write ."
+    "prettier:write": "prettier --write .",
+    "screenshot": "node script/screenshot.js --url http://127.0.0.1:3000/cards/loftwah/og --out tmp/og.png --width 1200 --height 630"
   }
 }

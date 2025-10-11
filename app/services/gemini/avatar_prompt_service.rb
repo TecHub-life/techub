@@ -150,7 +150,7 @@ module Gemini
         #{traits_line}
         #{profile_traits}
         Visual style: #{style_profile}. #{theme_line}
-        Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]}
+        Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
       PROMPT
     end
 

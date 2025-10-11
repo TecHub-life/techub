@@ -9,7 +9,7 @@ namespace :gemini do
 
   desc "Describe a GitHub avatar and build prompts. Usage: rake gemini:avatar_prompt[login] or LOGIN=loftwah STYLE='Neon-lit anime portrait' rake gemini:avatar_prompt"
   task :avatar_prompt, [ :login, :avatar_path, :style, :provider ] => :environment do |_, args|
-    login = args[:login] || ENV["LOGIN"]
+    login = args[:login] || ENV["LOGIN"] || "loftwah"
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
     style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
     provider = args[:provider] || ENV["PROVIDER"]
@@ -65,11 +65,7 @@ namespace :gemini do
 
   desc "Describe an avatar and generate TecHub image variants (1x1, 16x9, 3x1, 9x16). Usage: rake gemini:avatar_generate[login]"
   task :avatar_generate, [ :login, :style, :avatar_path, :output_dir, :provider ] => :environment do |_, args|
-    login = args[:login] || ENV["LOGIN"]
-    unless login.present?
-      warn "Usage: rake gemini:avatar_generate[github_login]"
-      exit 1
-    end
+    login = args[:login] || ENV["LOGIN"] || "loftwah"
 
     style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
@@ -98,7 +94,9 @@ namespace :gemini do
     puts "Avatar description:\n#{result.value[:avatar_description]}"
     puts "\nSaved image variants to #{result.value[:output_dir]}:"
     result.value[:images].each do |variant, payload|
-      puts "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+      line = "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+      line += " [url: #{payload[:public_url]}]" if payload[:public_url].present?
+      puts line
     end
     unless result.metadata.blank?
       puts "\nMetadata: #{result.metadata}"
@@ -107,11 +105,7 @@ namespace :gemini do
 
   desc "Generate a short narrative using a stored profile: rake gemini:profile_story[login]"
   task :profile_story, [ :login, :provider ] => :environment do |_, args|
-    login = args[:login] || ENV["LOGIN"]
-    unless login.present?
-      warn "Usage: rake gemini:profile_story[github_login]"
-      exit 1
-    end
+    login = args[:login] || ENV["LOGIN"] || "loftwah"
     provider = args[:provider] || ENV["PROVIDER"]
 
     result = Profiles::StoryFromProfile.call(login: login, provider: provider)
@@ -129,6 +123,7 @@ namespace :gemini do
   namespace :avatar_prompt do
     desc "Run avatar prompt against both providers for quick verification"
     task :verify, [ :login, :avatar_path, :style ] => :environment do |_, args|
+      verbose = [ "1", "true", "yes" ].include?(ENV["VERBOSE"].to_s.downcase)
       login = args[:login] || ENV["LOGIN"]
       avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
       style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
@@ -150,11 +145,22 @@ namespace :gemini do
 
         if result.success?
           puts "Provider #{provider} OK."
+          if verbose
+            puts "- Provider: #{provider}"
+            puts "- Theme: #{result.metadata[:theme]}"
+            puts "- Style profile: #{result.metadata[:style_profile]}"
+          end
           puts "- Description: #{result.value[:avatar_description]}"
           puts "\nTecHub image prompts:"
           result.value[:image_prompts].each do |variant, prompt|
             puts "\n[#{variant}]"
             puts prompt
+          end
+          if verbose && result.value[:structured_description].present?
+            puts "\nStructured details:"
+            result.value[:structured_description].except("description").each do |k, v|
+              puts "- #{k.tr('_', ' ')}: #{v}"
+            end
           end
         else
           warn "Provider #{provider} FAILED: #{result.error.message}"
@@ -167,11 +173,8 @@ namespace :gemini do
   namespace :avatar_generate do
     desc "Generate avatar variants via both providers (writes files)"
     task :verify, [ :login, :style, :avatar_path, :output_dir ] => :environment do |_, args|
-      login = args[:login] || ENV["LOGIN"]
-      unless login.present?
-        warn "Usage: rake gemini:avatar_generate:verify[github_login]"
-        exit 1
-      end
+      verbose = [ "1", "true", "yes" ].include?(ENV["VERBOSE"].to_s.downcase)
+      login = args[:login] || ENV["LOGIN"] || "loftwah"
 
       style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
       avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
@@ -195,9 +198,21 @@ namespace :gemini do
 
         if result.success?
           puts "Provider #{provider} OK. Images in #{result.value[:output_dir]}"
+          if verbose
+            puts "- Provider: #{(result.metadata || {})[:provider] || provider}"
+            puts "- Theme: #{(result.metadata || {})[:theme]}"
+            puts "- Style profile: #{(result.metadata || {})[:style_profile]}"
+            puts "\nExact prompts used:"
+            (result.value[:prompts] || {}).each do |variant, prompt|
+              puts "\n[#{variant}]"
+              puts prompt
+            end
+          end
           images = result.value[:images] || {}
           images.each do |variant, payload|
-            puts "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+            line = "- #{variant} (#{payload[:mime_type]}) -> #{payload[:output_path]}"
+            line += " [url: #{payload[:public_url]}]" if payload[:public_url].present?
+            puts line
           end
         else
           warn "Provider #{provider} FAILED: #{result.error.message}"
@@ -210,11 +225,8 @@ namespace :gemini do
   namespace :profile_story do
     desc "Generate profile story via both providers"
     task :verify, [ :login ] => :environment do |_, args|
-      login = args[:login] || ENV["LOGIN"]
-      unless login.present?
-        warn "Usage: rake gemini:profile_story:verify[github_login]"
-        exit 1
-      end
+      verbose = [ "1", "true", "yes" ].include?(ENV["VERBOSE"].to_s.downcase)
+      login = args[:login] || ENV["LOGIN"] || "loftwah"
 
       PROVIDER_ORDER.each do |provider|
         puts "\n=== Profile story via #{provider} ==="
@@ -222,6 +234,11 @@ namespace :gemini do
 
         if result.success?
           puts "Provider #{provider} OK. Finish reason: #{result.metadata[:finish_reason]}"
+          if verbose
+            puts "- Provider: #{result.metadata[:provider] || provider}"
+            puts "- Attempts: #{Array(result.metadata[:attempts]).size}"
+            puts "- Metadata: #{result.metadata.inspect}"
+          end
           puts result.value
         else
           warn "Provider #{provider} FAILED: #{result.error.message}"
@@ -233,11 +250,7 @@ namespace :gemini do
 
   desc "Run all Gemini verification tasks for a given login"
   task :verify_all, [ :login, :avatar_path, :style, :output_dir ] => :environment do |_, args|
-    login = args[:login] || ENV["LOGIN"]
-    unless login.present?
-      warn "Usage: rake gemini:verify_all[github_login]"
-      exit 1
-    end
+    login = args[:login] || ENV["LOGIN"] || "loftwah"
 
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
     style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE

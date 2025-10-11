@@ -62,6 +62,7 @@ module Gemini
       description = prompts_result.value[:avatar_description]
       structured = prompts_result.value[:structured_description]
       prompts = prompts_result.value[:image_prompts]
+      provider_for_artifacts = (prompts_result.metadata || {})[:provider] || provider_override
 
       generated = {}
 
@@ -80,8 +81,42 @@ module Gemini
         )
         return result if result.failure?
 
-        generated[key] = result.value.merge(aspect_ratio: variant[:aspect_ratio])
+        payload = result.value.merge(aspect_ratio: variant[:aspect_ratio])
+
+        if upload_enabled?
+          upload = Storage::ActiveStorageUploadService.call(
+            path: payload[:output_path],
+            content_type: payload[:mime_type],
+            filename: File.basename(variant_output_path)
+          )
+          return upload if upload.failure?
+          payload[:public_url] = upload.value[:public_url]
+        end
+
+        generated[key] = payload
+
+        # Record assets for later lookup (unified storage for URLs)
+        begin
+          record_variant_asset(
+            kind: variant_kind(key),
+            local_path: payload[:output_path],
+            public_url: payload[:public_url],
+            mime_type: payload[:mime_type],
+            provider: provider_for_artifacts
+          )
+        rescue StandardError
+          # best-effort; ignore recording failures
+        end
       end
+
+      # Best-effort: persist prompts + metadata artifacts next to outputs
+      write_artifacts(
+        provider_for_artifacts,
+        description: description,
+        structured: structured,
+        prompts: prompts,
+        metadata: prompts_result.metadata
+      )
 
       success(
         {
@@ -203,6 +238,59 @@ module Gemini
       base = File.basename(filename, File.extname(filename))
       ext = File.extname(filename)
       "#{base}-#{filename_suffix}#{ext}"
+    end
+
+    def upload_enabled?
+      flag = ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase
+      env_enabled = [ "1", "true", "yes" ].include?(flag)
+      env_enabled || Rails.env.production?
+    end
+
+    def record_variant_asset(kind:, local_path:, public_url:, mime_type:, provider: nil)
+      profile = Profile.find_by(login: login.downcase) rescue nil
+      return unless profile
+
+      ProfileAssets::RecordService.call(
+        profile: profile,
+        kind: kind,
+        local_path: local_path,
+        public_url: public_url,
+        mime_type: mime_type,
+        provider: provider
+      )
+    rescue StandardError
+      # best-effort; do not fail generation due to asset record
+    end
+
+    def variant_kind(key)
+      case key.to_s
+      when "1x1" then "avatar_1x1"
+      when "16x9" then "avatar_16x9"
+      when "3x1" then "avatar_3x1"
+      when "9x16" then "avatar_9x16"
+      else key.to_s
+      end
+    end
+
+    # Persist prompts and metadata artifacts for auditability
+    def write_artifacts(provider, description:, structured:, prompts:, metadata: {})
+      provider_key = provider.to_s.strip.presence || "unknown"
+      base_dir = output_dir.join(login, "meta")
+      FileUtils.mkdir_p(base_dir)
+
+      prompts_payload = {
+        avatar_description: description,
+        structured_description: structured,
+        prompts: prompts
+      }
+
+      meta_payload = metadata || {}
+
+      File.write(base_dir.join("prompts-#{provider_key}.json"), JSON.pretty_generate(prompts_payload))
+      File.write(base_dir.join("meta-#{provider_key}.json"), JSON.pretty_generate(meta_payload))
+    rescue StandardError => e
+      # Best-effort; do not fail generation due to artifact write
+      StructuredLogger.warn(message: "Failed to write artifacts", login: login, provider: provider_key, error: e.message) if defined?(StructuredLogger)
     end
   end
 end

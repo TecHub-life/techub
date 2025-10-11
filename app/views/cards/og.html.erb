@@ -1,0 +1,65 @@
+<% gen_dir = Rails.root.join('public','generated', @profile.login) %>
+<% bg_16x9 = Dir.exist?(gen_dir) ? Dir[gen_dir.join('avatar-16x9*.png').to_s].first : nil %>
+<div class="w-[1200px] h-[630px] bg-gray-900 overflow-hidden relative flex flex-col">
+  <% if bg_16x9 %>
+    <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_16x9)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none">
+  <% end %>
+  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/70 to-gray-900/95"></div>
+
+  <div class="relative z-10 flex-1 flex items-center justify-center px-12 py-8">
+    <div class="w-full max-w-6xl grid grid-cols-[1fr_auto] items-center gap-12">
+      <div class="space-y-4 min-w-0">
+        <div class="space-y-1">
+          <% name = @profile.display_name %>
+          <% handle = @profile.login %>
+          <% name_size = name.to_s.length > 25 ? "text-3xl" : name.to_s.length > 18 ? "text-4xl" : "text-5xl" %>
+          <% handle_size = handle.to_s.length > 20 ? "text-base" : "text-xl" %>
+          <h1 class="<%= name_size %> font-bold text-white tracking-wide drop-shadow-sm leading-tight"><%= name %></h1>
+          <p class="<%= handle_size %> font-medium text-indigo-400">@<%= handle %></p>
+        </div>
+
+        <div class="flex gap-8 text-gray-300 text-lg flex-wrap">
+          <% if @profile.location.present? %>
+            <span><%= @profile.location %></span>
+          <% end %>
+          <span><%= @profile.followers.to_i %> followers</span>
+        </div>
+
+        <% langs = @profile.top_languages(5).map(&:name) %>
+        <% if langs.any? %>
+          <div class="flex flex-wrap gap-3 py-2">
+            <% langs.each do |lang| %>
+              <span class="bg-gray-800/80 text-base font-medium text-indigo-300 px-4 py-2 rounded-full border border-gray-700/50">
+                #<%= lang %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if @profile.bio.present? %>
+          <div class="border-t border-gray-700/50 pt-3 mt-3">
+            <p class="italic text-gray-400 text-lg font-medium truncate">
+              "<%= @profile.bio %>"
+            </p>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="flex-shrink-0">
+        <div class="w-72 h-72 rounded-full p-1 bg-gradient-to-r from-purple-600 to-indigo-500 shadow-2xl">
+          <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
+            <% if @profile.avatar_url.present? %>
+              <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover">
+            <% else %>
+              <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="relative z-10 text-center pb-4 text-base font-semibold text-gray-400 tracking-wide">
+    techub.life
+  </p>
+</div>
