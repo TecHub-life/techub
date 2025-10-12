@@ -108,8 +108,8 @@ module Profiles
     end
 
     def update_repositories(profile, payload)
-      # Clear existing repositories
-      profile.profile_repositories.destroy_all
+      # Clear existing repositories except user-submitted ones
+      profile.profile_repositories.where.not(repository_type: "submitted").destroy_all
 
       # Add top repositories
       (payload[:top_repositories] || []).each do |repo_data|

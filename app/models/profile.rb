@@ -8,6 +8,8 @@ class Profile < ApplicationRecord
   has_one :profile_readme, dependent: :destroy
   has_one :profile_card, dependent: :destroy
   has_many :profile_assets, dependent: :destroy
+  has_many :profile_ownerships, dependent: :destroy
+  has_many :owners, through: :profile_ownerships, source: :user
 
   # Validations
   validates :github_id, presence: true, uniqueness: true

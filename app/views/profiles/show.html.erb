@@ -3,6 +3,17 @@
     <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100">
       GitHub Profile: <%= (@profile&.display_name.presence || params[:username] || "") %>
     </h1>
+    <% if @profile&.last_pipeline_status.present? %>
+      <span class="inline-block text-xs px-2 py-1 rounded border
+        <%= case @profile.last_pipeline_status
+           when 'queued' then 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200'
+           when 'success' then 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
+           when 'failure' then 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
+           else 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' end %>
+      ">
+        <%= @profile.last_pipeline_status.capitalize %>
+      </span>
+    <% end %>
     <p class="text-lg text-slate-600 dark:text-slate-300">
       Comprehensive profile insights and analytics.
     </p>

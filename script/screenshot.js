@@ -31,7 +31,7 @@ async function main() {
     const page = await browser.newPage()
     await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 })
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 })
-    if (delay > 0) await page.waitForTimeout(delay)
+    if (delay > 0) await new Promise((r) => setTimeout(r, delay))
     await page.screenshot({ path: out, type: 'png' })
     console.log(`Saved screenshot: ${out}`)
   } finally {

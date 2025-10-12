@@ -22,6 +22,16 @@ High-level flow
   - HTML: `/profiles/:username` shows profile summary, repos, orgs, activity, README.
   - JSON: `/profiles/:username.json` returns the same structured data.
 
+Submission UX (planned)
+
+- Manual inputs on submit page:
+  - Optional personal URL to scrape (`submitted_scrape_url`).
+  - Up to 4 GitHub repositories (owner/name) to include if automation misses them.
+- Persistence and usage:
+  - Repositories are stored as `ProfileRepository` rows with `repository_type: "submitted"`.
+  - Submitted URL is stored on `Profile` as `submitted_scrape_url` (nullable).
+  - Submitted repos are preserved across syncs and considered in card synthesis.
+
 Asynchronous orchestration
 
 - Solid Queue configured in all environments.
@@ -31,6 +41,8 @@ Asynchronous orchestration
 - Pipeline service:
   - `Profiles::GeneratePipelineService` orchestrates sync → avatar images → card synth → screenshots
     → optimize; can be wrapped in a job for full async execution (recommended).
+  - Planned: pre-step to ingest any `submitted` repositories (fetch metadata/topics) and queue a
+    scrape job for `submitted_scrape_url`.
 
 Eligibility and limits
 

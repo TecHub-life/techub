@@ -25,10 +25,17 @@ module Gemini
 
         prompts = result.value[:image_prompts]
         assert_equal %w[1x1 16x9 3x1 9x16], prompts.keys
-        prompts.each_value do |prompt|
-          assert_match(/Portrait prompt:/, prompt)
-          assert_includes prompt, "A playful avatar with teal gradients."
-          assert_includes prompt, "Key visual traits: facial features: Round glasses, undercut fade."
+
+        # 1x1 remains subject-forward
+        assert_match(/Portrait prompt:/, prompts["1x1"])
+        assert_includes prompts["1x1"], "A playful avatar with teal gradients."
+        assert_includes prompts["1x1"], "Key visual traits: facial features: Round glasses, undercut fade."
+
+        # Other variants emphasize supporting artwork rather than portrait
+        [ "16x9", "3x1", "9x16" ].each do |k|
+          assert_match(/Supporting artwork:/, prompts[k])
+          assert_includes prompts[k], "A playful avatar with teal gradients."
+          assert_includes prompts[k], "Key visual traits: facial features: Round glasses, undercut fade."
         end
 
         assert_equal prompts["1x1"], result.value[:image_prompt], "primary prompt should mirror 1x1 variant"

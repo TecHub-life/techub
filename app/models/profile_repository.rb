@@ -3,7 +3,7 @@ class ProfileRepository < ApplicationRecord
   has_many :repository_topics, dependent: :destroy
 
   validates :name, presence: true
-  validates :repository_type, inclusion: { in: %w[top pinned active] }
+  validates :repository_type, inclusion: { in: %w[top pinned active submitted] }
 
   scope :by_type, ->(type) { where(repository_type: type) }
   scope :by_language, ->(language) { where(language: language) }

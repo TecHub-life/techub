@@ -10,6 +10,15 @@ class ApplicationController < ActionController::Base
   private
 
   def load_current_user
+    # Allow explicit test header to set current user without touching Rack session
+    if Rails.env.test?
+      test_uid = request.headers["X-Test-User-Id"].presence
+      if test_uid
+        @current_user ||= User.find_by(id: test_uid)
+        return
+      end
+    end
+
     return if session[:current_user_id].blank?
 
     @current_user ||= User.find_by(id: session[:current_user_id])

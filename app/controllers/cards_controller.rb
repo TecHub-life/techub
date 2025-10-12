@@ -1,4 +1,5 @@
 class CardsController < ApplicationController
+  layout "cards"
   before_action :load_profile
 
   # 1200x630 — OpenGraph recommended

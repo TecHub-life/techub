@@ -61,7 +61,7 @@ module Gemini
 
       description = prompts_result.value[:avatar_description]
       structured = prompts_result.value[:structured_description]
-      prompts = prompts_result.value[:image_prompts]
+      prompts = (prompts_result.value[:image_prompts] || {}).dup
       provider_for_artifacts = (prompts_result.metadata || {})[:provider] || provider_override
 
       generated = {}

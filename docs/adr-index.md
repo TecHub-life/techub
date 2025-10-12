@@ -32,6 +32,21 @@ fallback to profile context on failures.
 **Summary**: Standardize on Node Puppeteer for rendering and capturing OG/card images; tests bypass
 browser; containers use system Chromium.
 
+### [ADR-0003: Submit page manual inputs for scrape URL and repositories](./adr/0003-submit-manual-inputs.md)
+
+**Status**: Proposed  
+**Date**: 2025-10-12  
+**Summary**: Accept a personal URL and up to 4 GitHub repositories during submission; persist
+`submitted` repositories and a scrape URL; preserve them across sync and ingest them in the
+orchestration pipeline.
+
+### [ADR-0004: Scraping driver — Puppeteer vs. Nokogiri](./adr/0004-scraping-driver.md)
+
+**Status**: Proposed  
+**Date**: 2025-10-12  
+**Summary**: Use Ruby `Net::HTTP` + `Nokogiri` for submission URL scraping with SSRF protections,
+caps, and timeouts; consider Puppeteer fallback only if needed.
+
 ## ADR Template
 
 When creating new ADRs, use this template:

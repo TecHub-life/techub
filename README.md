@@ -64,6 +64,10 @@ Copy `.env.example` to `.env` and fill in the values. Key settings:
   `http://127.0.0.1:3000/auth/github/callback` or the Codespaces URL) so OAuth redirects match the
   GitHub App settings.
 - `RESEND_API_KEY` reserved for future email notifications.
+- `REQUIRE_PROFILE_ELIGIBILITY` (default ON): set to `0`/`false`/`no` to disable the eligibility
+  gate (e.g., paid mode). Otherwise, gating is enforced.
+- `SUBMISSION_MANUAL_INPUTS_ENABLED` (default OFF): set to `1`/`true`/`yes` to enable manual inputs
+  (URL + repos) pre-steps.
 
 The PEM dropped in the repo (`techub-life.2025-10-02.private-key.pem`) can be referenced via
 `GITHUB_PRIVATE_KEY_PATH` locally.
@@ -161,6 +165,20 @@ bin/kamal deploy
 Secrets live in `.kamal/secrets`; populate them via environment variables or your password manager
 (never check plaintext credentials into git).
 
+## Docker Compose (Local)
+
+Spin up web + worker locally using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+- Web: http://localhost:3000
+- Worker: Solid Queue worker logs in the `worker` service
+- Health: `/up`, `/ops/jobs` (if Mission Control is present)
+
+See `docs/ops-runbook.md` for operations details.
+
 ## Additional Docs
 
 - `docs/marketing-overview.md` preserves the pre-Rails marketing write-up.
@@ -168,6 +186,14 @@ Secrets live in `.kamal/secrets`; populate them via environment variables or you
 - `docs/development-workflow.md` captures our “one feature per PR” and `ServiceResult` conventions.
 - `docs/application-workflow.md` describes the end-to-end app flow (auth, sync, AI, screenshots,
   storage) and async orchestration.
+- `docs/user-journey.md` is the authoritative end-to-end user journey (auth → submit → generate).
+- `docs/submit-manual-inputs-workflow.md` documents the submit flow for manual inputs (URL + repos)
+  end-to-end (spec-first; implementation partially scaffolded).
+- `docs/status-dashboard.md` shows current implementation status per module.
+- `docs/debugging-guide.md` explains how to pinpoint issues across stages and where artifacts live.
+- `docs/definition-of-done.md` shows how we write DoD and examples of “what good looks like”.
+- `docs/eligibility-policy.md` details the default-on eligibility policy (signals, scoring,
+  override).
 - `components/` and `pages/` contain early ideation notes.
 
 Questions? Drop an issue or DM @loftwah. Happy shipping!
