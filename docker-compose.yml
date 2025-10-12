@@ -1,29 +1,32 @@
 services:
   web:
     build: .
-    command: bash -lc "bin/rails db:prepare && bin/rails server -b 0.0.0.0 -p 3000"
     ports:
-      - '3000:3000'
+      - '3000:80'
     environment:
-      RAILS_ENV: development
+      RAILS_ENV: production
+      NODE_ENV: production
       APP_HOST: http://localhost:3000
-      # Uncomment to mount master key if using credentials
-      # RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      ACTIVE_STORAGE_SERVICE: local
+      DISABLE_FORCE_SSL: '1'
     volumes:
-      - .:/rails
-      - bundle:/usr/local/bundle
-    depends_on:
-      - worker
+      - ./config/master.key:/rails/config/master.key:ro
+      - storage:/rails/storage
 
   worker:
     build: .
-    command: bash -lc "bin/rails db:prepare && bin/rails solid_queue:start"
+    command: bash -lc "./bin/rails db:prepare && ./bin/rails solid_queue:start"
     environment:
-      RAILS_ENV: development
-      APP_HOST: http://web:3000
+      RAILS_ENV: production
+      NODE_ENV: production
+      APP_HOST: http://web
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      ACTIVE_STORAGE_SERVICE: local
+      DISABLE_FORCE_SSL: '1'
     volumes:
-      - .:/rails
-      - bundle:/usr/local/bundle
+      - ./config/master.key:/rails/config/master.key:ro
+      - storage:/rails/storage
 
 volumes:
-  bundle:
+  storage:
