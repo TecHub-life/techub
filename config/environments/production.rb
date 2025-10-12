@@ -21,14 +21,14 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on DigitalOcean Spaces in production (see config/storage.yml for options).
-  config.active_storage.service = :do_spaces
+  # Store uploaded files. Default to DigitalOcean Spaces, but allow override via env for local smoke.
+  config.active_storage.service = (ENV["ACTIVE_STORAGE_SERVICE"].presence || :do_spaces).to_sym
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true
 
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  # Force all access to the app over SSL unless explicitly disabled (useful for local smoke).
+  config.force_ssl = ENV["DISABLE_FORCE_SSL"].present? ? false : true
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }

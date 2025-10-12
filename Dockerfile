@@ -14,9 +14,13 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 # Rails app lives here
 WORKDIR /rails
 
-# Install base packages
+# Install base packages (include build tools so dev gems can compile in compose)
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 ca-certificates nodejs npm chromium imagemagick fonts-noto fonts-noto-color-emoji fonts-liberation && \
+    apt-get install --no-install-recommends -y \
+      curl libjemalloc2 libvips sqlite3 ca-certificates \
+      nodejs npm chromium imagemagick \
+      fonts-noto fonts-noto-color-emoji fonts-liberation \
+      build-essential git pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
