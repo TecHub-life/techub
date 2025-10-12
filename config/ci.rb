@@ -39,7 +39,15 @@ run!("bundle install") do
 end
 
 run!("npm install") do
-  system("[ -d node_modules ]") || system("npm install")
+  next true if system("[ -d node_modules ]")
+
+  cmd = if File.exist?("package-lock.json")
+    "npm ci --no-fund --no-audit --loglevel=error"
+  else
+    "npm install --no-fund --no-audit --loglevel=error"
+  end
+
+  system(cmd)
 end
 
 run!("db:prepare") { system("bin/rails db:prepare") }
@@ -47,6 +55,16 @@ run!("db:setup:queue") { system("bin/rails db:setup:queue") }
 run!("rubocop") { system("bin/rubocop") }
 run!("prettier") { system("npm run --silent prettier:check") }
 run!("test") { system("bin/rails test") }
+
+# Optional Docker build + smoke test
+if ENV["CI_BUILD_DOCKER"] == "1"
+  run!("docker:build") do
+    system("command -v docker >/dev/null") && system("docker build -t techub:ci .")
+  end
+  run!("docker:smoke") do
+    system("docker run --rm --entrypoint ./bin/rails techub:ci --version")
+  end
+end
 
 puts "\nAll green!"
 puts "techub.life"

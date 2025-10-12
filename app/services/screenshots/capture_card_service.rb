@@ -44,7 +44,7 @@ module Screenshots
         # In test, avoid invoking Node: create a tiny PNG header as a placeholder
         File.binwrite(path, "\x89PNG\r\n")
       else
-        ok = system(*cmd)
+        ok = Kernel.system(*cmd)
         return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" ") }) unless ok
       end
 
