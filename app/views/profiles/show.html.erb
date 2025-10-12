@@ -4,15 +4,33 @@
       GitHub Profile: <%= (@profile&.display_name.presence || params[:username] || "") %>
     </h1>
     <% if @profile&.last_pipeline_status.present? %>
-      <span class="inline-block text-xs px-2 py-1 rounded border
-        <%= case @profile.last_pipeline_status
-           when 'queued' then 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200'
-           when 'success' then 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
-           when 'failure' then 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
-           else 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' end %>
-      ">
-        <%= @profile.last_pipeline_status.capitalize %>
-      </span>
+      <div id="pipeline-status-container" 
+           data-controller="pipeline-status"
+           data-pipeline-status-login-value="<%= @profile.login %>" 
+           data-pipeline-status-status-value="<%= @profile.last_pipeline_status %>">
+        <span class="inline-block text-xs px-2 py-1 rounded border
+          <%= case @profile.last_pipeline_status
+             when 'queued' then 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200'
+             when 'success' then 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
+             when 'failure' then 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
+             else 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' end %>
+        ">
+          <span id="status-text"><%= @profile.last_pipeline_status.capitalize %></span>
+        </span>
+        
+        <% if @profile.last_pipeline_status == 'queued' %>
+          <div class="mt-3 max-w-md">
+            <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
+              <span id="progress-message">Generating your AI images...</span>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">This usually takes 30-60 seconds. Please don't close this page.</p>
+          </div>
+        <% end %>
+      </div>
     <% end %>
     <p class="text-lg text-slate-600 dark:text-slate-300">
       Comprehensive profile insights and analytics.

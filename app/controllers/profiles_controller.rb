@@ -87,7 +87,9 @@ class ProfilesController < ApplicationController
         following: @profile.following,
         created_at: @profile.github_created_at,
         updated_at: @profile.github_updated_at,
-        last_synced_at: @profile.last_synced_at
+        last_synced_at: @profile.last_synced_at,
+        last_pipeline_status: @profile.last_pipeline_status,
+        last_pipeline_error: @profile.last_pipeline_error
       },
       summary: @profile_summary,
       languages: @languages&.map { |lang| { name: lang.name, count: lang.count } },
