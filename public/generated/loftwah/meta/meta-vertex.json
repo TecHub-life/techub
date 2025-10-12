@@ -9,22 +9,17 @@
     },
     {
       "http_status": 200,
-      "finish_reason": "MAX_TOKENS",
-      "limit": 700
-    },
-    {
-      "http_status": 200,
       "finish_reason": "STOP",
-      "limit": 1000
+      "limit": 700
     }
   ],
   "structured": {
-    "description": "A man with a bald head and a full reddish-brown beard is depicted from the chest up, wearing a formal suit and tie. He is smiling warmly at the viewer against a dark blue background featuring a glowing digital network pattern, presenting a professional yet friendly appearance. The overall presentation suggests a confident individual in a tech-oriented or business context.",
-    "facial_features": "Bald head, full reddish-brown beard, dark eyebrows, and visible teeth.",
-    "expression": "A warm, open-mouthed smile with visible white teeth.",
-    "attire": "Black suit jacket, white collared shirt, and a light blue patterned necktie.",
-    "palette": "Dominant colours include dark blue, black, white, light blue, and reddish-brown, with bright white and light blue glowing accents in the background. The lighting is bright and even on the subject's face.",
-    "background": "A dark blue background featuring a glowing, interconnected network pattern of lines and dots.",
+    "description": "A bald man with a prominent reddish-brown beard is depicted from the chest up, wearing professional business attire. He presents a friendly and approachable demeanor against a dynamic, dark blue digital background with interconnected glowing lines. The overall impression is one of modern professionalism combined with a hint of technological sophistication.",
+    "facial_features": "Bald head, full reddish-brown beard, dark eyebrows.",
+    "expression": "A broad, open-mouthed smile revealing white teeth, with eyes looking directly forward.",
+    "attire": "A black suit jacket, a crisp white collared shirt, and a textured light blue necktie.",
+    "palette": "Dominant dark blues and blacks, contrasted with white, light blue, and the warm reddish-brown of the beard. The background features glowing light blue elements.",
+    "background": "A dark blue digital pattern composed of interconnected glowing light blue lines and dots, suggesting a network or data structure.",
     "mood": "Professional and approachable."
   },
   "theme": "TecHub",
