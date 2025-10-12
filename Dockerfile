@@ -16,7 +16,7 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 ca-certificates nodejs npm chromium imagemagick && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 ca-certificates nodejs npm chromium imagemagick fonts-noto fonts-noto-color-emoji fonts-liberation && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
@@ -24,6 +24,8 @@ ENV RAILS_ENV="production" \
     NODE_ENV="production" \
     RAILS_LOG_TO_STDOUT="1" \
     RAILS_SERVE_STATIC_FILES="true" \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="1" \
+    PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development:test"
@@ -41,6 +43,10 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
+
+# Install Node dependencies required for runtime screenshots (Puppeteer)
+COPY package.json package-lock.json ./
+RUN npm install --omit=optional --no-audit --no-fund && npm cache clean --force
 
 # Copy application code
 COPY . .

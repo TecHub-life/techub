@@ -26,7 +26,7 @@ async function main() {
     process.exit(2)
   }
 
-  const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+  const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] })
   try {
     const page = await browser.newPage()
     await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 })
