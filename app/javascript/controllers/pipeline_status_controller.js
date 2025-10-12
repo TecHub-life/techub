@@ -1,9 +1,9 @@
-import { Controller } from "@hotwired/stimulus"
+import { Controller } from '@hotwired/stimulus'
 
 export default class extends Controller {
   static values = {
     login: String,
-    status: String
+    status: String,
   }
 
   connect() {
@@ -19,7 +19,7 @@ export default class extends Controller {
   startPolling() {
     // Start with a simulated progress animation
     this.simulateProgress()
-    
+
     // Poll the server every 3 seconds
     this.pollInterval = setInterval(() => {
       this.checkStatus()
@@ -42,17 +42,17 @@ export default class extends Controller {
     const progressBar = document.getElementById('progress-bar')
     const progressPercent = document.getElementById('progress-percent')
     const progressMessage = document.getElementById('progress-message')
-    
+
     const messages = [
       'Generating your AI images...',
       'Creating avatar variants...',
       'Synthesizing card data...',
       'Capturing screenshots...',
-      'Almost done...'
+      'Almost done...',
     ]
-    
+
     let messageIndex = 0
-    
+
     this.progressInterval = setInterval(() => {
       // Slow down as we approach 90%
       if (progress < 30) {
@@ -64,15 +64,15 @@ export default class extends Controller {
       } else {
         progress += 0.2
       }
-      
+
       // Cap at 90% until we get real completion
       progress = Math.min(progress, 90)
-      
+
       if (progressBar && progressPercent) {
         progressBar.style.width = `${progress}%`
         progressPercent.textContent = `${Math.round(progress)}%`
       }
-      
+
       // Update message every 15%
       const newMessageIndex = Math.floor(progress / 20)
       if (newMessageIndex !== messageIndex && newMessageIndex < messages.length) {
@@ -88,15 +88,15 @@ export default class extends Controller {
     try {
       const response = await fetch(`/profiles/${this.loginValue}.json`, {
         headers: {
-          'Accept': 'application/json'
-        }
+          Accept: 'application/json',
+        },
       })
-      
+
       if (!response.ok) return
-      
+
       const data = await response.json()
       const newStatus = data.profile?.last_pipeline_status
-      
+
       if (newStatus && newStatus !== 'queued') {
         this.stopPolling()
         this.updateStatus(newStatus)
@@ -110,7 +110,7 @@ export default class extends Controller {
     const progressBar = document.getElementById('progress-bar')
     const progressPercent = document.getElementById('progress-percent')
     const progressMessage = document.getElementById('progress-message')
-    
+
     if (newStatus === 'success') {
       // Complete the progress bar
       if (progressBar && progressPercent) {
@@ -120,7 +120,7 @@ export default class extends Controller {
       if (progressMessage) {
         progressMessage.textContent = 'Complete! Reloading...'
       }
-      
+
       // Reload the page after a short delay to show completion
       setTimeout(() => {
         window.location.reload()
@@ -134,7 +134,7 @@ export default class extends Controller {
       if (progressMessage) {
         progressMessage.textContent = 'Generation failed. Reloading...'
       }
-      
+
       // Reload to show error message
       setTimeout(() => {
         window.location.reload()

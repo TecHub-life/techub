@@ -1,9 +1,8 @@
 <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
 <% bg_card = Dir.exist?(gen_dir) ? Dir[gen_dir.join('card-bg-16x9*.png').to_s].first : nil %>
 <% bg_16x9 = (!bg_card && Dir.exist?(gen_dir)) ? Dir[gen_dir.join('avatar-16x9*.png').to_s].first : nil %>
-<div class="w-full max-w-[1280px] mx-auto aspect-video bg-gray-900 overflow-hidden relative flex flex-col md:grid md:grid-rows-2">
-  <!-- Background header section -->
-  <div class="relative h-32 md:h-[360px] overflow-hidden z-10">
+<div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-2">
+  <div class="relative row-start-1 h-[360px] overflow-hidden z-10">
     <% if bg_card %>
       <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_card)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-50 object-center">
     <% elsif bg_16x9 %>
@@ -12,88 +11,84 @@
     <div class="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/30"></div>
   </div>
 
-  <!-- Avatar - positioned absolutely to overlap sections -->
-  <div class="absolute left-4 md:left-12 top-24 md:top-[360px] -translate-y-8 md:-translate-y-14 transform z-40">
-    <div class="w-24 h-24 md:w-44 md:h-44 rounded-full p-1 md:p-1.5 bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 shadow-[0_4px_20px_rgba(79,70,229,0.4)] md:shadow-[0_10px_40px_rgba(79,70,229,0.5)]">
+  <div class="absolute left-12 top-[360px] -translate-y-14 transform z-40">
+    <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 shadow-[0_10px_40px_rgba(79,70,229,0.5)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
         <% if @profile.avatar_url.present? %>
           <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
         <% else %>
-          <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400 text-2xl md:text-4xl">?</div>
+          <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
         <% end %>
       </div>
     </div>
   </div>
 
-  <!-- Content section -->
-  <div class="relative flex-1 md:h-[360px] z-30 px-4 md:px-12 pb-4 pt-12 md:pt-6 overflow-hidden border-t border-gray-800 bg-gray-900">
+  <div class="relative row-start-2 h-[360px] z-30 px-12 pb-4 pt-6 overflow-hidden border-t border-gray-800 bg-gray-900">
     <div class="h-full flex flex-col justify-between">
-      <!-- Name and meta info -->
-      <div class="pl-28 md:pl-[200px] pr-2 md:pr-8">
+      <div class="pl-[200px] pr-8">
         <% name = @profile.display_name %>
         <% handle = @profile.login %>
-        <% name_size = name.to_s.length > 26 ? "text-xl md:text-4xl" : name.to_s.length > 18 ? "text-2xl md:text-5xl" : "text-3xl md:text-6xl" %>
-        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 leading-none">
+        <% name_size = name.to_s.length > 26 ? "text-4xl" : name.to_s.length > 18 ? "text-5xl" : "text-6xl" %>
+        <div class="flex items-center gap-4 leading-none">
           <h1 class="<%= name_size %> font-bold text-white tracking-wide drop-shadow-sm truncate"><%= name %></h1>
-          <span class="text-sm md:text-2xl font-medium text-indigo-400">@<%= handle %></span>
+          <span class="text-2xl font-medium text-indigo-400">@<%= handle %></span>
         </div>
 
-        <div class="mt-2 flex flex-wrap items-center gap-1.5 md:gap-2 text-gray-200 text-xs md:text-base leading-none">
-          <div class="px-2 py-1 md:px-3 md:py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md">
-            <span class="font-medium truncate max-w-[120px] md:max-w-[280px]">github.com/<%= handle %></span>
+        <div class="mt-2 flex items-center gap-2 text-gray-200 whitespace-nowrap overflow-hidden leading-none">
+          <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md min-w-0">
+            <span class="font-medium truncate max-w-[280px] align-middle">github.com/<%= handle %></span>
           </div>
           <% if @profile.location.present? %>
-            <div class="px-2 py-1 md:px-3 md:py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md">
-              <span class="font-medium truncate max-w-[100px] md:max-w-[200px]"><%= @profile.location %></span>
+            <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md min-w-0">
+              <span class="font-medium truncate max-w-[200px] align-middle"><%= @profile.location %></span>
             </div>
           <% end %>
-          <div class="px-2 py-1 md:px-3 md:py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md">
+          <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md min-w-0">
             <span class="font-medium"><%= @profile.followers.to_i %> followers</span>
           </div>
         </div>
 
         <% if @profile.bio.present? %>
-          <p class="mt-2 md:mt-3 text-gray-300 text-sm md:text-lg leading-relaxed line-clamp-2 md:line-clamp-1"><%= @profile.bio %></p>
+          <p class="mt-3 text-gray-300 text-lg leading-relaxed line-clamp-1"><%= @profile.bio %></p>
         <% end %>
       </div>
 
-      <!-- Stats section -->
       <% card = @profile.profile_card %>
       <% atk = card&.attack || 70; defn = card&.defense || 60; spd = card&.speed || 80 %>
-      <div class="mt-3 md:mt-2 pl-0 md:pl-[200px] pr-2 md:pr-8">
-        <div class="grid grid-cols-3 gap-3 md:gap-6 max-w-full md:max-w-[760px] md:mx-auto">
-          <div class="space-y-1 md:space-y-2">
-            <div class="flex items-center justify-between text-xs md:text-sm text-gray-300">
-              <span class="flex items-center gap-1 md:gap-2 font-semibold">ATK</span>
-              <span class="font-bold text-yellow-300"><%= atk %></span>
+      <div class="mt-2 pl-[200px] pr-8">
+        <div class="grid grid-cols-3 gap-6 max-w-[760px] mx-auto w-full">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm text-gray-300">
+              <span class="flex items-center gap-2">ATK</span>
+              <span class="font-semibold text-yellow-300"><%= atk %></span>
             </div>
-            <div class="h-1.5 md:h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+            <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
               <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-400" style="width: <%= atk %>%"></div>
             </div>
           </div>
-          <div class="space-y-1 md:space-y-2">
-            <div class="flex items-center justify-between text-xs md:text-sm text-gray-300">
-              <span class="flex items-center gap-1 md:gap-2 font-semibold">DEF</span>
-              <span class="font-bold text-blue-300"><%= defn %></span>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm text-gray-300">
+              <span class="flex items-center gap-2">DEF</span>
+              <span class="font-semibold text-blue-300"><%= defn %></span>
             </div>
-            <div class="h-1.5 md:h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+            <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
               <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400" style="width: <%= defn %>%"></div>
             </div>
           </div>
-          <div class="space-y-1 md:space-y-2">
-            <div class="flex items-center justify-between text-xs md:text-sm text-gray-300">
-              <span class="flex items-center gap-1 md:gap-2 font-semibold">SPD</span>
-              <span class="font-bold text-green-300"><%= spd %></span>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm text-gray-300">
+              <span class="flex items-center gap-2">SPD</span>
+              <span class="font-semibold text-green-300"><%= spd %></span>
             </div>
-            <div class="h-1.5 md:h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+            <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
               <div class="h-full bg-gradient-to-r from-emerald-500 to-green-400" style="width: <%= spd %>%"></div>
             </div>
           </div>
         </div>
 
-        <div class="mt-2 flex items-center justify-end text-gray-400">
-          <div class="px-2 py-0.5 md:px-2.5 md:py-1 bg-gray-800/80 border border-gray-700 rounded-full flex items-center gap-1 md:gap-1.5 shadow-md">
-            <span class="text-[10px] md:text-xs font-semibold tracking-wide">TecHub</span>
+        <div class="mt-2 pr-4 flex items-center justify-end text-gray-400">
+          <div class="px-2.5 py-1 bg-gray-800/80 border border-gray-700 rounded-full flex items-center gap-1.5 shadow-md">
+            <span class="text-xs font-semibold tracking-wide">TecHub</span>
           </div>
         </div>
       </div>
