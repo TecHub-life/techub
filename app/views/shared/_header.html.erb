@@ -5,24 +5,24 @@
       <span>TecHub</span>
     <% end %>
 
-    <nav class="hidden items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex">
-      <%= link_to directory_path, class: nav_link_class(directory_path) do %>
+    <nav class="hidden items-center gap-4 lg:gap-16 text-xs lg:text-md font-medium text-slate-600 dark:text-slate-300 md:flex">
+      <%= link_to directory_path, class: "#{nav_link_class(directory_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
         <i class="fa-solid fa-folder-open text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Directory</span>
       <% end %>
-      <%= link_to leaderboards_path, class: nav_link_class(leaderboards_path) do %>
+      <%= link_to leaderboards_path, class: "#{nav_link_class(leaderboards_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
         <i class="fa-solid fa-trophy text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Leaderboards</span>
       <% end %>
-      <%= link_to analytics_path, class: nav_link_class(analytics_path) do %>
+      <%= link_to analytics_path, class: "#{nav_link_class(analytics_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
         <i class="fa-solid fa-chart-line text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Analytics</span>
       <% end %>
-      <%= link_to faq_path, class: nav_link_class(faq_path) do %>
+      <%= link_to faq_path, class: "#{nav_link_class(faq_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
         <i class="fa-solid fa-circle-question text-[18px] leading-none align-middle"></i>
         <span class="leading-none">FAQ</span>
       <% end %>
-      <%= link_to submit_path, class: nav_link_class(submit_path) do %>
+      <%= link_to submit_path, class: "#{nav_link_class(submit_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
         <i class="fa-solid fa-paper-plane text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Submit</span>
       <% end %>
@@ -85,6 +85,7 @@
 
         <% if current_user %>
           <%= link_to current_user.login, current_user.github_profile_url, target: "_blank", rel: "noopener", class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
+          <%= link_to "Sign Out", session_path, method: :delete, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700" %>
         <% else %>
           <%= link_to "Login", auth_github_path, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
         <% end %>
