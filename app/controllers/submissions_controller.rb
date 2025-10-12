@@ -44,8 +44,9 @@ class SubmissionsController < ApplicationController
       end
     end
 
-    # Optionally kick the pipeline (non-blocking in future job)
-    Profiles::GeneratePipelineService.call(login: profile.login)
+    # Enqueue pipeline job and mark status
+    profile.update!(submitted_at: Time.current, last_pipeline_status: "queued", last_pipeline_error: nil)
+    Profiles::GeneratePipelineJob.perform_later(profile.login)
 
     redirect_to profile_path(username: profile.login), notice: "Submission received for @#{profile.login}"
   rescue StandardError => e

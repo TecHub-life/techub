@@ -28,4 +28,22 @@ class CaptureCardServiceTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "og dimensions are 1200x630" do
+    result = Screenshots::CaptureCardService.call(login: "loftwah", variant: "og", host: "http://127.0.0.1:3000", output_path: Rails.root.join("tmp", "og-dim.png").to_s)
+    assert result.success?
+    assert_equal 1200, result.value[:width]
+    assert_equal 630, result.value[:height]
+  ensure
+    FileUtils.rm_f(Rails.root.join("tmp", "og-dim.png"))
+  end
+
+  test "card dimensions are 1280x720" do
+    result = Screenshots::CaptureCardService.call(login: "loftwah", variant: "card", host: "http://127.0.0.1:3000", output_path: Rails.root.join("tmp", "card-dim.png").to_s)
+    assert result.success?
+    assert_equal 1280, result.value[:width]
+    assert_equal 720, result.value[:height]
+  ensure
+    FileUtils.rm_f(Rails.root.join("tmp", "card-dim.png"))
+  end
 end

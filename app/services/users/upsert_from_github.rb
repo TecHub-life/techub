@@ -1,8 +1,9 @@
 module Users
   class UpsertFromGithub < ApplicationService
-    def initialize(user_payload:, access_token:)
+    def initialize(user_payload:, access_token:, emails: nil)
       @user_payload = user_payload
       @access_token = access_token
+      @emails = emails
     end
 
     def call
@@ -17,6 +18,12 @@ module Users
       )
       user.access_token = access_token
 
+      # Capture email if provided (primary verified preferred)
+      if emails.present?
+        chosen = pick_best_email(Array(emails))
+        user.email = normalize_email(chosen) if chosen.present?
+      end
+
       if user.save
         success(user)
       else
@@ -26,6 +33,25 @@ module Users
 
     private
 
-    attr_reader :user_payload, :access_token
+    attr_reader :user_payload, :access_token, :emails
+
+    def pick_best_email(list)
+      # Octokit returns an array of hashes with keys: :email, :primary, :verified
+      primary_verified = list.find { |e| truthy?(e[:primary]) && truthy?(e[:verified]) }&.dig(:email)
+      return primary_verified if primary_verified.present?
+
+      primary = list.find { |e| truthy?(e[:primary]) }&.dig(:email)
+      return primary if primary.present?
+
+      list.first&.dig(:email)
+    end
+
+    def normalize_email(email)
+      email.to_s.strip.downcase.presence
+    end
+
+    def truthy?(v)
+      v == true || v.to_s == "true"
+    end
   end
 end

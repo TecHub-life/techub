@@ -66,6 +66,8 @@ module Profiles
         if optimize
           fmt = variant == "og" ? nil : nil # keep defaults; project policy can adjust
           Images::OptimizeService.call(path: shot.value[:output_path], output_path: shot.value[:output_path], format: fmt)
+          # Also enqueue background optimization for heavier processing without blocking
+          Images::OptimizeJob.perform_later(path: shot.value[:output_path], format: fmt, quality: nil)
         end
       end
 

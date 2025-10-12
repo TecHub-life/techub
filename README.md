@@ -165,6 +165,20 @@ bin/kamal deploy
 Secrets live in `.kamal/secrets`; populate them via environment variables or your password manager
 (never check plaintext credentials into git).
 
+## Docker Compose (Local)
+
+Spin up web + worker locally using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+- Web: http://localhost:3000
+- Worker: Solid Queue worker logs in the `worker` service
+- Health: `/up`, `/ops/jobs` (if Mission Control is present)
+
+See `docs/ops-runbook.md` for operations details.
+
 ## Additional Docs
 
 - `docs/marketing-overview.md` preserves the pre-Rails marketing write-up.

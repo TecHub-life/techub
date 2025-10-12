@@ -8,13 +8,14 @@ Legend: [Done], [Partial], [Planned]
 Authentication & Accounts
 
 - [Done] GitHub OAuth sign-in (`/auth/github`) → `Users::UpsertFromGithub`
-- [Planned] My Profiles ownership (link User ↔ Profile) and per-user limits
+- [Done] My Profiles ownership (User ↔ Profile link + per-user cap; list/remove UI)
+- [Done] Per-user notifications (email + preference; deduped outbox)
 
 Submission & Eligibility
 
-- [Planned] Submit controller + form (capture `login`, optional URL + repos)
+- [Done] Submit controller + form (capture `login`, optional URL + repos)
 - [Done] Eligibility scoring service: `Eligibility::GithubProfileScoreService`
-- [Planned] Enforce eligibility gate in pipeline/job (roadmap PR 14)
+- [Done] Enforce eligibility gate in pipeline/job (default ON; surfaced on failure)
 
 Manual Inputs (URL + Repos)
 
@@ -25,7 +26,7 @@ Manual Inputs (URL + Repos)
 - [Done] Scraper service with caps: `Scraping::ScrapeUrlService` (+ tests)
 - [Done] Persistence of scraped content: `ProfileScrape` + `Profiles::RecordSubmittedScrapeService`
   (+ tests)
-- [Partial] Pipeline pre-steps: scrape recorded; repo ingest not yet wired; needs flag‑gate
+- [Done] Pipeline pre-steps wired (flag‑gated) for scrape + repo ingest
 
 GitHub Ingestion
 
@@ -36,15 +37,15 @@ Card Synthesis & Media
 
 - [Done] `Profiles::SynthesizeCardService` → `ProfileCard`
 - [Done] Avatar images via Gemini (`Gemini::AvatarImageSuiteService`); artifacts recorded
-- [Done] Screenshots via Puppeteer (`Screenshots::CaptureCardService`); background job scaffold
-- [Done] Image optimization service; optional upload to Spaces/S3
+- [Done] Screenshots via Puppeteer (`Screenshots::CaptureCardService`) + background job
+- [Done] Image optimization service (inline in pipeline); optional upload to Spaces/S3
   (`Storage::ActiveStorageUploadService`)
 
 Observability & Debuggability
 
 - [Done] Prompts + metadata artifacts saved under `public/generated/<login>/meta` (PR 03)
-- [Partial] Mission Control jobs UI (roadmap PR 06)
-- [Partial] Eligibility and pipeline status surfaced in UI
+- [Partial] Mission Control jobs UI (mount present; polish + docs pending)
+- [Partial] Eligibility and pipeline status surfaced in UI (basic badge; enrich reasons)
 
 Docs (single sources of truth)
 
@@ -55,8 +56,8 @@ Docs (single sources of truth)
 
 Outstanding Wiring (next milestones)
 
-- Submit controller + form; store manual inputs
-- Wire repo ingest step into pipeline (flag‑gated)
-- Enforce eligibility gate in pipeline/job; surface decline reasons
-- My Profiles (ownership + per-user limits)
+- My Profiles page (list/remove) + ownership management UI
+- Retry/backoff strategy and metrics for pipeline + screenshot jobs
+- Enrich eligibility decline messaging in UI (signals)
 - Mission Control visibility for pipeline stages and failures
+- Optional: move image optimization to a background job for larger assets

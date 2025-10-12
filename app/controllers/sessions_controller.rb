@@ -37,7 +37,8 @@ class SessionsController < ApplicationController
     end
 
     user_payload = fetch_result.value[:user]
-    upsert_result = Users::UpsertFromGithub.call(user_payload: user_payload, access_token: access_token)
+    emails = fetch_result.value[:emails]
+    upsert_result = Users::UpsertFromGithub.call(user_payload: user_payload, access_token: access_token, emails: emails)
     unless upsert_result.success?
       StructuredLogger.error(message: "User upsert failed", error: upsert_result.error)
       redirect_to root_path, alert: "Unable to persist GitHub user"

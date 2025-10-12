@@ -23,6 +23,9 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
           "submitted_repositories[]": [ "owner/repo1", "owner/repo2" ]
         }
         assert_equal 302, sess.response.status
+        prof = Profile.for_login("loftwah").first
+        assert_equal "queued", prof.last_pipeline_status
+        assert prof.submitted_at.present?
       end
 
       # Basic sanity: we got a redirect to profile page

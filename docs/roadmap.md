@@ -31,7 +31,7 @@ PR 03 — Verify artifacts and UX (DONE)
 - Verify tasks print exact inputs used; add `--verbose` toggle
 - Docs updated: how to compare provider outputs and artifacts
 
-PR 04 — Image storage: S3/GCS
+PR 04 — Image storage: S3/GCS (DONE)
 
 - Add storage adapter (env-driven), uploader, and public URL helpers
 - Fallback to local if creds absent; docs for credentials and paths
@@ -63,9 +63,8 @@ PR 08 — Screenshot worker (Puppeteer/Playwright)
   `rake screenshots:capture` capture fixed-size views to PNG.
 - Routes + views (DONE): `/cards/:login/(og|card|simple)` with 1200x630 and 1280x720 frames; use
   generated art when available.
-- Background job + retries (NEXT): Solid Queue job to run screenshots asynchronously; link artifacts
-  in metadata.
-- Tests: service unit (DONE) + golden-dimension checks (NEXT)
+- Background job (DONE): Solid Queue job runs screenshots asynchronously; artifacts recorded.
+- Retries + golden-dimension checks (NEXT)
 
 PR 09 — Profile synthesis service + validators
 
@@ -85,15 +84,15 @@ PR 11 — Observability
 - Dashboard doc for rate-limit/error monitoring
 - Tests: log keys present in service results
 
-PR 12 — Docker Compose validation + healthchecks
+PR 12 — Docker Compose validation + healthchecks (DONE)
 
 - Single image runtime: web and jobs run from the same container image
-- docker-compose.yml for local proof with services: web, worker, db
-- Healthchecks: Rails app, Solid Queue, Chromium/Puppeteer readiness
-- Docs: how to run locally via Compose and verify health
-- CI: optional compose-based smoke test target
+- docker-compose.yml for local proof with services: web, worker
+- Health endpoints: `/up`, `/ops/jobs` (where mounted)
+- Docs: `docs/ops-runbook.md` covers local Compose and checks
+- CI: optional compose-based smoke target (NEXT)
 
-PR 13 — Ownership & limits (My Profiles)
+PR 13 — Ownership & limits (My Profiles) (DONE)
 
 - Data model: link `User` ↔ `Profile` ownership (claim + list)
 - UI: “My Profiles” page with add/remove
@@ -109,7 +108,7 @@ Definition of Done
 - Docs: `docs/auth-and-ownership.md` updated with flows and limits.
 - Observability: structured logs for claim/removal events.
 
-PR 14 — Eligibility gate in pipeline
+PR 14 — Eligibility gate in pipeline (DONE)
 
 - Enable `require_profile_eligibility` in the generation pipeline/job
 - Surface decline reasons (signals) in UI and JSON
@@ -138,7 +137,7 @@ PR 15 — Avatar uploads & unified assets
 - Record avatar `ProfileAssets` rows with public URLs
 - Update views to prefer CDN URLs
 
-PR 16 — Full pipeline job orchestration
+PR 16 — Full pipeline job orchestration (DONE)
 
 - Add `Profiles::GeneratePipelineJob` (sync → images → synth → screenshots → optimize)
 - Retries/backoff and status logging; visible in Mission Control
@@ -150,7 +149,7 @@ PR 17 — Billing feature flag (Stripe-ready)
 - Stub billing service/interfaces for later Stripe drop-in
 - Docs: configuration and upgrade path
 
-PR 18 — Submit: manual inputs + scraping (Spec-first)
+PR 18 — Submit: manual inputs + scraping (DONE)
 
 - Spec: End-to-end documented in `docs/submit-manual-inputs-workflow.md` (start here).
 - UX (pending): Extend submit page to accept personal URL + up to 4 GitHub repos.
@@ -188,7 +187,7 @@ Milestone — E2E Auth → Submit → Generate status
 
 - Eligibility funnel + decline messaging
 - Admin dashboard and moderation
-- Notifications (Resend) on completion
+- Notifications on completion (Partial: ActionMailer in place; Resend provider wiring pending)
 - API endpoints for programmatic card access
 - Physical printing pipeline
 - Leaderboards/trending, marketplace integrations, mobile client

@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_11_000005) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_12_090200) do
+  create_table "notification_deliveries", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "event", null: false
+    t.string "subject_type", null: false
+    t.bigint "subject_id", null: false
+    t.datetime "delivered_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "event", "subject_type", "subject_id"], name: "idx_delivery_uniqueness", unique: true
+    t.index ["user_id"], name: "index_notification_deliveries_on_user_id"
+  end
+
   create_table "profile_activities", force: :cascade do |t|
     t.integer "profile_id", null: false
     t.integer "total_events", default: 0
@@ -172,6 +184,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_000005) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "submitted_scrape_url"
+    t.datetime "submitted_at"
+    t.string "last_pipeline_status"
+    t.text "last_pipeline_error"
     t.index ["github_id"], name: "index_profiles_on_github_id", unique: true
     t.index ["hireable"], name: "index_profiles_on_hireable"
     t.index ["last_synced_at"], name: "index_profiles_on_last_synced_at"
@@ -316,10 +331,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_000005) do
     t.string "access_token_ciphertext"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "email"
+    t.boolean "notify_on_pipeline", default: true, null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["github_id"], name: "index_users_on_github_id", unique: true
     t.index ["login"], name: "index_users_on_login", unique: true
   end
 
+  add_foreign_key "notification_deliveries", "users"
   add_foreign_key "profile_activities", "profiles"
   add_foreign_key "profile_assets", "profiles"
   add_foreign_key "profile_cards", "profiles"
