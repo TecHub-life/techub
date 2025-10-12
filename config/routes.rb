@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "/directory", to: "pages#directory"
   get "/leaderboards", to: "pages#leaderboards"
   get "/submit", to: "pages#submit"
+  post "/submit", to: "submissions#create", as: :create_submission
   get "/faq", to: "pages#faq"
   get "/analytics", to: "pages#analytics"
   get "/docs", to: "pages#docs"
@@ -29,6 +30,9 @@ Rails.application.routes.draw do
   # Friendly profile routes expected by tests
   get "/profiles", to: "profiles#index", as: :profiles
   get "/profiles/:username", to: "profiles#show", as: :profile
+
+  # Ownership (My Profiles) — index and create/destroy will come later
+  # get "/my/profiles", to: "my_profiles#index", as: :my_profiles
 
   # Card previews for screenshotting (HTML views sized for capture)
   get "/cards/:login/og", to: "cards#og", as: :card_og

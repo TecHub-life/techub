@@ -60,7 +60,7 @@ CREATE TABLE profile_repositories (
   stargazers_count INTEGER DEFAULT 0,   -- Star count
   forks_count INTEGER DEFAULT 0,        -- Fork count
   language VARCHAR,                     -- Primary language
-  repository_type VARCHAR NOT NULL,     -- 'top', 'pinned', 'active'
+  repository_type VARCHAR NOT NULL,     -- 'top', 'pinned', 'active', 'submitted' (planned)
   github_created_at DATETIME,
   github_updated_at DATETIME
 );
@@ -176,6 +176,7 @@ For each profile sync, TecHub makes the following API calls:
 2. **Image Processing**: README images are downloaded and paths updated
 3. **Language Analysis**: Repository languages are counted and ranked
 4. **Repository Categorization**: Repos are categorized as 'top', 'pinned', or 'active'
+   - Planned: user-submitted repositories categorized as 'submitted' and preserved across syncs
 5. **Activity Analysis**: Recent events are analyzed for activity patterns
 
 ## Example Data Structure
@@ -270,6 +271,7 @@ For each profile sync, TecHub makes the following API calls:
 profile.top_repositories     # 5 most starred repos
 profile.pinned_repositories # Up to 6 pinned repos
 profile.active_repositories # 5 recent active repos
+profile.submitted_repositories # User-submitted repos (planned)
 ```
 
 ### Language Data
@@ -478,6 +480,7 @@ profile.data_completeness     # Completeness metrics hash
 
 1. **Profile Data**: Complete profile information
 2. **Repository Data**: Categorized repository lists
+   - Include 'submitted' repositories when present (planned)
 3. **Activity Data**: Recent activity and engagement
 4. **Social Data**: Connected social media accounts
 
@@ -497,6 +500,22 @@ Based on this data structure, here are design opportunities for the next phase:
 10. **Achievement Highlights**: Surface GitHub achievements and sponsor badges
 11. **Collaboration Metrics**: Track pull request, issue engagement, and code review activity
 12. **Repository Contribution Mix**: Show percentage contributions across top repositories
+
+## Manual Submissions (planned)
+
+To ensure important work isn’t missed by automated collection, profiles may include:
+
+- `profiles.submitted_scrape_url` (nullable): An optional personal URL to scrape for additional
+  context.
+- `profile_repositories.repository_type = "submitted"`: Up to 4 user-specified repositories
+  (owner/name), fetched and stored alongside automated repos but preserved across syncs.
+
+Implications:
+
+- Sync should only refresh/replace `top`/`pinned`/`active`, preserving `submitted` rows.
+- Orchestrator should ingest submitted repos (topics/language/metadata) and queue scraping of the
+  submitted URL.
+- Views and JSON include `submitted` repositories so they can be surfaced in profiles and cards.
 
 ## Benefits
 

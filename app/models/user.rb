@@ -7,4 +7,7 @@ class User < ApplicationRecord
   def github_profile_url
     "https://github.com/#{login}"
   end
+
+  has_many :profile_ownerships, dependent: :destroy
+  has_many :profiles, through: :profile_ownerships
 end

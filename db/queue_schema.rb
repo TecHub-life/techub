@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_11_000002) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_11_000005) do
   create_table "profile_activities", force: :cascade do |t|
     t.integer "profile_id", null: false
     t.integer "total_events", default: 0
@@ -82,6 +82,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_000002) do
     t.index ["profile_id"], name: "index_profile_organizations_on_profile_id"
   end
 
+  create_table "profile_ownerships", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "profile_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["profile_id"], name: "index_profile_ownerships_on_profile_id"
+    t.index ["user_id", "profile_id"], name: "index_profile_ownerships_on_user_id_and_profile_id", unique: true
+    t.index ["user_id"], name: "index_profile_ownerships_on_user_id"
+  end
+
   create_table "profile_readmes", force: :cascade do |t|
     t.integer "profile_id", null: false
     t.text "content"
@@ -107,6 +117,24 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_000002) do
     t.index ["profile_id", "repository_type"], name: "index_profile_repositories_on_profile_id_and_repository_type"
     t.index ["profile_id"], name: "index_profile_repositories_on_profile_id"
     t.index ["stargazers_count"], name: "index_profile_repositories_on_stargazers_count"
+  end
+
+  create_table "profile_scrapes", force: :cascade do |t|
+    t.integer "profile_id", null: false
+    t.string "url", null: false
+    t.string "title"
+    t.string "description"
+    t.string "canonical_url"
+    t.string "content_type"
+    t.integer "http_status"
+    t.integer "bytes"
+    t.datetime "fetched_at"
+    t.text "text"
+    t.json "links"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["profile_id", "url"], name: "index_profile_scrapes_on_profile_id_and_url", unique: true
+    t.index ["profile_id"], name: "index_profile_scrapes_on_profile_id"
   end
 
   create_table "profile_social_accounts", force: :cascade do |t|
@@ -143,6 +171,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_000002) do
     t.datetime "last_synced_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "submitted_scrape_url"
     t.index ["github_id"], name: "index_profiles_on_github_id", unique: true
     t.index ["hireable"], name: "index_profiles_on_hireable"
     t.index ["last_synced_at"], name: "index_profiles_on_last_synced_at"
@@ -296,8 +325,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_000002) do
   add_foreign_key "profile_cards", "profiles"
   add_foreign_key "profile_languages", "profiles"
   add_foreign_key "profile_organizations", "profiles"
+  add_foreign_key "profile_ownerships", "profiles"
+  add_foreign_key "profile_ownerships", "users"
   add_foreign_key "profile_readmes", "profiles"
   add_foreign_key "profile_repositories", "profiles"
+  add_foreign_key "profile_scrapes", "profiles"
   add_foreign_key "profile_social_accounts", "profiles"
   add_foreign_key "repository_topics", "profile_repositories"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

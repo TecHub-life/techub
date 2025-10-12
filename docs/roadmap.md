@@ -100,11 +100,37 @@ PR 13 — Ownership & limits (My Profiles)
 - Policy: enforce per-user cap (default 5)
 - Docs: auth-and-ownership, workflow updates
 
+Definition of Done
+
+- Code: Users ↔ Profiles association; policy enforcing per-user cap (default 5); claim/list/remove
+  actions.
+- UX: “My Profiles” page with add/remove; clear error on cap exceeded.
+- Tests: model association + policy; controller actions; cap enforcement.
+- Docs: `docs/auth-and-ownership.md` updated with flows and limits.
+- Observability: structured logs for claim/removal events.
+
 PR 14 — Eligibility gate in pipeline
 
 - Enable `require_profile_eligibility` in the generation pipeline/job
 - Surface decline reasons (signals) in UI and JSON
 - Docs: eligibility policy + cost control
+
+Definition of Done
+
+- Code: Gate enforced by default in `GeneratePipelineService` (override only via
+  `REQUIRE_PROFILE_ELIGIBILITY=0`).
+- Behaviour: Failure returns `ServiceResult` with `eligibility` metadata (score, signals).
+- Tests: pass/fail paths; gate default-on; override disables.
+- Docs: `docs/eligibility-policy.md` (signals, scoring, override) + `docs/user-journey.md`.
+- Observability: structured logs include stage marker and reasons.
+
+Definition of Done
+
+- Code: Gate enforced in `GeneratePipelineService` behind `REQUIRE_PROFILE_ELIGIBILITY` flag.
+- Failure path: returns `ServiceResult` failure with `eligibility` metadata (score, signals).
+- Tests: pass/fail paths; signals covered; flag off bypasses gate.
+- Docs: `docs/user-journey.md` and `docs/debugging-guide.md` updated with failure handling.
+- Logs/Artifacts: clear stage marker and reasons in structured logs.
 
 PR 15 — Avatar uploads & unified assets
 
@@ -123,6 +149,34 @@ PR 17 — Billing feature flag (Stripe-ready)
 - Introduce `STRIPE_ENABLED` flag and entitlement checks around generation
 - Stub billing service/interfaces for later Stripe drop-in
 - Docs: configuration and upgrade path
+
+PR 18 — Submit: manual inputs + scraping (Spec-first)
+
+- Spec: End-to-end documented in `docs/submit-manual-inputs-workflow.md` (start here).
+- UX (pending): Extend submit page to accept personal URL + up to 4 GitHub repos.
+- DB (scaffolded): `profiles.submitted_scrape_url`; support `repository_type: "submitted"`; new
+  `profile_scrapes` table for storage.
+- Sync (done): Preserve `submitted` repos during GitHub sync.
+- Orchestrator (partial): Services exist; flag-gate pipeline pre-steps; non-fatal failures with
+  logging.
+- Tests (done): Scraper + record + preservation; add controller + pipeline integration tests when
+  wiring UI.
+
+Definition of Done
+
+- Code: Submit controller/form; stores `submitted_scrape_url` and up to 4 repos; pipeline pre-steps
+  gated by `SUBMISSION_MANUAL_INPUTS_ENABLED`.
+- Services: `IngestSubmittedRepositoriesService` hydrates topics/metadata;
+  `RecordSubmittedScrapeService` persists content/links with caps.
+- Tests: form validation; services success/failure; pipeline integration with flags on/off.
+- Docs: `docs/submit-manual-inputs-workflow.md` finalized; `docs/user-journey.md` updated.
+- Observability: logs for ingest/scrape stages; DB records verifiable; size/time caps enforced.
+
+Milestone — E2E Auth → Submit → Generate status
+
+- See `docs/status-dashboard.md` for authoritative status and links.
+- See `docs/user-journey.md` for the end-to-end flow and data ownership.
+- See `docs/submit-manual-inputs-workflow.md` for the manual inputs spec.
 
 ## Operational policies
 

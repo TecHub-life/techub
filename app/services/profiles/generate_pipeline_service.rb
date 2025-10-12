@@ -18,7 +18,31 @@ module Profiles
       return sync if sync.failure?
       profile = sync.value
 
-      # 2) Generate AI images (prompts + 4 variants);
+      # 1.5) Eligibility gate (flagged)
+      if FeatureFlags.enabled?(:require_profile_eligibility)
+        elig = evaluate_eligibility(profile)
+        unless elig[:eligible]
+          return failure(StandardError.new("profile_not_eligible"), metadata: { eligibility: elig })
+        end
+      end
+
+      # 2) Optional: ingest submitted repos + scrape submitted URL (flagged)
+      if FeatureFlags.enabled?(:submission_manual_inputs)
+        submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
+        if submitted_full_names.any?
+          Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: submitted_full_names)
+        end
+      end
+
+      # 2b) Optional: scrape submitted URL for extra context (flagged)
+      scraped = nil
+      if FeatureFlags.enabled?(:submission_manual_inputs) && profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
+        scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
+        StructuredLogger.warn(message: "scrape_failed", login: login, error: scraped_result.error.message) if scraped_result.failure?
+        scraped = scraped_result.value if scraped_result.success?
+      end
+
+      # 3) Generate AI images (prompts + 4 variants);
       images = Gemini::AvatarImageSuiteService.call(
         login: login,
         provider: provider,
@@ -27,11 +51,11 @@ module Profiles
       )
       return images if images.failure?
 
-      # 3) Synthesize card attributes and persist
+      # 4) Synthesize card attributes and persist
       synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
       return synth if synth.failure?
 
-      # 4) Capture screenshots (OG/card/simple)
+      # 5) Capture screenshots (OG/card/simple)
       captures = {}
       VARIANTS.each do |variant|
         shot = Screenshots::CaptureCardService.call(login: login, variant: variant, host: host)
@@ -50,7 +74,8 @@ module Profiles
           login: login,
           images: images.value,
           screenshots: captures,
-          card_id: synth.value.id
+          card_id: synth.value.id,
+          scraped: scraped
         },
         metadata: { login: login, provider: provider, upload: upload, optimize: optimize }
       )
@@ -61,5 +86,34 @@ module Profiles
     private
 
     attr_reader :login, :host, :provider, :upload, :optimize
+
+    def evaluate_eligibility(profile)
+      repositories = profile.profile_repositories.map do |r|
+        { private: false, archived: false, pushed_at: r.github_updated_at, owner_login: (r.full_name&.split("/")&.first || profile.login) }
+      end
+      recent_activity = {
+        total_events: profile.profile_activity&.total_events.to_i
+      }
+      pinned = profile.profile_repositories.where(repository_type: "pinned").map { |r| { name: r.name } }
+      readme = profile.profile_readme&.content
+      orgs = profile.profile_organizations.map { |o| { login: o.login } }
+
+      payload = {
+        login: profile.login,
+        followers: profile.followers,
+        following: profile.following,
+        created_at: profile.github_created_at
+      }
+
+      result = Eligibility::GithubProfileScoreService.call(
+        profile: payload,
+        repositories: repositories,
+        recent_activity: recent_activity,
+        pinned_repositories: pinned,
+        profile_readme: readme,
+        organizations: orgs
+      )
+      result.value
+    end
   end
 end
