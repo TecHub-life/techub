@@ -32,6 +32,8 @@ storage/*
 !/app/assets/builds/.keep
 /public/assets
 
+videos/
+
 # Credentials and keys
 config/master.key
 config/credentials/*.key
