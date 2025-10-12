@@ -9,20 +9,15 @@ module Gemini
       },
       "16x9" => {
         aspect_ratio: "16:9",
-        guidance: "Cinematic waist-up view in a futuristic control space with ambient glow and interface panels."
-      },
-      # Background for cards (non‑figurative, safe edges)
-      "card_bg" => {
-        aspect_ratio: "16:9",
-        guidance: "Abstract techno backdrop with soft gradients, flowing light trails, and geometric meshes. Nonfigurative composition, ample negative space, no text or logos. Works as a backdrop with safe edges (no cropping surprises)."
+        guidance: "Layout-aware OG composition with strong negative space for overlays; visual motifs from profile data (languages as color ribbons, repos as constellations, activity as arcs). Optional small subject cameo only if avatar clearly depicts a human; keep off-center, low-contrast. No text or logos."
       },
       "3x1" => {
         aspect_ratio: "3:1",
-        guidance: "Ultra-wide sweep with the subject guiding flowing light trails across a skyline."
+        guidance: "Ultra-wide banner with high-contrast yet unobtrusive abstract motifs; prioritize safe edges and central negative space for card UI. Use profile-inspired symbolism (language strands, repository nodes, subtle activity trails). Absolutely no person depiction, no text, no logos."
       },
       "9x16" => {
         aspect_ratio: "9:16",
-        guidance: "Poster-style vertical composition with dynamic stance and spotlight halo."
+        guidance: "Vertical supporting art with layered gradients and subtle geometric meshes; carry profile-inspired motifs tastefully. No text or logos; avoid literal portrait."
       }
     }.freeze
 
@@ -149,19 +144,24 @@ module Gemini
       profile_traits = include_profile_traits_line
       theme_line = prompt_theme.present? ? "Mood: #{prompt_theme}." : ""
 
-      if key.to_s == "card_bg"
-        # Background-only asset for cards (non-figurative); safe edges for cropping
-        <<~PROMPT.squish
-          Abstract generative backdrop—nonfigurative. #{profile_traits}
-          Visual style: #{style_profile}. #{theme_line}
-          Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
-        PROMPT
-      else
+      if key.to_s == "1x1"
         <<~PROMPT.squish
           Portrait prompt: #{primary_variant ? 'primary hero shot' : 'alternate framing'}.
           Subject description: #{description}
           #{traits_line}
           #{profile_traits}
+          Visual guidance: Use the avatar as inspiration only; do not copy it verbatim. If the avatar is not a human photo, avoid rendering a realistic human face—use emblematic or stylized representation instead.
+          Visual style: #{style_profile}. #{theme_line}
+          Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
+        PROMPT
+      else
+        <<~PROMPT.squish
+          Supporting artwork: Focus on abstract, illustrative, or symbolic visuals inspired by the avatar and profile context, not a literal recreation.
+          Source avatar inspiration: #{description}
+          #{traits_line}
+          #{profile_traits}
+          Constraints: no text or logos; keep safe edges for cropping and preserve clear negative space for UI overlays.
+          If this is a 16:9 OG image, an optional small subject cameo is allowed only when the avatar clearly depicts a human; keep the figure subtle, off-center, and non-dominant. Otherwise depict no person and lean fully abstract.
           Visual style: #{style_profile}. #{theme_line}
           Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
         PROMPT
