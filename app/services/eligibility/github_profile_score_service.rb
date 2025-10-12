@@ -5,7 +5,7 @@ module Eligibility
     MIN_RECENT_PUBLIC_REPOS = 3
     MIN_SOCIAL_PROOF = 3
     MIN_RECENT_EVENTS = 5
-    DEFAULT_THRESHOLD = 3
+    DEFAULT_THRESHOLD = 1
 
     def initialize(profile:, repositories: [], recent_activity: nil, pinned_repositories: [], profile_readme: nil, organizations: [], threshold: DEFAULT_THRESHOLD, as_of: Time.current)
       @profile = profile || {}

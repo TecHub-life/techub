@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html data-controller="theme">
   <head>
+    <script>
+      // Apply theme immediately to prevent flash
+      (function() {
+        const stored = localStorage.getItem('techub-theme');
+        const theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
     <title><%= content_for(:title) || "TecHub - GitHub Profile Analytics" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -48,7 +58,7 @@
     <main class="mt-12 pt-4 lg:pt-6">
       <div id="flash-root" class="relative">
         <% flash.each do |key, value| %>
-          <div class="mx-auto mb-4 mt-6 md:mt-0 max-w-3xl rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+          <div class="mx-auto mb-4 mt-6 max-w-3xl rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
             <%= value %>
           </div>
         <% end %>
