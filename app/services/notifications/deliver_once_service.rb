@@ -8,7 +8,7 @@ module Notifications
 
     def call
       return success(:skipped_no_email) if user.email.blank?
-      return success(:skipped_opt_out) unless user.notify_on_pipeline != false
+      return success(:skipped_opt_out) if user.notify_on_pipeline == false
 
       delivery = NotificationDelivery.find_or_initialize_by(
         user_id: user.id,

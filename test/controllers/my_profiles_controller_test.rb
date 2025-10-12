@@ -14,14 +14,13 @@ class MyProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "lists my profiles and can remove" do
+    uid = User.find_by(login: "tester").id
     open_session do |sess|
-      sess.get root_path
-      sess.request.session[:current_user_id] = @user.id
-      sess.get my_profiles_path
+      sess.get my_profiles_path, headers: { "X-Test-User-Id" => uid.to_s }
       assert_equal 200, sess.response.status
 
       assert_difference -> { ProfileOwnership.count }, -1 do
-        sess.delete remove_my_profile_path(username: @profile.login)
+        sess.delete remove_my_profile_path(username: @profile.login), headers: { "X-Test-User-Id" => uid.to_s }
         assert_equal 302, sess.response.status
       end
     end

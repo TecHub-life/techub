@@ -14,14 +14,13 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
   test "creates submission, links ownership, stores manual inputs when enabled" do
     ENV["SUBMISSION_MANUAL_INPUTS_ENABLED"] = "1"
     Profiles::SyncFromGithub.stub :call, ServiceResult.success(Profile.create!(github_id: 2002, login: "loftwah")) do
+      uid = User.find_by(login: "tester").id
       open_session do |sess|
-        sess.get root_path
-        sess.request.session[:current_user_id] = @user.id
         sess.post create_submission_path, params: {
           login: "loftwah",
           submitted_scrape_url: "https://linkarooie.com/loftwah",
           "submitted_repositories[]": [ "owner/repo1", "owner/repo2" ]
-        }
+        }, headers: { "X-Test-User-Id" => uid.to_s }
         assert_equal 302, sess.response.status
         prof = Profile.for_login("loftwah").first
         assert_equal "queued", prof.last_pipeline_status

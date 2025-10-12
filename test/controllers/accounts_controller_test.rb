@@ -12,10 +12,9 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "updates email and notify_on_pipeline" do
+    uid = User.find_by(login: "tester").id
     open_session do |sess|
-      sess.get root_path
-      sess.request.session[:current_user_id] = @user.id
-      sess.patch account_path, params: { user: { email: "New@Example.com", notify_on_pipeline: "0" } }
+      sess.patch account_path, params: { user: { email: "New@Example.com", notify_on_pipeline: "0" } }, headers: { "X-Test-User-Id" => uid.to_s }
       assert_equal 302, sess.response.status
       @user.reload
       assert_equal "new@example.com", @user.email
