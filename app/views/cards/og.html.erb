@@ -3,11 +3,11 @@
 <% bg_16x9 = (!bg_card && Dir.exist?(gen_dir)) ? Dir[gen_dir.join('avatar-16x9*.png').to_s].first : nil %>
 <div class="w-[1200px] h-[630px] bg-gray-900 overflow-hidden relative flex flex-col">
   <% if bg_card %>
-    <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_card)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-25 object-center pointer-events-none">
+    <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_card)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-45 object-center pointer-events-none">
   <% elsif bg_16x9 %>
-    <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_16x9)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-25 object-center pointer-events-none">
+    <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_16x9)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-45 object-center pointer-events-none">
   <% end %>
-  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/70 to-gray-900/95"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 to-gray-900/80"></div>
 
   <div class="relative z-10 flex-1 flex items-center justify-center px-12 py-8">
     <div class="w-full max-w-6xl grid grid-cols-[1fr_auto] items-center gap-12">
