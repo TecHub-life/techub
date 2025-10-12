@@ -1,9 +1,12 @@
 <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
-<% bg_16x9 = Dir.exist?(gen_dir) ? Dir[gen_dir.join('avatar-16x9*.png').to_s].first : nil %>
+<% bg_card = Dir.exist?(gen_dir) ? Dir[gen_dir.join('card-bg-16x9*.png').to_s].first : nil %>
+<% bg_16x9 = (!bg_card && Dir.exist?(gen_dir)) ? Dir[gen_dir.join('avatar-16x9*.png').to_s].first : nil %>
 <div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-2">
   <div class="relative row-start-1 h-[360px] overflow-hidden z-10">
-    <% if bg_16x9 %>
-      <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_16x9)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-30">
+    <% if bg_card %>
+      <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_card)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-35 object-center">
+    <% elsif bg_16x9 %>
+      <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_16x9)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-30 object-center">
     <% end %>
     <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/40"></div>
   </div>
@@ -12,7 +15,7 @@
     <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 shadow-[0_10px_40px_rgba(79,70,229,0.5)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
         <% if @profile.avatar_url.present? %>
-          <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover">
+          <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
         <% else %>
           <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
         <% end %>

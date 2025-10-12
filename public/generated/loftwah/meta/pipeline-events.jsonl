@@ -1,0 +1,32 @@
+{"ts":"2025-10-12T08:41:17Z","stage":"start","message":"pipeline start","login":"loftwah","host":null}
+{"ts":"2025-10-12T08:41:17Z","stage":"sync","message":"sync_from_github:begin"}
+{"ts":"2025-10-12T08:41:29Z","stage":"sync","message":"sync_from_github:ok","profile":{"name":"Dean Lofts","login":"loftwah","followers":1144,"following":526,"location":"Melbourne, Australia","created_at":"2016-06-14T05:36:22.000Z","languages":["Ruby","Shell","Python","TypeScript","JavaScript","Go","HTML","Astro"],"top_repositories":["linux-for-pirates","loftwahs-cheatsheet","linkarooie"],"organizations":["caremonkey","EddieHubCommunity","SchoolInnovationsAndAchievement"]}}
+{"ts":"2025-10-12T08:41:29Z","stage":"eligibility","message":"evaluate:begin"}
+{"ts":"2025-10-12T08:41:29Z","stage":"eligibility","message":"evaluate:ok","result":{"score":5,"threshold":3,"eligible":true,"signals":{"account_age":{"met":true,"detail":"Account age 3407 days meets minimum of 60 days"},"repository_activity":{"met":true,"detail":"5 public repos with pushes in last 12 months"},"social_proof":{"met":true,"detail":"Followers 1144, following 526 (threshold 3)"},"meaningful_profile":{"met":true,"detail":"Meaningful profile context detected (bio/readme/pinned repos)"},"recent_activity":{"met":true,"detail":"276 public events in the past 90 days"}}}}
+{"ts":"2025-10-12T08:41:29Z","stage":"images","message":"image_generation:begin"}
+{"ts":"2025-10-12T08:42:31Z","stage":"images","message":"image_generation:ok","variants":["1x1","16x9","card_bg","3x1","9x16"]}
+{"ts":"2025-10-12T08:42:31Z","stage":"images","message":"artifact_load:ok","prompts_file":"/home/loftwah/gits/techub/public/generated/loftwah/meta/prompts-ai_studio.json"}
+{"ts":"2025-10-12T08:42:31Z","stage":"card","message":"synthesize_card:begin"}
+{"ts":"2025-10-12T08:42:31Z","stage":"card","message":"synthesize_card:ok","card_id":1}
+{"ts":"2025-10-12T08:42:31Z","stage":"screenshot","message":"capture:begin","variant":"og"}
+{"ts":"2025-10-12T08:42:35Z","stage":"screenshot","message":"capture:ok","variant":"og","output_path":"/home/loftwah/gits/techub/public/generated/loftwah/og.png"}
+{"ts":"2025-10-12T08:42:35Z","stage":"screenshot","message":"capture:begin","variant":"card"}
+{"ts":"2025-10-12T08:42:37Z","stage":"screenshot","message":"capture:ok","variant":"card","output_path":"/home/loftwah/gits/techub/public/generated/loftwah/card.png"}
+{"ts":"2025-10-12T08:42:37Z","stage":"screenshot","message":"capture:begin","variant":"simple"}
+{"ts":"2025-10-12T08:42:40Z","stage":"screenshot","message":"capture:ok","variant":"simple","output_path":"/home/loftwah/gits/techub/public/generated/loftwah/simple.png"}
+{"ts":"2025-10-12T08:47:46Z","stage":"start","message":"pipeline start","login":"loftwah","host":null}
+{"ts":"2025-10-12T08:47:46Z","stage":"sync","message":"sync_from_github:begin"}
+{"ts":"2025-10-12T08:47:59Z","stage":"sync","message":"sync_from_github:ok","profile":{"name":"Dean Lofts","login":"loftwah","followers":1144,"following":526,"location":"Melbourne, Australia","created_at":"2016-06-14T05:36:22.000Z","languages":["Ruby","Shell","Python","TypeScript","JavaScript","Go","HTML","Astro"],"top_repositories":["linux-for-pirates","loftwahs-cheatsheet","linkarooie"],"organizations":["caremonkey","EddieHubCommunity","SchoolInnovationsAndAchievement"]}}
+{"ts":"2025-10-12T08:47:59Z","stage":"eligibility","message":"evaluate:begin"}
+{"ts":"2025-10-12T08:47:59Z","stage":"eligibility","message":"evaluate:ok","result":{"score":5,"threshold":3,"eligible":true,"signals":{"account_age":{"met":true,"detail":"Account age 3407 days meets minimum of 60 days"},"repository_activity":{"met":true,"detail":"5 public repos with pushes in last 12 months"},"social_proof":{"met":true,"detail":"Followers 1144, following 526 (threshold 3)"},"meaningful_profile":{"met":true,"detail":"Meaningful profile context detected (bio/readme/pinned repos)"},"recent_activity":{"met":true,"detail":"276 public events in the past 90 days"}}}}
+{"ts":"2025-10-12T08:47:59Z","stage":"images","message":"image_generation:begin"}
+{"ts":"2025-10-12T08:49:00Z","stage":"images","message":"image_generation:ok","variants":["1x1","16x9","card_bg","3x1","9x16"]}
+{"ts":"2025-10-12T08:49:00Z","stage":"images","message":"artifact_load:ok","prompts_file":"/home/loftwah/gits/techub/public/generated/loftwah/meta/prompts-ai_studio.json"}
+{"ts":"2025-10-12T08:49:00Z","stage":"card","message":"synthesize_card:begin"}
+{"ts":"2025-10-12T08:49:00Z","stage":"card","message":"synthesize_card:ok","card_id":1}
+{"ts":"2025-10-12T08:49:00Z","stage":"screenshot","message":"capture:begin","variant":"og"}
+{"ts":"2025-10-12T08:49:03Z","stage":"screenshot","message":"capture:ok","variant":"og","output_path":"/home/loftwah/gits/techub/public/generated/loftwah/og.png"}
+{"ts":"2025-10-12T08:49:03Z","stage":"screenshot","message":"capture:begin","variant":"card"}
+{"ts":"2025-10-12T08:49:05Z","stage":"screenshot","message":"capture:ok","variant":"card","output_path":"/home/loftwah/gits/techub/public/generated/loftwah/card.png"}
+{"ts":"2025-10-12T08:49:05Z","stage":"screenshot","message":"capture:begin","variant":"simple"}
+{"ts":"2025-10-12T08:49:08Z","stage":"screenshot","message":"capture:ok","variant":"simple","output_path":"/home/loftwah/gits/techub/public/generated/loftwah/simple.png"}

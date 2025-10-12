@@ -11,6 +11,11 @@ module Gemini
         aspect_ratio: "16:9",
         guidance: "Cinematic waist-up view in a futuristic control space with ambient glow and interface panels."
       },
+      # Background for cards (non‑figurative, safe edges)
+      "card_bg" => {
+        aspect_ratio: "16:9",
+        guidance: "Abstract techno backdrop with soft gradients, flowing light trails, and geometric meshes. Nonfigurative composition, ample negative space, no text or logos. Works as a backdrop with safe edges (no cropping surprises)."
+      },
       "3x1" => {
         aspect_ratio: "3:1",
         guidance: "Ultra-wide sweep with the subject guiding flowing light trails across a skyline."
@@ -124,7 +129,7 @@ module Gemini
       salient = structured_details(structured)
 
       IMAGE_VARIANTS.each_with_index.each_with_object({}) do |((key, variant), index), hash|
-        hash[key] = build_variant_prompt(description, salient, variant, index.zero?)
+        hash[key] = build_variant_prompt(key, description, salient, variant, index.zero?)
       end
     end
 
@@ -139,19 +144,28 @@ module Gemini
       details
     end
 
-    def build_variant_prompt(description, salient_details, variant, primary_variant)
+    def build_variant_prompt(key, description, salient_details, variant, primary_variant)
       traits_line = salient_details.any? ? "Key visual traits: #{salient_details.join('; ')}." : ""
       profile_traits = include_profile_traits_line
       theme_line = prompt_theme.present? ? "Mood: #{prompt_theme}." : ""
 
-      <<~PROMPT.squish
-        Portrait prompt: #{primary_variant ? 'primary hero shot' : 'alternate framing'}.
-        Subject description: #{description}
-        #{traits_line}
-        #{profile_traits}
-        Visual style: #{style_profile}. #{theme_line}
-        Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
-      PROMPT
+      if key.to_s == "card_bg"
+        # Background-only asset for cards (non-figurative); safe edges for cropping
+        <<~PROMPT.squish
+          Abstract generative backdrop—nonfigurative. #{profile_traits}
+          Visual style: #{style_profile}. #{theme_line}
+          Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
+        PROMPT
+      else
+        <<~PROMPT.squish
+          Portrait prompt: #{primary_variant ? 'primary hero shot' : 'alternate framing'}.
+          Subject description: #{description}
+          #{traits_line}
+          #{profile_traits}
+          Visual style: #{style_profile}. #{theme_line}
+          Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
+        PROMPT
+      end
     end
 
     def normalize_structured(structured)

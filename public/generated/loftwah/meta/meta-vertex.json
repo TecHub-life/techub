@@ -9,17 +9,22 @@
     },
     {
       "http_status": 200,
-      "finish_reason": "STOP",
+      "finish_reason": "MAX_TOKENS",
       "limit": 700
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "STOP",
+      "limit": 1000
     }
   ],
   "structured": {
-    "description": "A man with a bald head and a full, reddish-brown beard is presented from the chest up, wearing professional business attire. He is smiling warmly at the viewer, set against a dark blue background adorned with a glowing digital network pattern. The overall presentation suggests a blend of professional competence and friendly accessibility.",
-    "facial_features": "Bald head, full reddish-brown beard, dark eyebrows.",
+    "description": "A man with a bald head and a full reddish-brown beard is depicted from the chest up, wearing a formal suit and tie. He is smiling warmly at the viewer against a dark blue background featuring a glowing digital network pattern, presenting a professional yet friendly appearance. The overall presentation suggests a confident individual in a tech-oriented or business context.",
+    "facial_features": "Bald head, full reddish-brown beard, dark eyebrows, and visible teeth.",
     "expression": "A warm, open-mouthed smile with visible white teeth.",
     "attire": "Black suit jacket, white collared shirt, and a light blue patterned necktie.",
-    "palette": "Dominant colours include dark blue, black, white, light blue, and reddish-brown, with bright white glowing elements in the background. The lighting is bright and even on the subject's face.",
-    "background": "A dark blue background featuring a glowing, interconnected network pattern composed of white lines and dots.",
+    "palette": "Dominant colours include dark blue, black, white, light blue, and reddish-brown, with bright white and light blue glowing accents in the background. The lighting is bright and even on the subject's face.",
+    "background": "A dark blue background featuring a glowing, interconnected network pattern of lines and dots.",
     "mood": "Professional and approachable."
   },
   "theme": "TecHub",

@@ -3,6 +3,7 @@ module Gemini
     VARIANTS = {
       "1x1" => { aspect_ratio: "1:1", filename: "avatar-1x1.png" },
       "16x9" => { aspect_ratio: "16:9", filename: "avatar-16x9.png" },
+      "card_bg" => { aspect_ratio: "16:9", filename: "card-bg-16x9.png" },
       "3x1" => { aspect_ratio: "3:1", filename: "avatar-3x1.png" },
       "9x16" => { aspect_ratio: "9:16", filename: "avatar-9x16.png" }
     }.freeze
@@ -266,6 +267,7 @@ module Gemini
       case key.to_s
       when "1x1" then "avatar_1x1"
       when "16x9" then "avatar_16x9"
+      when "card_bg" then "card_background"
       when "3x1" then "avatar_3x1"
       when "9x16" then "avatar_9x16"
       else key.to_s
