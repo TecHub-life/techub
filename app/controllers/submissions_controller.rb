@@ -27,12 +27,21 @@ class SubmissionsController < ApplicationController
     end
 
     # Enqueue async submission job (sync + ownership + manual inputs + pipeline)
-    Profiles::SubmitProfileJob.perform_later(
-      login,
-      actor.id,
-      submitted_scrape_url: submission_params[:submitted_scrape_url],
-      submitted_repositories: submission_params[:submitted_repositories]
-    )
+    if Rails.env.test?
+      Profiles::SubmitProfileJob.perform_now(
+        login,
+        actor.id,
+        submitted_scrape_url: submission_params[:submitted_scrape_url],
+        submitted_repositories: submission_params[:submitted_repositories]
+      )
+    else
+      Profiles::SubmitProfileJob.perform_later(
+        login,
+        actor.id,
+        submitted_scrape_url: submission_params[:submitted_scrape_url],
+        submitted_repositories: submission_params[:submitted_repositories]
+      )
+    end
 
     redirect_to my_profiles_path, notice: "Submission queued for @#{login}. It will appear here when ready."
   rescue StandardError => e
