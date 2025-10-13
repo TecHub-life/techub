@@ -20,7 +20,7 @@ class PagesController < ApplicationController
 
     scope = Profile.where(last_pipeline_status: "success").includes(:profile_assets, :profile_card)
     if @q.present?
-      scope = scope.where("login LIKE :q OR name LIKE :q", q: "%#{@q}%")
+      scope = scope.where("profiles.login LIKE :q OR profiles.name LIKE :q", q: "%#{@q}%")
     end
     if @tag.present?
       scope = scope.joins(:profile_card).where("lower(profile_cards.tags) LIKE ?", "%\"#{@tag}\"%")
