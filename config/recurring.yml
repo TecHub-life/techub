@@ -15,3 +15,13 @@ production:
   clear_solid_queue_finished_jobs:
     command: 'SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)'
     schedule: every hour at minute 12
+  refresh_profile_tags:
+    class: Profiles::RefreshTagsJob
+    args:
+      - { limit: 200 }
+    schedule: every 2 hours
+  refresh_stale_profiles:
+    class: Profiles::RefreshStaleJob
+    args:
+      - { limit: 200, stale_after: 21600 }
+    schedule: every 3 hours

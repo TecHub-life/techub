@@ -1,10 +1,17 @@
-OG Image and Card Views
+OG Images — Generation & Serving
+
+Optimal Sizes & Formats
+
+- OG: 1200x630, progressive JPEG (q≈85) preferred
+- Card: 1280x720, progressive JPEG (q≈85)
+- Simple: 1280x720, progressive JPEG (q≈85)
+- PNG is reserved for transparency‑required cases only
 
 Dimensions and MIME Types
 
-- OpenGraph: 1200x630 (1.91:1). MIME: image/png (or image/jpeg). We use PNG.
-- TecHub Card: 1280x720 (16:9). MIME: image/png.
-- Simplified Card: 1280x720 (16:9). MIME: image/png.
+- OpenGraph: 1200x630 (1.91:1). MIME: image/jpeg preferred (progressive); PNG fallback.
+- TecHub Card: 1280x720 (16:9). MIME: image/jpeg.
+- Simplified Card: 1280x720 (16:9). MIME: image/jpeg.
 
 Routes (HTML, sized for screenshots)
 
@@ -12,38 +19,32 @@ Routes (HTML, sized for screenshots)
 - /cards/:login/card → 1280x720 card preview
 - /cards/:login/simple → 1280x720 simplified card
 
-Usage
-
-- Views render fixed-size containers using Tailwind (e.g., w-[1200px] h-[630px]).
-- A future screenshot worker (Playwright/Puppeteer) captures these routes to PNG.
-- In development, assets (including generated images) stay on disk.
-
 Screenshots (Puppeteer)
 
-- Script: `script/screenshot.js` (requires `puppeteer` devDependency)
-- Rails service: `Screenshots::CaptureCardService` shells out to Node and returns `ServiceResult`.
-- Rake: `rake "screenshots:capture[login,variant]"` with optional `APP_HOST` and `out` path.
-- Example:
-  - `APP_HOST=http://127.0.0.1:3000 rake "screenshots:capture[loftwah,og]"`
-  - Saves to `public/generated/loftwah/og.png` by default.
+- Script: `script/screenshot.js` (uses `puppeteer`)
+- Service: `Screenshots::CaptureCardService` shells out to Node and returns `ServiceResult`.
+- Output defaults to JPEG (q=85); test env uses PNG for fixture stability.
 
-Design Notes
+Optimization
 
-- Based on TechDeck layout patterns, adapted for GitHub profiles (name, login, followers, location,
-  top languages, bio, avatar).
-- Keep text legible within the fixed frame; long names scale down.
+- `Images::OptimizeService` uses `image_processing` + `ruby-vips` (progressive JPEG, strip metadata)
+  with ImageMagick fallback.
+- Background job `Images::OptimizeJob` handles larger assets and optional upload to Spaces.
 
-Future PRs
+Direct Route
 
-- Screenshot worker to render routes to PNG and store them (PNG mime).
-- OG image route that serves the PNG directly for meta tags.
+- `/og/:login(.:format)` (default format: `jpg`).
+- Behaviour:
+  - If a CDN/public URL exists for `kind: 'og'`, responds with a 302 redirect to that URL.
+  - Else if a local file exists under `public/generated/:login/og.jpg` (or `.png`), serves it with
+    `Cache-Control: public, max-age=31536000`.
+  - Else enqueues `Profiles::GeneratePipelineJob` and responds `202 Accepted` with
+    `{ status: 'generating' }`.
 
-### Optimization
+Meta Tags
 
-- We use ImageMagick to optimize outputs.
-- Service: strips metadata and compresses PNG; JPEGs use by default.
-- Rake: (e.g., ).
-- Dockerfile installs for production usage.
+- Profile pages set `og:image` and Twitter image tags, preferring CDN URLs when available.
 
-Tip: keep OG as PNG or export as high-quality JPEG if size is critical. Use ProfileAsset entries to
-track current paths/URLs.
+See also
+
+- `docs/asset-guidelines.md` for sizes, formats, locations, and customization notes

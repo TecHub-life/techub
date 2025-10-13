@@ -11,16 +11,38 @@ module Images
       return failure(StandardError.new("File not found"), metadata: { path: path.to_s }) unless path.exist?
 
       if Rails.env.test?
-        # In tests, avoid invoking external commands
+        # In tests, avoid invoking external processors
         FileUtils.cp(path, output_path) unless output_path == path
         return success({ output_path: output_path.to_s, format: effective_format, quality: quality })
       end
 
-      cmd = build_command
-      ok = system(*cmd)
-      return failure(StandardError.new("Image optimization failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+      # Prefer ImageProcessing with vips for speed and quality
+      begin
+        require "image_processing/vips"
+        processor = ImageProcessing::Vips.source(path.to_s)
+        processor = processor.saver(strip: true)
 
-      success({ output_path: output_path.to_s, format: effective_format, quality: quality })
+        case effective_format
+        when "jpg", "jpeg"
+          dst = ensure_ext(output_path.to_s, ".jpg")
+          processed = processor
+            .convert("jpg")
+            .saver(quality: quality.clamp(1, 100), interlace: true)
+            .call(destination: dst)
+        else # png
+          dst = ensure_ext(output_path.to_s, ".png")
+          # Vips PNG compression is fast and effective; effort defaults are good
+          processed = processor.convert("png").call(destination: dst)
+        end
+
+        success({ output_path: processed, format: effective_format, quality: quality })
+      rescue LoadError
+        # Fallback to ImageMagick CLI if gem not available
+        cmd = build_magick_command
+        ok = system(*cmd)
+        return failure(StandardError.new("Image optimization failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+        success({ output_path: output_path.to_s, format: effective_format, quality: quality })
+      end
     rescue StandardError => e
       failure(e)
     end
@@ -29,8 +51,8 @@ module Images
 
     attr_reader :path, :output_path, :format, :quality
 
-    def build_command
-      # Use ImageMagick convert via `magick` CLI
+    def build_magick_command
+      # Use ImageMagick convert via `magick` CLI as a fallback
       src = path.to_s
       dst = output_path.to_s
       case effective_format

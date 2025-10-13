@@ -36,12 +36,11 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "shows error for non-existent GitHub user" do
-    Profiles::SyncFromGithub.stub :call, ServiceResult.failure(Octokit::NotFound.new) do
-      get profile_path(username: "nonexistentuser123456789")
-
-      assert_response :success
-      assert_match /not found/i, response.body.downcase
-    end
+  test "redirects to submit for non-existent profile" do
+    get profile_path(username: "nonexistentuser123456789")
+    assert_redirected_to submit_path
+    follow_redirect!
+    assert_response :success
+    assert_match /profile not found/i, response.body.downcase
   end
 end

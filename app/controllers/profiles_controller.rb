@@ -18,8 +18,8 @@ class ProfilesController < ApplicationController
         refresh_and_load_profile(username)
       end
     else
-      # New profile - fetch from GitHub
-      refresh_and_load_profile(username)
+      # Do not auto-create. Redirect to submit flow.
+      redirect_to submit_path, alert: "Profile not found. Submit to add it." and return
     end
 
     respond_to do |format|

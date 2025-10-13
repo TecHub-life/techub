@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Simple Puppeteer screenshot helper
-// Usage: node script/screenshot.js --url http://127.0.0.1:3000/cards/loftwah/og --out /path/to/out.png --width 1200 --height 630 --wait 500
+// Usage: node script/screenshot.js --url http://127.0.0.1:3000/cards/loftwah/og --out /path/to/out.jpg --width 1200 --height 630 --wait 500 --type jpeg --quality 85
 
 const args = require('node:util').parseArgs({
   options: {
@@ -9,14 +9,17 @@ const args = require('node:util').parseArgs({
     width: { type: 'string', default: '1200' },
     height: { type: 'string', default: '630' },
     wait: { type: 'string', default: '500' },
+    type: { type: 'string', default: 'jpeg' }, // 'png' or 'jpeg'
+    quality: { type: 'string', default: '85' }, // 1..100 (jpeg only)
   },
 })
 
 async function main() {
-  const { url, out, width, height, wait } = args.values
+  const { url, out, width, height, wait, type, quality } = args.values
   const w = parseInt(width, 10)
   const h = parseInt(height, 10)
   const delay = parseInt(wait, 10)
+  const q = parseInt(quality, 10)
 
   let puppeteer
   try {
@@ -34,7 +37,9 @@ async function main() {
     await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 })
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 })
     if (delay > 0) await new Promise((r) => setTimeout(r, delay))
-    await page.screenshot({ path: out, type: 'png' })
+    const opts = { path: out, type: type === 'png' ? 'png' : 'jpeg' }
+    if (opts.type === 'jpeg' && Number.isFinite(q)) opts.quality = q
+    await page.screenshot(opts)
     console.log(`Saved screenshot: ${out}`)
   } finally {
     await browser.close()

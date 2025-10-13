@@ -21,7 +21,10 @@
               <% end %>
             </div>
           </div>
-          <%= button_to "Remove", remove_my_profile_path(username: profile.login), method: :delete, form: { data: { turbo_confirm: "Remove @#{profile.login}?" } }, class: "text-sm text-red-600 hover:text-red-800" %>
+          <div class="flex items-center gap-3">
+            <%= link_to "Settings", my_profile_settings_path(username: profile.login), class: "text-sm text-slate-700 hover:text-blue-600 dark:text-slate-300" %>
+            <%= button_to "Remove", remove_my_profile_path(username: profile.login), method: :delete, form: { data: { turbo_confirm: "Remove @#{profile.login}?" } }, class: "text-sm text-red-600 hover:text-red-800" %>
+          </div>
         </div>
       <% end %>
     </div>
@@ -33,4 +36,3 @@
     <a href="<%= submit_path %>" class="inline-block rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Submit a Profile</a>
   </div>
 </section>
-

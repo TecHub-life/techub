@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   get "/faq", to: "pages#faq"
   get "/analytics", to: "pages#analytics"
   get "/docs", to: "pages#docs"
+  get "/motifs", to: "pages#motifs"
   # Account settings
   get "/settings/account", to: "accounts#edit", as: :edit_account
   patch "/settings/account", to: "accounts#update", as: :account
@@ -37,11 +38,16 @@ Rails.application.routes.draw do
   # Ownership (My Profiles) — index and create/destroy will come later
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
   delete "/my/profiles/:username", to: "my_profiles#destroy", as: :remove_my_profile
+  get "/my/profiles/:username/settings", to: "my_profiles#settings", as: :my_profile_settings
+  post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile
 
   # Card previews for screenshotting (HTML views sized for capture)
   get "/cards/:login/og", to: "cards#og", as: :card_og
   get "/cards/:login/card", to: "cards#card", as: :card_preview
   get "/cards/:login/simple", to: "cards#simple", as: :card_simple
+
+  # Direct OG image route (serves/redirects image; enqueues generation if missing)
+  get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
   # Mission Control (Jobs UI) — only mount when gem is present (single mount)
   if defined?(MissionControl::Jobs::Engine)
     basic = ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] || (Rails.application.credentials.dig(:mission_control, :jobs, :http_basic) rescue nil)
