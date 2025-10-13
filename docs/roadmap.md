@@ -192,6 +192,14 @@ Milestone — E2E Auth → Submit → Generate status
 - Physical printing pipeline
 - Leaderboards/trending, marketplace integrations, mobile client
 
+Raw Profiles deprecation
+
+- Remove public references and links to `/raw_profiles` in UI (landing, examples)
+- Keep routes for legacy/testing temporarily; restrict access behind admin flag if needed
+- Move raw JSON/profile refresh to owner-only tools within `My Profiles` settings
+- Add a button to refresh raw profile data in settings; show last synced timestamp
+- DoD: UI has no raw links; settings include refresh; docs updated
+
 ## Next Up (sequenced TODOs)
 
 PR 19 — Directory Listing (browse)
@@ -255,6 +263,30 @@ PR 27 — Theme & Color Customization (owner UI)
 - Templates read owner selections to render consistent previews/screenshots
 - DoD: settings form + persistence; previews reflect chosen colors; docs updated
   (`docs/asset-guidelines.md`)
+
+PR 28 — Public Profile Page (Product v1)
+
+- Replace current `profiles/:username` view with product page (cards-first)
+- Pull from `ProfileCard`, `ProfileAssets`, OG/card/simple screenshots; show generated artifacts
+- CTAs: View/copy OG URL, Share, View card variants; enqueue generation when missing (202 UI)
+- SEO: OG/Twitter tags use generated images; canonical URL
+- Fallbacks: skeleton/loading states, eligibility messages when gated
+- Tests: controller/view integration; artifacts presence/absence; share links
+- DoD: page is the primary “product” view; no raw data dump here
+
+PR 29 — Header/navigation cleanup
+
+- Single source of truth for account actions; remove duplicate “My Profiles”
+- When signed in: one My Profiles entry + Sign Out; when signed out: Sign In
+- Optional: user avatar chip linking to GitHub profile
+- Tests: nav renders correctly for signed in/out states
+
+PR 30 — Raw profile tooling (owner-only)
+
+- Move raw JSON/profile refresh to `My Profiles → Settings` (owner only)
+- Add “Refresh from GitHub” button + last synced timestamp
+- Remove public links to `/raw_profiles`; keep routes flagged for admin/tests only
+- Tests: settings renders refresh; action queues sync and updates timestamp
 
 PR 25 — Prompt Context Enrichment (DONE)
 
