@@ -212,11 +212,21 @@ module Gemini
       langs = Array(profile_context[:languages]).first(3)
       repos = Array(profile_context[:top_repositories]).first(2)
       orgs = Array(profile_context[:organizations]).first(2)
+      followers = profile_context[:followers_band]
+      tenure = profile_context[:tenure_years]
+      activity = profile_context[:activity_level]
+      topics = Array(profile_context[:topics]).first(2)
+      hireable = profile_context[:hireable] ? "yes" : nil
 
       parts = []
       parts << "languages: #{langs.join(', ')}" if langs.any?
       parts << "repos: #{repos.join(', ')}" if repos.any?
       parts << "orgs: #{orgs.join(', ')}" if orgs.any?
+      parts << "followers: #{followers}" if followers.present?
+      parts << "tenure: #{tenure}y" if tenure
+      parts << "activity: #{activity}" if activity
+      parts << "topics: #{topics.join(', ')}" if topics.any?
+      parts << "hireable: #{hireable}" if hireable
 
       line = parts.join("; ")
       return "" if line.empty?

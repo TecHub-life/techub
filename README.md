@@ -68,6 +68,11 @@ Copy `.env.example` to `.env` and fill in the values. Key settings:
   gate (e.g., paid mode). Otherwise, gating is enforced.
 - `SUBMISSION_MANUAL_INPUTS_ENABLED` (default OFF): set to `1`/`true`/`yes` to enable manual inputs
   (URL + repos) pre-steps.
+- `GENERATED_IMAGE_UPLOAD`: when set to `1`/`true`/`yes`, generated assets are uploaded to Active
+  Storage (DigitalOcean Spaces in production) and public URLs recorded alongside local paths.
+- `IMAGE_OPT_BG_THRESHOLD`: minimum file size in bytes to trigger background image optimization.
+  Defaults to `300000` (≈300KB). Smaller files get a quick inline pass; larger files are optimized
+  via a Solid Queue job on the `images` queue and optionally re-uploaded.
 
 The PEM dropped in the repo (`techub-life.2025-10-02.private-key.pem`) can be referenced via
 `GITHUB_PRIVATE_KEY_PATH` locally.
@@ -126,6 +131,10 @@ onto Solid Queue.
 - `config/recurring.yml` schedules a refresh for `loftwah` every 30 minutes in all environments.
 - `Github::WorkflowRunHandlerJob` is wired for webhook-driven reactions (currently logs payload
   metadata).
+
+Heavy image optimization runs on the `images` queue. The job emits structured logs for visibility:
+`image_optimize_started`, `image_optimize_skipped`, `image_optimize_completed`, and
+`image_optimize_failed`, including duration and size-savings metrics.
 
 Run workers locally via the `jobs` and `recurring` processes inside `Procfile.dev`.
 

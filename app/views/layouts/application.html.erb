@@ -12,14 +12,14 @@
     <meta property="og:url" content="<%= request.original_url %>">
     <meta property="og:title" content="<%= content_for(:title) || 'TecHub - GitHub Profile Analytics' %>">
     <meta property="og:description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics.' %>">
-    <meta property="og:image" content="<%= asset_url('techub-og.jpg') %>">
+    <meta property="og:image" content="<%= content_for(:og_image) || asset_url('techub-og.jpg') %>">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="<%= request.original_url %>">
     <meta property="twitter:title" content="<%= content_for(:title) || 'TecHub - GitHub Profile Analytics' %>">
     <meta property="twitter:description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics.' %>">
-    <meta property="twitter:image" content="<%= asset_url('techub-og.jpg') %>">
+    <meta property="twitter:image" content="<%= content_for(:twitter_image) || content_for(:og_image) || asset_url('techub-og.jpg') %>">
     
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>

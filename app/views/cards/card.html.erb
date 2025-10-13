@@ -1,6 +1,12 @@
 <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
-<% bg_card = Dir.exist?(gen_dir) ? Dir[gen_dir.join('card-bg-16x9*.png').to_s].first : nil %>
-<% bg_16x9 = (!bg_card && Dir.exist?(gen_dir)) ? Dir[gen_dir.join('avatar-16x9*.png').to_s].first : nil %>
+<% bg_card = nil %>
+<% if Dir.exist?(gen_dir) %>
+  <% bg_card = Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
+<% end %>
+<% bg_16x9 = nil %>
+<% if !bg_card && Dir.exist?(gen_dir) %>
+  <% bg_16x9 = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first %>
+<% end %>
 <div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-2">
   <div class="relative row-start-1 h-[360px] overflow-hidden z-10">
     <% if bg_card %>

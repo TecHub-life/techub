@@ -53,8 +53,30 @@ module Profiles
       dominant_lang = p.profile_languages.order(count: :desc).first&.name.to_s
       spirit_animal = spirit_for_language(dominant_lang)
 
-      tags = p.profile_languages.order(count: :desc).limit(5).pluck(:name)
-      tags += top_repos.map(&:name)
+      # Tags: six, lowercase, relevant
+      tags = []
+      # 1) Top languages (up to 3)
+      tags += p.profile_languages.order(count: :desc).limit(3).pluck(:name)
+      # 2) Popular repository topics across this profile (up to 3)
+      topic_counts = Hash.new(0)
+      owners = Array(p.organization_logins) + [ p.login ]
+      Array(p.profile_repositories).each do |r|
+        owner = (r.full_name.to_s.split("/").first.presence || p.login).downcase
+        next unless owners.map(&:downcase).include?(owner)
+        Array(r.topics_list).each { |t| topic_counts[t] += 1 }
+      end
+      popular_topics = topic_counts.sort_by { |(_t, c)| -c }.map(&:first).first(3)
+      tags += popular_topics
+      # 3) Role/descriptor from signals (1 slot if room)
+      role = case vibe_from_bio(p.bio)
+      when "Open Source" then "open-source"
+      when "Founder" then "founder"
+      when "AI Builder" then "ai"
+      else "builder"
+      end
+      tags << role
+      # Normalize: lowercase, uniq, drop blanks, max 6
+      tags = tags.map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq.first(6)
 
       tagline_source = p.summary.to_s
       tagline_source = p.bio.to_s if tagline_source.blank?
@@ -69,7 +91,7 @@ module Profiles
         special_move: special_move_from_profile(p),
         spirit_animal: spirit_animal,
         archetype: archetype_from_signals(p),
-        tags: tags.uniq.first(8),
+        tags: tags,
         style_profile: DEFAULT_STYLE,
         theme: theme
       }

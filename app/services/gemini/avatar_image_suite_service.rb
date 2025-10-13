@@ -83,11 +83,26 @@ module Gemini
 
         payload = result.value.merge(aspect_ratio: variant[:aspect_ratio])
 
+        # Convert to JPEG for smaller size by default (progressive via vips)
+        begin
+          src_path = payload[:output_path]
+          jpg_path = src_path.to_s.sub(/\.png\z/i, ".jpg")
+          conv = Images::OptimizeService.call(path: src_path, output_path: jpg_path, format: "jpg", quality: 85)
+          if conv.success?
+            # Optionally remove original PNG to save space
+            FileUtils.rm_f(src_path) if src_path.to_s.casecmp(jpg_path) != 0
+            payload[:output_path] = conv.value[:output_path]
+            payload[:mime_type] = "image/jpeg"
+          end
+        rescue StandardError
+          # If conversion fails, keep original PNG
+        end
+
         if upload_enabled?
           upload = Storage::ActiveStorageUploadService.call(
             path: payload[:output_path],
             content_type: payload[:mime_type],
-            filename: File.basename(variant_output_path)
+            filename: File.basename(payload[:output_path])
           )
           return upload if upload.failure?
           payload[:public_url] = upload.value[:public_url]
@@ -106,6 +121,25 @@ module Gemini
           )
         rescue StandardError
           # best-effort; ignore recording failures
+        end
+
+        # Enqueue background optimization for large generated assets (best-effort)
+        begin
+          threshold = (ENV["IMAGE_OPT_BG_THRESHOLD"] || 300_000).to_i
+          file_size = File.size(payload[:output_path]) rescue 0
+          if file_size >= threshold
+            Images::OptimizeJob.perform_later(
+              path: payload[:output_path],
+              login: login,
+              kind: variant_kind(key),
+              format: nil,
+              quality: nil,
+              min_bytes_for_bg: threshold,
+              upload: upload_enabled?
+            )
+          end
+        rescue StandardError
+          # ignore enqueue failures
         end
       end
 
@@ -142,15 +176,27 @@ module Gemini
     end
 
     def profile_context_for(login)
-      record = Profile.includes(:profile_repositories, :profile_organizations, :profile_social_accounts, :profile_languages).find_by(login: login.downcase) rescue nil
+      record = Profile
+        .includes(:profile_organizations, :profile_social_accounts, :profile_languages, :profile_activity, profile_repositories: :repository_topics)
+        .find_by(login: login.downcase) rescue nil
       return {} unless record
+
+      followers_band = format_followers(record.followers)
+      tenure_years = compute_tenure_years(record.github_created_at || record.created_at)
+      activity_level = compute_activity_level(record.profile_activity)
+      topics = dominant_topics(record, limit: 2)
 
       {
         name: record.respond_to?(:name) ? (record.name.presence || record.login) : record.login,
         summary: record.respond_to?(:summary) ? record.summary.to_s.strip : "",
         languages: fetch_names(record, :profile_languages, :name, limit: 5),
         top_repositories: fetch_repo_names(record),
-        organizations: fetch_org_names(record)
+        organizations: fetch_org_names(record),
+        followers_band: followers_band,
+        tenure_years: tenure_years,
+        activity_level: activity_level,
+        topics: topics,
+        hireable: !!record.hireable
       }
     end
 
@@ -230,6 +276,40 @@ module Gemini
       else
         Array(collection).first(3).map { |org| org.respond_to?(:name) ? (org.name.presence || (org.respond_to?(:login) ? org.login : nil)) : nil }.compact
       end
+    end
+
+    def dominant_topics(record, limit: 2)
+      counts = Hash.new(0)
+      owners = Array(record.organization_logins) + [ record.login ]
+      Array(record.profile_repositories).each do |repo|
+        owner = (repo.full_name.to_s.split("/").first.presence || record.login).downcase
+        next unless owners.map(&:downcase).include?(owner)
+        Array(repo.repository_topics).each { |t| counts[t.name.to_s.downcase] += 1 }
+      end
+      counts.sort_by { |(_t, c)| -c }.map(&:first).first(limit)
+    end
+
+    def compute_tenure_years(created_at)
+      return nil unless created_at
+      years = ((Time.current - created_at.to_time) / 1.year).floor
+      [ years, 0 ].max
+    end
+
+    def compute_activity_level(activity)
+      return nil unless activity
+      total = activity.total_events.to_i
+      case total
+      when 60.. then "high"
+      when 20..59 then "medium"
+      else "low"
+      end
+    end
+
+    def format_followers(n)
+      n = n.to_i
+      return "0" if n <= 0
+      return sprintf("%.1fk", n / 1000.0) if n >= 1000
+      n.to_s
     end
 
     def filename_with_suffix(filename)

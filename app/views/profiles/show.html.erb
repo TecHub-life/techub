@@ -1,3 +1,34 @@
+<%# Page metadata for sharing %>
+<%
+  title_text = (@profile&.display_name.presence || @profile&.login || params[:username]).to_s
+  desc_text = @profile&.bio.presence || "GitHub profile insights and AI trading card"
+  content_for :title, "#{title_text} – TecHub"
+  content_for :description, desc_text
+
+  og_url = nil
+  begin
+    if @profile
+      og_asset = @profile.profile_assets.find_by(kind: "og")
+      if og_asset&.public_url.present?
+        og_url = og_asset.public_url
+      else
+        base = Rails.root.join("public", "generated", @profile.login)
+        rel = nil
+        if File.exist?(base.join("og.jpg"))
+          rel = "/generated/#{@profile.login}/og.jpg"
+        elsif File.exist?(base.join("og.png"))
+          rel = "/generated/#{@profile.login}/og.png"
+        end
+        og_url = rel.present? ? (request.base_url + rel) : nil
+      end
+    end
+  rescue StandardError
+    og_url = nil
+  end
+  content_for :og_image, og_url if og_url.present?
+  content_for :twitter_image, og_url if og_url.present?
+%>
+
 <section class="mx-auto max-w-6xl px-4 py-12">
   <div class="space-y-4 mb-8">
     <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100">

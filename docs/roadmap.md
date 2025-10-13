@@ -191,3 +191,75 @@ Milestone — E2E Auth → Submit → Generate status
 - API endpoints for programmatic card access
 - Physical printing pipeline
 - Leaderboards/trending, marketplace integrations, mobile client
+
+## Next Up (sequenced TODOs)
+
+PR 19 — Directory Listing (browse)
+
+- Page: `/directory` lists recent successful profiles (`last_pipeline_status = 'success'`),
+  paginated
+- Includes avatar, name/handle, and links to profile and OG/card assets
+- Sorting: most recent first; optional search stub
+- DoD: tests for listing ordering; view renders with seed data
+
+PR 20 — OG Image Route + Pre‑Gen
+
+- Route: `/og/:login` returns the generated JPEG (302 to CDN URL when uploaded)
+- If missing, respond 202 + enqueue `Profiles::GeneratePipelineJob` (idempotent) and return JSON
+- Hook: on submission and on successful sync, pre‑enqueue OG/card screenshot generation
+- DoD: controller/unit tests; integration test for 202→ready path
+
+PR 21 — Retry/Backoff Metrics
+
+- Enrich `retry_on` flows with attempt/backoff in structured logs for pipeline + screenshot jobs
+- Surface attempts/durations on profile page and in Mission Control notes
+- DoD: log keys present; sample rendered in UI
+
+PR 22 — Mission Control Polish
+
+- Add per‑profile pipeline stage/status (sync, gen, synth, screenshots, optimize)
+- Show last error, attempts, and asset links
+- DoD: basic read‑only view; no write actions required
+
+PR 23 — Eligibility Decline UX
+
+- Present score and top signals on failure paths (profile + submit flows)
+- Link to docs for improvement tips
+- DoD: UI and JSON include signals when gated
+
+PR 24 — Image Pipeline Finalization (DONE)
+
+- Default screenshots to progressive JPEG (q=85); keep PNG for transparency
+- Heavy optimization in background with upload + metrics; threshold via `IMAGE_OPT_BG_THRESHOLD`
+- Views resilient to `.jpg/.png`; profile OG tags prefer generated JPEG
+
+PR 26 — Background Selection (owner UI + storage)
+
+- Storage plan: persist multiple background candidates per profile (16x9 focus) as independent rows
+  (new table `profile_backgrounds`) with fields: `profile_id`, `kind` (`bg_16x9`, `bg_card`, etc.),
+  `local_path`, `public_url`, `provider`, `sha256`, `generated_at`, `selected`.
+- Generation: keep saving current single canonical assets via `ProfileAssets` for backwards‑compat;
+  additionally write each new candidate to `profile_backgrounds` (and DO Spaces when enabled).
+- UI: “Choose Background” in Profile Settings lists recent backgrounds, allows selecting one as
+  active; screenshots use the selected one if present, otherwise latest.
+- Cleanup: optional retention policy (keep last N=5 per kind), recurring prune job.
+- DoD: table + model; write path from generation; settings page list/select; screenshots prefer
+  selected; docs updated.
+
+PR 27 — Theme & Color Customization (owner UI)
+
+- Extend Profile Settings to allow per‑variant color palettes and text color selections (simple,
+  card, og)
+- Persist selections alongside existing `profile_cards.theme` / `profile_cards.style_profile` (or a
+  small JSON column for `theme_options`)
+- Templates read owner selections to render consistent previews/screenshots
+- DoD: settings form + persistence; previews reflect chosen colors; docs updated
+  (`docs/asset-guidelines.md`)
+
+PR 25 — Prompt Context Enrichment (DONE)
+
+- Extend `profile_context` with: followers band, activity intensity (90d), tenure (years), 1–2
+  dominant topics (owned/org only), hireable flag.
+- Fold into AvatarPromptService “Profile traits” line with strict length caps; no on-image
+  text/logos.
+- DoD: traits appear in prompts metadata; implemented with owner/org filtering for topics.

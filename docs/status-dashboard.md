@@ -56,8 +56,11 @@ Docs (single sources of truth)
 
 Outstanding Wiring (next milestones)
 
-- My Profiles page (list/remove) + ownership management UI
-- Retry/backoff strategy and metrics for pipeline + screenshot jobs
+- Directory listing: list recent successful profiles (browseable directory)
+- OG image direct route (+pre-generation hook): serve/redirect `og.jpg`; enqueue if missing
+- Retry/backoff metrics: log attempts/backoff; surface on profile + Mission Control
 - Enrich eligibility decline messaging in UI (signals)
-- Mission Control visibility for pipeline stages and failures
-- Optional: move image optimization to a background job for larger assets
+- Mission Control: surface pipeline stages and latest error per profile
+- Heavy image optimization in background (DONE)
+- Background selection: store multiple candidates; owner selects active; screenshots/OG prefer
+  selection

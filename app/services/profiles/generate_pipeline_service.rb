@@ -62,12 +62,31 @@ module Profiles
         return shot if shot.failure?
         captures[variant] = shot.value
 
-        # Optional post-process optimization
+        # Optional: move heavy optimization to background for larger assets
         if optimize
-          fmt = variant == "og" ? nil : nil # keep defaults; project policy can adjust
-          Images::OptimizeService.call(path: shot.value[:output_path], output_path: shot.value[:output_path], format: fmt)
-          # Also enqueue background optimization for heavier processing without blocking
-          Images::OptimizeJob.perform_later(path: shot.value[:output_path], format: fmt, quality: nil)
+          begin
+            file_size = File.size(shot.value[:output_path]) rescue 0
+            threshold = (ENV["IMAGE_OPT_BG_THRESHOLD"] || 300_000).to_i
+            fmt = nil # keep current format
+
+            # Enqueue background optimization when file is larger than threshold
+            if file_size >= threshold
+              Images::OptimizeJob.perform_later(
+                path: shot.value[:output_path],
+                login: login,
+                kind: variant,
+                format: fmt,
+                quality: nil,
+                min_bytes_for_bg: threshold,
+                upload: upload
+              )
+            else
+              # For small files, do a quick inline pass (best-effort)
+              Images::OptimizeService.call(path: shot.value[:output_path], output_path: shot.value[:output_path], format: fmt)
+            end
+          rescue StandardError => e
+            StructuredLogger.warn(message: "optimize_enqueue_failed", login: login, variant: variant, error: e.message)
+          end
         end
       end
 
