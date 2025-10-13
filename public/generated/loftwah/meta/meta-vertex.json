@@ -14,13 +14,13 @@
     }
   ],
   "structured": {
-    "description": "A man with a bald head and a full, reddish-brown beard is presented from the chest up, wearing professional business attire. He is smiling warmly at the viewer against a dark blue background featuring an abstract glowing network pattern, suggesting a tech-oriented or connected theme. The overall presentation conveys a sense of professionalism combined with an approachable and friendly demeanor.",
-    "facial_features": "Bald head, full reddish-brown beard, dark eyebrows, and visible ears.",
-    "expression": "A warm, open-mouthed smile with visible white teeth.",
-    "attire": "Black suit jacket, white collared shirt, and a light blue tie with subtle horizontal stripes.",
-    "palette": "Dominant dark blue, black, white, light blue, and warm skin tones with a reddish-brown beard.",
-    "background": "Dark blue background featuring a glowing, interconnected network or constellation pattern with bright nodes.",
-    "mood": "Professional and approachable"
+    "description": "A man with a bald head and a full, reddish-brown beard is presented from the chest up, wearing formal business attire. He is smiling warmly at the viewer, set against a dark blue background adorned with a glowing, interconnected network pattern. The overall presentation suggests a professional yet friendly individual in a technologically themed environment.",
+    "facial_features": "Bald head, full reddish-brown beard, light brown eyebrows.",
+    "expression": "A broad, friendly smile with visible white teeth.",
+    "attire": "Black suit jacket, white collared shirt, and a bright blue patterned tie.",
+    "palette": "Dominant colours include dark blue, black, white, and reddish-brown, accented by bright blue and glowing light blue elements.",
+    "background": "A dark blue background featuring a glowing, interconnected geometric network pattern.",
+    "mood": "Professional and approachable."
   },
   "theme": "TecHub",
   "style_profile": "neon-lit anime portrait with confident tech leader energy"

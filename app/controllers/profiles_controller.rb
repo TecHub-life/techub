@@ -103,6 +103,18 @@ class ProfilesController < ApplicationController
     }
   end
 
+  public
+
+  def status
+    username = params[:username].to_s.downcase
+    profile = Profile.for_login(username).first
+    if profile.nil?
+      return render json: { status: "missing" }, status: :ok
+    end
+    state = profile.last_pipeline_status.presence || "unknown"
+    render json: { status: state }, status: :ok
+  end
+
   def repository_json(repo)
     {
       name: repo.name,
