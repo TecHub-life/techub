@@ -1,5 +1,12 @@
 # Roadmap
 
+## Current state and gaps (explicit)
+
+- The current public profile page UI is not acceptable for product v1; it is an interim view.
+- AI text/traits generation is NOT implemented; only heuristic stats/tags exist.
+- Directory UX is rudimentary; needs a cards-first browse experience and styling overhaul.
+- These items are prioritized in upcoming PRs and considered blockers for a shippable v1.
+
 ## Shipped (baseline)
 
 - GitHub auth + profile ingestion (repos, languages, orgs, README)
