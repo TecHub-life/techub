@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_12_090200) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_14_000003) do
   create_table "notification_deliveries", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "event", null: false
@@ -68,6 +68,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_090200) do
     t.datetime "generated_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "bg_choice_card", default: "ai", null: false
+    t.string "bg_color_card"
+    t.string "bg_choice_og", default: "ai", null: false
+    t.string "bg_color_og"
+    t.string "bg_choice_simple", default: "ai", null: false
+    t.string "bg_color_simple"
+    t.float "bg_fx_card"
+    t.float "bg_fy_card"
+    t.float "bg_zoom_card"
+    t.float "bg_fx_og"
+    t.float "bg_fy_og"
+    t.float "bg_zoom_og"
+    t.float "bg_fx_simple"
+    t.float "bg_fy_simple"
+    t.float "bg_zoom_simple"
     t.index ["profile_id"], name: "index_profile_cards_on_profile_id", unique: true
   end
 
@@ -187,8 +202,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_090200) do
     t.datetime "submitted_at"
     t.string "last_pipeline_status"
     t.text "last_pipeline_error"
+    t.datetime "last_ai_regenerated_at"
     t.index ["github_id"], name: "index_profiles_on_github_id", unique: true
     t.index ["hireable"], name: "index_profiles_on_hireable"
+    t.index ["last_ai_regenerated_at"], name: "index_profiles_on_last_ai_regenerated_at"
     t.index ["last_synced_at"], name: "index_profiles_on_last_synced_at"
     t.index ["login"], name: "index_profiles_on_login", unique: true
   end

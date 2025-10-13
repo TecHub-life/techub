@@ -1,17 +1,28 @@
 <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
-<% bg_card = nil %>
-<% if Dir.exist?(gen_dir) %>
-  <% bg_card = Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
-<% end %>
-<% bg_16x9 = nil %>
-<% if !bg_card && Dir.exist?(gen_dir) %>
-  <% bg_16x9 = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first %>
+<% card_prefs = @profile.profile_card %>
+<% choice = card_prefs&.bg_choice_og || 'ai' %>
+<% color_hex = (card_prefs&.bg_color_og || '#0f172a') %>
+
+<% asset_bg16 = @profile.profile_assets.find_by(kind: 'avatar_16x9') %>
+<% asset_card = @profile.profile_assets.find_by(kind: 'card') %>
+<% bg_url = nil %>
+<% if choice == 'ai' %>
+  <% if asset_bg16&.public_url.present? %>
+    <% bg_url = asset_bg16.public_url %>
+  <% elsif asset_card&.public_url.present? %>
+    <% bg_url = asset_card.public_url %>
+  <% elsif Dir.exist?(gen_dir) %>
+    <% file = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first || Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
+    <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
+  <% end %>
+<% elsif choice == 'default' %>
+  <% bg_url = '/default-card.jpg' %>
 <% end %>
 <div class="w-[1200px] h-[630px] bg-gray-900 overflow-hidden relative flex flex-col">
-  <% if bg_card %>
-    <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_card)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-45 object-center pointer-events-none">
-  <% elsif bg_16x9 %>
-    <img src="<%= "/generated/#{@profile.login}/#{File.basename(bg_16x9)}" %>" alt="Generated background" class="absolute inset-0 w-full h-full object-cover opacity-45 object-center pointer-events-none">
+  <% if choice == 'color' %>
+    <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
+  <% elsif bg_url %>
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-45 pointer-events-none">
   <% end %>
   <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 to-gray-900/80"></div>
 

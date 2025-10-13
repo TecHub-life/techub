@@ -2,12 +2,13 @@ module Profiles
   class GeneratePipelineService < ApplicationService
     VARIANTS = %w[og card simple].freeze
 
-    def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true)
+    def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, ai: true)
       @login = login.to_s.downcase
       @host = host.presence || ENV["APP_HOST"].presence || "http://127.0.0.1:3000"
       @provider = provider # nil respects default
       @upload = upload.nil? ? ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase.in?([ "1", "true", "yes" ]) : upload
       @optimize = optimize
+      @ai = ai
     end
 
     def call
@@ -42,14 +43,17 @@ module Profiles
         scraped = scraped_result.value if scraped_result.success?
       end
 
-      # 3) Generate AI images (prompts + 4 variants);
-      images = Gemini::AvatarImageSuiteService.call(
-        login: login,
-        provider: provider,
-        filename_suffix: provider,
-        output_dir: Rails.root.join("public", "generated")
-      )
-      return images if images.failure?
+      images = nil
+      if ai
+        # 3) Generate AI images (prompts + 4 variants)
+        images = Gemini::AvatarImageSuiteService.call(
+          login: login,
+          provider: provider,
+          filename_suffix: provider,
+          output_dir: Rails.root.join("public", "generated")
+        )
+        return images if images.failure?
+      end
 
       # 4) Synthesize card attributes and persist
       synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
@@ -93,7 +97,7 @@ module Profiles
       success(
         {
           login: login,
-          images: images.value,
+          images: images&.value,
           screenshots: captures,
           card_id: synth.value.id,
           scraped: scraped
@@ -106,7 +110,7 @@ module Profiles
 
     private
 
-    attr_reader :login, :host, :provider, :upload, :optimize
+    attr_reader :login, :host, :provider, :upload, :optimize, :ai
 
     def evaluate_eligibility(profile)
       repositories = profile.profile_repositories.map do |r|

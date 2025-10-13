@@ -4,10 +4,10 @@ module Profiles
 
     retry_on StandardError, wait: ->(executions) { (executions**2).seconds }, attempts: 3
 
-    def perform(login)
+    def perform(login, ai: true)
       started = Time.current
       StructuredLogger.info(message: "pipeline_started", service: self.class.name, login: login)
-      result = Profiles::GeneratePipelineService.call(login: login)
+      result = Profiles::GeneratePipelineService.call(login: login, ai: ai)
       profile = Profile.for_login(login).first
       return unless profile
 

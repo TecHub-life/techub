@@ -8,7 +8,7 @@ Goal
 Storage Plan
 
 - Keep `ProfileAssets` as the canonical single latest asset per kind (`og`, `card`, `simple`,
-  `avatar_*`).
+  `avatar_*`). Owners may upload to overwrite these canonical assets.
 - Add a new table `profile_backgrounds` (to be implemented) for multiple candidates:
   - `profile_id` (FK)
   - `kind` (`bg_16x9`, `bg_card`, optionally `bg_3x1`)
@@ -25,6 +25,13 @@ Generation
 - On each generation, continue to write the latest to `ProfileAssets` for current flows.
 - Additionally, insert a `profile_backgrounds` row for each candidate written; upload to Spaces when
   enabled.
+
+Owner uploads
+
+- Owners can upload/overwrite canonical assets for: `og`, `card`, `simple`, and `avatar_3x1` (3×1
+  banner).
+- Uploaded assets take precedence in renders; they overwrite the single latest record per kind.
+- UI: My Profile → Settings includes upload forms; overwriting is explicit.
 
 Selection & Rendering
 

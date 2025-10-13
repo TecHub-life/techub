@@ -1,4 +1,29 @@
-<div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative flex items-center justify-center">
+<% card_prefs = @profile.profile_card %>
+<% choice = card_prefs&.bg_choice_simple || 'ai' %>
+<% color_hex = (card_prefs&.bg_color_simple || '#0f172a') %>
+
+<% gen_dir = Rails.root.join('public','generated', @profile.login) %>
+<% asset_bg16 = @profile.profile_assets.find_by(kind: 'avatar_16x9') %>
+<% asset_card = @profile.profile_assets.find_by(kind: 'card') %>
+<% bg_url = nil %>
+<% if choice == 'ai' %>
+  <% if asset_bg16&.public_url.present? %>
+    <% bg_url = asset_bg16.public_url %>
+  <% elsif asset_card&.public_url.present? %>
+    <% bg_url = asset_card.public_url %>
+  <% elsif Dir.exist?(gen_dir) %>
+    <% file = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first || Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
+    <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
+  <% end %>
+<% elsif choice == 'default' %>
+  <% bg_url = '/default-card.jpg' %>
+<% end %>
+
+
+<div class="w-[1280px] h-[720px] overflow-hidden relative flex items-center justify-center" style="background:<%= choice == 'color' ? color_hex : '#0b1220' %>">
+  <% if choice != 'color' && bg_url %>
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-35">
+  <% end %>
   <div class="text-center space-y-4">
     <div class="mx-auto w-40 h-40 rounded-full overflow-hidden bg-gray-800">
       <% if @profile.avatar_url.present? %>
@@ -14,4 +39,3 @@
     <% end %>
   </div>
 </div>
-

@@ -1,5 +1,12 @@
 # Roadmap
 
+## Current state and gaps (explicit)
+
+- The current public profile page UI is not acceptable for product v1; it is an interim view.
+- AI text/traits generation is NOT implemented; only heuristic stats/tags exist.
+- Directory UX is rudimentary; needs a cards-first browse experience and styling overhaul.
+- These items are prioritized in upcoming PRs and considered blockers for a shippable v1.
+
 ## Shipped (baseline)
 
 - GitHub auth + profile ingestion (repos, languages, orgs, README)
@@ -66,11 +73,12 @@ PR 08 — Screenshot worker (Puppeteer/Playwright)
 - Background job (DONE): Solid Queue job runs screenshots asynchronously; artifacts recorded.
 - Retries + golden-dimension checks (NEXT)
 
-PR 09 — Profile synthesis service + validators
+PR 09 — Profile synthesis service + validators (PENDING)
 
-- `ProfileSynthesisService` for structured card data (title, tags, traits)
-- Validators and re-ask loop for violations
-- Tests: rule coverage + re-ask loop
+- `ProfileSynthesisService` (AI text: short/long bios, buffs, traits) — NOT DONE
+- Validators and re-ask loop for constraints — NOT DONE
+- Persist to model; render AI section on profile page — NOT DONE
+- Tests: rule coverage + re-ask loop — NOT DONE
 
 PR 10 — OG image route + share pipeline
 
@@ -171,6 +179,36 @@ Definition of Done
 - Docs: `docs/submit-manual-inputs-workflow.md` finalized; `docs/user-journey.md` updated.
 - Observability: logs for ingest/scrape stages; DB records verifiable; size/time caps enforced.
 
+PR 19 — Custom backgrounds & 3x1 banner
+
+- Add upload UI in My Profile settings for `og`, `card`, `simple`, and `3x1` banner
+- Store uploads as `ProfileAssets` kinds: `og`, `card`, `simple`, `avatar_3x1`
+- Prefer uploaded assets over generated ones in renders
+- Roadmap follow-up: optional per-card-type custom assets; background selection UI
+
+Definition of Done
+
+- Code: Controller endpoint to upload/overwrite assets; validation and storage to Spaces when
+  enabled
+- UX: Settings page shows previews and upload buttons per kind; overwrite semantics are clear
+- Docs: `docs/background-selection.md` updated to include `3x1` support and owner uploads
+- Observability: structured logs on upload success/failure
+
+PR 20 — Regeneration limits & non-AI re-capture
+
+- Split regeneration into two flows: non-AI re-capture (unlimited) and AI artwork regeneration
+  (rate-limited)
+- Enforce weekly limit per profile for AI artwork regeneration
+- Pipeline accepts `ai: false` to skip AI generation and only re-capture screenshots/optimize
+- Settings UI shows availability and next allowed time
+
+Definition of Done
+
+- Code: `Profiles::GeneratePipelineService` supports `ai:` flag; job accepts and forwards `ai`
+- Policy: `last_ai_regenerated_at` tracked per profile; allow once per 7 days
+- UX: Two buttons in Settings; AI button disabled with explanation until window opens
+- Docs: `docs/ops-runbook.md` updated with limits; `docs/user-journey.md` clarifies flows
+
 Milestone — E2E Auth → Submit → Generate status
 
 - See `docs/status-dashboard.md` for authoritative status and links.
@@ -264,7 +302,7 @@ PR 27 — Theme & Color Customization (owner UI)
 - DoD: settings form + persistence; previews reflect chosen colors; docs updated
   (`docs/asset-guidelines.md`)
 
-PR 28 — Public Profile Page (Product v1)
+PR 28 — Public Profile Page (Product v1) (PENDING)
 
 - Replace current `profiles/:username` view with product page (cards-first)
 - Pull from `ProfileCard`, `ProfileAssets`, OG/card/simple screenshots; show generated artifacts
@@ -273,6 +311,7 @@ PR 28 — Public Profile Page (Product v1)
 - Fallbacks: skeleton/loading states, eligibility messages when gated
 - Tests: controller/view integration; artifacts presence/absence; share links
 - DoD: page is the primary “product” view; no raw data dump here
+- Status: current page is interim; AI text + final layout pending
 
 PR 29 — Header/navigation cleanup
 
