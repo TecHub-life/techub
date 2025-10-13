@@ -29,7 +29,11 @@ class SubmissionsController < ApplicationController
     end
 
     # Link ownership
-    ProfileOwnership.find_or_create_by!(user: actor, profile: persisted)
+    begin
+      ProfileOwnership.find_or_create_by!(user: actor, profile: persisted)
+    rescue ActiveRecord::RecordInvalid => e
+      return redirect_to submit_path, alert: e.record.errors.full_messages.to_sentence
+    end
 
     # Persist manual inputs when feature is enabled
     if FeatureFlags.enabled?(:submission_manual_inputs)
