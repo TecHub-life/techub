@@ -26,6 +26,12 @@
         <i class="fa-solid fa-paper-plane text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Submit</span>
       <% end %>
+      <% if current_user %>
+        <%= link_to my_profiles_path, class: "#{nav_link_class(my_profiles_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+          <i class="fa-solid fa-id-badge text-[18px] leading-none align-middle"></i>
+          <span class="leading-none">My Profiles</span>
+        <% end %>
+      <% end %>
     </nav>
 
     <div class="flex items-center gap-3">
@@ -51,7 +57,11 @@
       </button>
 
       <% if current_user %>
-        <%= link_to current_user.login, current_user.github_profile_url, target: "_blank", rel: "noopener", class: "inline-flex h-10 px-4 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
+        <%= link_to my_profiles_path, class: "inline-flex h-10 px-4 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" do %>
+          <i class="fa-solid fa-id-badge mr-2"></i>
+          <span>My Profiles</span>
+        <% end %>
+        <%= button_to "Sign Out", session_path, method: :delete, class: "inline-flex h-10 px-4 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
       <% else %>
         <%= link_to "Login", auth_github_path, class: "inline-flex h-10 px-4 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
       <% end %>
