@@ -54,9 +54,10 @@ Rails.application.routes.draw do
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)
-    # Enforce HTTP Basic in production; allow optional guard elsewhere
-    basic = ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] || Rails.application.credentials.dig(:mission_control, :jobs, :http_basic)
-    if Rails.env.production? || basic.present?
+    # Prefer credentials; in production ignore env and require credentials
+    cred = Rails.application.credentials.dig(:mission_control, :jobs, :http_basic)
+    basic = Rails.env.production? ? cred : (ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] || cred)
+    if basic.present?
       user, pass = (basic.to_s.split(":", 2))
       authenticator = lambda do |u, p|
         ActiveSupport::SecurityUtils.secure_compare(u.to_s, user.to_s) &
@@ -65,7 +66,12 @@ Rails.application.routes.draw do
       constraint = lambda { |req| ActionController::HttpAuthentication::Basic.authenticate(req, &authenticator) }
       constraints(constraint) { mount MissionControl::Jobs::Engine, at: "/ops/jobs" }
     else
-      mount MissionControl::Jobs::Engine, at: "/ops/jobs"
+      # In production, do not mount without auth
+      if Rails.env.production?
+        # noop: leave unmounted to avoid exposure
+      else
+        mount MissionControl::Jobs::Engine, at: "/ops/jobs"
+      end
     end
   else
     # Fallback lightweight jobs status when Mission Control is not installed

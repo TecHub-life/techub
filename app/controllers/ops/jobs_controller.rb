@@ -39,8 +39,8 @@ module Ops
     private
 
     def require_jobs_basic_auth
-      basic = ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] || Rails.application.credentials.dig(:mission_control, :jobs, :http_basic)
-      # In production, always require auth even if credentials are missing
+      cred = Rails.application.credentials.dig(:mission_control, :jobs, :http_basic)
+      basic = Rails.env.production? ? cred : (ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] || cred)
       if Rails.env.production?
         authenticate_or_request_with_http_basic("TecHub Jobs") do |u, p|
           user, pass = (basic.to_s.split(":", 2))
