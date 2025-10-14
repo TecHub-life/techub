@@ -22,14 +22,33 @@
     <meta property="og:url" content="<%= request.original_url %>">
     <meta property="og:title" content="<%= content_for(:title) || 'TecHub - GitHub Profile Analytics' %>">
     <meta property="og:description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics.' %>">
-    <meta property="og:image" content="<%= content_for(:og_image) || asset_url('techub-og.jpg') %>">
+    <%# Ensure absolute URL for fallback OG image %>
+    <% og_fallback = request.base_url + asset_path('techub-og.jpg') %>
+    <meta property="og:image" content="<%= content_for(:og_image) || og_fallback %>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="TecHub">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image:alt" content="<%= (content_for(:title) || 'TecHub preview') %>">
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="<%= request.original_url %>">
-    <meta property="twitter:title" content="<%= content_for(:title) || 'TecHub - GitHub Profile Analytics' %>">
-    <meta property="twitter:description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics.' %>">
-    <meta property="twitter:image" content="<%= content_for(:twitter_image) || content_for(:og_image) || asset_url('techub-og.jpg') %>">
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="<%= request.original_url %>">
+    <meta name="twitter:title" content="<%= content_for(:title) || 'TecHub - GitHub Profile Analytics' %>">
+    <meta name="twitter:description" content="<%= content_for(:description) || 'Comprehensive GitHub profile analytics, repository insights, and developer statistics.' %>">
+    <% twitter_fallback = content_for(:twitter_image) || content_for(:og_image) || og_fallback %>
+    <meta name="twitter:image" content="<%= twitter_fallback %>">
+    <meta name="twitter:image:alt" content="<%= (content_for(:title) || 'TecHub preview') %>">
+    <% if ENV['TWITTER_SITE_HANDLE'].present? %>
+      <meta name="twitter:site" content="<%= ENV['TWITTER_SITE_HANDLE'] %>">
+    <% end %>
+    <% if ENV['TWITTER_CREATOR_HANDLE'].present? %>
+      <meta name="twitter:creator" content="<%= ENV['TWITTER_CREATOR_HANDLE'] %>">
+    <% end %>
+
+    <!-- Theme color for modern browsers (light/dark aware) -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0f172a">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#020617">
     
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>

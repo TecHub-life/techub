@@ -17,18 +17,16 @@ module Profiles
       # Link ownership (idempotent)
       ProfileOwnership.find_or_create_by!(user: actor, profile: persisted)
 
-      # Persist manual inputs when feature is enabled
-      if FeatureFlags.enabled?(:submission_manual_inputs)
-        url = submitted_scrape_url.to_s.strip
-        persisted.update!(submitted_scrape_url: url) if url.present?
+      # Persist optional manual inputs when provided
+      url = submitted_scrape_url.to_s.strip
+      persisted.update!(submitted_scrape_url: url) if url.present?
 
-        Array(submitted_repositories).compact.map(&:to_s).map(&:strip).reject(&:blank?).first(4).each do |full_name|
-          owner, repo = full_name.split("/", 2)
-          next if owner.blank? || repo.blank?
-          pr = persisted.profile_repositories.find_or_initialize_by(full_name: "#{owner}/#{repo}", repository_type: "submitted")
-          pr.name ||= repo
-          pr.save!
-        end
+      Array(submitted_repositories).compact.map(&:to_s).map(&:strip).reject(&:blank?).first(4).each do |full_name|
+        owner, repo = full_name.split("/", 2)
+        next if owner.blank? || repo.blank?
+        pr = persisted.profile_repositories.find_or_initialize_by(full_name: "#{owner}/#{repo}", repository_type: "submitted")
+        pr.name ||= repo
+        pr.save!
       end
 
       # Enqueue pipeline job and mark status

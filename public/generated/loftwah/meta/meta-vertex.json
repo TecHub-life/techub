@@ -9,18 +9,23 @@
     },
     {
       "http_status": 200,
-      "finish_reason": "STOP",
+      "finish_reason": "MAX_TOKENS",
       "limit": 700
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "STOP",
+      "limit": 1000
     }
   ],
   "structured": {
-    "description": "A bald man with a prominent reddish-brown beard is depicted from the chest up, wearing professional business attire. He is smiling directly at the viewer, conveying a friendly and approachable demeanor. The subject is set against a dark blue background featuring an abstract network of glowing lines and interconnected dots, suggesting a technological or digital theme.",
-    "facial_features": "The avatar has a bald head and a full, well-groomed reddish-brown beard. His eyebrows are dark and his eyes are light in color.",
-    "expression": "The man has a broad, open-mouthed smile, showing his teeth, and his eyes are looking directly forward.",
-    "attire": "He is wearing a black suit jacket over a crisp white collared shirt, complemented by a bright blue patterned tie.",
-    "palette": "The dominant colors are dark blue from the background, black and white from the attire, and the warm reddish-brown of the beard. The lighting is bright and even on the subject, with glowing blue accents in the background.",
-    "background": "The background is a deep blue, featuring a digital network pattern composed of glowing light blue lines connecting various small, luminous dots.",
-    "mood": "Professional and approachable."
+    "description": "A man with a bald head and a full, reddish-brown beard is presented from the chest up, wearing professional business attire. He is smiling warmly at the viewer against a dark blue background featuring an intricate glowing network pattern, suggesting a tech-oriented or connected theme. The overall presentation conveys a sense of professionalism combined with an approachable and friendly demeanor.",
+    "facial_features": "The avatar has a bald head, prominent eyebrows, and a full, well-groomed reddish-brown beard. His eyes are open and looking directly forward.",
+    "expression": "The avatar exhibits a friendly and open smile, with his teeth clearly visible.",
+    "attire": "The avatar is dressed in a black suit jacket over a crisp white collared shirt. He wears a bright blue tie with subtle horizontal stripes.",
+    "palette": "The dominant colors are dark blue for the background, black for the suit, white for the shirt, and reddish-brown for the beard, accented by the bright blue tie and glowing network elements.",
+    "background": "The background is a deep blue color, featuring a luminous, interconnected network pattern composed of light blue lines and glowing circular nodes.",
+    "mood": "Professional and approachable"
   },
   "theme": "TecHub",
   "style_profile": "neon-lit anime portrait with confident tech leader energy"

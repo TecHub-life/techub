@@ -3,14 +3,14 @@
   <div class="space-y-3">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-sky-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
           TecHub Directory
         </h1>
         <p class="mt-2 text-slate-600 dark:text-slate-400">
           Browse developer trading cards • <%= @total %> profiles
         </p>
       </div>
-      <a href="<%= motifs_path %>" class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:shadow-xl hover:scale-105">
+      <a href="<%= motifs_path %>" class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:shadow-xl hover:scale-105">
         <span>🎭</span>
         <span>Archetypes & Spirits</span>
       </a>
@@ -69,7 +69,7 @@
           <input type="checkbox" name="mine" value="1" <%= 'checked' if @mine %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
           <span>Only mine</span>
         </label>
-        <button type="submit" class="ml-auto rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2 text-sm font-medium text-white shadow-md transition hover:shadow-lg hover:scale-105">
+        <button type="submit" class="ml-auto rounded-lg bg-gradient-to-r from-indigo-600 to-sky-600 px-6 py-2 text-sm font-medium text-white shadow-md transition hover:shadow-lg hover:scale-105">
           Apply Filters
         </button>
       </div>
@@ -100,7 +100,7 @@
         <a href="<%= profile_path(username: profile.login) %>" class="group block">
           <div class="relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-md transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:border-indigo-300 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900 dark:hover:border-indigo-500">
             <!-- Card Preview Image -->
-            <div class="relative h-48 overflow-hidden bg-gradient-to-br from-purple-600/10 via-indigo-600/10 to-cyan-600/10">
+            <div class="relative h-48 overflow-hidden bg-gradient-to-br from-sky-600/10 via-indigo-600/10 to-cyan-600/10">
               <% gen_dir = Rails.root.join('public','generated', profile.login) %>
               <% card_img = nil %>
               
@@ -124,7 +124,7 @@
               <% end %>
               
               <!-- Fallback gradient background when no image -->
-              <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-indigo-600/20 to-cyan-600/20"></div>
+              <div class="absolute inset-0 bg-gradient-to-br from-sky-600/20 via-indigo-600/20 to-cyan-600/20"></div>
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
               
               <!-- Avatar Badge -->

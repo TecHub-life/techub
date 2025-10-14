@@ -22,9 +22,9 @@
   <% if choice == 'color' %>
     <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
   <% elsif bg_url %>
-    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-45 pointer-events-none">
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-30 pointer-events-none">
   <% end %>
-  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/40 to-gray-900/80"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/55 to-gray-900/85"></div>
 
   <div class="relative z-10 flex-1 flex items-center justify-center px-12 py-8">
     <div class="w-full max-w-6xl grid grid-cols-[1fr_auto] items-center gap-12">
@@ -35,7 +35,7 @@
           <% name_size = name.to_s.length > 25 ? "text-3xl" : name.to_s.length > 18 ? "text-4xl" : "text-5xl" %>
           <% handle_size = handle.to_s.length > 20 ? "text-base" : "text-xl" %>
           <h1 class="<%= name_size %> font-bold text-white tracking-wide drop-shadow-sm leading-tight"><%= name %></h1>
-          <p class="<%= handle_size %> font-medium text-indigo-400">@<%= handle %></p>
+          <p class="<%= handle_size %> font-medium text-sky-400">@<%= handle %></p>
         </div>
 
         <div class="flex gap-3 text-gray-300 text-base flex-wrap">
@@ -56,24 +56,40 @@
         <% if langs.any? %>
           <div class="flex flex-wrap gap-3 py-2">
             <% langs.each do |lang| %>
-              <span class="bg-gray-800/80 text-base font-medium text-indigo-300 px-4 py-2 rounded-full border border-gray-700/50">
-                #<%= lang %>
-              </span>
+              <span class="bg-gray-800/80 text-base font-medium text-sky-300 px-4 py-2 rounded-full border border-gray-700/50">#<%= lang %></span>
             <% end %>
           </div>
         <% end %>
 
-        <% if @profile.bio.present? %>
-          <div class="border-t border-gray-700/50 pt-3 mt-3">
-            <p class="italic text-gray-400 text-lg font-medium truncate">
-              "<%= @profile.bio %>"
-            </p>
+        <% card = @profile.profile_card %>
+        <% if card %>
+          <div class="flex flex-wrap gap-3 py-1">
+            <% if card.attack.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-amber-300 font-semibold">ATK <%= card.attack %></span>
+            <% end %>
+            <% if card.defense.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-blue-300 font-semibold">DEF <%= card.defense %></span>
+            <% end %>
+            <% if card.speed.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-green-300 font-semibold">SPD <%= card.speed %></span>
+            <% end %>
+            <% if card.playing_card.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-sky-300 font-medium"><%= card.playing_card %></span>
+            <% end %>
+            <% if card.spirit_animal.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-sky-300 font-medium"><%= card.spirit_animal %></span>
+            <% end %>
+            <% if card.archetype.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-sky-300 font-medium"><%= card.archetype %></span>
+            <% end %>
           </div>
         <% end %>
+
+        <%# No bio on OG image for clarity %>
       </div>
 
       <div class="flex-shrink-0">
-        <div class="w-72 h-72 rounded-full p-1 bg-gradient-to-r from-purple-600 to-indigo-500 shadow-2xl">
+        <div class="w-72 h-72 rounded-full p-1 bg-gradient-to-r from-sky-500 to-indigo-500 shadow-2xl">
           <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
             <% if @profile.avatar_url.present? %>
               <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">

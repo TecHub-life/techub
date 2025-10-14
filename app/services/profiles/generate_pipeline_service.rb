@@ -31,17 +31,15 @@ module Profiles
         end
       end
 
-      # 2) Optional: ingest submitted repos + scrape submitted URL (flagged)
-      if FeatureFlags.enabled?(:submission_manual_inputs)
-        submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
-        if submitted_full_names.any?
-          Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: submitted_full_names)
-        end
+      # 2) Optional: ingest submitted repos when present
+      submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
+      if submitted_full_names.any?
+        Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: submitted_full_names)
       end
 
-      # 2b) Optional: scrape submitted URL for extra context (flagged)
+      # 2b) Optional: scrape submitted URL for extra context
       scraped = nil
-      if FeatureFlags.enabled?(:submission_manual_inputs) && profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
+      if profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
         scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
         StructuredLogger.warn(message: "scrape_failed", login: login, error: scraped_result.error.message) if scraped_result.failure?
         scraped = scraped_result.value if scraped_result.success?
