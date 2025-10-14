@@ -69,6 +69,7 @@ class ProfilesController < ApplicationController
   end
 
   def render_json_profile
+    card = @profile&.profile_card
     render json: {
       profile: {
         login: @profile.login,
@@ -99,7 +100,31 @@ class ProfilesController < ApplicationController
       pinned_repositories: @pinned_repositories&.map { |repo| repository_json(repo) },
       active_repositories: @active_repositories&.map { |repo| repository_json(repo) },
       recent_activity: @recent_activity&.as_json,
-      readme: @profile_readme&.as_json
+      readme: @profile_readme&.as_json,
+      card: card && {
+        title: card.title,
+        tagline: card.tagline,
+        short_bio: card.short_bio,
+        long_bio: card.long_bio,
+        buff: card.buff,
+        buff_description: card.buff_description,
+        weakness: card.weakness,
+        weakness_description: card.weakness_description,
+        flavor_text: card.flavor_text,
+        attack: card.attack,
+        defense: card.defense,
+        speed: card.speed,
+        playing_card: card.playing_card,
+        spirit_animal: card.spirit_animal,
+        archetype: card.archetype,
+        vibe: card.vibe,
+        vibe_description: card.vibe_description,
+        special_move: card.special_move,
+        special_move_description: card.special_move_description,
+        tags: Array(card.tags),
+        model_name: card.model_name,
+        generated_at: card.generated_at
+      }
     }
   end
 

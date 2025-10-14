@@ -59,17 +59,21 @@ class PagesController < ApplicationController
   end
 
   def motifs
-    # Aggregate counts for spirit animals and archetypes across successful profiles
+    # Canonical catalogs with counts from current successful profiles
     rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.spirit_animal", "profile_cards.archetype")
-    spirits = Hash.new(0)
-    archetypes = Hash.new(0)
+    counts_spirit = Hash.new(0)
+    counts_arch = Hash.new(0)
     rows.each do |spirit, arch|
-      spirits[spirit] += 1 if spirit.present?
-      archetypes[arch] += 1 if arch.present?
+      counts_spirit[spirit] += 1 if spirit.present?
+      counts_arch[arch] += 1 if arch.present?
     end
 
-    @spirits = spirits.sort_by { |(_k, v)| -v }
-    @archetypes = archetypes.sort_by { |(_k, v)| -v }
+    @archetype_catalog = Motifs::Catalog.archetypes.map do |name, desc|
+      { name: name, description: desc, count: counts_arch[name] }
+    end
+    @spirit_catalog = Motifs::Catalog.spirit_animals.map do |name, desc|
+      { name: name, description: desc, count: counts_spirit[name] }
+    end
   end
 
   def leaderboards; end

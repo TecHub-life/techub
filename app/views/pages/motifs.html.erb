@@ -12,35 +12,40 @@
   <div class="grid gap-8 md:grid-cols-2">
     <div>
       <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">Archetypes</h2>
-      <% if @archetypes.any? %>
-        <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <% @archetypes.each do |name, count| %>
-            <li class="flex items-center justify-between p-3">
-              <a href="<%= directory_path(archetype: name) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= name %></a>
-              <span class="text-sm text-slate-600 dark:text-slate-400"><%= count %></span>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="text-slate-600 dark:text-slate-300">No archetypes yet.</p>
-      <% end %>
+      <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <% @archetype_catalog.each do |item| %>
+          <li class="p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <a href="<%= directory_path(archetype: item[:name]) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= item[:name] %></a>
+                <p class="text-sm text-slate-600 dark:text-slate-400"><%= item[:description] %></p>
+              </div>
+              <% if item[:count].to_i > 0 %>
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200"><%= item[:count] %></span>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
     </div>
 
     <div>
       <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">Spirit Animals</h2>
-      <% if @spirits.any? %>
-        <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <% @spirits.each do |name, count| %>
-            <li class="flex items-center justify-between p-3">
-              <a href="<%= directory_path(spirit: name) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= name %></a>
-              <span class="text-sm text-slate-600 dark:text-slate-400"><%= count %></span>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="text-slate-600 dark:text-slate-300">No spirit animals yet.</p>
-      <% end %>
+      <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <% @spirit_catalog.each do |item| %>
+          <li class="p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <a href="<%= directory_path(spirit: item[:name]) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= item[:name] %></a>
+                <p class="text-sm text-slate-600 dark:text-slate-400"><%= item[:description] %></p>
+              </div>
+              <% if item[:count].to_i > 0 %>
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200"><%= item[:count] %></span>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
     </div>
   </div>
 </section>
-

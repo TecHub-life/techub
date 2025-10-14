@@ -56,11 +56,10 @@ Docs (single sources of truth)
 
 Outstanding Wiring (next milestones)
 
-- Directory listing: list recent successful profiles (browseable directory)
-- OG image direct route (+pre-generation hook): serve/redirect `og.jpg`; enqueue if missing
-- Retry/backoff metrics: log attempts/backoff; surface on profile + Mission Control
-- Enrich eligibility decline messaging in UI (signals)
-- Mission Control: surface pipeline stages and latest error per profile
-- Heavy image optimization in background (DONE)
-- Background selection: store multiple candidates; owner selects active; screenshots/OG prefer
-  selection
+- Directory listing — [Done]
+- OG image direct route (+pre-generation hook) — [Done]
+- Retry/backoff metrics — [Planned]
+- Enrich eligibility decline messaging in UI (signals) — [Planned]
+- Mission Control: surface pipeline stages and latest error per profile — [Planned]
+- Heavy image optimization in background — [Done]
+- Background selection: store multiple candidates; owner selects active — [Planned]

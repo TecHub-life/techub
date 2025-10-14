@@ -29,6 +29,30 @@
   content_for :twitter_image, og_url if og_url.present?
 %>
 
+<%# JSON-LD Structured Data for Profile %>
+<% if @profile.present? %>
+  <% json_ld = {
+    "@context" => "https://schema.org",
+    "@type" => "Person",
+    "name" => @profile.display_name,
+    "url" => request.original_url,
+    "image" => @profile.avatar_url,
+    "description" => (@profile.profile_card&.short_bio.presence || @profile.bio).to_s,
+    "sameAs" => [@profile.html_url, (@profile.blog if @profile.blog.present?)].compact,
+    "additionalProperty" => [
+      { "@type" => "PropertyValue", "name" => "attack", "value" => @profile.profile_card&.attack },
+      { "@type" => "PropertyValue", "name" => "defense", "value" => @profile.profile_card&.defense },
+      { "@type" => "PropertyValue", "name" => "speed", "value" => @profile.profile_card&.speed },
+      { "@type" => "PropertyValue", "name" => "playing_card", "value" => @profile.profile_card&.playing_card },
+      { "@type" => "PropertyValue", "name" => "spirit_animal", "value" => @profile.profile_card&.spirit_animal },
+      { "@type" => "PropertyValue", "name" => "archetype", "value" => @profile.profile_card&.archetype }
+    ]
+  } %>
+  <script type="application/ld+json">
+    <%= json_ld.to_json.html_safe %>
+  </script>
+<% end %>
+
 <section class="mx-auto max-w-6xl px-4 py-12">
   <div class="space-y-4 mb-8">
     <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100">
@@ -64,7 +88,7 @@
       </div>
     <% end %>
     <p class="text-lg text-slate-600 dark:text-slate-300">
-      Comprehensive profile insights and analytics.
+      <%= @profile.profile_card&.short_bio.presence || "Comprehensive profile insights and analytics." %>
     </p>
     <div class="flex flex-wrap items-center gap-3">
       <% if current_user %>
@@ -80,6 +104,22 @@
 
   <% if @profile.present? %>
     <div class="grid gap-8 lg:grid-cols-3">
+      <!-- Card Artifacts (cards-first) -->
+      <div class="lg:col-span-3">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Card Artifacts</h2>
+          <div class="grid gap-4 md:grid-cols-3">
+            <% [ ["OpenGraph", og_image_url(login: @profile.login, format: :jpg) ], ["Card", card_preview_path(login: @profile.login) ], ["Simple", card_simple_path(login: @profile.login) ] ].each do |label, url| %>
+              <div class="rounded border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="text-xs font-medium px-3 py-2 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300"><%= label %></div>
+                <div class="aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <a href="<%= url %>" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">View</a>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
       <!-- Profile Info -->
       <div class="lg:col-span-1">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
@@ -94,7 +134,11 @@
             @<%= @profile.login %>
           </p>
           
-          <% if @profile.bio.present? %>
+          <% if @profile.profile_card&.long_bio.present? %>
+            <p class="text-slate-700 dark:text-slate-300 mb-4">
+              <%= @profile.profile_card.long_bio %>
+            </p>
+          <% elsif @profile.bio.present? %>
             <p class="text-slate-700 dark:text-slate-300 mb-4">
               <%= @profile.bio %>
             </p>
@@ -356,6 +400,51 @@
                   <% end %>
                 </div>
               <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Traits & Stats -->
+        <% card = @profile.profile_card %>
+        <% if card.present? %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Traits & Stats</h3>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <p class="text-sm"><span class="font-semibold">Buff:</span> <%= card.buff.presence || "—" %></p>
+                <% if card.buff_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.buff_description %></p>
+                <% end %>
+                <p class="text-sm mt-3"><span class="font-semibold">Weakness:</span> <%= card.weakness.presence || "—" %></p>
+                <% if card.weakness_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.weakness_description %></p>
+                <% end %>
+                <p class="text-sm mt-3"><span class="font-semibold">Vibe:</span> <%= card.vibe.presence || "—" %></p>
+                <% if card.vibe_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.vibe_description %></p>
+                <% end %>
+                <p class="text-sm mt-3"><span class="font-semibold">Special Move:</span> <%= card.special_move.presence || "—" %></p>
+                <% if card.special_move_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.special_move_description %></p>
+                <% end %>
+              </div>
+              <div>
+                <div class="flex gap-4 text-sm">
+                  <div><span class="font-semibold">Attack:</span> <%= card.attack %></div>
+                  <div><span class="font-semibold">Defense:</span> <%= card.defense %></div>
+                  <div><span class="font-semibold">Speed:</span> <%= card.speed %></div>
+                </div>
+                <p class="text-sm mt-2"><span class="font-semibold">Playing Card:</span> <%= card.playing_card.presence || "—" %></p>
+                <p class="text-sm mt-2"><span class="font-semibold">Spirit Animal:</span> <%= card.spirit_animal.presence || "—" %></p>
+                <p class="text-sm mt-2"><span class="font-semibold">Archetype:</span> <%= card.archetype.presence || "—" %></p>
+                <% if Array(card.tags).any? %>
+                  <div class="flex flex-wrap gap-1.5 mt-3">
+                    <% Array(card.tags).first(6).each do |t| %>
+                      <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">#<%= t %></span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
             </div>
           </div>
         <% end %>

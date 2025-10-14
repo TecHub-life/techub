@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_14_000003) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_14_010000) do
   create_table "notification_deliveries", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "event", null: false
@@ -83,6 +83,19 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_14_000003) do
     t.float "bg_fx_simple"
     t.float "bg_fy_simple"
     t.float "bg_zoom_simple"
+    t.text "short_bio"
+    t.text "long_bio"
+    t.string "buff"
+    t.text "buff_description"
+    t.string "weakness"
+    t.text "weakness_description"
+    t.string "flavor_text"
+    t.string "playing_card"
+    t.text "vibe_description"
+    t.text "special_move_description"
+    t.text "avatar_description"
+    t.string "model_name"
+    t.string "prompt_version"
     t.index ["profile_id"], name: "index_profile_cards_on_profile_id", unique: true
   end
 

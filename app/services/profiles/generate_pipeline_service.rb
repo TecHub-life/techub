@@ -14,10 +14,13 @@ module Profiles
     def call
       return failure(StandardError.new("login required")) if login.blank?
 
+      pipeline_started = Time.current
+      StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "sync") if defined?(StructuredLogger)
       # 1) Ensure profile + avatar exists
       sync = Profiles::SyncFromGithub.call(login: login)
       return sync if sync.failure?
       profile = sync.value
+      StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "sync", duration_ms: ((Time.current - pipeline_started) * 1000).to_i) if defined?(StructuredLogger)
 
       # 1.5) Eligibility gate (flagged)
       if FeatureFlags.enabled?(:require_profile_eligibility)
@@ -46,6 +49,8 @@ module Profiles
       images = nil
       if ai
         # 3) Generate AI images (prompts + 4 variants)
+        t0 = Time.current
+        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_images") if defined?(StructuredLogger)
         images = Gemini::AvatarImageSuiteService.call(
           login: login,
           provider: provider,
@@ -53,13 +58,32 @@ module Profiles
           output_dir: Rails.root.join("public", "generated")
         )
         return images if images.failure?
+        StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_images", duration_ms: ((Time.current - t0) * 1000).to_i) if defined?(StructuredLogger)
+
+        # 3b) AI text + traits (structured)
+        t1 = Time.current
+        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_traits") if defined?(StructuredLogger)
+        ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile)
+        if ai_traits.failure?
+          StructuredLogger.warn(message: "ai_traits_failed", login: login, error: ai_traits.error.message) if defined?(StructuredLogger)
+          # Fallback to heuristic synthesis
+          StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
+          synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
+          return synth if synth.failure?
+          StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
+        else
+          StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_traits", duration_ms: ((Time.current - t1) * 1000).to_i) if defined?(StructuredLogger)
+        end
+      else
+        # Heuristic-only path
+        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
+        synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
+        return synth if synth.failure?
+        StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
       end
 
-      # 4) Synthesize card attributes and persist
-      synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
-      return synth if synth.failure?
-
       # 5) Capture screenshots (OG/card/simple)
+      StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
       captures = {}
       VARIANTS.each do |variant|
         shot = Screenshots::CaptureCardService.call(login: login, variant: variant, host: host)
@@ -93,6 +117,7 @@ module Profiles
           end
         end
       end
+      StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
 
       success(
         {
