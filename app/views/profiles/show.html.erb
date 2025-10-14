@@ -53,54 +53,29 @@
   </script>
 <% end %>
 
-<section class="mx-auto max-w-6xl px-4 py-12">
-  <div class="space-y-4 mb-8">
-    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100">
-      GitHub Profile: <%= (@profile&.display_name.presence || params[:username] || "") %>
-    </h1>
-    <% if @profile&.last_pipeline_status.present? %>
-      <div id="pipeline-status-container" 
-           data-controller="pipeline-status"
-           data-pipeline-status-login-value="<%= @profile.login %>" 
-           data-pipeline-status-status-value="<%= @profile.last_pipeline_status %>">
-        <span class="inline-block text-xs px-2 py-1 rounded border
-          <%= case @profile.last_pipeline_status
-             when 'queued' then 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200'
-             when 'success' then 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
-             when 'failure' then 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
-             else 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' end %>
-        ">
-          <span id="status-text"><%= @profile.last_pipeline_status.capitalize %></span>
-        </span>
-        
-        <% if @profile.last_pipeline_status == 'queued' %>
-          <div class="mt-3 max-w-md">
-            <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
-              <span id="progress-message">Generating your AI images...</span>
-              <span id="progress-percent">0%</span>
-            </div>
-            <div class="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-500 ease-out" style="width: 0%"></div>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">This usually takes 30-60 seconds. Please don't close this page.</p>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
-    <p class="text-lg text-slate-600 dark:text-slate-300">
-      <%= @profile.profile_card&.short_bio.presence || "Comprehensive profile insights and analytics." %>
-    </p>
-    <div class="flex flex-wrap items-center gap-3">
-      <% if current_user %>
-        <span class="text-sm text-slate-700 dark:text-slate-300">
-          Signed in as <strong><%= current_user.login %></strong>
-        </span>
-        <%= button_to "Sign out", session_path, method: :delete, class: "text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" %>
+<section class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+  <% if @profile.present? %>
+    <% og_banner = (og_image_url(login: @profile.login, format: :jpg) rescue nil) %>
+    <div class="relative w-full h-44 sm:h-56 md:h-64 rounded-xl overflow-hidden mb-12">
+      <% if og_banner.present? %>
+        <img src="<%= og_banner %>" alt="OG banner" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
       <% else %>
-        <%= link_to "Sign in with GitHub", auth_github_path, class: "inline-block bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-700" %>
+        <div class="absolute inset-0 bg-gradient-to-r from-indigo-900 to-purple-900"></div>
       <% end %>
+      <div class="absolute inset-0 bg-black/35"></div>
+      <div class="absolute bottom-4 left-4 right-4 flex items-center gap-3">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ring-white/80 bg-slate-700">
+          <% if @profile.avatar_url.present? %>
+            <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover" loading="lazy">
+          <% end %>
+        </div>
+        <div class="min-w-0">
+          <div class="text-white text-xl sm:text-2xl font-bold truncate"><%= @profile.display_name %></div>
+          <div class="text-white/90 text-sm sm:text-base truncate">@<%= @profile.login %></div>
+        </div>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <% if @profile.present? %>
     <div class="grid gap-8 lg:grid-cols-3">
@@ -109,17 +84,37 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
           <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Card Artifacts</h2>
           <div class="grid gap-4 md:grid-cols-3">
+            <% base = Rails.root.join("public", "generated", @profile.login) %>
+            <% og_img = if File.exist?(base.join("og.jpg"))
+              "/generated/#{@profile.login}/og.jpg"
+            elsif File.exist?(base.join("og.png"))
+              "/generated/#{@profile.login}/og.png"
+            else
+              (og_image_path(login: @profile.login, format: :jpg) rescue nil)
+            end %>
+            <% card_img = if File.exist?(base.join("card.jpg"))
+              "/generated/#{@profile.login}/card.jpg"
+            elsif File.exist?(base.join("card.png"))
+              "/generated/#{@profile.login}/card.png"
+            end %>
+            <% simple_img = if File.exist?(base.join("simple.jpg"))
+              "/generated/#{@profile.login}/simple.jpg"
+            elsif File.exist?(base.join("simple.png"))
+              "/generated/#{@profile.login}/simple.png"
+            end %>
             <% thumbs = [
-              ["OpenGraph", "/generated/#{@profile.login}/og.jpg", og_image_url(login: @profile.login, format: :jpg) ],
-              ["Card", "/generated/#{@profile.login}/card.jpg", card_preview_path(login: @profile.login) ],
-              ["Simple", "/generated/#{@profile.login}/simple.jpg", card_simple_path(login: @profile.login) ]
+              ["OpenGraph", og_img],
+              ["Card", card_img],
+              ["Simple", simple_img]
             ] %>
-            <% thumbs.each do |label, img, link| %>
+            <% thumbs.each do |label, img| %>
               <div class="rounded border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="text-xs font-medium px-3 py-2 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300"><%= label %></div>
-                <a href="<%= link %>" target="_blank" rel="noopener" class="block">
-                  <img src="<%= img %>" alt="<%= label %> preview" class="w-full aspect-video object-cover bg-slate-100 dark:bg-slate-800">
-                </a>
+                <% if img.present? %>
+                  <img src="<%= img %>" alt="<%= label %> preview" class="w-full aspect-video object-cover bg-slate-100 dark:bg-slate-800" loading="lazy">
+                <% else %>
+                  <div class="w-full aspect-video flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs">No image</div>
+                <% end %>
               </div>
             <% end %>
           </div>
@@ -344,18 +339,13 @@
       
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-6">
-        <!-- Actions / CTAs -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-wrap items-center gap-2">
-          <% og_url = og_image_url(login: @profile.login, format: :jpg) rescue nil %>
-          <%= link_to "View OG Image", og_url, target: "_blank", rel: "noopener", class: "inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
-          <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700" data-action="click->clipboard#copy" data-clipboard-text-value="<%= og_url %>">
-            Copy OG URL
-          </button>
-          <% if current_user && (current_user.profile_ownerships.exists?(profile_id: @profile.id) rescue false) %>
+        <!-- Actions / CTAs (owner-only recapture; no raw URLs) -->
+        <% if current_user && (current_user.profile_ownerships.exists?(profile_id: @profile.id) rescue false) %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-wrap items-center gap-2">
             <%= button_to "Re-capture Screenshots", regenerate_my_profile_path(username: @profile.login), method: :post, class: "inline-flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-600" %>
             <%= button_to "Regenerate AI Artwork", regenerate_my_profile_ai_path(username: @profile.login), method: :post, class: "inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" %>
-          <% end %>
-        </div>
+          </div>
+        <% end %>
         <!-- Profile README -->
         <% if @profile_readme.present? && @profile_readme.content.present? %>
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">

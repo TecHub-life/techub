@@ -47,6 +47,16 @@ Practical steps to run, monitor, and debug TecHub locally and in prod.
   - `pipeline_started` / `pipeline_completed` / `pipeline_failed`
   - `screenshot_failed` / `record_asset_ok`
 
+## Image optimization
+
+- Default: uses ImageMagick CLI for safety. libvips is OPT-IN to avoid native crashes on some
+  environments.
+- To enable vips explicitly (faster):
+
+  ```bash
+  IMAGE_OPT_VIPS=1
+  ```
+
 ## Common Tasks
 
 - Run tests:

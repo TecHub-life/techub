@@ -16,33 +16,39 @@ module Images
         return success({ output_path: output_path.to_s, format: effective_format, quality: quality })
       end
 
-      # Prefer ImageProcessing with vips for speed and quality
-      begin
-        require "image_processing/vips"
-        processor = ImageProcessing::Vips.source(path.to_s)
-        processor = processor.saver(strip: true)
+      # Prefer ImageProcessing with vips only when explicitly enabled
+      if use_vips?
+        begin
+          require "image_processing/vips"
+          processor = ImageProcessing::Vips.source(path.to_s)
+          processor = processor.saver(strip: true)
 
-        case effective_format
-        when "jpg", "jpeg"
-          dst = ensure_ext(output_path.to_s, ".jpg")
-          processed = processor
-            .convert("jpg")
-            .saver(quality: quality.clamp(1, 100), interlace: true)
-            .call(destination: dst)
-        else # png
-          dst = ensure_ext(output_path.to_s, ".png")
-          # Vips PNG compression is fast and effective; effort defaults are good
-          processed = processor.convert("png").call(destination: dst)
+          case effective_format
+          when "jpg", "jpeg"
+            dst = ensure_ext(output_path.to_s, ".jpg")
+            processed = processor
+              .convert("jpg")
+              .saver(quality: quality.clamp(1, 100), interlace: true)
+              .call(destination: dst)
+          else # png
+            dst = ensure_ext(output_path.to_s, ".png")
+            processed = processor.convert("png").call(destination: dst)
+          end
+
+          return success({ output_path: processed, format: effective_format, quality: quality })
+        rescue LoadError
+          # fall through to magick
+        rescue StandardError => e
+          # Any runtime error falls back to magick for safety
+          StructuredLogger.warn(message: "vips_optimize_failed", error: e.message, path: path.to_s) if defined?(StructuredLogger)
         end
-
-        success({ output_path: processed, format: effective_format, quality: quality })
-      rescue LoadError
-        # Fallback to ImageMagick CLI if gem not available
-        cmd = build_magick_command
-        ok = system(*cmd)
-        return failure(StandardError.new("Image optimization failed"), metadata: { cmd: cmd.join(" ") }) unless ok
-        success({ output_path: output_path.to_s, format: effective_format, quality: quality })
       end
+
+      # Fallback: ImageMagick CLI
+      cmd = build_magick_command
+      ok = system(*cmd)
+      return failure(StandardError.new("Image optimization failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+      success({ output_path: output_path.to_s, format: effective_format, quality: quality })
     rescue StandardError => e
       failure(e)
     end
@@ -50,6 +56,11 @@ module Images
     private
 
     attr_reader :path, :output_path, :format, :quality
+
+    def use_vips?
+      # Opt-in only: enable when IMAGE_OPT_VIPS is truthy
+      %w[1 true yes].include?(ENV["IMAGE_OPT_VIPS"].to_s.downcase)
+    end
 
     def build_magick_command
       # Use ImageMagick convert via `magick` CLI as a fallback
