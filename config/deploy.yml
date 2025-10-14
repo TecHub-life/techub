@@ -2,15 +2,18 @@
 service: techub
 
 # Name of the container image.
-image: ghcr.io/loftwah/techub
+# Publish and pull the image from GitHub Container Registry
+# NOTE: GHCR lower-cases org/repo names
+image: ghcr.io/techub-life/techub
 
 # Deploy to these servers.
 servers:
   web:
-    - 203.0.113.10
+    # Comma-separated list of IPs/hosts, e.g. "203.0.113.10,203.0.113.12"
+    hosts: <%= ENV.fetch("WEB_HOSTS", "techub.life").split(",") %>
   job:
-    hosts:
-      - 203.0.113.11
+    # Defaults to WEB_HOSTS if JOB_HOSTS is not set
+    hosts: <%= ENV.fetch("JOB_HOSTS", ENV.fetch("WEB_HOSTS", "techub.life")).split(",") %>
     cmd: bin/jobs start
     env:
       clear:
@@ -22,15 +25,16 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
   ssl: true
-  host: app.techub.run
+  # Set your public hostname. Can be overridden by APP_HOST env; default points to production domain.
+  host: <%= ENV.fetch("APP_HOST", "techub.life") %>
 
 # Credentials for your image host.
 registry:
-  # Specify the registry server, if you're not using Docker Hub
-  # server: registry.digitalocean.com / ghcr.io / ...
-  username: loftwah
-
-  # Always use an access token rather than real password when possible.
+  # Use GitHub Container Registry for images
+  server: ghcr.io
+  # Username for GHCR (your GitHub username or GitHub Actions actor)
+  username: <%= ENV.fetch("REGISTRY_USERNAME", "loftwah") %>
+  # Always use an access token rather than a real password; see .kamal/secrets
   password:
     - KAMAL_REGISTRY_PASSWORD
 
@@ -88,8 +92,10 @@ builder:
   #   - GITHUB_TOKEN
   #   - RAILS_MASTER_KEY
 # Use a different ssh user than root
+# Use SSH config for auth (Host aliases like "techub-do" work).
+# To force a user, set `SSH_USER` and add:
 # ssh:
-#   user: app
+#   user: <%= ENV["SSH_USER"] %>
 
 # Use accessory services (secrets come from .kamal/secrets).
 # accessories:
