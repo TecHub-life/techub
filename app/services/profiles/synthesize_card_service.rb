@@ -82,8 +82,15 @@ module Profiles
       else "builder"
       end
       tags << role
-      # Normalize: lowercase, uniq, drop blanks, max 6
-      tags = tags.map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq.first(6)
+      # Normalize: lowercase, uniq, drop blanks
+      tags = tags.map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq
+      # Ensure exactly 6 tags to satisfy model validation
+      fallback_pool = %w[developer coder builder maker engineer hacker]
+      while tags.length < 6
+        next_tag = fallback_pool[tags.length % fallback_pool.length]
+        tags << next_tag unless tags.include?(next_tag)
+      end
+      tags = tags.first(6)
 
       tagline_source = p.summary.to_s
       tagline_source = p.bio.to_s if tagline_source.blank?

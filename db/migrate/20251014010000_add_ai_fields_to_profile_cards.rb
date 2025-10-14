@@ -12,7 +12,8 @@ class AddAiFieldsToProfileCards < ActiveRecord::Migration[8.0]
       t.text :vibe_description
       t.text :special_move_description
       t.text :avatar_description
-      t.string :model_name
+      # Rename to avoid ActiveRecord::DangerousAttributeError on reserved :model_name
+      t.string :ai_model
       t.string :prompt_version
     end
   end

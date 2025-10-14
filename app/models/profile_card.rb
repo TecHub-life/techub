@@ -14,6 +14,11 @@ class ProfileCard < ApplicationRecord
     Array(tags)
   end
 
+  # Convenience accessor maintained for API consumers; map old name to new column
+  def model_name
+    self[:ai_model]
+  end
+
   private
 
   def stats_bounds

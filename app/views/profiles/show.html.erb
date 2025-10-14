@@ -109,12 +109,17 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
           <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Card Artifacts</h2>
           <div class="grid gap-4 md:grid-cols-3">
-            <% [ ["OpenGraph", og_image_url(login: @profile.login, format: :jpg) ], ["Card", card_preview_path(login: @profile.login) ], ["Simple", card_simple_path(login: @profile.login) ] ].each do |label, url| %>
+            <% thumbs = [
+              ["OpenGraph", "/generated/#{@profile.login}/og.jpg", og_image_url(login: @profile.login, format: :jpg) ],
+              ["Card", "/generated/#{@profile.login}/card.jpg", card_preview_path(login: @profile.login) ],
+              ["Simple", "/generated/#{@profile.login}/simple.jpg", card_simple_path(login: @profile.login) ]
+            ] %>
+            <% thumbs.each do |label, img, link| %>
               <div class="rounded border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="text-xs font-medium px-3 py-2 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300"><%= label %></div>
-                <div class="aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <a href="<%= url %>" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">View</a>
-                </div>
+                <a href="<%= link %>" target="_blank" rel="noopener" class="block">
+                  <img src="<%= img %>" alt="<%= label %> preview" class="w-full aspect-video object-cover bg-slate-100 dark:bg-slate-800">
+                </a>
               </div>
             <% end %>
           </div>

@@ -21,6 +21,7 @@ module Profiles
       return sync if sync.failure?
       profile = sync.value
       StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "sync", duration_ms: ((Time.current - pipeline_started) * 1000).to_i) if defined?(StructuredLogger)
+      record_event(profile, stage: "sync", status: "completed", duration_ms: ((Time.current - pipeline_started) * 1000).to_i)
 
       # 1.5) Eligibility gate (flagged)
       if FeatureFlags.enabled?(:require_profile_eligibility)
@@ -59,6 +60,7 @@ module Profiles
         )
         return images if images.failure?
         StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_images", duration_ms: ((Time.current - t0) * 1000).to_i) if defined?(StructuredLogger)
+        record_event(profile, stage: "ai_images", status: "completed", duration_ms: ((Time.current - t0) * 1000).to_i)
 
         # 3b) AI text + traits (structured)
         t1 = Time.current
@@ -66,13 +68,16 @@ module Profiles
         ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile)
         if ai_traits.failure?
           StructuredLogger.warn(message: "ai_traits_failed", login: login, error: ai_traits.error.message) if defined?(StructuredLogger)
+          record_event(profile, stage: "ai_traits", status: "failed", duration_ms: ((Time.current - t1) * 1000).to_i, message: ai_traits.error.message)
           # Fallback to heuristic synthesis
           StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
           synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
           return synth if synth.failure?
           StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
+          record_event(profile, stage: "synth_heuristic", status: "completed", duration_ms: 0)
         else
           StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_traits", duration_ms: ((Time.current - t1) * 1000).to_i) if defined?(StructuredLogger)
+          record_event(profile, stage: "ai_traits", status: "completed", duration_ms: ((Time.current - t1) * 1000).to_i)
         end
       else
         # Heuristic-only path
@@ -118,13 +123,17 @@ module Profiles
         end
       end
       StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
+      record_event(profile, stage: "screenshots", status: "completed")
+
+      # Card is expected to be persisted either by AI traits synthesis or heuristic fallback
+      card_id = profile.profile_card&.id
 
       success(
         {
           login: login,
           images: images&.value,
           screenshots: captures,
-          card_id: synth.value.id,
+          card_id: card_id,
           scraped: scraped
         },
         metadata: { login: login, provider: provider, upload: upload, optimize: optimize }
@@ -136,6 +145,12 @@ module Profiles
     private
 
     attr_reader :login, :host, :provider, :upload, :optimize, :ai
+
+    def record_event(profile, stage:, status:, duration_ms: nil, message: nil)
+      ProfilePipelineEvent.create!(profile_id: profile.id, stage: stage, status: status, duration_ms: duration_ms, message: message, created_at: Time.current)
+    rescue StandardError => e
+      StructuredLogger.warn(message: "pipeline_event_record_failed", login: profile.login, stage: stage, status: status, error: e.message) if defined?(StructuredLogger)
+    end
 
     def evaluate_eligibility(profile)
       repositories = profile.profile_repositories.map do |r|

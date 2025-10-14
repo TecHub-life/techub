@@ -93,7 +93,7 @@ module Profiles
         special_move_description: cleaned["special_move_description"],
         tags: cleaned["tags"],
         avatar_description: avatar_description_for(profile),
-        model_name: Gemini::Configuration.model,
+        ai_model: Gemini::Configuration.model,
         prompt_version: PROMPT_VERSION,
         generated_at: Time.current
       )
@@ -270,9 +270,15 @@ module Profiles
 
     def extract_json_from_response(body)
       raw = normalize_to_hash(body)
-      parts = dig_value(Array(dig_value(Array(dig_value(raw, :candidates)).first, :content)), :parts) rescue nil
+      # Safely navigate candidates → content → parts without wrapping hashes in arrays incorrectly
+      candidates = Array(dig_value(raw, :candidates))
+      first_candidate = candidates.first || {}
+      content = dig_value(first_candidate, :content) || {}
+      parts = dig_value(content, :parts)
+
       json = extract_structured_json(parts)
-      json ||= parse_relaxed_json(Array(parts).filter_map { |p| dig_value(p, :text) }.join(" "))
+      texts = Array(parts).filter_map { |p| dig_value(p, :text) }.join(" ")
+      json ||= parse_relaxed_json(texts)
       json
     end
 
