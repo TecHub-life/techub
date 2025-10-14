@@ -153,9 +153,10 @@ PR 16 — Full pipeline job orchestration (DONE)
 
 PR 17 — Billing feature flag (Stripe-ready)
 
-- Introduce `STRIPE_ENABLED` flag and entitlement checks around generation
+- Introduce `STRIPE_ENABLED` flag and entitlement checks around generation (stub only; free by
+  default)
 - Stub billing service/interfaces for later Stripe drop-in
-- Docs: configuration and upgrade path
+- Docs: configuration and upgrade path; note that billing is OFF by default and not required
 
 PR 18 — Submit: manual inputs + scraping (DONE)
 
@@ -333,3 +334,20 @@ PR 25 — Prompt Context Enrichment (DONE)
 - Fold into AvatarPromptService “Profile traits” line with strict length caps; no on-image
   text/logos.
 - DoD: traits appear in prompts metadata; implemented with owner/org filtering for topics.
+
+PR 31 — Observability polish (NEW)
+
+- Add a simple request log enricher in controllers (uses `Current.*`) to include user, ip, path.
+- Add correlation id to `ServiceResult.metadata` across orchestrated calls.
+- DoD: structured logs include `request_id` and `correlation_id`; sample traces in docs.
+
+PR 32 — AI traits analytics (NEW)
+
+- Persist AI traits `attempts` count and `provider/model` metadata on `ProfileCard` when available.
+- DoD: fields present; pipeline populates when AI traits succeed; surfaced in JSON.
+
+PR 33 — Mobile polish for cards-first profile page (NEW)
+
+- When shipping the cards-first page, add small-screen font/spacing tweaks and lazy-load images.
+- DoD: Lighthouse mobile score improved; CLS below threshold; images have `loading="lazy"` where
+  appropriate.

@@ -61,6 +61,12 @@ Practical steps to run, monitor, and debug TecHub locally and in prod.
   rake screenshots:capture[login,og]
   ```
 
+- Capture all three variants if missing (idempotent):
+
+  ```bash
+  rake screenshots:capture_all[login]
+  ```
+
 ## Production (Kamal)
 
 - See `config/deploy.yml` and `README.md` for Kamal deployment. Provide credentials in
