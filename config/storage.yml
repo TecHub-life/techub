@@ -21,9 +21,6 @@ do_spaces:
     <%= ENV["DO_SPACES_ENDPOINT"] || Rails.application.credentials.dig(:do_spaces, :endpoint) %>
   force_path_style: true
   public: true
-  url: :public
-  public_host:
-    <%= ENV["DO_SPACES_CDN"] || Rails.application.credentials.dig(:do_spaces, :cdn_endpoint) %>
 # Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:
 #   service: S3

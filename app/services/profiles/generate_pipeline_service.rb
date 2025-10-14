@@ -14,10 +14,14 @@ module Profiles
     def call
       return failure(StandardError.new("login required")) if login.blank?
 
+      pipeline_started = Time.current
+      StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "sync") if defined?(StructuredLogger)
       # 1) Ensure profile + avatar exists
       sync = Profiles::SyncFromGithub.call(login: login)
       return sync if sync.failure?
       profile = sync.value
+      StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "sync", duration_ms: ((Time.current - pipeline_started) * 1000).to_i) if defined?(StructuredLogger)
+      record_event(profile, stage: "sync", status: "completed", duration_ms: ((Time.current - pipeline_started) * 1000).to_i)
 
       # 1.5) Eligibility gate (flagged)
       if FeatureFlags.enabled?(:require_profile_eligibility)
@@ -27,7 +31,7 @@ module Profiles
         end
       end
 
-      # 2) Optional: ingest submitted repos + scrape submitted URL (flagged)
+      # 2) Optional: ingest submitted repos when present (flag-gated)
       if FeatureFlags.enabled?(:submission_manual_inputs)
         submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
         if submitted_full_names.any?
@@ -35,17 +39,21 @@ module Profiles
         end
       end
 
-      # 2b) Optional: scrape submitted URL for extra context (flagged)
+      # 2b) Optional: scrape submitted URL for extra context (flag-gated)
       scraped = nil
-      if FeatureFlags.enabled?(:submission_manual_inputs) && profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
-        scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
-        StructuredLogger.warn(message: "scrape_failed", login: login, error: scraped_result.error.message) if scraped_result.failure?
-        scraped = scraped_result.value if scraped_result.success?
+      if FeatureFlags.enabled?(:submission_manual_inputs)
+        if profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
+          scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
+          StructuredLogger.warn(message: "scrape_failed", login: login, error: scraped_result.error.message) if scraped_result.failure?
+          scraped = scraped_result.value if scraped_result.success?
+        end
       end
 
       images = nil
       if ai
         # 3) Generate AI images (prompts + 4 variants)
+        t0 = Time.current
+        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_images") if defined?(StructuredLogger)
         images = Gemini::AvatarImageSuiteService.call(
           login: login,
           provider: provider,
@@ -53,13 +61,36 @@ module Profiles
           output_dir: Rails.root.join("public", "generated")
         )
         return images if images.failure?
+        StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_images", duration_ms: ((Time.current - t0) * 1000).to_i) if defined?(StructuredLogger)
+        record_event(profile, stage: "ai_images", status: "completed", duration_ms: ((Time.current - t0) * 1000).to_i)
+
+        # 3b) AI text + traits (structured)
+        t1 = Time.current
+        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_traits") if defined?(StructuredLogger)
+        ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile)
+        if ai_traits.failure?
+          StructuredLogger.warn(message: "ai_traits_failed", login: login, error: ai_traits.error.message) if defined?(StructuredLogger)
+          record_event(profile, stage: "ai_traits", status: "failed", duration_ms: ((Time.current - t1) * 1000).to_i, message: ai_traits.error.message)
+          # Fallback to heuristic synthesis
+          StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
+          synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
+          return synth if synth.failure?
+          StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
+          record_event(profile, stage: "synth_heuristic", status: "completed", duration_ms: 0)
+        else
+          StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_traits", duration_ms: ((Time.current - t1) * 1000).to_i) if defined?(StructuredLogger)
+          record_event(profile, stage: "ai_traits", status: "completed", duration_ms: ((Time.current - t1) * 1000).to_i)
+        end
+      else
+        # Heuristic-only path
+        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
+        synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
+        return synth if synth.failure?
+        StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
       end
 
-      # 4) Synthesize card attributes and persist
-      synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
-      return synth if synth.failure?
-
       # 5) Capture screenshots (OG/card/simple)
+      StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
       captures = {}
       VARIANTS.each do |variant|
         shot = Screenshots::CaptureCardService.call(login: login, variant: variant, host: host)
@@ -93,13 +124,18 @@ module Profiles
           end
         end
       end
+      StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
+      record_event(profile, stage: "screenshots", status: "completed")
+
+      # Card is expected to be persisted either by AI traits synthesis or heuristic fallback
+      card_id = profile.profile_card&.id
 
       success(
         {
           login: login,
           images: images&.value,
           screenshots: captures,
-          card_id: synth.value.id,
+          card_id: card_id,
           scraped: scraped
         },
         metadata: { login: login, provider: provider, upload: upload, optimize: optimize }
@@ -111,6 +147,12 @@ module Profiles
     private
 
     attr_reader :login, :host, :provider, :upload, :optimize, :ai
+
+    def record_event(profile, stage:, status:, duration_ms: nil, message: nil)
+      ProfilePipelineEvent.create!(profile_id: profile.id, stage: stage, status: status, duration_ms: duration_ms, message: message, created_at: Time.current)
+    rescue StandardError => e
+      StructuredLogger.warn(message: "pipeline_event_record_failed", login: profile.login, stage: stage, status: status, error: e.message) if defined?(StructuredLogger)
+    end
 
     def evaluate_eligibility(profile)
       repositories = profile.profile_repositories.map do |r|

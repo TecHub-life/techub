@@ -2,10 +2,10 @@
 
 ## Current state and gaps (explicit)
 
-- The current public profile page UI is not acceptable for product v1; it is an interim view.
-- AI text/traits generation is NOT implemented; only heuristic stats/tags exist.
-- Directory UX is rudimentary; needs a cards-first browse experience and styling overhaul.
-- These items are prioritized in upcoming PRs and considered blockers for a shippable v1.
+- Public profile page UI remains interim; Product v1 layout still pending (cards‑first).
+- AI text/traits generation implemented with validators and fallback; re‑ask loop added; tests
+  pending.
+- Directory UX exists and is functional; filters and styling are improving but not final.
 
 ## Shipped (baseline)
 
@@ -73,18 +73,18 @@ PR 08 — Screenshot worker (Puppeteer/Playwright)
 - Background job (DONE): Solid Queue job runs screenshots asynchronously; artifacts recorded.
 - Retries + golden-dimension checks (NEXT)
 
-PR 09 — Profile synthesis service + validators (PENDING)
+PR 09 — Profile synthesis service + validators (PARTIAL)
 
-- `ProfileSynthesisService` (AI text: short/long bios, buffs, traits) — NOT DONE
-- Validators and re-ask loop for constraints — NOT DONE
-- Persist to model; render AI section on profile page — NOT DONE
-- Tests: rule coverage + re-ask loop — NOT DONE
+- `ProfileSynthesisService` (AI text: short/long bios, buffs, traits) — DONE
+- Validators and re‑ask loop for constraints — DONE (one strict re‑ask; fallbacks); tests pending
+- Persist to model; render AI section on profile page — DONE
+- Tests: rule coverage + re‑ask loop — PENDING
 
-PR 10 — OG image route + share pipeline
+PR 10 — OG image route + share pipeline (DONE)
 
-- Route that renders a shareable card preview
-- Background job to pre-generate OG assets
-- Tests: route + job integration
+- Route `/og/:login` returns generated image or 202 with enqueue
+- Integrated with pipeline for generation; artifacts saved
+- Tests: add/expand integration coverage (PENDING)
 
 PR 11 — Observability
 
@@ -153,9 +153,10 @@ PR 16 — Full pipeline job orchestration (DONE)
 
 PR 17 — Billing feature flag (Stripe-ready)
 
-- Introduce `STRIPE_ENABLED` flag and entitlement checks around generation
+- Introduce `STRIPE_ENABLED` flag and entitlement checks around generation (stub only; free by
+  default)
 - Stub billing service/interfaces for later Stripe drop-in
-- Docs: configuration and upgrade path
+- Docs: configuration and upgrade path; note that billing is OFF by default and not required
 
 PR 18 — Submit: manual inputs + scraping (DONE)
 
@@ -240,20 +241,19 @@ Raw Profiles deprecation
 
 ## Next Up (sequenced TODOs)
 
-PR 19 — Directory Listing (browse)
+PR 19 — Directory Listing (browse) (DONE)
 
-- Page: `/directory` lists recent successful profiles (`last_pipeline_status = 'success'`),
-  paginated
-- Includes avatar, name/handle, and links to profile and OG/card assets
-- Sorting: most recent first; optional search stub
-- DoD: tests for listing ordering; view renders with seed data
+- Page `/directory` lists recent successful profiles with pagination
+- Filters: search, tag, language, hireable, active, mine, archetype, spirit
+- Sorting: most recent first
+- Tests: add coverage for filters and pagination (PENDING)
 
-PR 20 — OG Image Route + Pre‑Gen
+PR 20 — OG Image Route + Pre‑Gen (DONE)
 
-- Route: `/og/:login` returns the generated JPEG (302 to CDN URL when uploaded)
-- If missing, respond 202 + enqueue `Profiles::GeneratePipelineJob` (idempotent) and return JSON
-- Hook: on submission and on successful sync, pre‑enqueue OG/card screenshot generation
-- DoD: controller/unit tests; integration test for 202→ready path
+- Route: `/og/:login` returns the generated image (302 to CDN URL when uploaded) or 202 + enqueue
+- Hook: on submission/successful sync, share routes link to OG; artifacts recorded under
+  `public/generated/<login>`
+- Tests: expand 202→ready integration (PENDING)
 
 PR 21 — Retry/Backoff Metrics
 
@@ -334,3 +334,20 @@ PR 25 — Prompt Context Enrichment (DONE)
 - Fold into AvatarPromptService “Profile traits” line with strict length caps; no on-image
   text/logos.
 - DoD: traits appear in prompts metadata; implemented with owner/org filtering for topics.
+
+PR 31 — Observability polish (NEW)
+
+- Add a simple request log enricher in controllers (uses `Current.*`) to include user, ip, path.
+- Add correlation id to `ServiceResult.metadata` across orchestrated calls.
+- DoD: structured logs include `request_id` and `correlation_id`; sample traces in docs.
+
+PR 32 — AI traits analytics (NEW)
+
+- Persist AI traits `attempts` count and `provider/model` metadata on `ProfileCard` when available.
+- DoD: fields present; pipeline populates when AI traits succeed; surfaced in JSON.
+
+PR 33 — Mobile polish for cards-first profile page (NEW)
+
+- When shipping the cards-first page, add small-screen font/spacing tweaks and lazy-load images.
+- DoD: Lighthouse mobile score improved; CLS below threshold; images have `loading="lazy"` where
+  appropriate.

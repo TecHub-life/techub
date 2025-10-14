@@ -16,6 +16,13 @@ module Profiles
       return failure(StandardError.new("profile is required")) unless profile.is_a?(Profile)
 
       attrs = compute_from_signals(profile)
+      # Apply account-level overrides (e.g., Loftwah)
+      begin
+        acct_overrides = Profiles::AiOverrides.for(profile)
+        attrs.merge!(acct_overrides) if acct_overrides.present?
+      rescue NameError
+        # ignore if overrides module not loaded
+      end
 
       if persist
         record = profile.profile_card || profile.build_profile_card
@@ -75,8 +82,15 @@ module Profiles
       else "builder"
       end
       tags << role
-      # Normalize: lowercase, uniq, drop blanks, max 6
-      tags = tags.map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq.first(6)
+      # Normalize: lowercase, uniq, drop blanks
+      tags = tags.map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq
+      # Ensure exactly 6 tags to satisfy model validation
+      fallback_pool = %w[developer coder builder maker engineer hacker]
+      while tags.length < 6
+        next_tag = fallback_pool[tags.length % fallback_pool.length]
+        tags << next_tag unless tags.include?(next_tag)
+      end
+      tags = tags.first(6)
 
       tagline_source = p.summary.to_s
       tagline_source = p.bio.to_s if tagline_source.blank?
@@ -91,6 +105,7 @@ module Profiles
         special_move: special_move_from_profile(p),
         spirit_animal: spirit_animal,
         archetype: archetype_from_signals(p),
+        playing_card: playing_card_from_signals(p),
         tags: tags,
         style_profile: DEFAULT_STYLE,
         theme: theme
@@ -108,11 +123,11 @@ module Profiles
 
     def spirit_for_language(lang)
       case lang.to_s.downcase
-      when "ruby" then "Red Panda"
-      when "javascript", "typescript" then "Hummingbird"
-      when "go" then "Falcon"
-      when "python" then "Snow Leopard"
-      else "Fox"
+      when "ruby" then "Wombat"
+      when "javascript", "typescript" then "Kookaburra"
+      when "go" then "Emu"
+      when "python" then "Platypus"
+      else "Quokka"
       end
     end
 
@@ -136,12 +151,36 @@ module Profiles
 
     def archetype_from_signals(p)
       if p.profile_organizations.size > 3
-        "Guild Leader"
+        "The Ruler"
       elsif p.public_repos.to_i > 50
-        "Archivist"
+        "The Sage"
       else
-        "Sprinter"
+        "The Explorer"
       end
+    end
+
+    def playing_card_from_signals(p)
+      # Suit by dominant language family, rank by followers/stars bracket
+      lang = p.profile_languages.order(count: :desc).first&.name.to_s.downcase
+      suit = case lang
+      when /ruby|rails/ then "♥"
+      when /js|ts|node/ then "♣"
+      when /go/ then "♠"
+      when /python/ then "♦"
+      else [ "♣", "♦", "♥", "♠" ][p.login.to_s.hash % 4]
+      end
+
+      star_sum = Array(p.top_repositories).first(5).sum { |r| r.stargazers_count.to_i }
+      score = (p.followers.to_i / 250) + (star_sum / 1000)
+      rank = case score
+      when 8.. then "Ace"
+      when 6..7 then "King"
+      when 4..5 then "Queen"
+      when 2..3 then "Jack"
+      else [ "10", "9", "8", "7" ][p.public_repos.to_i % 4]
+      end
+
+      "#{rank} of #{suit}"
     end
   end
 end

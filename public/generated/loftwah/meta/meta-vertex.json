@@ -9,18 +9,23 @@
     },
     {
       "http_status": 200,
-      "finish_reason": "STOP",
+      "finish_reason": "MAX_TOKENS",
       "limit": 700
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "STOP",
+      "limit": 1000
     }
   ],
   "structured": {
-    "description": "A man with a bald head and a full, reddish-brown beard is presented from the chest up, wearing formal business attire. He is smiling warmly at the viewer, set against a dark blue background adorned with a glowing, interconnected network pattern. The overall presentation suggests a professional yet friendly individual in a technologically themed environment.",
-    "facial_features": "Bald head, full reddish-brown beard, light brown eyebrows.",
-    "expression": "A broad, friendly smile with visible white teeth.",
-    "attire": "Black suit jacket, white collared shirt, and a bright blue patterned tie.",
-    "palette": "Dominant colours include dark blue, black, white, and reddish-brown, accented by bright blue and glowing light blue elements.",
-    "background": "A dark blue background featuring a glowing, interconnected geometric network pattern.",
-    "mood": "Professional and approachable."
+    "description": "A man with a bald head and a full, reddish-brown beard is presented from the chest up, wearing professional business attire. He is smiling warmly at the viewer against a dark blue background featuring an intricate glowing network pattern, suggesting a tech-oriented or connected theme. The overall presentation conveys a sense of professionalism combined with an approachable and friendly demeanor.",
+    "facial_features": "The avatar has a bald head, prominent eyebrows, and a full, well-groomed reddish-brown beard. His eyes are open and looking directly forward.",
+    "expression": "The avatar exhibits a friendly and open smile, with his teeth clearly visible.",
+    "attire": "The avatar is dressed in a black suit jacket over a crisp white collared shirt. He wears a bright blue tie with subtle horizontal stripes.",
+    "palette": "The dominant colors are dark blue for the background, black for the suit, white for the shirt, and reddish-brown for the beard, accented by the bright blue tie and glowing network elements.",
+    "background": "The background is a deep blue color, featuring a luminous, interconnected network pattern composed of light blue lines and glowing circular nodes.",
+    "mood": "Professional and approachable"
   },
   "theme": "TecHub",
   "style_profile": "neon-lit anime portrait with confident tech leader energy"

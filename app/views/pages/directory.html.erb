@@ -3,14 +3,14 @@
   <div class="space-y-3">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-sky-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
           TecHub Directory
         </h1>
         <p class="mt-2 text-slate-600 dark:text-slate-400">
           Browse developer trading cards • <%= @total %> profiles
         </p>
       </div>
-      <a href="<%= motifs_path %>" class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:shadow-xl hover:scale-105">
+      <a href="<%= motifs_path %>" class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:shadow-xl hover:scale-105">
         <span>🎭</span>
         <span>Archetypes & Spirits</span>
       </a>
@@ -37,6 +37,24 @@
           <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Min Followers</label>
           <input type="number" name="min_followers" min="0" value="<%= h(@min_followers || '') %>" placeholder="0" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
         </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Archetype</label>
+          <select name="archetype" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+            <option value=""></option>
+            <% Motifs::Catalog.archetype_names.each do |name| %>
+              <option value="<%= name %>" <%= 'selected' if @archetype == name %>><%= name %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Spirit Animal</label>
+          <select name="spirit" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+            <option value=""></option>
+            <% Motifs::Catalog.spirit_animal_names.each do |name| %>
+              <option value="<%= name %>" <%= 'selected' if @spirit == name %>><%= name %></option>
+            <% end %>
+          </select>
+        </div>
       </div>
       <div class="flex flex-wrap items-center gap-4">
         <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -51,7 +69,7 @@
           <input type="checkbox" name="mine" value="1" <%= 'checked' if @mine %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
           <span>Only mine</span>
         </label>
-        <button type="submit" class="ml-auto rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2 text-sm font-medium text-white shadow-md transition hover:shadow-lg hover:scale-105">
+        <button type="submit" class="ml-auto rounded-lg bg-gradient-to-r from-indigo-600 to-sky-600 px-6 py-2 text-sm font-medium text-white shadow-md transition hover:shadow-lg hover:scale-105">
           Apply Filters
         </button>
       </div>
@@ -82,7 +100,7 @@
         <a href="<%= profile_path(username: profile.login) %>" class="group block">
           <div class="relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-md transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:border-indigo-300 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900 dark:hover:border-indigo-500">
             <!-- Card Preview Image -->
-            <div class="relative h-48 overflow-hidden bg-gradient-to-br from-purple-600/10 via-indigo-600/10 to-cyan-600/10">
+            <div class="relative h-48 overflow-hidden bg-gradient-to-br from-sky-600/10 via-indigo-600/10 to-cyan-600/10">
               <% gen_dir = Rails.root.join('public','generated', profile.login) %>
               <% card_img = nil %>
               
@@ -106,7 +124,7 @@
               <% end %>
               
               <!-- Fallback gradient background when no image -->
-              <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-indigo-600/20 to-cyan-600/20"></div>
+              <div class="absolute inset-0 bg-gradient-to-br from-sky-600/20 via-indigo-600/20 to-cyan-600/20"></div>
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
               
               <!-- Avatar Badge -->
@@ -160,6 +178,10 @@
                 </div>
               </div>
 
+              <% if card&.flavor_text.present? %>
+                <p class="text-xs text-slate-700 dark:text-slate-300"><%= card.flavor_text %></p>
+              <% end %>
+
               <!-- Meta Info -->
               <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-700">
                 <span class="flex items-center gap-1">
@@ -197,7 +219,7 @@
       </div>
       <div class="flex w-full items-center justify-center gap-2 md:w-auto md:gap-3">
         <% if @has_prev %>
-          <%= link_to directory_path(q: @q.presence, tag: @tag.presence, language: @language.presence, min_followers: @min_followers, hireable: @hireable ? 1 : nil, active: @active ? 1 : nil, mine: @mine ? 1 : nil, page: @page - 1), class: "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:gap-2 sm:px-4" do %>
+          <%= link_to directory_path(q: @q.presence, tag: @tag.presence, language: @language.presence, archetype: @archetype.presence, spirit: @spirit.presence, min_followers: @min_followers, hireable: @hireable ? 1 : nil, active: @active ? 1 : nil, mine: @mine ? 1 : nil, page: @page - 1), class: "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:gap-2 sm:px-4" do %>
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -217,7 +239,7 @@
         <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Page <%= @page %></span>
         
         <% if @has_next %>
-          <%= link_to directory_path(q: @q.presence, tag: @tag.presence, language: @language.presence, min_followers: @min_followers, hireable: @hireable ? 1 : nil, active: @active ? 1 : nil, mine: @mine ? 1 : nil, page: @page + 1), class: "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:gap-2 sm:px-4" do %>
+          <%= link_to directory_path(q: @q.presence, tag: @tag.presence, language: @language.presence, archetype: @archetype.presence, spirit: @spirit.presence, min_followers: @min_followers, hireable: @hireable ? 1 : nil, active: @active ? 1 : nil, mine: @mine ? 1 : nil, page: @page + 1), class: "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:gap-2 sm:px-4" do %>
             <span class="hidden sm:inline">Next</span>
             <span class="sm:hidden">Next</span>
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

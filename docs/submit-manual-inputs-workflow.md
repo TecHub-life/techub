@@ -103,7 +103,9 @@ Notes:
 - Services: scraper, record, ingest — implemented
 - Sync: preserves `submitted` repos — implemented
 - UI: submit form + controller wire-up — NOT implemented
-- Pipeline: pre-steps present; still needs feature flag and clearer logging/failover docs
+- Pipeline: pre-steps present; flag-gated via `SUBMISSION_MANUAL_INPUTS_ENABLED`. When ON, the
+  pipeline will ingest any `submitted` repos (metadata/topics) and record a scrape for
+  `submitted_scrape_url` if provided. Failures are logged but non-fatal.
 
 ## Rollout Plan
 

@@ -78,31 +78,29 @@ namespace :profiles do
       end
     end
 
-    # Step 2: Optional ingest/scrape (flagged)
-    if FeatureFlags.enabled?(:submission_manual_inputs)
-      submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
-      if submitted_full_names.any?
-        log_event(events_path, stage: "ingest", message: "submitted_repos:begin", repos: submitted_full_names)
-        begin
-          Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: submitted_full_names)
-          log_event(events_path, stage: "ingest", message: "submitted_repos:ok")
-        rescue => e
-          log_event(events_path, stage: "ingest", message: "submitted_repos:error", error: e.message)
-        end
+    # Step 2: Optional ingest/scrape when present
+    submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
+    if submitted_full_names.any?
+      log_event(events_path, stage: "ingest", message: "submitted_repos:begin", repos: submitted_full_names)
+      begin
+        Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: submitted_full_names)
+        log_event(events_path, stage: "ingest", message: "submitted_repos:ok")
+      rescue => e
+        log_event(events_path, stage: "ingest", message: "submitted_repos:error", error: e.message)
       end
+    end
 
-      if profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
-        log_event(events_path, stage: "scrape", message: "record:begin", url: profile.submitted_scrape_url)
-        begin
-          scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
-          if scraped_result.success?
-            log_event(events_path, stage: "scrape", message: "record:ok")
-          else
-            log_event(events_path, stage: "scrape", message: "record:fail", error: scraped_result.error.message)
-          end
-        rescue => e
-          log_event(events_path, stage: "scrape", message: "record:error", error: e.message)
+    if profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
+      log_event(events_path, stage: "scrape", message: "record:begin", url: profile.submitted_scrape_url)
+      begin
+        scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
+        if scraped_result.success?
+          log_event(events_path, stage: "scrape", message: "record:ok")
+        else
+          log_event(events_path, stage: "scrape", message: "record:fail", error: scraped_result.error.message)
         end
+      rescue => e
+        log_event(events_path, stage: "scrape", message: "record:error", error: e.message)
       end
     end
 

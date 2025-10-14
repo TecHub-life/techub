@@ -29,57 +29,205 @@
   content_for :twitter_image, og_url if og_url.present?
 %>
 
-<section class="mx-auto max-w-6xl px-4 py-12">
-  <div class="space-y-4 mb-8">
-    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100">
-      GitHub Profile: <%= (@profile&.display_name.presence || params[:username] || "") %>
-    </h1>
-    <% if @profile&.last_pipeline_status.present? %>
-      <div id="pipeline-status-container" 
-           data-controller="pipeline-status"
-           data-pipeline-status-login-value="<%= @profile.login %>" 
-           data-pipeline-status-status-value="<%= @profile.last_pipeline_status %>">
-        <span class="inline-block text-xs px-2 py-1 rounded border
-          <%= case @profile.last_pipeline_status
-             when 'queued' then 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200'
-             when 'success' then 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
-             when 'failure' then 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
-             else 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' end %>
-        ">
-          <span id="status-text"><%= @profile.last_pipeline_status.capitalize %></span>
-        </span>
-        
-        <% if @profile.last_pipeline_status == 'queued' %>
-          <div class="mt-3 max-w-md">
-            <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
-              <span id="progress-message">Generating your AI images...</span>
-              <span id="progress-percent">0%</span>
-            </div>
-            <div class="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-500 ease-out" style="width: 0%"></div>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">This usually takes 30-60 seconds. Please don't close this page.</p>
+<%# JSON-LD Structured Data for Profile %>
+<% if @profile.present? %>
+  <% json_ld = {
+    "@context" => "https://schema.org",
+    "@type" => "Person",
+    "name" => @profile.display_name,
+    "url" => request.original_url,
+    "image" => @profile.avatar_url,
+    "description" => (@profile.profile_card&.short_bio.presence || @profile.bio).to_s,
+    "sameAs" => [@profile.html_url, (@profile.blog if @profile.blog.present?)].compact,
+    "additionalProperty" => [
+      { "@type" => "PropertyValue", "name" => "attack", "value" => @profile.profile_card&.attack },
+      { "@type" => "PropertyValue", "name" => "defense", "value" => @profile.profile_card&.defense },
+      { "@type" => "PropertyValue", "name" => "speed", "value" => @profile.profile_card&.speed },
+      { "@type" => "PropertyValue", "name" => "playing_card", "value" => @profile.profile_card&.playing_card },
+      { "@type" => "PropertyValue", "name" => "spirit_animal", "value" => @profile.profile_card&.spirit_animal },
+      { "@type" => "PropertyValue", "name" => "archetype", "value" => @profile.profile_card&.archetype }
+    ]
+  } %>
+  <script type="application/ld+json">
+    <%= json_ld.to_json.html_safe %>
+  </script>
+<% end %>
+
+<section class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+  <% if @profile.present? %>
+    <div class="mb-10 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-4">
+          <img src="<%= @profile.avatar_url %>" alt="<%= @profile.login %>" class="w-16 h-16 rounded-full ring-2 ring-slate-200 dark:ring-slate-700">
+          <div class="min-w-0">
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400"><%= @profile.login %></p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight"><%= @profile.display_name %></h1>
+            <p class="text-sky-600 dark:text-sky-400 font-medium">@<%= @profile.login %></p>
           </div>
+        </div>
+
+        <% about = @profile.profile_card&.long_bio.presence || @profile.profile_card&.short_bio.presence || @profile.bio %>
+        <% if about.present? %>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
+            <%= about %>
+          </p>
         <% end %>
+
+        <div class="grid gap-2 text-sm text-slate-700 dark:text-slate-300">
+          <% if @profile.location.present? %>
+            <div><span class="font-semibold">Location:</span> <%= @profile.location %></div>
+          <% end %>
+          <% if @profile.email.present? %>
+            <div><span class="font-semibold">Email:</span> <a href="mailto:<%= @profile.email %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener"><%= @profile.email %></a></div>
+          <% end %>
+          <% if @profile.blog.present? %>
+            <div><span class="font-semibold">Website:</span> <a href="<%= @profile.blog %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener"><%= @profile.blog %></a></div>
+          <% end %>
+          <% if @profile.twitter_username.present? %>
+            <div><span class="font-semibold">Twitter:</span> <a href="https://twitter.com/<%= @profile.twitter_username %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener">@<%= @profile.twitter_username %></a></div>
+          <% end %>
+          <% if @profile.hireable %>
+            <div class="text-green-600 dark:text-green-400 font-semibold">💼 Available for hire</div>
+          <% end %>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+          <a href="https://github.com/<%= @profile.login %>?tab=followers" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+            <p class="text-2xl font-bold text-slate-900 dark:text-slate-100"><%= @profile.followers.to_i %></p>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Followers</p>
+          </a>
+          <a href="https://github.com/<%= @profile.login %>?tab=following" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+            <p class="text-2xl font-bold text-slate-900 dark:text-slate-100"><%= @profile.following.to_i %></p>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Following</p>
+          </a>
+          <a href="https://github.com/<%= @profile.login %>?tab=repositories" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+            <p class="text-2xl font-bold text-slate-900 dark:text-slate-100"><%= @profile.public_repos.to_i %></p>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Repos</p>
+          </a>
+          <% if @profile.public_gists && @profile.public_gists > 0 %>
+            <a href="https://gist.github.com/<%= @profile.login %>" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+              <p class="text-2xl font-bold text-slate-900 dark:text-slate-100"><%= @profile.public_gists %></p>
+              <p class="text-xs text-slate-600 dark:text-slate-400">Public Gists</p>
+            </a>
+          <% end %>
+        </div>
       </div>
-    <% end %>
-    <p class="text-lg text-slate-600 dark:text-slate-300">
-      Comprehensive profile insights and analytics.
-    </p>
-    <div class="flex flex-wrap items-center gap-3">
-      <% if current_user %>
-        <span class="text-sm text-slate-700 dark:text-slate-300">
-          Signed in as <strong><%= current_user.login %></strong>
-        </span>
-        <%= button_to "Sign out", session_path, method: :delete, class: "text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" %>
-      <% else %>
-        <%= link_to "Sign in with GitHub", auth_github_path, class: "inline-block bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-700" %>
-      <% end %>
     </div>
-  </div>
+  <% end %>
 
   <% if @profile.present? %>
     <div class="grid gap-8 lg:grid-cols-3">
+      <!-- Highlights (quote + AI chips) -->
+      <div class="lg:col-span-3">
+        <% card = @profile.profile_card %>
+        <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-gradient-to-r from-sky-950 via-indigo-900 to-cyan-900 p-6 text-white">
+          <% if card&.flavor_text.present? %>
+            <p class="text-xl sm:text-2xl font-semibold italic mb-4">"<%= card.flavor_text %>"</p>
+          <% elsif card&.short_bio.present? %>
+            <p class="text-xl sm:text-2xl font-semibold italic mb-4">"<%= card.short_bio %>"</p>
+          <% end %>
+          <div class="flex flex-wrap gap-2">
+            <% if card&.attack.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-amber-300 font-semibold">Attack <%= card.attack %></span>
+            <% end %>
+            <% if card&.defense.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-blue-300 font-semibold">Defense <%= card.defense %></span>
+            <% end %>
+            <% if card&.speed.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-green-300 font-semibold">Speed <%= card.speed %></span>
+            <% end %>
+            <% if card&.playing_card.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-sky-200 font-medium">Card <%= card.playing_card %></span>
+            <% end %>
+            <% if card&.spirit_animal.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-sky-200 font-medium">Spirit <%= card.spirit_animal %></span>
+            <% end %>
+            <% if card&.archetype.present? %>
+              <span class="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-sky-200 font-medium">Archetype <%= card.archetype %></span>
+            <% end %>
+            <% if Array(card&.tags).any? %>
+              <% Array(card.tags).first(6).each do |t| %>
+                <span class="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-indigo-200 font-medium">#<%= t %></span>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      <!-- Card Artifacts (cards-first) -->
+      <div class="lg:col-span-3">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Shareable Cards</h2>
+          <% base = Rails.root.join("public", "generated", @profile.login) %>
+          <% og_img = if File.exist?(base.join("og.jpg"))
+            ts = File.mtime(base.join("og.jpg")).to_i rescue nil
+            "/generated/#{@profile.login}/og.jpg#{ts ? "?v=#{ts}" : ""}"
+          elsif File.exist?(base.join("og.png"))
+            ts = File.mtime(base.join("og.png")).to_i rescue nil
+            "/generated/#{@profile.login}/og.png#{ts ? "?v=#{ts}" : ""}"
+          else
+            (og_image_path(login: @profile.login, format: :jpg) rescue nil)
+          end %>
+          <% card_img = if File.exist?(base.join("card.jpg"))
+            ts = File.mtime(base.join("card.jpg")).to_i rescue nil
+            "/generated/#{@profile.login}/card.jpg#{ts ? "?v=#{ts}" : ""}"
+          elsif File.exist?(base.join("card.png"))
+            ts = File.mtime(base.join("card.png")).to_i rescue nil
+            "/generated/#{@profile.login}/card.png#{ts ? "?v=#{ts}" : ""}"
+          end %>
+          <% simple_img = if File.exist?(base.join("simple.jpg"))
+            ts = File.mtime(base.join("simple.jpg")).to_i rescue nil
+            "/generated/#{@profile.login}/simple.jpg#{ts ? "?v=#{ts}" : ""}"
+          elsif File.exist?(base.join("simple.png"))
+            ts = File.mtime(base.join("simple.png")).to_i rescue nil
+            "/generated/#{@profile.login}/simple.png#{ts ? "?v=#{ts}" : ""}"
+          end %>
+
+          <%# Main Card: large, first %>
+          <div class="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900">
+            <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800">
+              <span>Main Card</span>
+              <% if card_img.present? %>
+                <a href="<%= card_img %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-700 dark:text-blue-400">Open</a>
+              <% end %>
+            </div>
+            <% if card_img.present? %>
+              <img src="<%= card_img %>" alt="Main card" class="w-full object-contain bg-slate-100 dark:bg-slate-900">
+            <% else %>
+              <div class="w-full aspect-video flex items-center justify-center text-slate-400 text-xs">Generating…</div>
+            <% end %>
+          </div>
+
+          <%# OG + Simple stacked for clarity (no columns) %>
+          <div class="space-y-4">
+            <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900">
+              <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800">
+                <span>OpenGraph Image</span>
+                <% if og_img.present? %>
+                  <a href="<%= og_img %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-700 dark:text-blue-400">Open</a>
+                <% end %>
+              </div>
+              <% if og_img.present? %>
+                <img src="<%= og_img %>" alt="OpenGraph image" class="w-full object-contain bg-slate-100 dark:bg-slate-900" loading="lazy">
+              <% else %>
+                <div class="w-full aspect-video flex items-center justify-center text-slate-400 text-xs">Generating…</div>
+              <% end %>
+            </div>
+            <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900">
+              <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800">
+                <span>Simple Card</span>
+                <% if simple_img.present? %>
+                  <a href="<%= simple_img %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-700 dark:text-blue-400">Open</a>
+                <% end %>
+              </div>
+              <% if simple_img.present? %>
+                <img src="<%= simple_img %>" alt="Simple card" class="w-full object-contain bg-slate-100 dark:bg-slate-900" loading="lazy">
+              <% else %>
+                <div class="w-full aspect-video flex items-center justify-center text-slate-400 text-xs">Generating…</div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Profile Info -->
       <div class="lg:col-span-1">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
@@ -94,7 +242,11 @@
             @<%= @profile.login %>
           </p>
           
-          <% if @profile.bio.present? %>
+          <% if @profile.profile_card&.long_bio.present? %>
+            <p class="text-slate-700 dark:text-slate-300 mb-4">
+              <%= @profile.profile_card.long_bio %>
+            </p>
+          <% elsif @profile.bio.present? %>
             <p class="text-slate-700 dark:text-slate-300 mb-4">
               <%= @profile.bio %>
             </p>
@@ -295,24 +447,65 @@
       
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-6">
-        <!-- Actions / CTAs -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-wrap items-center gap-2">
-          <% og_url = og_image_url(login: @profile.login, format: :jpg) rescue nil %>
-          <%= link_to "View OG Image", og_url, target: "_blank", rel: "noopener", class: "inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
-          <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700" data-action="click->clipboard#copy" data-clipboard-text-value="<%= og_url %>">
-            Copy OG URL
-          </button>
-          <% if current_user && (current_user.profile_ownerships.exists?(profile_id: @profile.id) rescue false) %>
+        <!-- AI Profile (front and center) -->
+        <% card = @profile.profile_card %>
+        <% if card.present? %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <% if card.flavor_text.present? %>
+              <p class="italic text-slate-700 dark:text-slate-300 text-lg leading-relaxed mb-4">"<%= card.flavor_text %>"</p>
+            <% end %>
+            <div class="flex flex-wrap gap-3 mb-4">
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Attack</span>
+                <span class="text-slate-600 dark:text-slate-300"><%= card.attack %></span>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Defense</span>
+                <span class="text-slate-600 dark:text-slate-300"><%= card.defense %></span>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Speed</span>
+                <span class="text-slate-600 dark:text-slate-300"><%= card.speed %></span>
+              </div>
+              <% if card.playing_card.present? %>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                  <span class="font-semibold">Card</span>
+                  <span class="text-slate-600 dark:text-slate-300"><%= card.playing_card %></span>
+                </div>
+              <% end %>
+              <% if card.spirit_animal.present? %>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                  <span class="font-semibold">Spirit</span>
+                  <span class="text-slate-600 dark:text-slate-300"><%= card.spirit_animal %></span>
+                </div>
+              <% end %>
+              <% if card.archetype.present? %>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                  <span class="font-semibold">Archetype</span>
+                  <span class="text-slate-600 dark:text-slate-300"><%= card.archetype %></span>
+                </div>
+              <% end %>
+            </div>
+            <% if Array(card.tags).any? %>
+              <div class="flex flex-wrap gap-2">
+                <% Array(card.tags).first(6).each do |t| %>
+                  <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">#<%= t %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        <!-- Actions / CTAs (owner-only recapture; no raw URLs) -->
+        <% if current_user && (current_user.profile_ownerships.exists?(profile_id: @profile.id) rescue false) %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-wrap items-center gap-2">
             <%= button_to "Re-capture Screenshots", regenerate_my_profile_path(username: @profile.login), method: :post, class: "inline-flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-600" %>
             <%= button_to "Regenerate AI Artwork", regenerate_my_profile_ai_path(username: @profile.login), method: :post, class: "inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" %>
-          <% end %>
-        </div>
-        <!-- Profile README -->
-        <% if @profile_readme.present? && @profile_readme.content.present? %>
+          </div>
+        <% end %>
+        <!-- Profile README (hidden) -->
+        <% if false && @profile_readme.present? && @profile_readme.content.present? %>
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Profile README
-            </h3>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Profile README</h3>
             <div class="prose dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300">
               <%= render_markdown(@profile_readme.content) %>
             </div>
@@ -356,6 +549,51 @@
                   <% end %>
                 </div>
               <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Traits & Stats -->
+        <% card = @profile.profile_card %>
+        <% if card.present? %>
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Traits & Stats</h3>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <p class="text-sm"><span class="font-semibold">Buff:</span> <%= card.buff.presence || "—" %></p>
+                <% if card.buff_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.buff_description %></p>
+                <% end %>
+                <p class="text-sm mt-3"><span class="font-semibold">Weakness:</span> <%= card.weakness.presence || "—" %></p>
+                <% if card.weakness_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.weakness_description %></p>
+                <% end %>
+                <p class="text-sm mt-3"><span class="font-semibold">Vibe:</span> <%= card.vibe.presence || "—" %></p>
+                <% if card.vibe_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.vibe_description %></p>
+                <% end %>
+                <p class="text-sm mt-3"><span class="font-semibold">Special Move:</span> <%= card.special_move.presence || "—" %></p>
+                <% if card.special_move_description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= card.special_move_description %></p>
+                <% end %>
+              </div>
+              <div>
+                <div class="flex gap-4 text-sm">
+                  <div><span class="font-semibold">Attack:</span> <%= card.attack %></div>
+                  <div><span class="font-semibold">Defense:</span> <%= card.defense %></div>
+                  <div><span class="font-semibold">Speed:</span> <%= card.speed %></div>
+                </div>
+                <p class="text-sm mt-2"><span class="font-semibold">Playing Card:</span> <%= card.playing_card.presence || "—" %></p>
+                <p class="text-sm mt-2"><span class="font-semibold">Spirit Animal:</span> <%= card.spirit_animal.presence || "—" %></p>
+                <p class="text-sm mt-2"><span class="font-semibold">Archetype:</span> <%= card.archetype.presence || "—" %></p>
+                <% if Array(card.tags).any? %>
+                  <div class="flex flex-wrap gap-1.5 mt-3">
+                    <% Array(card.tags).first(6).each do |t| %>
+                      <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">#<%= t %></span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
             </div>
           </div>
         <% end %>

@@ -25,6 +25,13 @@ module Ops
           @error = e.message
         end
       end
+
+      # Recent pipeline stage events
+      begin
+        @recent_events = ProfilePipelineEvent.includes(:profile).order(created_at: :desc).limit(50)
+      rescue StandardError
+        @recent_events = []
+      end
     end
   end
 end

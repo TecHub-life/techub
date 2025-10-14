@@ -163,16 +163,44 @@ GitHub for CI.
 
 ## Deployment With Kamal
 
-`config/deploy.yml` targets a `web` host and a dedicated `job` host. Update the IPs/usernames for
-your infra, push the image to `ghcr.io/loftwah/techub`, and run:
+The Kamal config is IP-free and single-node friendly:
+
+- `servers.web.hosts` reads from `WEB_HOSTS` (defaults to `techub.life`).
+- `servers.job.hosts` defaults to `WEB_HOSTS` (jobs run on the same host).
+- Image publishes to `ghcr.io/techub-life/techub` (GHCR).
+- Proxy host defaults to `techub.life`.
+
+### Single-node quickstart (no IPs in repo)
+
+1. Create an SSH host alias (example):
+
+```
+Host techub-do
+  HostName <your-server-ip>
+  User <your-ssh-user>
+  IdentityFile ~/.ssh/<your-key>
+```
+
+2. Export the only two env vars you need:
+
+```bash
+export WEB_HOSTS="techub-do"            # your SSH alias
+export KAMAL_REGISTRY_PASSWORD="<ghcr_token>"  # packages:write scope
+```
+
+3. Deploy:
 
 ```bash
 bin/kamal setup
 bin/kamal deploy
 ```
 
-Secrets live in `.kamal/secrets`; populate them via environment variables or your password manager
-(never check plaintext credentials into git).
+Notes:
+
+- `JOB_HOSTS` is not needed; it defaults to `WEB_HOSTS`.
+- `REGISTRY_USERNAME` defaults to the maintainer account; override if pushing from a different user.
+- `.kamal/secrets` only references `KAMAL_REGISTRY_PASSWORD` and reads `RAILS_MASTER_KEY` from
+  `config/master.key`.
 
 ## Docker Compose (Local)
 

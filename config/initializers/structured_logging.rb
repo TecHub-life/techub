@@ -48,8 +48,15 @@ module StructuredLogger
   end
 
   def emit(level, message_or_hash, extra)
-    entry = message_or_hash.is_a?(Hash) ? message_or_hash : { message: message_or_hash }
-    payload = entry.merge(extra)
+    base = case message_or_hash
+    when String
+      { message: message_or_hash }
+    when Hash
+      message_or_hash
+    else
+      { message: message_or_hash.inspect }
+    end
+    payload = entry.merge(base).merge(extra) rescue base.merge(extra)
     # Primary sink: Rails logger (JSON to STDOUT)
     Rails.logger.public_send(level, payload)
 
