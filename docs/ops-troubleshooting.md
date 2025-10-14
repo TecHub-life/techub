@@ -47,4 +47,3 @@ Common Issues
 - 406 on HEAD/allow_browser: benign for HEAD requests from crawlers; normal.
 - No jobs running: confirm workers with `/ops/jobs` and tail job logs.
 - Solid Queue in Puma: controlled by `SOLID_QUEUE_IN_PUMA` in `config/deploy.yml`.
-
