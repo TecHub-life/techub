@@ -1,0 +1,8 @@
+doctl compute droplet create techub-server \
+  --region nyc3 \
+  --image ubuntu-24-04-x64 \
+  --size s-1vcpu-1gb \
+  --ssh-keys 51407246 \
+  --enable-ipv6 \
+  --enable-backups=false \
+  --wait
