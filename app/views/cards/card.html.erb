@@ -75,35 +75,40 @@
         <% end %>
       </div>
 
-      <% card = @profile.profile_card %>
-      <% atk = card&.attack || 70; defn = card&.defense || 60; spd = card&.speed || 80 %>
+      <% followers = @profile.followers.to_i %>
+      <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
+      <% events = @profile.profile_activity&.total_events.to_i %>
+      <% # Normalize into 0-100 bands for bar widths %>
+      <% followers_pct = [[(followers / 5000.0 * 100).round, 0].max, 100].min %>
+      <% stars_pct = [[(stars / 2000.0 * 100).round, 0].max, 100].min %>
+      <% activity_pct = [[(events / 200.0 * 100).round, 0].max, 100].min %>
       <div class="mt-2 pl-[200px] pr-8">
         <div class="grid grid-cols-3 gap-6 max-w-[760px] mx-auto w-full">
           <div class="space-y-2">
             <div class="flex items-center justify-between text-sm text-gray-300">
-              <span class="flex items-center gap-2">ATK</span>
-              <span class="font-semibold text-yellow-300"><%= atk %></span>
+              <span class="flex items-center gap-2">Followers</span>
+              <span class="font-semibold text-yellow-300"><%= followers %></span>
             </div>
             <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-              <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-400" style="width: <%= atk %>%"></div>
+              <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-400" style="width: <%= followers_pct %>%"></div>
             </div>
           </div>
           <div class="space-y-2">
             <div class="flex items-center justify-between text-sm text-gray-300">
-              <span class="flex items-center gap-2">DEF</span>
-              <span class="font-semibold text-blue-300"><%= defn %></span>
+              <span class="flex items-center gap-2">Stars (Top Repos)</span>
+              <span class="font-semibold text-blue-300"><%= stars %></span>
             </div>
             <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-              <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400" style="width: <%= defn %>%"></div>
+              <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400" style="width: <%= stars_pct %>%"></div>
             </div>
           </div>
           <div class="space-y-2">
             <div class="flex items-center justify-between text-sm text-gray-300">
-              <span class="flex items-center gap-2">SPD</span>
-              <span class="font-semibold text-green-300"><%= spd %></span>
+              <span class="flex items-center gap-2">Activity (90d)</span>
+              <span class="font-semibold text-green-300"><%= events %></span>
             </div>
             <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-              <div class="h-full bg-gradient-to-r from-emerald-500 to-green-400" style="width: <%= spd %>%"></div>
+              <div class="h-full bg-gradient-to-r from-emerald-500 to-green-400" style="width: <%= activity_pct %>%"></div>
             </div>
           </div>
         </div>

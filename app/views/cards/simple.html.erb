@@ -34,8 +34,15 @@
     </div>
     <h1 class="text-5xl font-bold text-white"><%= @profile.display_name %></h1>
     <p class="text-xl text-indigo-400">@<%= @profile.login %></p>
-    <% if @profile.bio.present? %>
-      <p class="text-gray-300 max-w-3xl mx-auto"><%= @profile.bio %></p>
+    <% langs = @profile.top_languages(4).map(&:name) %>
+    <% if langs.any? %>
+      <div class="flex items-center justify-center gap-2 flex-wrap">
+        <% langs.each do |lang| %>
+          <span class="text-sm px-3 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-indigo-300">#<%= lang %></span>
+        <% end %>
+      </div>
     <% end %>
+    <% followers = @profile.followers.to_i %>
+    <p class="text-gray-300">⭐ <%= followers %> followers</p>
   </div>
 </div>

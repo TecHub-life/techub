@@ -38,11 +38,18 @@
           <p class="<%= handle_size %> font-medium text-indigo-400">@<%= handle %></p>
         </div>
 
-        <div class="flex gap-8 text-gray-300 text-lg flex-wrap">
+        <div class="flex gap-3 text-gray-300 text-base flex-wrap">
           <% if @profile.location.present? %>
-            <span><%= @profile.location %></span>
+            <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">📍 <%= @profile.location %></span>
           <% end %>
-          <span><%= @profile.followers.to_i %> followers</span>
+          <% followers = @profile.followers.to_i %>
+          <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
+          <% orgs = @profile.profile_organizations.size %>
+          <% repos = @profile.public_repos.to_i %>
+          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">⭐ <%= stars %> stars</span>
+          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">👥 <%= followers %> followers</span>
+          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">🏢 <%= orgs %> orgs</span>
+          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">📦 <%= repos %> repos</span>
         </div>
 
         <% langs = @profile.top_languages(5).map(&:name) %>
