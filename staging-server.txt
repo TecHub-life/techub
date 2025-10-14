@@ -1,8 +1,61 @@
 doctl compute droplet create techub-server \
   --region nyc3 \
   --image ubuntu-24-04-x64 \
-  --size s-1vcpu-1gb \
+  --size s-2vcpu-4gb \
   --ssh-keys 51407246 \
   --enable-ipv6 \
   --enable-backups=false \
   --wait
+
+---
+
+    doctl compute droplet create techub-server \
+      --region nyc3 \
+      --image ubuntu-24-04-x64 \
+      --size s-2vcpu-4gb \
+      --ssh-keys 51407246 \
+      --enable-ipv6 \
+      --enable-backups=false \
+      --wait
+    ```
+  - Existing: resize in-place (requires power off; disk can only grow).
+    ```bash
+    doctl compute droplet list
+    doctl compute droplet-action power-off <DROPLET_ID>
+    doctl compute droplet-action resize <DROPLET_ID> --size s-2vcpu-4gb --resize-disk
+    doctl compute droplet-action power-on <DROPLET_ID>
+    ```
+
+- Add swap (prevents OOM during Chrome spikes)
+  ```bash
+  sudo fallocate -l 2G /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+  ```
+
+- Harden Puppeteer launch (more stable on small VMs)
+  - Set env and pass to `puppeteer.launch`:
+    ```bash
+    export PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --single-process --no-zygote"
+    export PUPPETEER_TIMEOUT=60000
+    export NODE_OPTIONS="--max-old-space-size=2048"
+    ```
+  - Ensure the Node script uses those args:
+    ```javascript
+    const extraArgs = (process.env.PUPPETEER_ARGS || "").split(" ").filter(Boolean)
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--user-data-dir=/tmp/puppeteer'].concat(extraArgs)
+    })
+    ```
+
+- Give jobs more capacity (Solid Queue)
+  - Run more worker processes/containers (e.g., `kamal scale worker=3`) and/or bump threads if you’ve configured them.
+  - Keep the web separate from workers if possible (dedicated worker host or at least a separate process).
+
+- Nginx/proxy timeouts (avoid premature 502s while screenshots run)
+  - Increase upstream/read timeouts to ≥ 75s if not already.
+
+If you want, I can apply the size bump in `staging-server.txt`, add the swap provisioning to your bootstrap, and wire the Puppeteer env flags. I’ll keep it terse and copy-paste friendly as you prefer [[memory:3389909]].
