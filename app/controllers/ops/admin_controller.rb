@@ -1,16 +1,15 @@
 module Ops
-  class JobsController < BaseController
+  class AdminController < BaseController
     def index
-      @adapter = ActiveJob::Base.queue_adapter
       @engine_present = defined?(MissionControl::Jobs::Engine)
+      @adapter = ActiveJob::Base.queue_adapter
 
       @stats = {
         queued: nil,
         ready: nil,
         running: nil,
         failed: nil,
-        finished_last_hour: nil,
-        processes: []
+        finished_last_hour: nil
       }
 
       if defined?(SolidQueue)
@@ -20,20 +19,23 @@ module Ops
           @stats[:running] = (SolidQueue::ClaimedExecution.count rescue nil)
           @stats[:failed] = (SolidQueue::FailedExecution.count rescue nil)
           @stats[:finished_last_hour] = (SolidQueue::Job.where.not(finished_at: nil).where("finished_at > ?", 1.hour.ago).count rescue nil)
-          @stats[:processes] = (SolidQueue::Process.order(last_heartbeat_at: :desc).limit(10).to_a rescue [])
         rescue StandardError => e
           @error = e.message
         end
       end
 
-      # Recent pipeline stage events
-      begin
-        @recent_events = ProfilePipelineEvent.includes(:profile).order(created_at: :desc).limit(50)
-      rescue StandardError
-        @recent_events = []
-      end
+      @dev_log_tail = tail_log("log/development.log", 200) if Rails.env.development?
     end
 
     private
+
+    def tail_log(path, lines)
+      file_path = Rails.root.join(path)
+      return nil unless File.exist?(file_path)
+      content = File.read(file_path)
+      content.lines.last(lines).join
+    rescue StandardError
+      nil
+    end
   end
 end

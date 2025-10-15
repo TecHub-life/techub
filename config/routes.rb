@@ -52,26 +52,24 @@ Rails.application.routes.draw do
 
   # Direct OG image route (serves/redirects image; enqueues generation if missing)
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
+
+  # Ops admin (lightweight panel)
+  namespace :ops do
+    get "/", to: "admin#index", as: :admin
+  end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)
-    # Prefer credentials; in production ignore env and require credentials
+    # Mount the engine. Auth is enforced inside the engine via
+    # config/initializers/mission_control_jobs.rb (HTTP Basic).
     cred = Rails.application.credentials.dig(:mission_control, :jobs, :http_basic)
     basic = Rails.env.production? ? cred : (ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] || cred)
-    if basic.present?
-      user, pass = (basic.to_s.split(":", 2))
-      authenticator = lambda do |u, p|
-        ActiveSupport::SecurityUtils.secure_compare(u.to_s, user.to_s) &
-          ActiveSupport::SecurityUtils.secure_compare(p.to_s, pass.to_s)
-      end
-      constraint = lambda { |req| ActionController::HttpAuthentication::Basic.authenticate(req, &authenticator) }
-      constraints(constraint) { mount MissionControl::Jobs::Engine, at: "/ops/jobs" }
+
+    if Rails.env.production?
+      # Only expose in production when HTTP Basic credentials exist
+      mount MissionControl::Jobs::Engine, at: "/ops/jobs" if basic.present?
     else
-      # In production, do not mount without auth
-      if Rails.env.production?
-        # noop: leave unmounted to avoid exposure
-      else
-        mount MissionControl::Jobs::Engine, at: "/ops/jobs"
-      end
+      # Always mount in non-production for local administration
+      mount MissionControl::Jobs::Engine, at: "/ops/jobs"
     end
   else
     # Fallback lightweight jobs status when Mission Control is not installed
