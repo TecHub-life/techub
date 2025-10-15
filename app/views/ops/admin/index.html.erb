@@ -1,0 +1,58 @@
+<section class="mx-auto max-w-4xl space-y-6 px-4 py-12">
+  <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Ops Admin</h1>
+
+  <% if @engine_present %>
+    <div class="rounded border border-slate-200 bg-white p-4 text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+      Mission Control is installed. Open <a href="/ops/jobs" class="text-blue-600 dark:text-blue-400">/ops/jobs</a> for full jobs UI.
+    </div>
+  <% end %>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div class="text-sm text-slate-500 dark:text-slate-400">Adapter</div>
+      <div class="text-lg font-semibold"><%= @adapter.class.name %></div>
+    </div>
+    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div class="text-sm text-slate-500 dark:text-slate-400">Queued</div>
+      <div class="text-lg font-semibold"><%= @stats[:queued] || '—' %></div>
+    </div>
+    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div class="text-sm text-slate-500 dark:text-slate-400">Ready</div>
+      <div class="text-lg font-semibold"><%= @stats[:ready] || '—' %></div>
+    </div>
+    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div class="text-sm text-slate-500 dark:text-slate-400">Running</div>
+      <div class="text-lg font-semibold"><%= @stats[:running] || '—' %></div>
+    </div>
+    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div class="text-sm text-slate-500 dark:text-slate-400">Failed</div>
+      <div class="text-lg font-semibold"><%= @stats[:failed] || '—' %></div>
+    </div>
+    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div class="text-sm text-slate-500 dark:text-slate-400">Finished (1h)</div>
+      <div class="text-lg font-semibold"><%= @stats[:finished_last_hour] || '—' %></div>
+    </div>
+  </div>
+
+  <% if @dev_log_tail.present? %>
+    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <h2 class="text-lg font-semibold mb-3">Development Log (tail)</h2>
+      <pre class="max-h-96 overflow-auto whitespace-pre-wrap text-xs"><%= @dev_log_tail %></pre>
+    </div>
+  <% end %>
+
+  <% if @engine_present %>
+    <div class="rounded border border-slate-200 bg-white p-0 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 text-slate-700 dark:border-slate-700 dark:text-slate-200">
+        <h2 class="text-lg font-semibold">Jobs UI</h2>
+        <a href="/ops/jobs" class="rounded px-2 py-1 text-blue-600 underline dark:text-blue-400" target="_blank" rel="noopener">Open full screen</a>
+      </div>
+      <div class="h-[75vh] w-full" style="height: 75vh;">
+        <iframe id="ops-jobs-frame" src="/ops/jobs" title="Mission Control Jobs"
+                style="border:0; width:100%; height:100%; background:transparent"></iframe>
+      </div>
+    </div>
+  <% end %>
+</section>
+
+
