@@ -1,22 +1,10 @@
-<section class="mx-auto max-w-6xl space-y-8 px-4 py-8">
-  <!-- Header -->
-  <div class="space-y-3">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex-1">
-        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-sky-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
-          TecHub Directory
-        </h1>
-        <p class="mt-1.5 sm:mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-400">
-          Browse developer trading cards • <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @total %></span> profiles
-        </p>
-      </div>
-      <a href="<%= motifs_path %>" class="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105 whitespace-nowrap">
-        <span>🎭</span>
-        <span class="hidden sm:inline">Archetypes & Spirits</span>
-        <span class="sm:hidden">Archetypes</span>
-      </a>
-    </div>
-  </div>
+<section class="mx-auto max-w-4xl space-y-6 px-4 py-12">
+  <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">
+    TecHub Directory
+  </h1>
+  <p class="text-slate-600 dark:text-slate-300">
+    Browse developer trading cards • <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @total %></span> profiles
+  </p>
 
   <!-- Filters -->
   <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
