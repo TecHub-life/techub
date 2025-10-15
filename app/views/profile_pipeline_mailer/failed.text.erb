@@ -1,10 +1,10 @@
 Hi <%= @user.name || @user.login %>,
 
-We couldn’t generate a TecHub card for @<%= @profile.login %>.
-Error: <%= @error_message %>
+We couldn’t generate a TecHub card for @<%= @profile.login %> at this time.
 
-You can try again later or contact support.
+We’ve recorded the issue and will take a look. You’ll receive another email when it succeeds. You can also visit your TecHub account to manage or retry generation:
+
+- My Profiles: <%= Rails.application.routes.url_helpers.my_profiles_url %>
 
 Thanks,
 TecHub
-

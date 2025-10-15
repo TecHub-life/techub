@@ -11,9 +11,13 @@ Profile status: <%= @profile&.last_pipeline_status %>
 Profile error: <%= @profile&.last_pipeline_error %>
 
 Links:
-- Profile: <%= (Rails.application.routes.url_helpers.profile_url(username: @profile.login, host: ENV.fetch('APP_HOST', 'http://localhost:3000')) rescue nil) %>
-- Ops Jobs: <%= File.join(ENV.fetch('APP_HOST', 'http://localhost:3000'), '/ops/jobs') %>
+<% begin %>
+- Profile: <%= Rails.application.routes.url_helpers.profile_url(username: @profile.login) %>
+- Ops Jobs: <%= Rails.application.routes.url_helpers.url_for(controller: '/ops/jobs', action: nil, only_path: false) rescue (Rails.application.routes.url_helpers.root_url + 'ops/jobs') %>
+<% rescue %>
+- Profile: <%= @profile&.login %>
+- Ops Jobs: /ops/jobs
+<% end %>
 
 Metadata:
 <%= (@metadata.present? ? JSON.pretty_generate(@metadata) : '(none)') %>
-

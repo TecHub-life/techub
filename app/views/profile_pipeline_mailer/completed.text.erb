@@ -2,8 +2,8 @@ Hi <%= @user.name || @user.login %>,
 
 Your TecHub card for @<%= @profile.login %> is ready.
 
-View profile: <%= @profile.github_profile_url %>
+View your TecHub profile:
+<%= Rails.application.routes.url_helpers.profile_url(username: @profile.login) %>
 
 Thanks,
 TecHub
-
