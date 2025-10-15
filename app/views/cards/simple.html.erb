@@ -22,7 +22,7 @@
 
 <div class="w-[1280px] h-[720px] overflow-hidden relative flex items-center justify-center" style="background:<%= choice == 'color' ? color_hex : '#0b1220' %>">
   <% if choice != 'color' && bg_url %>
-    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-20">
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-25">
   <% end %>
   <div class="text-center space-y-4">
     <div class="mx-auto w-40 h-40 rounded-full overflow-hidden bg-gray-800">
@@ -34,7 +34,7 @@
     </div>
     <h1 class="text-5xl font-bold text-white"><%= @profile.display_name %></h1>
     <p class="text-xl text-sky-400">@<%= @profile.login %></p>
-    <% langs = @profile.top_languages(4).map { |l| l.name.to_s.downcase } %>
+    <% langs = @profile.top_languages(4).map(&:name) %>
     <% if langs.any? %>
       <div class="flex items-center justify-center gap-2 flex-wrap">
         <% langs.each do |lang| %>
@@ -60,12 +60,19 @@
           <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium"><%= card.playing_card %></span>
         <% end %>
         <% if card.spirit_animal.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium"><%= card.spirit_animal %></span>
+          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium">🐾 <%= card.spirit_animal %></span>
         <% end %>
         <% if card.archetype.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium"><%= card.archetype %></span>
+          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium">⚡ <%= card.archetype %></span>
         <% end %>
       </div>
+      <% if Array(card.tags).any? %>
+        <div class="flex items-center justify-center gap-2 flex-nowrap mt-3">
+          <% Array(card.tags).first(6).each do |t| %>
+            <span class="text-sm px-3 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-indigo-200">#<%= t.to_s.downcase %></span>
+          <% end %>
+        </div>
+      <% end %>
     <% else %>
       <% followers = @profile.followers.to_i %>
       <p class="text-gray-300">⭐ <%= followers %> followers</p>
