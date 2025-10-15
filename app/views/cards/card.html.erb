@@ -31,6 +31,11 @@
       <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-100">
     <% end %>
     <div class="absolute inset-0 bg-gradient-to-b from-black/5 via-black/10 to-black/20"></div>
+    <%# Top-right corner marker should sit inside the banner area %>
+    <% card_tr = @profile.profile_card %>
+    <% if card_tr && card_tr.playing_card.present? %>
+      <div class="absolute top-2 right-4 text-white/85 text-lg font-semibold select-none whitespace-nowrap"><%= card_tr.playing_card %></div>
+    <% end %>
   </div>
 
   <div class="absolute left-12 top-[216px] -translate-y-12 transform z-40">
@@ -154,7 +159,6 @@
     <%# Corner playing card markers on main card (use full text) %>
     <% card = @profile.profile_card %>
     <% if card && card.playing_card.present? %>
-      <div class="absolute top-2 right-6 text-white/85 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
       <div class="absolute bottom-2 left-6 text-white/85 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
     <% end %>
   </div>
