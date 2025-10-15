@@ -45,7 +45,7 @@ module Profiles
         company: payload[:profile][:company],
         location: payload[:profile][:location],
         blog: payload[:profile][:blog],
-        email: payload[:profile][:email],
+        # Email withheld from Profile to prevent accidental public exposure
         twitter_username: payload[:profile][:twitter_username],
         hireable: payload[:profile][:hireable] || false,
         html_url: payload[:profile][:html_url],

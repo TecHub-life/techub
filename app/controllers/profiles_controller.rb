@@ -76,7 +76,6 @@ class ProfilesController < ApplicationController
         name: @profile.name,
         bio: @profile.bio,
         location: @profile.location,
-        email: @profile.email,
         blog: @profile.blog,
         twitter_username: @profile.twitter_username,
         company: @profile.company,

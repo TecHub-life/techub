@@ -77,9 +77,7 @@
           <% if @profile.location.present? %>
             <div><span class="font-semibold">Location:</span> <%= @profile.location %></div>
           <% end %>
-          <% if @profile.email.present? %>
-            <div><span class="font-semibold">Email:</span> <a href="mailto:<%= @profile.email %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener"><%= @profile.email %></a></div>
-          <% end %>
+          <%# Email intentionally not displayed to protect privacy %>
           <% if @profile.blog.present? %>
             <div><span class="font-semibold">Website:</span> <a href="<%= @profile.blog %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener"><%= @profile.blog %></a></div>
           <% end %>
@@ -261,14 +259,7 @@
               <p><strong>Company:</strong> <%= @profile.company %></p>
             <% end %>
             
-            <% if @profile.email.present? %>
-              <p>
-                <strong>Email:</strong>
-                <a href="mailto:<%= @profile.email %>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                  <%= @profile.email %>
-                </a>
-              </p>
-            <% end %>
+            <%# Email intentionally not displayed to protect privacy %>
             
             <% if @profile.blog.present? %>
               <p>
