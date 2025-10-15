@@ -25,6 +25,13 @@ module Ops
       end
 
       @dev_log_tail = tail_log("log/development.log", 200) if Rails.env.development?
+
+      # Failed profiles (last pipeline failed). Keep list small for UI.
+      begin
+        @failed_profiles = Profile.where(last_pipeline_status: "failure").order(updated_at: :desc).limit(50)
+      rescue StandardError
+        @failed_profiles = []
+      end
     end
 
     def send_test_email
