@@ -34,6 +34,21 @@
     </div>
   </div>
 
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Email Smoke Test</h2>
+    <%= form_with url: ops_send_test_email_path, method: :post, local: true, class: "space-y-3" do |f| %>
+      <div>
+        <label class="block text-sm text-slate-600 dark:text-slate-300">To (email)</label>
+        <%= text_field_tag :to, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+      </div>
+      <div>
+        <label class="block text-sm text-slate-600 dark:text-slate-300">Message (optional)</label>
+        <%= text_field_tag :message, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+      </div>
+      <%= submit_tag "Send test email", class: "rounded bg-blue-600 px-4 py-2 text-white" %>
+    <% end %>
+  </div>
+
   <% if @dev_log_tail.present? %>
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <h2 class="text-lg font-semibold mb-3">Development Log (tail)</h2>

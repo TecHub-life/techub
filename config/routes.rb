@@ -56,6 +56,7 @@ Rails.application.routes.draw do
   # Ops admin (lightweight panel)
   namespace :ops do
     get "/", to: "admin#index", as: :admin
+    post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
   end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)

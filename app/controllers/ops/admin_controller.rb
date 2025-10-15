@@ -27,6 +27,17 @@ module Ops
       @dev_log_tail = tail_log("log/development.log", 200) if Rails.env.development?
     end
 
+    def send_test_email
+      to = params[:to].presence
+      message = params[:message]
+      if to.blank?
+        redirect_to ops_admin_path, alert: "Recipient is required"
+        return
+      end
+      SystemMailer.with(to: to, message: message).smoke_test.deliver_later
+      redirect_to ops_admin_path, notice: "Queued smoke test email to #{to}"
+    end
+
     private
 
     def tail_log(path, lines)
