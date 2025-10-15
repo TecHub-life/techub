@@ -31,9 +31,9 @@
         <% end %>
         
         <% if recent_activity.event_breakdown.present? %>
-          <div class="rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 p-4">
-            <p class="text-xs font-medium text-purple-700 dark:text-purple-300 mb-1">Event Types</p>
-            <p class="text-lg font-bold text-purple-900 dark:text-purple-100">
+          <div class="rounded-lg bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/20 dark:to-cyan-950/20 border border-teal-200 dark:border-teal-800 p-4">
+            <p class="text-xs font-medium text-teal-700 dark:text-teal-300 mb-1">Event Types</p>
+            <p class="text-lg font-bold text-teal-900 dark:text-teal-100">
               <%= recent_activity.event_breakdown.keys.count %>
             </p>
           </div>
@@ -54,7 +54,7 @@
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd"/>
                     </svg>
                   <% when /Pull/ %>
-                    <svg class="h-4 w-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="h-4 w-4 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
                     </svg>
                   <% when /Issue/ %>
