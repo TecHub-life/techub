@@ -39,7 +39,7 @@
   </div>
 
   <div class="absolute left-12 top-[216px] -translate-y-12 transform z-40">
-    <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-cyan-500 shadow-[0_10px_40px_rgba(59,130,246,0.45)]">
+    <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-[0_10px_40px_rgba(59,130,246,0.45)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
         <% if @profile.avatar_url.present? %>
           <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
@@ -121,13 +121,13 @@
               <span class="px-2.5 py-1 rounded bg-emerald-900/40 border border-emerald-700 text-emerald-200 font-semibold">🐾 <%= card.spirit_animal %></span>
             <% end %>
             <% if card.archetype.present? %>
-              <span class="px-2.5 py-1 rounded bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-200 font-semibold">⚡ <%= card.archetype %></span>
+              <span class="px-2.5 py-1 rounded bg-emerald-900/40 border border-emerald-700 text-emerald-200 font-semibold">⚡ <%= card.archetype %></span>
             <% end %>
           </div>
           <%# Compact trait value chips (no long descriptions) %>
           <div class="mt-2 flex flex-wrap items-center justify-end gap-1.5 text-xs sm:text-sm">
             <% if card.vibe.present? %>
-              <span class="px-2.5 py-1 rounded bg-indigo-900/40 border border-indigo-700 text-indigo-200 font-medium">Vibe: <%= card.vibe %></span>
+              <span class="px-2.5 py-1 rounded bg-cyan-900/40 border border-cyan-700 text-cyan-200 font-medium">Vibe: <%= card.vibe %></span>
             <% end %>
             <% if card.special_move.present? %>
               <span class="px-2.5 py-1 rounded bg-sky-900/40 border border-sky-700 text-sky-200 font-medium">Move: <%= card.special_move %></span>
@@ -150,7 +150,7 @@
       <div class="absolute inset-x-0 bottom-20 px-12">
         <div class="flex flex-wrap items-center justify-center gap-2">
           <% Array(card.tags).first(6).each do |t| %>
-            <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-indigo-300 font-medium">#<%= t.to_s.downcase %></span>
+            <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-cyan-300 font-medium">#<%= t.to_s.downcase %></span>
           <% end %>
         </div>
       </div>

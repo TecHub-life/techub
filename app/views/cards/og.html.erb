@@ -65,7 +65,7 @@
         <% if repos.any? %>
           <div class="-mt-1 mb-1 flex flex-wrap items-center gap-2">
             <% repos.each do |(rn, stars)| %>
-              <span class="px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-700 text-violet-200 max-w-[260px] truncate">
+              <span class="px-3 py-1.5 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 max-w-[260px] truncate">
                 <%= rn %>
                 <% if stars > 0 %>
                   <span class="ml-1 text-xs text-amber-300">★ <%= stars %></span>
@@ -91,7 +91,7 @@
               <span class="px-3 py-1.5 rounded-full bg-emerald-900/40 border border-emerald-700/70 text-emerald-200 font-semibold">🐾 <%= card.spirit_animal %></span>
             <% end %>
             <% if card.archetype.present? %>
-              <span class="px-3 py-1.5 rounded-full bg-fuchsia-900/40 border border-fuchsia-700/70 text-fuchsia-200 font-semibold">⚡ <%= card.archetype %></span>
+              <span class="px-3 py-1.5 rounded-full bg-emerald-900/40 border border-emerald-700/70 text-emerald-200 font-semibold">⚡ <%= card.archetype %></span>
             <% end %>
           </div>
           <% if Array(card.tags).any? %>
@@ -113,7 +113,7 @@
       </div>
 
       <div class="flex-shrink-0 -ml-8">
-        <div class="w-80 h-80 rounded-full p-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 shadow-2xl">
+        <div class="w-80 h-80 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
           <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
             <% if @profile.avatar_url.present? %>
               <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">

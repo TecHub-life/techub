@@ -27,7 +27,7 @@
   <% end %>
   <div class="relative z-20 text-center space-y-4">
     <%# Avatar with subtle ring %>
-    <div class="relative z-20 mx-auto w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-cyan-500 shadow-[0_8px_28px_rgba(59,130,246,0.35)]">
+    <div class="relative z-20 mx-auto w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-[0_8px_28px_rgba(59,130,246,0.35)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-900">
         <% if @profile.avatar_url.present? %>
           <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover">
@@ -73,7 +73,7 @@
           <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-emerald-200 font-medium shadow-sm backdrop-blur-[2px]">🐾 <%= card.spirit_animal %></span>
         <% end %>
         <% if card.archetype.present? %>
-          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-fuchsia-200 font-medium shadow-sm backdrop-blur-[2px]">⚡ <%= card.archetype %></span>
+          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-emerald-200 font-medium shadow-sm backdrop-blur-[2px]">⚡ <%= card.archetype %></span>
         <% end %>
       </div>
 
@@ -81,7 +81,7 @@
       <% if Array(card.tags).any? %>
         <div class="flex items-center justify-center gap-2 flex-nowrap mt-3">
           <% Array(card.tags).first(6).each do |t| %>
-            <span class="text-sm px-3 py-1 rounded-full bg-gray-900/85 border border-gray-700 text-indigo-200 shadow-sm backdrop-blur-[2px]">#<%= t.to_s.downcase %></span>
+            <span class="text-sm px-3 py-1 rounded-full bg-gray-900/85 border border-gray-700 text-cyan-200 shadow-sm backdrop-blur-[2px]">#<%= t.to_s.downcase %></span>
           <% end %>
         </div>
       <% end %>
