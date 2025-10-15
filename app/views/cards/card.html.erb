@@ -80,7 +80,7 @@
         <% card = @profile.profile_card %>
         <% ft = card&.flavor_text.presence %>
         <% if ft.present? %>
-          <p class="mt-3 text-sky-300 text-sm leading-relaxed">"<%= ft %>"</p>
+          <p class="mt-3 text-sky-300 text-base leading-relaxed">"<%= ft %>"</p>
         <% end %>
         <%# Prefer full short_bio over any truncated tagline %>
         <% short_bio = card&.short_bio.presence || @profile.bio %>
@@ -138,26 +138,24 @@
         <% end %>
       </div>
     </div>
+
+    <%# Absolute bottom row: centered tags and subtle branding inside the card area %>
+    <% card = @profile.profile_card %>
+    <% if card && Array(card.tags).any? %>
+      <div class="absolute inset-x-0 bottom-8 px-12">
+        <div class="flex flex-nowrap items-center justify-center gap-2">
+          <% Array(card.tags).first(6).each do |t| %>
+            <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-indigo-300 font-medium">#<%= t.to_s.downcase %></span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <p class="absolute inset-x-0 bottom-2 text-center text-xs font-semibold text-slate-300 tracking-wide">techub.life</p>
+    <%# Corner playing card markers on main card (use full text) %>
+    <% card = @profile.profile_card %>
+    <% if card && card.playing_card.present? %>
+      <div class="absolute top-3 right-4 text-white/80 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
+      <div class="absolute bottom-3 left-4 text-white/80 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
+    <% end %>
   </div>
 </div>
-
-<%# Centered tags row below content grid %>
-<% card = @profile.profile_card %>
-<% if card && Array(card.tags).any? %>
-  <div class="w-[1280px] px-12 -mt-2">
-    <div class="flex flex-nowrap items-center justify-center gap-2">
-      <% Array(card.tags).first(6).each do |t| %>
-        <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-indigo-300 font-medium">#<%= t.to_s.downcase %></span>
-      <% end %>
-    </div>
-  </div>
-<% end %>
-
-<p class="text-center pt-2 text-sm font-semibold text-slate-300 tracking-wide">techub.life</p>
-
-<%# Corner playing card markers on main card (use full text) %>
-<% card = @profile.profile_card %>
-<% if card && card.playing_card.present? %>
-  <div class="absolute top-3 right-4 text-white/80 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
-  <div class="absolute bottom-3 left-4 text-white/80 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
-<% end %>
