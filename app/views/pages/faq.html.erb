@@ -1,27 +1,135 @@
 <section class="mx-auto max-w-4xl space-y-6 px-4 py-12">
-  <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Frequently Asked Questions</h1>
+  <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+    Frequently <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">Asked</span> Questions
+  </h1>
   <dl class="space-y-4">
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
-      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Why the GitHub App install?</dt>
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What is <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">TecHub</span>?</dt>
       <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        App-level credentials unlock higher rate limits and faster data syncs. We scope
-        permissions tightly and rotate tokens using Solid Queue jobs.
+        TecHub is an AI‑powered collectible trading card directory for GitHub developer profiles. It turns
+        your public GitHub presence into a stylised card with stats, tags, and flavour that reflect what you build.
       </dd>
     </div>
+
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
-      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Do you store my GitHub token?</dt>
-      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        Access tokens are encrypted at rest via Active Record encryption. They only authorise
-        TecHub features on your behalf and can be revoked at any time from GitHub settings.
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">How does it <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">work</span>?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300 space-y-2">
+        <p><span class="font-semibold">Submission (free):</span> Submit any GitHub username. We run an eligibility check (age, repos, followers,
+        recent activity) to keep quality high.</p>
+        <p><span class="font-semibold">AI‑powered generation:</span> We analyse public GitHub signals (repos, commits, languages, topics) and any optional
+        link you provide to generate stats, buffs, weaknesses, special moves, and tags.</p>
+        <p><span class="font-semibold">Directory entry:</span> Your card joins a searchable directory — discoverable by languages, stacks, vibes, and styles.</p>
+        <p><span class="font-semibold">JSON endpoint:</span> Profile and card data are available at <code class="whitespace-nowrap">/profiles/:username.json</code> for integrations, leaderboards, and apps.</p>
+        <p><span class="font-semibold">Physical edition:</span> The first 52 profiles are eligible for a limited‑edition printed deck.</p>
       </dd>
     </div>
+
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
-      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What if my profile gets declined?</dt>
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Why an <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">eligibility gate</span> instead of a fee?</dt>
       <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        Submissions are free, but we score every account for signal (≥60 days old, 3+ active repos,
-        real followers, recent activity, meaningful bio/readme). Hit at least three signals and you’re
-        in. Miss the mark and we’ll tell you what to improve before trying again.
+        Keeping TecHub free means we vet profiles for meaningful public signal (account age, active repos,
+        social proof, recent activity). Hitting at least three signals passes. If you miss, we’ll surface why
+        and you can try again after levelling up.
       </dd>
     </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Why the <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">GitHub App</span> install?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        App‑level credentials unlock higher rate limits and faster background syncs. We scope permissions tightly
+        and rotate tokens via Solid Queue.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Do you store my GitHub <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">token</span>?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        Access tokens are encrypted at rest (Active Record Encryption). They only authorise TecHub features on your
+        behalf and can be revoked anytime in your GitHub settings.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Where does the <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">information</span> come from?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        TecHub uses the GitHub API to analyse public data — profile fields, repos, topics, languages, and activity —
+        plus an optional URL you can submit for extra context. We never access private repositories or secrets.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Is this just <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">OSINT</span>?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        It’s open‑source intelligence in service of builders. TecHub organises what you’ve already made public and turns
+        it into a focused, celebratory snapshot — not an attempt to uncover private information.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Can I stay <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">anonymous</span> or pseudonymous?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        Yes. If your GitHub identity is pseudonymous, your card will reflect that. We only use public data associated
+        with your GitHub handle.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What if I never signed up but see my <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">profile</span>?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        Cards can be created based on public GitHub activity or seeded by the team. You can claim your card to refresh it
+        or request removal if you prefer not to be included.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">How do I <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">claim</span> or remove a profile?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        Contact <a href="https://x.com/loftwah" class="underline hover:text-slate-900 dark:hover:text-slate-100" target="_blank" rel="noopener">@loftwah</a>
+        on X/Twitter to verify ownership of the GitHub handle. We’ll honour removal requests. If blocked, reach out via another
+        channel — verification is still supported.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Can I <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">opt out</span> permanently?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        Yes. Once verified, your GitHub login is added to a permanent block list. Neither you nor anyone else can submit it.
+        To reverse this later, contact the official account to remove the block.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What do I get with my <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">TecHub card</span>?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <ul class="list-disc pl-5 space-y-1">
+          <li>A unique, stylised card based on your GitHub persona.</li>
+          <li>Inclusion in the searchable TecHub directory.</li>
+          <li>JSON access to your profile and card data.</li>
+          <li>Eligibility for limited‑edition physical decks.</li>
+          <li>Shareable assets for your README, portfolio, and socials.</li>
+        </ul>
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">How can I <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">use</span> my card?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <ul class="list-disc pl-5 space-y-1">
+          <li><span class="font-semibold">Flex:</span> add it to your README, portfolio, and bio.</li>
+          <li><span class="font-semibold">Discover:</span> explore builders by languages, stacks, vibes, and styles.</li>
+          <li><span class="font-semibold">Build:</span> use the JSON for leaderboards, trend graphs, or integrations.</li>
+          <li><span class="font-semibold">Support:</span> card developers you rate to help them join the collection.</li>
+        </ul>
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Where can I find images and <span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 animate-gradient">JSON</span>?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        Use <code class="whitespace-nowrap">/profiles/:username.json</code> for JSON. Open Graph images are served from
+        <code class="whitespace-nowrap">/og/:login.jpg</code> (PNG/JPG). We enqueue generation automatically if assets are missing.
+      </dd>
+    </div>
+
   </dl>
 </section>

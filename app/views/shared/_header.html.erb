@@ -5,7 +5,7 @@
       <span>TecHub</span>
     <% end %>
 
-    <nav class="hidden items-center gap-4 lg:gap-8 text-sm lg:text-base font-medium text-slate-600 dark:text-slate-300 md:flex">
+    <nav class="hidden lg:flex items-center gap-4 lg:gap-8 text-sm lg:text-base font-medium text-slate-600 dark:text-slate-300">
       <%= link_to directory_path, class: "#{nav_link_class(directory_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
         <i class="fa-solid fa-folder-open text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Directory</span>
@@ -38,7 +38,7 @@
       <!-- Mobile hamburger -->
       <button
         type="button"
-        class="inline-flex md:hidden md:invisible md:opacity-0 md:pointer-events-none h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer"
+        class="inline-flex lg:hidden h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer"
         aria-controls="mobile-menu"
         aria-expanded="false"
         id="mobile-menu-button"
@@ -57,15 +57,15 @@
       </button>
 
       <% if current_user %>
-        <%= button_to "Sign Out", session_path, method: :delete, class: "hidden md:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
+        <%= button_to "Sign Out", session_path, method: :delete, class: "hidden lg:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
       <% else %>
-        <%= link_to "Login", auth_github_path, data: { turbo: false }, class: "hidden md:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
+        <%= link_to "Login", auth_github_path, data: { turbo: false }, class: "hidden lg:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
       <% end %>
     </div>
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" class="md:hidden hidden border-t border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+  <div id="mobile-menu" class="lg:hidden hidden border-t border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
     <div class="mx-auto max-w-6xl px-4 py-3">
       <div class="flex flex-col gap-2 text-slate-700 dark:text-slate-200">
         <%= link_to directory_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800" do %>
@@ -104,8 +104,8 @@
   </div>
 
   <style>
-    @media (min-width: 768px) {
-      /* Ensure hamburger is hidden on md and above regardless of utility order */
+    @media (min-width: 1024px) {
+      /* Ensure hamburger is hidden on lg and above regardless of utility order */
       #mobile-menu-button { display: none !important; }
     }
   </style>
