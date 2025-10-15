@@ -1,0 +1,188 @@
+<%# Stats & Traits Tab - Card stats, buff, weakness, vibe, special moves %>
+<div class="space-y-6">
+  <% card = profile.profile_card %>
+  
+  <% if card.present? %>
+    <%# Primary Stats %>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+      <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+        <svg class="h-6 w-6 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+        </svg>
+        Primary Stats
+      </h3>
+      
+      <div class="grid gap-6 sm:grid-cols-3">
+        <%# Attack %>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <svg class="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+              </svg>
+              Attack
+            </span>
+            <span class="text-2xl font-bold text-yellow-600 dark:text-yellow-400"><%= card.attack %></span>
+          </div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full transition-all duration-500" style="width: <%= card.attack %>%"></div>
+          </div>
+        </div>
+
+        <%# Defense %>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              Defense
+            </span>
+            <span class="text-2xl font-bold text-blue-600 dark:text-blue-400"><%= card.defense %></span>
+          </div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500" style="width: <%= card.defense %>%"></div>
+          </div>
+        </div>
+
+        <%# Speed %>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+              </svg>
+              Speed
+            </span>
+            <span class="text-2xl font-bold text-green-600 dark:text-green-400"><%= card.speed %></span>
+          </div>
+          <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500" style="width: <%= card.speed %>%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Player Traits - Full Width Grid %>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+      <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+        <svg class="h-6 w-6 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+        </svg>
+        Player Traits
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <%# Buff %>
+        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <h4 class="text-xs font-bold text-green-700 dark:text-green-400 mb-2 flex items-center gap-1 uppercase tracking-wide">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            Buff
+          </h4>
+          <p class="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100"><%= card.buff.presence || "—" %></p>
+          <% if card.buff_description.present? %>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1"><%= card.buff_description %></p>
+          <% end %>
+        </div>
+
+        <%# Weakness %>
+        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <h4 class="text-xs font-bold text-red-700 dark:text-red-400 mb-2 flex items-center gap-1 uppercase tracking-wide">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+            </svg>
+            Weakness
+          </h4>
+          <p class="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100"><%= card.weakness.presence || "—" %></p>
+          <% if card.weakness_description.present? %>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1"><%= card.weakness_description %></p>
+          <% end %>
+        </div>
+
+        <%# Vibe %>
+        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <h4 class="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 flex items-center gap-1 uppercase tracking-wide">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"/>
+            </svg>
+            Vibe
+          </h4>
+          <p class="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100"><%= card.vibe.presence || "—" %></p>
+          <% if card.vibe_description.present? %>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1"><%= card.vibe_description %></p>
+          <% end %>
+        </div>
+
+        <%# Special Move %>
+        <div class="border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-lg p-4">
+          <h4 class="text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2 flex items-center gap-1 uppercase tracking-wide">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+            </svg>
+            Special Move
+          </h4>
+          <p class="text-sm sm:text-base font-bold text-indigo-900 dark:text-indigo-100"><%= card.special_move.presence || "—" %></p>
+          <% if card.special_move_description.present? %>
+            <p class="text-xs sm:text-sm text-indigo-700 dark:text-indigo-300 mt-1"><%= card.special_move_description %></p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# Card Attributes & Tags - 2 Column Row %>
+    <div class="grid gap-6 md:grid-cols-2">
+      <%# Card Attributes %>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-5">
+        <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wide">Card Attributes</h4>
+        <div class="space-y-3">
+          <% if card.playing_card.present? %>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Playing Card</span>
+              <span class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= card.playing_card %></span>
+            </div>
+          <% end %>
+          <% if card.spirit_animal.present? %>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Spirit Animal</span>
+              <span class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= card.spirit_animal %></span>
+            </div>
+          <% end %>
+          <% if card.archetype.present? %>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400">Archetype</span>
+              <span class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= card.archetype %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Tags %>
+      <% if Array(card.tags).any? %>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-5">
+          <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wide">Tags</h4>
+          <div class="flex flex-wrap gap-2">
+            <% Array(card.tags).each do |t| %>
+              <span class="inline-flex items-center gap-1 rounded-full bg-indigo-100 dark:bg-indigo-950 px-3 py-1.5 text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                </svg>
+                <%= t %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  <% else %>
+    <%# No Card Data %>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-12 text-center">
+      <svg class="h-16 w-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">No card data available</h3>
+      <p class="text-slate-600 dark:text-slate-400">Card stats and traits haven't been generated yet.</p>
+    </div>
+  <% end %>
+</div>
