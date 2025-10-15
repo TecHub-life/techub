@@ -1,77 +1,106 @@
 <section class="mx-auto max-w-6xl space-y-8 px-4 py-8">
   <!-- Header -->
   <div class="space-y-3">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-sky-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex-1">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-sky-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
           TecHub Directory
         </h1>
-        <p class="mt-2 text-slate-600 dark:text-slate-400">
-          Browse developer trading cards • <%= @total %> profiles
+        <p class="mt-1.5 sm:mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-400">
+          Browse developer trading cards • <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @total %></span> profiles
         </p>
       </div>
-      <a href="<%= motifs_path %>" class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:shadow-xl hover:scale-105">
+      <a href="<%= motifs_path %>" class="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105 whitespace-nowrap">
         <span>🎭</span>
-        <span>Archetypes & Spirits</span>
+        <span class="hidden sm:inline">Archetypes & Spirits</span>
+        <span class="sm:hidden">Archetypes</span>
       </a>
     </div>
   </div>
 
   <!-- Filters -->
-  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <form action="<%= directory_path %>" method="get" class="space-y-4">
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Search</label>
-          <input type="text" name="q" value="<%= h @q %>" placeholder="@login or name" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Tag</label>
-          <input type="text" name="tag" value="<%= h @tag %>" placeholder="e.g., ruby, ai" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Language</label>
-          <input type="text" name="language" value="<%= h @language %>" placeholder="e.g., ruby" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Min Followers</label>
-          <input type="number" name="min_followers" min="0" value="<%= h(@min_followers || '') %>" placeholder="0" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Archetype</label>
-          <select name="archetype" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-            <option value=""></option>
-            <% Motifs::Catalog.archetype_names.each do |name| %>
-              <option value="<%= name %>" <%= 'selected' if @archetype == name %>><%= name %></option>
-            <% end %>
-          </select>
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Spirit Animal</label>
-          <select name="spirit" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-            <option value=""></option>
-            <% Motifs::Catalog.spirit_animal_names.each do |name| %>
-              <option value="<%= name %>" <%= 'selected' if @spirit == name %>><%= name %></option>
-            <% end %>
-          </select>
+  <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <form action="<%= directory_path %>" method="get">
+      <!-- Filter Header -->
+      <div class="border-b border-slate-200 px-3 py-3 sm:px-6 sm:py-4 dark:border-slate-700">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">Filter Profiles</h2>
+          <button type="submit" class="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-sky-600 px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:shadow-lg hover:scale-105 cursor-pointer">
+            <svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Search</span>
+          </button>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-4">
-        <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-          <input type="checkbox" name="hireable" value="1" <%= 'checked' if @hireable %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
-          <span>Hireable</span>
-        </label>
-        <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-          <input type="checkbox" name="active" value="1" <%= 'checked' if @active %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
-          <span>Active (30d)</span>
-        </label>
-        <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-          <input type="checkbox" name="mine" value="1" <%= 'checked' if @mine %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
-          <span>Only mine</span>
-        </label>
-        <button type="submit" class="ml-auto rounded-lg bg-gradient-to-r from-indigo-600 to-sky-600 px-6 py-2 text-sm font-medium text-white shadow-md transition hover:shadow-lg hover:scale-105">
-          Apply Filters
-        </button>
+
+      <div class="p-3 sm:p-6 space-y-4 sm:space-y-6">
+        <!-- Search & Basic Filters -->
+        <div>
+          <h3 class="mb-2 sm:mb-3 text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Search</h3>
+          <div class="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Username or Name</label>
+              <input type="text" name="q" value="<%= h @q %>" placeholder="@login or name" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
+            </div>
+            <div>
+              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Tag</label>
+              <input type="text" name="tag" value="<%= h @tag %>" placeholder="e.g., ruby, ai" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
+            </div>
+            <div>
+              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Language</label>
+              <input type="text" name="language" value="<%= h @language %>" placeholder="e.g., ruby" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
+            </div>
+            <div>
+              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Min Followers</label>
+              <input type="number" name="min_followers" min="0" value="<%= h(@min_followers || '') %>" placeholder="0" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Attributes -->
+        <div>
+          <h3 class="mb-2 sm:mb-3 text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Card Attributes</h3>
+          <div class="grid gap-3 sm:gap-4 sm:grid-cols-2">
+            <div>
+              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Archetype</label>
+              <select name="archetype" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                <option value="">All Archetypes</option>
+                <% Motifs::Catalog.archetype_names.each do |name| %>
+                  <option value="<%= name %>" <%= 'selected' if @archetype == name %>><%= name %></option>
+                <% end %>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Spirit Animal</label>
+              <select name="spirit" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                <option value="">All Spirit Animals</option>
+                <% Motifs::Catalog.spirit_animal_names.each do |name| %>
+                  <option value="<%= name %>" <%= 'selected' if @spirit == name %>><%= name %></option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Filters -->
+        <div>
+          <h3 class="mb-2 sm:mb-3 text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Additional Filters</h3>
+          <div class="flex flex-wrap gap-2 sm:gap-4">
+            <label class="inline-flex items-center gap-1.5 sm:gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer">
+              <input type="checkbox" name="hireable" value="1" <%= 'checked' if @hireable %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
+              <span>Hireable</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 sm:gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer">
+              <input type="checkbox" name="active" value="1" <%= 'checked' if @active %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
+              <span>Active (30d)</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 sm:gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer">
+              <input type="checkbox" name="mine" value="1" <%= 'checked' if @mine %> class="rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600">
+              <span>My Profiles</span>
+            </label>
+          </div>
+        </div>
       </div>
     </form>
   </div>
@@ -90,7 +119,7 @@
     <% end %>
 
     <!-- Cards Grid -->
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       <% @profiles.each do |profile| %>
         <% card = profile.profile_card %>
         <% atk = card&.attack || 70 %>
