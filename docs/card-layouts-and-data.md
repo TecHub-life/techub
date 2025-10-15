@@ -64,40 +64,38 @@ Layout Specs
 - Main Card (HTML view: `GET /cards/:login/card`)
   - size: 1280×720 (16:9)
   - header ratio: 30/70 (banner:content)
-  - background: `ai` → prefer 3×1 > card > 16:9; `default` → `/default-card.jpg`; `color` → solid
+  - layout: 3‑column lower grid → `[avatar gutter | main content | meta chips]`
+  - background: full image (light gradient for legibility)
   - shows
     - name + handle
-    - github URL, location, follower count
-    - tagline (strict precedence below)
-    - trait descriptions: `vibe` + `vibe_description`, `special_move` + `special_move_description`,
-      `buff` + `buff_description`, `weakness` + `weakness_description`
-    - top repo chips (name + small star count)
-    - language chips (lowercase)
-    - card stats chips: ATK/DEF/SPD, playing_card, spirit_animal, archetype
-    - tag chips from ProfileCard.tags (lowercase)
-  - does not show
-    - follower/star/activity bar graphs (removed)
+    - single URL chip (blog preferred; else GitHub) and location
+    - flavor_text (quoted) then short_bio (no truncation)
+    - right column: ⭐ stars • 👥 followers, 📦 repos, ATK/DEF/SPD, spirit_animal, archetype,
+      Vibe/Move/Buff/Weak
+  - tags: centered below grid (all 6)
+  - corners: playing_card marker (full text) top‑right of banner and bottom‑left of card
+  - removed: repo chips, languages, progress bars
 
 - OG Image (HTML view: `GET /cards/:login/og`)
   - size: 1200×630
-  - darker background (lower image opacity + stronger gradient) to prioritize text
+  - background: darker (image opacity ~0.28) + strong gradient
   - shows
     - name + handle
-    - one-line tagline: `flavor_text` → `short_bio` (quoted, line‑clamped)
-    - top repo chips (name + small star count)
-    - card chips: ATK/DEF/SPD (+ optional playing_card/spirit_animal/archetype)
-    - tag chips (lowercase, show all 6)
-    - meta: personal URL (preferred) or GitHub URL; combined "⭐ stars • 👥 followers"
-  - corners: playing card marker from `playing_card` (e.g., `Ace of ♣`) at top‑right and
-    bottom‑left
+    - one‑line tagline: `flavor_text` → `short_bio` (quoted)
+    - top repo chips (name + ★ count)
+    - card chips: ATK/DEF/SPD, spirit_animal, archetype
+    - tag chips (all 6)
+    - meta: URL (blog preferred, else GitHub) + "⭐ stars • 👥 followers"
+  - corners: playing_card (full text) at top‑right and bottom‑left
 
 - Simple (HTML view: `GET /cards/:login/simple`)
   - size: 1280×720 (16:9)
-  - minimal composition; background toned down further
+  - background: image opacity ~0.10 + soft radial vignette (content above overlay)
   - shows
-    - avatar, name, handle
-    - language chips (lowercase)
-    - ATK/DEF/SPD then playing_card/spirit_animal/archetype (when available)
+    - avatar (ring), name, handle
+    - single URL chip (blog preferred; else GitHub)
+    - ATK/DEF/SPD and playing_card/spirit_animal/archetype
+    - tags (all 6), centered
 
 Settings Page Previews
 
@@ -117,9 +115,9 @@ Design Notes & Guidelines
   - repo chips prefer concise repository names over verbose metrics
 
 - Content Priorities
-  - main card: identity + tagline → repo chips → languages → stat/trait chips → tags
-  - og: identity → languages → repo chips → stat/trait chips → tags
-  - simple: identity → languages → stat/trait chips
+  - main card: identity + URLs → flavor_text + short_bio → right‑column chips → tags
+  - og: identity → tagline (1‑line) → repo chips → stat/trait chips → tags
+  - simple: identity + URL → stat/trait chips → tags
 
 Where to Change Things
 
@@ -219,12 +217,11 @@ Tagline and Bios (Exact Rules)
 
 - Display precedence per view
   - Main Card (`/cards/:login/card`)
-    - Use: `ProfileCard.tagline` → `ProfileCard.short_bio` → `Profile.bio`.
-    - Code: `app/views/cards/card.html.erb`:89
-    - Presentation: clamped to 2 lines; keep ≤ ~80 visible chars for balance.
+    - Use: `ProfileCard.short_bio` → `Profile.bio` (no truncation). `flavor_text` is displayed above
+      as a quoted line.
+    - Code: `app/views/cards/card.html.erb`
   - OG (`/cards/:login/og` / `/og/:login.jpg`)
-    - Currently no biography text for clarity; identity + chips only.
-    - If required later: use the same precedence as Main Card but clamp to 1 line.
+    - One‑line: `flavor_text` → `short_bio` (quoted, clamped)
   - Simple (`/cards/:login/simple`)
     - No biography text; minimal identity + chips.
 
