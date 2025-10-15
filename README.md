@@ -261,6 +261,7 @@ docker compose exec -T web ls -lah /rails/tmp/smoke-og.png
 - `docs/status-dashboard.md` shows current implementation status per module.
 - `docs/debugging-guide.md` explains how to pinpoint issues across stages and where artifacts live.
 - `docs/ops-admin.md` documents ops and job administration (access, credentials, and common tasks).
+- `docs/email.md` documents email (Resend) setup, zsh-friendly smoke tests, and ops auth.
 - `docs/definition-of-done.md` shows how we write DoD and examples of “what good looks like”.
 - `docs/eligibility-policy.md` details the default-on eligibility policy (signals, scoring,
   override).

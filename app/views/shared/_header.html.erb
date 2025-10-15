@@ -59,7 +59,7 @@
       <% if current_user %>
         <%= button_to "Sign Out", session_path, method: :delete, class: "hidden md:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
       <% else %>
-        <%= link_to "Login", auth_github_path, class: "hidden md:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
+        <%= link_to "Login", auth_github_path, data: { turbo: false }, class: "hidden md:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
       <% end %>
     </div>
   </div>
@@ -97,7 +97,7 @@
           <%= link_to current_user.login, current_user.github_profile_url, target: "_blank", rel: "noopener", class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
           <%= link_to "Sign Out", session_path, method: :delete, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700" %>
         <% else %>
-          <%= link_to "Login", auth_github_path, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
+          <%= link_to "Login", auth_github_path, data: { turbo: false }, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
         <% end %>
       </div>
     </div>

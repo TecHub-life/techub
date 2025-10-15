@@ -18,6 +18,14 @@ module Profiles
       else
         profile.update!(last_pipeline_status: "failure", last_pipeline_error: result.error.message)
         Notifications::PipelineNotifierService.call(profile: profile, status: "failure", error_message: result.error.message)
+        # Ops alert for failed pipeline runs (env/credentials driven)
+        Notifications::OpsAlertService.call(
+          profile: profile,
+          job: self.class.name,
+          error_message: result.error.message,
+          metadata: result.respond_to?(:metadata) ? result.metadata : nil,
+          duration_ms: ((Time.current - started) * 1000).to_i
+        )
         StructuredLogger.error(message: "pipeline_failed", service: self.class.name, login: login, error: result.error.message, duration_ms: ((Time.current - started) * 1000).to_i)
       end
     end

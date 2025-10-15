@@ -56,6 +56,11 @@ Rails.application.routes.draw do
   # Ops admin (lightweight panel)
   namespace :ops do
     get "/", to: "admin#index", as: :admin
+    post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
+    # Profiles admin actions
+    post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile
+    post "/profiles/:username/retry_ai", to: "profiles#retry_ai", as: :retry_profile_ai
+    delete "/profiles/:username", to: "profiles#destroy", as: :destroy_profile
   end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)

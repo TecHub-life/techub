@@ -1,0 +1,19 @@
+TecHub Job Failure Alert
+
+Job: <%= @job %>
+Profile: @<%= @profile&.login %>
+Duration: <%= (@duration_ms || 0).to_i %> ms
+
+Error:
+<%= @error_message %>
+
+Profile status: <%= @profile&.last_pipeline_status %>
+Profile error: <%= @profile&.last_pipeline_error %>
+
+Links:
+- Profile: <%= (Rails.application.routes.url_helpers.profile_url(username: @profile.login, host: ENV.fetch('APP_HOST', 'http://localhost:3000')) rescue nil) %>
+- Ops Jobs: <%= File.join(ENV.fetch('APP_HOST', 'http://localhost:3000'), '/ops/jobs') %>
+
+Metadata:
+<%= (@metadata.present? ? JSON.pretty_generate(@metadata) : '(none)') %>
+
