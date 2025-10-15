@@ -22,12 +22,12 @@
   <% if choice == 'color' %>
     <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
   <% elsif bg_url %>
-    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-22 pointer-events-none">
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-28 pointer-events-none">
   <% end %>
-  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/60 to-gray-900/88"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/55 to-gray-900/85"></div>
 
   <div class="relative z-10 flex-1 flex items-center justify-center px-12 py-8">
-    <div class="w-full max-w-6xl grid grid-cols-[1fr_auto] items-center gap-12">
+    <div class="w-full max-w-6xl grid grid-cols-[1fr_auto] items-center gap-6">
       <div class="space-y-4 min-w-0">
         <div class="space-y-1">
           <% name = @profile.display_name %>
@@ -112,8 +112,8 @@
         <%# No bio on OG image for clarity %>
       </div>
 
-      <div class="flex-shrink-0">
-        <div class="w-72 h-72 rounded-full p-1 bg-gradient-to-r from-sky-500 to-indigo-500 shadow-2xl">
+      <div class="flex-shrink-0 -ml-8">
+        <div class="w-80 h-80 rounded-full p-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 shadow-2xl">
           <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
             <% if @profile.avatar_url.present? %>
               <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
