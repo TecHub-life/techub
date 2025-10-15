@@ -1,0 +1,122 @@
+<%# Hero Tab - Profile header with avatar, bio, and stats %>
+<div class="space-y-6">
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center gap-4">
+        <img src="<%= profile.avatar_url %>" alt="<%= profile.login %>" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full ring-4 ring-slate-200 dark:ring-slate-700">
+        <div class="min-w-0 flex-1">
+          <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400"><%= profile.login %></p>
+          <h1 class="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-sky-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent leading-tight">
+            <%= profile.display_name %>
+          </h1>
+          <p class="text-sky-600 dark:text-sky-400 font-medium">@<%= profile.login %></p>
+        </div>
+      </div>
+
+      <% about = profile.profile_card&.long_bio.presence || profile.profile_card&.short_bio.presence || profile.bio %>
+      <% if about.present? %>
+        <% if about.length > 200 %>
+          <%# Long bio - expandable on mobile, full on desktop %>
+          <div class="text-slate-700 dark:text-slate-300 leading-relaxed text-sm md:text-base">
+            <%# Mobile: truncated with Read More %>
+            <div class="md:hidden" x-data="{ expanded: false }">
+              <div x-show="!expanded">
+                <span><%= about.truncate(200) %></span>
+                <button @click="expanded = true" type="button" class="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline">
+                  Read more
+                </button>
+              </div>
+              <div x-show="expanded" style="display: none;">
+                <span><%= about %></span>
+                <button @click="expanded = false" type="button" class="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline">
+                  Show less
+                </button>
+              </div>
+            </div>
+            <%# Desktop: always full %>
+            <div class="hidden md:block"><%= about %></div>
+          </div>
+        <% else %>
+          <%# Short bio - always show full %>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed text-base md:text-lg"><%= about %></p>
+        <% end %>
+      <% end %>
+
+      <%# Quick Info Grid %>
+      <div class="grid gap-2 md:flex md:flex-wrap md:justify-around w-full md:w-full text-sm md:text-base  text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 mt-2">
+        <% if profile.location.present? %>
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+            </svg>
+            <span><%= profile.location %></span>
+          </div>
+        <% end %>
+        <% if profile.company.present? %>
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
+            </svg>
+            <span><%= profile.company %></span>
+          </div>
+        <% end %>
+        <% if profile.email.present? %>
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+            </svg>
+            <a href="mailto:<%= profile.email %>" class="text-blue-600 dark:text-blue-400 hover:underline"><%= profile.email %></a>
+          </div>
+        <% end %>
+        <% if profile.blog.present? %>
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+            </svg>
+            <a href="<%= profile.blog %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener"><%= profile.blog %></a>
+          </div>
+        <% end %>
+        <% if profile.twitter_username.present? %>
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+            </svg>
+            <a href="https://twitter.com/<%= profile.twitter_username %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener">@<%= profile.twitter_username %></a>
+          </div>
+        <% end %>
+        <% if profile.hireable %>
+          <div class="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold">
+            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.951 22.951 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/>
+              <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/>
+            </svg>
+            <span>Available for hire</span>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Stats Grid %>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+        <a href="https://github.com/<%= profile.login %>?tab=followers" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+          <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.followers.to_i %></p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Followers</p>
+        </a>
+        <a href="https://github.com/<%= profile.login %>?tab=following" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+          <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.following.to_i %></p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Following</p>
+        </a>
+        <a href="https://github.com/<%= profile.login %>?tab=repositories" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+          <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.public_repos.to_i %></p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Repos</p>
+        </a>
+        <% if profile.public_gists && profile.public_gists > 0 %>
+          <a href="https://gist.github.com/<%= profile.login %>" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+            <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.public_gists %></p>
+            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Gists</p>
+          </a>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

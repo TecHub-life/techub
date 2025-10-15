@@ -1,0 +1,147 @@
+<%# Overview Tab - Flavor text, languages, social, organizations %>
+<div class="space-y-6">
+  <% card = profile.profile_card %>
+  
+  <%# Flavor Text Banner %>
+  <% if card&.flavor_text.present? || card&.short_bio.present? %>
+    <div class="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-gradient-to-r from-sky-950 via-indigo-900 to-cyan-900 p-5 text-white shadow-md text-center">
+      <p class="text-base sm:text-lg md:text-xl font-medium italic mb-4">"<%= card.flavor_text.presence || card.short_bio %>"</p>
+      
+      <%# Primary Badges Group %>
+      <div class="flex flex-wrap gap-2 justify-center mb-3">
+        <% if card&.attack.present? %>
+          <span class="px-2.5 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-amber-300 font-medium">⚔️ <%= card.attack %></span>
+        <% end %>
+        <% if card&.defense.present? %>
+          <span class="px-2.5 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-blue-300 font-medium">🛡️ <%= card.defense %></span>
+        <% end %>
+        <% if card&.speed.present? %>
+          <span class="px-2.5 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-green-300 font-medium">⚡ <%= card.speed %></span>
+        <% end %>
+        <% if card&.playing_card.present? %>
+          <span class="px-2.5 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-sky-200">🃏 <%= card.playing_card %></span>
+        <% end %>
+        <% if card&.spirit_animal.present? %>
+          <span class="px-2.5 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-sky-200">🦅 <%= card.spirit_animal %></span>
+        <% end %>
+        <% if card&.archetype.present? %>
+          <span class="px-2.5 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-sky-200">⚡ <%= card.archetype %></span>
+        <% end %>
+      </div>
+
+      <%# Hashtags Group %>
+      <% if Array(card&.tags).any? %>
+        <div class="flex flex-wrap gap-2 justify-center">
+          <% Array(card.tags).first(6).each do |t| %>
+            <span class="px-2.5 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-indigo-200">#<%= t %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# Grid Layout - Languages, Social, Organizations %>
+  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <%# Languages %>
+    <% if languages.present? && languages.any? %>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 md:p-6">
+        <h3 class="text-base md:text-lg font-bold text-slate-900 dark:text-slate-100 mb-3 md:mb-4 flex items-center gap-2">
+          <svg class="h-4 w-4 md:h-5 md:w-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Top Languages
+        </h3>
+        <div class="space-y-2 md:space-y-3">
+          <% languages.first(5).each do |language| %>
+            <div class="flex justify-between items-center">
+              <span class="text-sm md:text-base font-medium text-slate-700 dark:text-slate-300"><%= language.name %></span>
+              <span class="text-sm md:text-base font-bold text-indigo-600 dark:text-indigo-400"><%= language.count %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Social Accounts %>
+    <% if social_accounts.present? && social_accounts.any? %>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 md:p-6">
+        <h3 class="text-base md:text-lg font-bold text-slate-900 dark:text-slate-100 mb-3 md:mb-4 flex items-center gap-2">
+          <svg class="h-4 w-4 md:h-5 md:w-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+            <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+          </svg>
+          Social Accounts
+        </h3>
+        <div class="space-y-2 md:space-y-3">
+          <% social_accounts.each do |account| %>
+            <a href="<%= account.url %>" target="_blank" rel="noopener" class="group flex items-center justify-between gap-2 md:gap-3 p-2 md:p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+              <div class="min-w-0">
+                <p class="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                  <%= account.provider.capitalize %>
+                </p>
+                <% if account.display_name.present? %>
+                  <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                    <%= account.display_name %>
+                  </p>
+                <% end %>
+              </div>
+              <svg class="h-4 w-4 md:h-5 md:w-5 text-slate-400 group-hover:text-indigo-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Organizations %>
+    <% if organizations.present? && organizations.any? %>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 md:p-6">
+        <h3 class="text-base md:text-lg font-bold text-slate-900 dark:text-slate-100 mb-3 md:mb-4 flex items-center gap-2">
+          <svg class="h-4 w-4 md:h-5 md:w-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+          Organizations
+        </h3>
+        <div class="space-y-2 md:space-y-3">
+          <% organizations.each do |org| %>
+            <a href="<%= org.html_url %>" target="_blank" rel="noopener" class="flex items-start gap-2 md:gap-3 group">
+              <img src="<%= org.avatar_url %>" alt="<%= org.login %>" class="w-8 h-8 md:w-10 md:h-10 rounded ring-2 ring-slate-200 dark:ring-slate-700 group-hover:ring-indigo-500 transition flex-shrink-0">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm md:text-base font-medium text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition break-words">
+                  <%= org.name || org.login %>
+                </p>
+                <% if org.description.present? %>
+                  <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400 break-words">
+                    <%= org.description %>
+                  </p>
+                <% end %>
+              </div>
+            </a>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Owner Actions %>
+  <% if current_user && (current_user.profile_ownerships.exists?(profile_id: profile.id) rescue false) %>
+    <div class="bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-950/20 dark:to-sky-950/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 text-center">Owner Actions</h3>
+      <div class="flex flex-wrap gap-2 justify-center">
+        <%= button_to regenerate_my_profile_path(username: profile.login), method: :post, class: "inline-flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-600 transition" do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span>Re-capture Screenshots</span>
+        <% end %>
+        <%= button_to regenerate_my_profile_ai_path(username: profile.login), method: :post, class: "inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition" do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+          </svg>
+          <span>Regenerate AI Artwork</span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

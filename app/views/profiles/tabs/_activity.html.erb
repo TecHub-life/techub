@@ -1,0 +1,143 @@
+<%# Activity Tab - Recent activity and active repositories %>
+<div class="space-y-6">
+  <%# Recent Activity Summary %>
+  <% if recent_activity.present? %>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+      <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+        <svg class="h-6 w-6 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+        </svg>
+        Recent Activity
+      </h3>
+      
+      <%# Activity Stats %>
+      <div class="grid gap-4 sm:grid-cols-3 mb-6">
+        <% if recent_activity.last_active.present? %>
+          <div class="rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 p-4">
+            <p class="text-xs font-medium text-green-700 dark:text-green-300 mb-1">Last Active</p>
+            <p class="text-lg font-bold text-green-900 dark:text-green-100">
+              <%= recent_activity.last_active.strftime('%b %d, %Y') %>
+            </p>
+          </div>
+        <% end %>
+        
+        <% if recent_activity.total_events && recent_activity.total_events > 0 %>
+          <div class="rounded-lg bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-indigo-950/20 dark:to-sky-950/20 border border-indigo-200 dark:border-indigo-800 p-4">
+            <p class="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1">Total Events (90 days)</p>
+            <p class="text-lg font-bold text-indigo-900 dark:text-indigo-100">
+              <%= recent_activity.total_events %>
+            </p>
+          </div>
+        <% end %>
+        
+        <% if recent_activity.event_breakdown.present? %>
+          <div class="rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 p-4">
+            <p class="text-xs font-medium text-purple-700 dark:text-purple-300 mb-1">Event Types</p>
+            <p class="text-lg font-bold text-purple-900 dark:text-purple-100">
+              <%= recent_activity.event_breakdown.keys.count %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Event Breakdown %>
+      <% if recent_activity.event_breakdown.present? %>
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-4">
+          <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wide">Event Breakdown</h4>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <% recent_activity.event_breakdown.sort_by { |k, v| -v }.first(9).each do |event_type, count| %>
+              <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <span class="text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <% case event_type %>
+                  <% when /Push/ %>
+                    <svg class="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd"/>
+                    </svg>
+                  <% when /Pull/ %>
+                    <svg class="h-4 w-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                  <% when /Issue/ %>
+                    <svg class="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                  <% when /Create/ %>
+                    <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
+                    </svg>
+                  <% else %>
+                    <svg class="h-4 w-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                  <% end %>
+                  <%= event_type.gsub('Event', '') %>
+                </span>
+                <span class="text-sm font-bold text-slate-900 dark:text-slate-100"><%= count %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# Active Repositories %>
+  <% if active_repositories.present? && active_repositories.any? %>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+      <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+        <svg class="h-6 w-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+        </svg>
+        Active Repositories
+      </h3>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Repositories with recent activity</p>
+      
+      <div class="space-y-3">
+        <% active_repositories.each do |repo| %>
+          <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-green-300 dark:hover:border-green-700 transition">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <a href="<%= repo.html_url %>" target="_blank" rel="noopener" class="font-semibold text-slate-900 dark:text-slate-100 hover:text-green-600 dark:hover:text-green-400 transition flex items-center gap-2">
+                  <svg class="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                  </svg>
+                  <span class="truncate"><%= repo.full_name %></span>
+                </a>
+                <% if repo.description.present? %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                    <%= repo.description.truncate(100) %>
+                  </p>
+                <% end %>
+                <div class="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span class="flex items-center gap-1">
+                    <svg class="h-3.5 w-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    <%= repo.stargazers_count %>
+                  </span>
+                  <% if repo.language.present? %>
+                    <span class="flex items-center gap-1">
+                      <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                      <%= repo.language %>
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Empty State %>
+  <% if (recent_activity.blank? || (recent_activity.total_events.to_i == 0)) && (active_repositories.blank? || active_repositories.empty?) %>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-12 text-center">
+      <svg class="h-16 w-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">No recent activity</h3>
+      <p class="text-slate-600 dark:text-slate-400">No public activity recorded in the last 90 days.</p>
+    </div>
+  <% end %>
+</div>

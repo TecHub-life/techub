@@ -73,3 +73,26 @@ html {
 .animate-pulse-slow {
   animation: pulseSlow 4s ease-in-out infinite;
 }
+
+/* Alpine.js x-cloak - hide elements until Alpine is ready */
+[x-cloak] {
+  display: none !important;
+}
+
+/* Scrollbar hide utility for horizontal tab navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Line clamp utilities for text truncation */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
