@@ -38,7 +38,8 @@ html {
 }
 
 @keyframes gradient {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -47,7 +48,8 @@ html {
 }
 
 @keyframes pulseSlow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
   }
   50% {
