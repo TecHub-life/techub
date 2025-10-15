@@ -22,9 +22,9 @@
   <% if choice == 'color' %>
     <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
   <% elsif bg_url %>
-    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-30 pointer-events-none">
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-22 pointer-events-none">
   <% end %>
-  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/55 to-gray-900/85"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-gray-900/60 to-gray-900/88"></div>
 
   <div class="relative z-10 flex-1 flex items-center justify-center px-12 py-8">
     <div class="w-full max-w-6xl grid grid-cols-[1fr_auto] items-center gap-12">
@@ -38,30 +38,43 @@
           <p class="<%= handle_size %> font-medium text-sky-400">@<%= handle %></p>
         </div>
 
+        <%# One-line tagline/short bio for OG (quoted) %>
+        <% card = @profile.profile_card %>
+        <% og_tagline = card&.flavor_text.presence || card&.short_bio.presence %>
+        <% if og_tagline.present? %>
+          <p class="text-gray-200 text-base leading-tight line-clamp-1">"<%= og_tagline %>"</p>
+        <% end %>
+
         <div class="flex gap-3 text-gray-300 text-base flex-wrap">
-          <% if @profile.location.present? %>
-            <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">📍 <%= @profile.location %></span>
-          <% end %>
           <% followers = @profile.followers.to_i %>
           <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
-          <% orgs = @profile.profile_organizations.size %>
-          <% repos = @profile.public_repos.to_i %>
-          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">⭐ <%= stars %> stars</span>
-          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">👥 <%= followers %> followers</span>
-          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">🏢 <%= orgs %> orgs</span>
-          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">📦 <%= repos %> repos</span>
+          <% # Prefer personal URL; else GitHub URL. Keep to two chips to avoid wrapping. %>
+          <% if @profile.blog.present? %>
+            <% nice_url = @profile.blog.to_s.gsub(%r{https?://}, '').gsub(/^www\./, '') %>
+            <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">🔗 <%= nice_url %></span>
+          <% else %>
+            <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">github.com/<%= handle %></span>
+          <% end %>
+          <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70">⭐ <%= stars %> • 👥 <%= followers %></span>
         </div>
 
-        <% langs = @profile.top_languages(5).map(&:name) %>
-        <% if langs.any? %>
-          <div class="flex flex-wrap gap-3 py-2">
-            <% langs.each do |lang| %>
-              <span class="bg-gray-800/80 text-base font-medium text-sky-300 px-4 py-2 rounded-full border border-gray-700/50">#<%= lang %></span>
+        <%# Languages removed from OG to reduce duplication and save space %>
+
+        <% # Notable repositories — show name + small star count; styled distinct from other chips %>
+        <% repos = Array(@profile.top_repositories).first(3).map { |r| [r.name.to_s, r.stargazers_count.to_i] } %>
+        <% if repos.any? %>
+          <div class="-mt-1 mb-1 flex flex-wrap items-center gap-2">
+            <% repos.each do |(rn, stars)| %>
+              <span class="px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-700 text-violet-200 max-w-[260px] truncate">
+                <%= rn %>
+                <% if stars > 0 %>
+                  <span class="ml-1 text-xs text-amber-300">★ <%= stars %></span>
+                <% end %>
+              </span>
             <% end %>
           </div>
         <% end %>
 
-        <% card = @profile.profile_card %>
         <% if card %>
           <div class="flex flex-wrap gap-3 py-1">
             <% if card.attack.present? %>
@@ -73,16 +86,27 @@
             <% if card.speed.present? %>
               <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-green-300 font-semibold">SPD <%= card.speed %></span>
             <% end %>
-            <% if card.playing_card.present? %>
-              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-sky-300 font-medium"><%= card.playing_card %></span>
-            <% end %>
+            <%# playing_card chip removed; shown via corner markers instead %>
             <% if card.spirit_animal.present? %>
-              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-sky-300 font-medium"><%= card.spirit_animal %></span>
+              <span class="px-3 py-1.5 rounded-full bg-emerald-900/40 border border-emerald-700/70 text-emerald-200 font-semibold">🐾 <%= card.spirit_animal %></span>
             <% end %>
             <% if card.archetype.present? %>
-              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-sky-300 font-medium"><%= card.archetype %></span>
+              <span class="px-3 py-1.5 rounded-full bg-fuchsia-900/40 border border-fuchsia-700/70 text-fuchsia-200 font-semibold">⚡ <%= card.archetype %></span>
             <% end %>
           </div>
+          <% if Array(card.tags).any? %>
+            <div class="flex flex-wrap gap-2 py-1">
+              <% Array(card.tags).first(6).each do |t| %>
+                <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-indigo-300 font-medium">#<%= t.to_s.downcase %></span>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <%# Corner playing card markers (use full text, e.g., "Ace of ♣") %>
+        <% if card && card.playing_card.present? %>
+          <div class="absolute top-3 right-4 text-white/80 text-base font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
+          <div class="absolute bottom-3 left-4 text-white/80 text-base font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
         <% end %>
 
         <%# No bio on OG image for clarity %>

@@ -23,17 +23,17 @@
 <% elsif choice == 'default' %>
   <% bg_url = '/default-card.jpg' %>
 <% end %>
-<div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-[240px_480px]">
-  <div class="relative row-start-1 h-[240px] overflow-hidden z-10">
+<div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-[216px_504px]">
+  <div class="relative row-start-1 h-[216px] overflow-hidden z-10">
     <% if choice == 'color' %>
       <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
     <% elsif bg_url %>
-      <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-60">
+      <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-40">
     <% end %>
-    <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/40"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/50"></div>
   </div>
 
-  <div class="absolute left-12 top-[240px] -translate-y-14 transform z-40">
+  <div class="absolute left-12 top-[216px] -translate-y-12 transform z-40">
     <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-cyan-500 shadow-[0_10px_40px_rgba(59,130,246,0.45)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
         <% if @profile.avatar_url.present? %>
@@ -56,10 +56,31 @@
           <span class="text-2xl font-medium text-sky-400">@<%= handle %></span>
         </div>
 
+        <% # Notable repositories — emphasize actual work; include small star counts %>
+        <% repos = Array(@profile.top_repositories).first(3).map { |r| [r.name.to_s, r.stargazers_count.to_i] } %>
+        <% if repos.any? %>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <% repos.each do |(rn, stars)| %>
+              <span class="px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-700 text-violet-200 max-w-[260px] truncate">
+                <%= rn %>
+                <% if stars > 0 %>
+                  <span class="ml-1 text-xs text-amber-300">★ <%= stars %></span>
+                <% end %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+
         <div class="mt-2 flex items-center gap-2 text-gray-200 whitespace-nowrap overflow-hidden leading-none">
           <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md min-w-0">
             <span class="font-medium truncate max-w-[280px] align-middle">github.com/<%= handle %></span>
           </div>
+          <% if @profile.blog.present? %>
+            <% nice_url = @profile.blog.to_s.gsub(%r{https?://}, '').gsub(/^www\./, '') %>
+            <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md min-w-0">
+              <span class="font-medium truncate max-w-[280px] align-middle">🔗 <%= nice_url %></span>
+            </div>
+          <% end %>
           <% if @profile.location.present? %>
             <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md min-w-0">
               <span class="font-medium truncate max-w-[200px] align-middle"><%= @profile.location %></span>
@@ -71,9 +92,19 @@
         </div>
 
         <% card = @profile.profile_card %>
-        <% short_bio = card&.short_bio.presence || @profile.bio %>
+        <% short_bio = card&.tagline.presence || card&.short_bio.presence || @profile.bio %>
         <% if short_bio.present? %>
           <p class="mt-3 text-gray-200 text-lg leading-relaxed line-clamp-2"><%= short_bio %></p>
+        <% end %>
+
+        <%# Languages %>
+        <% langs = @profile.top_languages(5).map { |l| l.name.to_s.downcase } %>
+        <% if langs.any? %>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <% langs.each do |lang| %>
+              <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-sky-300 font-medium">#<%= lang %></span>
+            <% end %>
+          </div>
         <% end %>
 
         <% if card %>
@@ -87,63 +118,61 @@
             <% if card.speed.present? %>
               <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-green-300 font-semibold">Speed: <%= card.speed %></span>
             <% end %>
-            <% if card.playing_card.present? %>
-              <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium"><%= card.playing_card %></span>
-            <% end %>
+            <%# playing_card chip removed; shown via corner markers instead %>
             <% if card.spirit_animal.present? %>
-              <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium"><%= card.spirit_animal %></span>
+              <span class="px-2.5 py-1 rounded bg-emerald-900/40 border border-emerald-700 text-emerald-200 font-semibold">🐾 <%= card.spirit_animal %></span>
             <% end %>
             <% if card.archetype.present? %>
-              <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium"><%= card.archetype %></span>
+              <span class="px-2.5 py-1 rounded bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-200 font-semibold">⚡ <%= card.archetype %></span>
             <% end %>
           </div>
+          <% if Array(card.tags).any? %>
+            <div class="mt-2 flex flex-wrap gap-2">
+              <% Array(card.tags).first(6).each do |t| %>
+                <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-indigo-300 font-medium">#<%= t.to_s.downcase %></span>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%# Trait descriptions: vibe, special move, buff, weakness %>
+          <% if card.vibe_description.present? || card.special_move_description.present? || card.buff_description.present? || card.weakness_description.present? %>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+              <% if card.vibe_description.present? || card.vibe.present? %>
+                <div class="rounded-lg bg-gray-800/70 border border-gray-700 p-3">
+                  <div class="text-indigo-300 font-semibold mb-1">Vibe<%= card.vibe.present? ? ':' : '' %> <span class="text-gray-200 font-medium"><%= card.vibe %></span></div>
+                  <p class="text-gray-300 leading-snug line-clamp-2"><%= card.vibe_description %></p>
+                </div>
+              <% end %>
+              <% if card.special_move_description.present? || card.special_move.present? %>
+                <div class="rounded-lg bg-gray-800/70 border border-gray-700 p-3">
+                  <div class="text-sky-300 font-semibold mb-1">Special Move<%= card.special_move.present? ? ':' : '' %> <span class="text-gray-200 font-medium"><%= card.special_move %></span></div>
+                  <p class="text-gray-300 leading-snug line-clamp-2"><%= card.special_move_description %></p>
+                </div>
+              <% end %>
+              <% if card.buff_description.present? || card.buff.present? %>
+                <div class="rounded-lg bg-gray-800/70 border border-gray-700 p-3">
+                  <div class="text-emerald-300 font-semibold mb-1">Buff<%= card.buff.present? ? ':' : '' %> <span class="text-gray-200 font-medium"><%= card.buff %></span></div>
+                  <p class="text-gray-300 leading-snug line-clamp-2"><%= card.buff_description %></p>
+                </div>
+              <% end %>
+              <% if card.weakness_description.present? || card.weakness.present? %>
+                <div class="rounded-lg bg-gray-800/70 border border-gray-700 p-3">
+                  <div class="text-rose-300 font-semibold mb-1">Weakness<%= card.weakness.present? ? ':' : '' %> <span class="text-gray-200 font-medium"><%= card.weakness %></span></div>
+                  <p class="text-gray-300 leading-snug line-clamp-2"><%= card.weakness_description %></p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
         <% end %>
       </div>
-
-      <% followers = @profile.followers.to_i %>
-      <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
-      <% events = @profile.profile_activity&.total_events.to_i %>
-      <% # Normalize into 0-100 bands for bar widths %>
-      <% followers_pct = [[(followers / 5000.0 * 100).round, 0].max, 100].min %>
-      <% stars_pct = [[(stars / 2000.0 * 100).round, 0].max, 100].min %>
-      <% activity_pct = [[(events / 200.0 * 100).round, 0].max, 100].min %>
-      <div class="mt-2 pl-[200px] pr-8">
-        <div class="grid grid-cols-3 gap-6 max-w-[760px] mx-auto w-full">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm text-gray-300">
-              <span class="flex items-center gap-2">Followers</span>
-              <span class="font-semibold text-yellow-300"><%= followers %></span>
-            </div>
-            <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-              <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-400" style="width: <%= followers_pct %>%"></div>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm text-gray-300">
-              <span class="flex items-center gap-2">Stars (Top Repos)</span>
-              <span class="font-semibold text-blue-300"><%= stars %></span>
-            </div>
-            <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-              <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400" style="width: <%= stars_pct %>%"></div>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm text-gray-300">
-              <span class="flex items-center gap-2">Activity (90d)</span>
-              <span class="font-semibold text-green-300"><%= events %></span>
-            </div>
-            <div class="h-2.5 w-full bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-              <div class="h-full bg-gradient-to-r from-emerald-500 to-green-400" style="width: <%= activity_pct %>%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-2 pr-4 flex items-center justify-end text-gray-400">
-          <div class="px-2.5 py-1 bg-gray-800/80 border border-gray-700 rounded-full flex items-center gap-1.5 shadow-md">
-            <span class="text-xs font-semibold tracking-wide">TecHub</span>
-          </div>
-        </div>
-      </div>
+      <div class="mt-2 pl-[200px] pr-8"></div>
     </div>
   </div>
 </div>
+
+<%# Corner playing card markers on main card (use full text) %>
+<% card = @profile.profile_card %>
+<% if card && card.playing_card.present? %>
+  <div class="absolute top-3 right-4 text-white/80 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
+  <div class="absolute bottom-3 left-4 text-white/80 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
+<% end %>

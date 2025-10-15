@@ -22,7 +22,7 @@
 
 <div class="w-[1280px] h-[720px] overflow-hidden relative flex items-center justify-center" style="background:<%= choice == 'color' ? color_hex : '#0b1220' %>">
   <% if choice != 'color' && bg_url %>
-    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-25">
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-20">
   <% end %>
   <div class="text-center space-y-4">
     <div class="mx-auto w-40 h-40 rounded-full overflow-hidden bg-gray-800">
@@ -34,7 +34,7 @@
     </div>
     <h1 class="text-5xl font-bold text-white"><%= @profile.display_name %></h1>
     <p class="text-xl text-sky-400">@<%= @profile.login %></p>
-    <% langs = @profile.top_languages(4).map(&:name) %>
+    <% langs = @profile.top_languages(4).map { |l| l.name.to_s.downcase } %>
     <% if langs.any? %>
       <div class="flex items-center justify-center gap-2 flex-wrap">
         <% langs.each do |lang| %>

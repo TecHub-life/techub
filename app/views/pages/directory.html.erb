@@ -216,7 +216,7 @@
               <% if card && Array(card.tags).any? %>
                 <div class="flex flex-wrap gap-1.5">
                   <% Array(card.tags).first(3).each do |t| %>
-                    <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">#<%= t %></span>
+                    <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">#<%= t.to_s.downcase %></span>
                   <% end %>
                   <% if Array(card.tags).length > 3 %>
                     <span class="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">+<%= Array(card.tags).length - 3 %></span>

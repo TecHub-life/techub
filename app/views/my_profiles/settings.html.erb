@@ -127,34 +127,87 @@
         </div>
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">Card</h3>
-          <% if @asset_card&.public_url.present? %>
-            <a href="<%= @asset_card.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">View</a>
-          <% else %>
-            <a href="<%= card_preview_path(login: @profile.login) %>" target="_blank" class="text-blue-600 dark:text-blue-400">Preview</a>
-          <% end %>
-          <div class="mt-3">
-            <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <input type="hidden" name="kind" value="card">
-              <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
-              <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
-            </form>
+          <div class="flex items-start gap-3">
+            <div class="shrink-0">
+              <div class="relative w-[320px] h-[180px] overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
+                <iframe src="<%= card_preview_path(login: @profile.login) %>" title="Card preview" style="width:1280px; height:720px; transform:scale(0.25); transform-origin: top left; border:0;" loading="lazy"></iframe>
+              </div>
+              <div class="mt-2">
+                <a href="<%= card_preview_path(login: @profile.login) %>" target="_blank" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Open full view</a>
+              </div>
+            </div>
+            <div class="flex-1">
+              <% if @asset_card&.public_url.present? %>
+                <a href="<%= @asset_card.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">Custom image</a>
+              <% else %>
+                <span class="text-slate-600 dark:text-slate-300 text-sm">Using generated background</span>
+              <% end %>
+              <div class="mt-3">
+                <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <input type="hidden" name="kind" value="card">
+                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
+                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">OG</h3>
+          <div class="flex items-start gap-3">
+            <div class="shrink-0">
+              <div class="relative w-[300px] h-[158px] overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
+                <iframe src="<%= card_og_path(login: @profile.login) %>" title="OG preview" style="width:1200px; height:630px; transform:scale(0.25); transform-origin: top left; border:0;" loading="lazy"></iframe>
+              </div>
+              <div class="mt-2">
+                <a href="<%= card_og_path(login: @profile.login) %>" target="_blank" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Open full view</a>
+              </div>
+            </div>
+            <div class="flex-1">
+              <% if @asset_og&.public_url.present? %>
+                <a href="<%= @asset_og.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">Custom image</a>
+              <% else %>
+                <span class="text-slate-600 dark:text-slate-300 text-sm">Using generated background</span>
+              <% end %>
+              <div class="mt-3">
+                <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <input type="hidden" name="kind" value="og">
+                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
+                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">Simple</h3>
-          <% if @asset_simple&.public_url.present? %>
-            <a href="<%= @asset_simple.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">View</a>
-          <% else %>
-            <a href="<%= card_simple_path(login: @profile.login) %>" target="_blank" class="text-blue-600 dark:text-blue-400">Preview</a>
-          <% end %>
-          <div class="mt-3">
-            <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <input type="hidden" name="kind" value="simple">
-              <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
-              <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
-            </form>
+          <div class="flex items-start gap-3">
+            <div class="shrink-0">
+              <div class="relative w-[320px] h-[180px] overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
+                <iframe src="<%= card_simple_path(login: @profile.login) %>" title="Simple preview" style="width:1280px; height:720px; transform:scale(0.25); transform-origin: top left; border:0;" loading="lazy"></iframe>
+              </div>
+              <div class="mt-2">
+                <a href="<%= card_simple_path(login: @profile.login) %>" target="_blank" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Open full view</a>
+              </div>
+            </div>
+            <div class="flex-1">
+              <% if @asset_simple&.public_url.present? %>
+                <a href="<%= @asset_simple.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">Custom image</a>
+              <% else %>
+                <span class="text-slate-600 dark:text-slate-300 text-sm">Using generated background</span>
+              <% end %>
+              <div class="mt-3">
+                <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <input type="hidden" name="kind" value="simple">
+                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
+                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
