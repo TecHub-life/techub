@@ -22,60 +22,72 @@
 
 <div class="w-[1280px] h-[720px] overflow-hidden relative flex items-center justify-center" style="background:<%= choice == 'color' ? color_hex : '#0b1220' %>">
   <% if choice != 'color' && bg_url %>
-    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-25">
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-15 z-0">
+    <div class="absolute inset-0 z-10 pointer-events-none" style="background: radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.12) 70%, rgba(0,0,0,0.00) 100%);"></div>
   <% end %>
-  <div class="text-center space-y-4">
-    <div class="mx-auto w-40 h-40 rounded-full overflow-hidden bg-gray-800">
-      <% if @profile.avatar_url.present? %>
-        <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover">
-      <% else %>
-        <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
-      <% end %>
+  <div class="relative z-20 text-center space-y-4">
+    <%# Avatar with subtle ring %>
+    <div class="relative z-20 mx-auto w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-cyan-500 shadow-[0_8px_28px_rgba(59,130,246,0.35)]">
+      <div class="w-full h-full rounded-full overflow-hidden bg-gray-900">
+        <% if @profile.avatar_url.present? %>
+          <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover">
+        <% else %>
+          <div class="w-full h-full bg-gray-800 flex items-center justify-center text-gray-400">?</div>
+        <% end %>
+      </div>
     </div>
     <h1 class="text-5xl font-bold text-white"><%= @profile.display_name %></h1>
-    <p class="text-xl text-sky-400">@<%= @profile.login %></p>
-    <% langs = @profile.top_languages(4).map(&:name) %>
-    <% if langs.any? %>
-      <div class="flex items-center justify-center gap-2 flex-wrap">
-        <% langs.each do |lang| %>
-          <span class="text-sm px-3 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-sky-300">#<%= lang %></span>
-        <% end %>
-      </div>
-    <% end %>
+    <p class="text-xl text-sky-300">@<%= @profile.login %></p>
+
+    <%# URL chip (blog preferred; else GitHub) – match OG dark-chip style for consistency %>
+    <div class="flex items-center justify-center gap-2">
+      <% if @profile.blog.present? %>
+        <% nice_url = @profile.blog.to_s.gsub(%r{https?://}, '').gsub(/^www\./, '') %>
+        <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-slate-100 shadow-sm backdrop-blur-[2px]">🔗 <%= nice_url %></span>
+      <% else %>
+        <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-slate-100 shadow-sm backdrop-blur-[2px]">github.com/<%= @profile.login %></span>
+      <% end %>
+    </div>
+
     <% card = @profile.profile_card %>
     <% if card %>
-      <div class="flex items-center justify-center gap-2 flex-wrap mt-2">
+      <%# Stats row %>
+      <div class="flex items-center justify-center gap-2 flex-wrap mt-3">
         <% if card.attack.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-amber-300 font-semibold">ATK <%= card.attack %></span>
+          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/85 border border-gray-700 text-amber-300 font-semibold shadow-sm backdrop-blur-[2px]">ATK <%= card.attack %></span>
         <% end %>
         <% if card.defense.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-blue-300 font-semibold">DEF <%= card.defense %></span>
+          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/85 border border-gray-700 text-blue-300 font-semibold shadow-sm backdrop-blur-[2px]">DEF <%= card.defense %></span>
         <% end %>
         <% if card.speed.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-green-300 font-semibold">SPD <%= card.speed %></span>
+          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/85 border border-gray-700 text-green-300 font-semibold shadow-sm backdrop-blur-[2px]">SPD <%= card.speed %></span>
         <% end %>
       </div>
+
+      <%# Traits row %>
       <div class="flex items-center justify-center gap-2 flex-wrap mt-2">
         <% if card.playing_card.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium"><%= card.playing_card %></span>
+          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-sky-300 font-medium shadow-sm backdrop-blur-[2px]"><%= card.playing_card %></span>
         <% end %>
         <% if card.spirit_animal.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium">🐾 <%= card.spirit_animal %></span>
+          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-emerald-200 font-medium shadow-sm backdrop-blur-[2px]">🐾 <%= card.spirit_animal %></span>
         <% end %>
         <% if card.archetype.present? %>
-          <span class="text-sm px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-sky-300 font-medium">⚡ <%= card.archetype %></span>
+          <span class="text-sm px-3 py-1.5 rounded-full bg-gray-900/80 border border-gray-700 text-fuchsia-200 font-medium shadow-sm backdrop-blur-[2px]">⚡ <%= card.archetype %></span>
         <% end %>
       </div>
+
+      <%# Tags row — always up to 6 %>
       <% if Array(card.tags).any? %>
         <div class="flex items-center justify-center gap-2 flex-nowrap mt-3">
           <% Array(card.tags).first(6).each do |t| %>
-            <span class="text-sm px-3 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-indigo-200">#<%= t.to_s.downcase %></span>
+            <span class="text-sm px-3 py-1 rounded-full bg-gray-900/85 border border-gray-700 text-indigo-200 shadow-sm backdrop-blur-[2px]">#<%= t.to_s.downcase %></span>
           <% end %>
         </div>
       <% end %>
     <% else %>
       <% followers = @profile.followers.to_i %>
-      <p class="text-gray-300">⭐ <%= followers %> followers</p>
+      <p class="text-white">⭐ <%= followers %> followers</p>
     <% end %>
   </div>
 </div>
