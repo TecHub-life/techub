@@ -7,51 +7,32 @@ Purpose
 
 Canonical Example (realistic fields)
 
-{
-  "profile": {
-    "login": "loftwah",
-    "name": "Dean Lofts",
-    "bio": "DevOps Engineer, Music Producer, and big fan of Open Source.",
-    "location": "Melbourne, Australia",
-    "blog": "https://linkarooie.com/loftwah",
-    "twitter_username": "loftwah",
-    "avatar_url": "/avatars/loftwah.png",
-    "github_url": "https://github.com/loftwah",
-    "public_repos": 356,
-    "public_gists": 633,
-    "followers": 1149,
-    "following": 526
-  },
-  "summary": "Ships in public with 356 repositories and 1149 followers...",
-  "languages": [ { "name": "Ruby", "count": 21 }, { "name": "Shell", "count": 18 }, { "name": "Python", "count": 17 } ],
-  "social_accounts": [ { "provider": "TWITTER", "url": "https://x.com/loftwah", "display_name": "@loftwah" } ],
-  "organizations": [ { "login": "TecHub-life", "description": "TecHub is an AI powered profile generator and card game with leaderboards." } ],
-  "top_repositories": [ { "name": "linux-for-pirates", "language": "Astro", "stargazers_count": 142 }, { "name": "loftwahs-cheatsheet", "stargazers_count": 42 } ],
-  "pinned_repositories": [ { "name": "techub", "language": "Ruby", "stargazers_count": 13 } ],
-  "active_repositories": [ { "name": "techub", "full_name": "TecHub-life/techub", "stargazers_count": 13 } ],
-  "recent_activity": { "total_events": 300, "event_breakdown": { "PushEvent": 131, "PullRequestEvent": 29 } },
-  "readme": { "content": "# Dean Lofts ..." },
-  "card": {
-    "title": "Dean Lofts",
-    "tagline": "From infrastructure code to generative soundscapes, Dean Lofts builds the future",
-    "short_bio": "Highly active DevOps Engineer and Cloud Architect...",
-    "long_bio": "Dean Lofts, a Senior DevOps Engineer and Cloud Architect ...",
-    "buff": "Architect Of Automation",
-    "buff_description": "Design and implement robust, automated infrastructure and creative systems...",
-    "weakness": "Sprawling Innovation",
-    "weakness_description": "Relentless drive can spread focus across many projects...",
-    "flavor_text": "From infrastructure code to generative soundscapes, Dean Lofts builds the future",
-    "attack": 100, "defense": 100, "speed": 75,
-    "playing_card": "Ace of ♣",
-    "spirit_animal": "Koala",
-    "archetype": "The Hero",
-    "vibe": "Open Source",
-    "vibe_description": "Orchestrates complex cloud environments with community spirit...",
-    "special_move": "Community Rally",
-    "special_move_description": "Rapidly deploys AI‑driven platforms and resilient cloud architectures...",
-    "tags": ["ruby","shell","python","devops","hacktoberfest","linux"]
-  }
-}
+{ "profile": { "login": "loftwah", "name": "Dean Lofts", "bio": "DevOps Engineer, Music Producer,
+and big fan of Open Source.", "location": "Melbourne, Australia", "blog":
+"https://linkarooie.com/loftwah", "twitter_username": "loftwah", "avatar_url":
+"/avatars/loftwah.png", "github_url": "https://github.com/loftwah", "public_repos": 356,
+"public_gists": 633, "followers": 1149, "following": 526 }, "summary": "Ships in public with 356
+repositories and 1149 followers...", "languages": [ { "name": "Ruby", "count": 21 }, { "name":
+"Shell", "count": 18 }, { "name": "Python", "count": 17 } ], "social_accounts": [ { "provider":
+"TWITTER", "url": "https://x.com/loftwah", "display_name": "@loftwah" } ], "organizations": [ {
+"login": "TecHub-life", "description": "TecHub is an AI powered profile generator and card game with
+leaderboards." } ], "top_repositories": [ { "name": "linux-for-pirates", "language": "Astro",
+"stargazers_count": 142 }, { "name": "loftwahs-cheatsheet", "stargazers_count": 42 } ],
+"pinned_repositories": [ { "name": "techub", "language": "Ruby", "stargazers_count": 13 } ],
+"active_repositories": [ { "name": "techub", "full_name": "TecHub-life/techub", "stargazers_count":
+13 } ], "recent_activity": { "total_events": 300, "event_breakdown": { "PushEvent": 131,
+"PullRequestEvent": 29 } }, "readme": { "content": "# Dean Lofts ..." }, "card": { "title": "Dean
+Lofts", "tagline": "From infrastructure code to generative soundscapes, Dean Lofts builds the
+future", "short_bio": "Highly active DevOps Engineer and Cloud Architect...", "long_bio": "Dean
+Lofts, a Senior DevOps Engineer and Cloud Architect ...", "buff": "Architect Of Automation",
+"buff_description": "Design and implement robust, automated infrastructure and creative systems...",
+"weakness": "Sprawling Innovation", "weakness_description": "Relentless drive can spread focus
+across many projects...", "flavor_text": "From infrastructure code to generative soundscapes, Dean
+Lofts builds the future", "attack": 100, "defense": 100, "speed": 75, "playing_card": "Ace of ♣",
+"spirit_animal": "Koala", "archetype": "The Hero", "vibe": "Open Source", "vibe_description":
+"Orchestrates complex cloud environments with community spirit...", "special_move": "Community
+Rally", "special_move_description": "Rapidly deploys AI‑driven platforms and resilient cloud
+architectures...", "tags": ["ruby","shell","python","devops","hacktoberfest","linux"] } }
 
 Data Inventory
 
@@ -71,7 +52,8 @@ Data Inventory
   - traits: `vibe`, `special_move`, `spirit_animal`, `archetype`, `playing_card`
   - tags: `tags[]` (array, normalized to lowercase in UI)
   - style/theme: `style_profile`, `theme`, `generated_at`
-  - background prefs: `bg_choice_card|og|simple` in `profile_card` (ai | default | color), `bg_color_card|og|simple`
+  - background prefs: `bg_choice_card|og|simple` in `profile_card` (ai | default | color),
+    `bg_color_card|og|simple`
 
 - Assets (ProfileAssets)
   - kinds: `og`, `card`, `simple`, `avatar_3x1` (3×1 banner), `avatar_16x9` (16:9 art)
@@ -87,7 +69,8 @@ Layout Specs
     - name + handle
     - github URL, location, follower count
     - tagline (strict precedence below)
-    - trait descriptions: `vibe` + `vibe_description`, `special_move` + `special_move_description`, `buff` + `buff_description`, `weakness` + `weakness_description`
+    - trait descriptions: `vibe` + `vibe_description`, `special_move` + `special_move_description`,
+      `buff` + `buff_description`, `weakness` + `weakness_description`
     - top repo chips (name + small star count)
     - language chips (lowercase)
     - card stats chips: ATK/DEF/SPD, playing_card, spirit_animal, archetype
@@ -105,7 +88,8 @@ Layout Specs
     - card chips: ATK/DEF/SPD (+ optional playing_card/spirit_animal/archetype)
     - tag chips (lowercase, show all 6)
     - meta: personal URL (preferred) or GitHub URL; combined "⭐ stars • 👥 followers"
-  - corners: playing card marker from `playing_card` (e.g., `Ace of ♣`) at top‑right and bottom‑left
+  - corners: playing card marker from `playing_card` (e.g., `Ace of ♣`) at top‑right and
+    bottom‑left
 
 - Simple (HTML view: `GET /cards/:login/simple`)
   - size: 1280×720 (16:9)
@@ -161,12 +145,16 @@ Layout Consumption Map (exact fields)
 - Main Card
   - identity: `profile.name`, `profile.login`
   - meta chips: `profile.github_url` (from `html_url`), `profile.location`, `profile.followers`
-  - tagline: `card.tagline` → `card.short_bio` → `profile.bio` (target ≤ 80 chars; 2 lines via line‑clamp)
+  - tagline: `card.tagline` → `card.short_bio` → `profile.bio` (target ≤ 80 chars; 2 lines via
+    line‑clamp)
   - repo chips: `top_repositories[].name` + `stargazers_count` (★ shown if > 0)
   - languages: `languages[].name` (lowercase)
-  - stat/trait chips: `card.attack`, `card.defense`, `card.speed`, `card.playing_card`, `card.spirit_animal`, `card.archetype`
+  - stat/trait chips: `card.attack`, `card.defense`, `card.speed`, `card.playing_card`,
+    `card.spirit_animal`, `card.archetype`
   - fanfare: spirit animal and archetype chips styled with distinct colors/icons
-  - trait descriptions: `card.vibe` + `vibe_description`, `card.special_move` + `special_move_description`, `card.buff` + `buff_description`, `card.weakness` + `weakness_description`
+  - trait descriptions: `card.vibe` + `vibe_description`, `card.special_move` +
+    `special_move_description`, `card.buff` + `buff_description`, `card.weakness` +
+    `weakness_description`
   - tags: `card.tags[]` (lowercase)
   - corners: playing card marker from `playing_card` at top‑right and bottom‑left (full text)
 
@@ -174,14 +162,16 @@ Layout Consumption Map (exact fields)
   - identity: `profile.name`, `profile.login`
   - repo chips: `top_repositories[].name` + `stargazers_count`
   - languages: `languages[].name` (lowercase)
-  - stat/trait chips: `card.attack`, `card.defense`, `card.speed`, `card.playing_card`, `card.spirit_animal`, `card.archetype`
+  - stat/trait chips: `card.attack`, `card.defense`, `card.speed`, `card.playing_card`,
+    `card.spirit_animal`, `card.archetype`
   - tags: `card.tags[]` (lowercase)
   - no bio text to avoid clutter
 
 - Simple Image
   - identity: `profile.name`, `profile.login`, avatar
   - languages: `languages[].name` (lowercase)
-  - stat/trait chips: `card.attack`, `card.defense`, `card.speed`, `card.playing_card`, `card.spirit_animal`, `card.archetype`
+  - stat/trait chips: `card.attack`, `card.defense`, `card.speed`, `card.playing_card`,
+    `card.spirit_animal`, `card.archetype`
   - no bio text
 
 Text Fit & No-Clip Rules
@@ -196,13 +186,16 @@ Public Profile Page
 - Tabs: Profile, Overview, Activity, Stats & Traits
 - Current highlights
   - Structured metadata & OG wired (JSON‑LD uses `short_bio` → `bio`).
-  - Overview: flavor_text/short_bio banner, stat/trait chips, tags, top languages, social accounts, organizations.
+  - Overview: flavor_text/short_bio banner, stat/trait chips, tags, top languages, social accounts,
+    organizations.
   - Activity: recent events and active repositories.
   - Stats & Traits: numeric stats, traits (playing_card, spirit_animal, archetype), tags.
 - Should/Planned
   - Hero: show `long_bio` expanded with “read more”; keep `short_bio` as teaser.
-  - Traits panel: add `vibe` + `vibe_description`, `special_move` + `special_move_description`, `buff` + `buff_description`, and `weakness` + `weakness_description` (full text).
-  - Repos: dedicated grids for `pinned_repositories` and `top_repositories` with stars/forks and topics.
+  - Traits panel: add `vibe` + `vibe_description`, `special_move` + `special_move_description`,
+    `buff` + `buff_description`, and `weakness` + `weakness_description` (full text).
+  - Repos: dedicated grids for `pinned_repositories` and `top_repositories` with stars/forks and
+    topics.
   - Orgs: richer cards with descriptions and avatars.
   - Social: verified links and badges.
   - Tags cloud: interactive filter to directory.
