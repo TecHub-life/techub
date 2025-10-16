@@ -18,7 +18,7 @@ class PagesController < ApplicationController
     @per_page = (params[:per_page] || 24).to_i.clamp(1, 60)
     offset = (@page - 1) * @per_page
 
-    scope = Profile.all.includes(:profile_assets, :profile_card)
+    scope = Profile.where(last_pipeline_status: "success").includes(:profile_assets, :profile_card)
     if @q.present?
       scope = scope.where("profiles.login LIKE :q OR profiles.name LIKE :q", q: "%#{@q}%")
     end
@@ -50,11 +50,6 @@ class PagesController < ApplicationController
     # Build tag cloud (from current successful profiles only)
     cloud_source = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.tags")
     @tag_cloud = cloud_source.flatten.map { |t| t.to_s.downcase.strip }.reject(&:blank?).tally.sort_by { |(_t, c)| -c }.first(40)
-
-    # Autocomplete data
-    @usernames = Profile.where(last_pipeline_status: "success").pluck(:login, :name).map { |l, n| "#{l} (#{n})" }
-    @tags = @tag_cloud.map(&:first)
-    @languages = ProfileLanguage.joins(:profile).where(profiles: { last_pipeline_status: "success" }).distinct.pluck(:name)
 
     @total = scope.count
     @profiles = scope.order(updated_at: :desc).limit(@per_page).offset(offset)
@@ -91,36 +86,5 @@ class PagesController < ApplicationController
 
   def docs
     @marketing_overview = File.read(Rails.root.join("docs", "marketing-overview.md")) if File.exist?(Rails.root.join("docs", "marketing-overview.md"))
-  end
-
-  def autocomplete
-    field = params[:field]
-    query = params[:q].to_s.downcase
-
-    results = case field
-    when "username"
-      Profile.where("lower(login) LIKE ? OR lower(name) LIKE ?", "%#{query}%", "%#{query}%")
-             .limit(10)
-             .pluck(:login, :name)
-             .map { |login, name| { value: login, label: "#{name} (@#{login})" } }
-    when "tag"
-      Profile.joins(:profile_card)
-             .pluck("profile_cards.tags")
-             .flatten
-             .uniq
-             .select { |t| t.to_s.downcase.include?(query) }
-             .first(10)
-             .map { |t| { value: t, label: t } }
-    when "language"
-      ProfileLanguage.where("lower(name) LIKE ?", "%#{query}%")
-                     .distinct
-                     .limit(10)
-                     .pluck(:name)
-                     .map { |l| { value: l, label: l } }
-    else
-      []
-    end
-
-    render json: { results: results }
   end
 end
