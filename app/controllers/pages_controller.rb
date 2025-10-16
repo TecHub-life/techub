@@ -87,4 +87,35 @@ class PagesController < ApplicationController
   def docs
     @marketing_overview = File.read(Rails.root.join("docs", "marketing-overview.md")) if File.exist?(Rails.root.join("docs", "marketing-overview.md"))
   end
+
+  def autocomplete
+    field = params[:field]
+    query = params[:q].to_s.downcase
+
+    results = case field
+    when "username"
+      Profile.where("lower(login) LIKE ? OR lower(name) LIKE ?", "%#{query}%", "%#{query}%")
+             .limit(10)
+             .pluck(:login, :name)
+             .map { |login, name| { value: login, label: "#{name} (@#{login})" } }
+    when "tag"
+      Profile.joins(:profile_card)
+             .pluck("profile_cards.tags")
+             .flatten
+             .uniq
+             .select { |t| t.to_s.downcase.include?(query) }
+             .first(10)
+             .map { |t| { value: t, label: t } }
+    when "language"
+      ProfileLanguage.where("lower(name) LIKE ?", "%#{query}%")
+                     .distinct
+                     .limit(10)
+                     .pluck(:name)
+                     .map { |l| { value: l, label: l } }
+    else
+      []
+    end
+
+    render json: { results: results }
+  end
 end
