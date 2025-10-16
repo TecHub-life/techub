@@ -96,7 +96,7 @@ class PagesController < ApplicationController
   def autocomplete
     field = params[:field]
     query = params[:q].to_s.downcase
-    
+
     results = case field
     when "username"
       Profile.where("lower(login) LIKE ? OR lower(name) LIKE ?", "%#{query}%", "%#{query}%")
@@ -120,7 +120,7 @@ class PagesController < ApplicationController
     else
       []
     end
-    
+
     render json: { results: results }
   end
 end
