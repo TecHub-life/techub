@@ -60,11 +60,30 @@ This guide explains how to access and administer background jobs and ops tools.
 
 ## Ownership Management
 
+### Terminology
+
+- Profile: a Techub profile (e.g. `@octocat`) representing a public GitHub account within Techub.
+  Profiles are identified by `profiles.login`.
+- User: an authenticated GitHub account in the system (OAuth). Users are identified by
+  `users.login`.
+
+There can be many `User`↔`Profile` links, but exactly one link per profile is marked as the owner.
+
 - Manage ownerships at `/ops/ownerships` (HTTP Basic protected).
-- Actions:
-  - Promote: make a selected link the single owner for that profile (clears current owner flag).
-  - Demote: clear the owner flag for that link.
-  - Remove: delete a link.
+- UI:
+  - Filter by profile with the selector at the top.
+  - Table lists `Profile`, `User`, current `Owner` state, and `Actions`.
+  - Actions:
+    - Make owner: set this link as the single owner for the profile (removes other links for the
+      profile).
+    - Transfer: move ownership to another GitHub login by entering the target user login.
+    - Remove link: delete a non-owner link. Owner links cannot be deleted; use Transfer.
+
+### Invariants
+
+- A profile must always have exactly one owner.
+- You cannot clear or delete the owner link.
+- To change owners, use Transfer (or Make owner on an existing non-owner link).
 - Rake equivalents:
   - `rake techub:ownership:list`
   - `rake techub:ownership:list_profile[login]`

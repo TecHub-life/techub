@@ -64,9 +64,12 @@ Rails.application.routes.draw do
     delete "/profiles/:username", to: "profiles#destroy", as: :destroy_profile
     # Ownerships admin
     get "/ownerships", to: "ownerships#index", as: :ownerships
+    post "/ownerships/set_owner", to: "ownerships#set_owner", as: :set_owner_ownership
+    # link removed: single-owner model enforced
     post "/ownerships/:id/promote", to: "ownerships#promote", as: :promote_ownership
-    post "/ownerships/:id/demote", to: "ownerships#demote", as: :demote_ownership
+    post "/ownerships/:id/transfer", to: "ownerships#transfer", as: :transfer_ownership
     delete "/ownerships/:id", to: "ownerships#destroy", as: :destroy_ownership
+    get "/users/search", to: "users#search", as: :search_users
   end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)
