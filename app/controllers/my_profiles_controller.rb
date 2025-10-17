@@ -119,7 +119,10 @@ class MyProfilesController < ApplicationController
 
   def destroy
     ownership = ProfileOwnership.find_by(user_id: current_user.id, profile_id: @profile.id)
-    return redirect_to my_profiles_path, alert: "You do not own this profile" unless ownership
+    return redirect_to my_profiles_path, alert: "Not linked to this profile" unless ownership
+    if ownership.is_owner
+      return redirect_to my_profiles_path, alert: "You are the owner. Transfer in Ops to remove it."
+    end
     ownership.destroy!
     redirect_to my_profiles_path, notice: "Removed @#{@profile.login} from your profiles"
   end
