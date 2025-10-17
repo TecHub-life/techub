@@ -3,7 +3,7 @@ Hi <%= @user.name || @user.login %>,
 Your TecHub card for @<%= @profile.login %> is ready.
 
 View your TecHub profile:
-<%= Rails.application.routes.url_helpers.profile_url(username: @profile.login) %>
+<%= profile_url(username: @profile.login) %>
 
 Thanks,
 TecHub
