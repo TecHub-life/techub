@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   root "pages#home"
 
   get "/directory", to: "pages#directory"
+  get "/directory/autocomplete", to: "pages#autocomplete"
   get "/leaderboards", to: "pages#leaderboards"
   get "/submit", to: "pages#submit"
   post "/submit", to: "submissions#create", as: :create_submission
