@@ -17,9 +17,13 @@ class SubmissionsController < ApplicationController
       return redirect_to submit_path, alert: "You have reached the maximum number of profiles"
     end
 
-    # Optimistically link ownership immediately if profile already exists
+    # Existing profile handling: rightful owner may claim; others are rejected
     if (existing = Profile.for_login(login).first)
-      Profiles::ClaimOwnershipService.call(user: actor, profile: existing)
+      if actor.login.to_s.downcase == existing.login.to_s.downcase
+        Profiles::ClaimOwnershipService.call(user: actor, profile: existing)
+      else
+        return redirect_to submit_path, alert: "@#{login} already exists."
+      end
     end
 
     # Enqueue async submission job (sync + ownership + manual inputs + pipeline)

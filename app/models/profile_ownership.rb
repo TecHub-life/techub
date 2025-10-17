@@ -5,6 +5,7 @@ class ProfileOwnership < ApplicationRecord
   validates :user_id, presence: true
   validates :profile_id, presence: true
   validate :only_one_owner
+  validate :prevent_orphaned_profile
 
   validate :enforce_user_profile_cap
 
@@ -24,5 +25,24 @@ class ProfileOwnership < ApplicationRecord
     existing = ProfileOwnership.where(profile_id: profile_id, is_owner: true)
     existing = existing.where.not(id: id) if id.present?
     errors.add(:base, "Profile already has an owner") if existing.exists?
+  end
+
+  def prevent_orphaned_profile
+    return unless profile_id.present?
+
+    # If this record is the current owner and is being changed to non-owner or destroyed,
+    # ensure another owner will exist in the same transaction.
+    if will_save_change_to_is_owner?
+      becoming_non_owner = is_owner_change == [ true, false ]
+      if becoming_non_owner
+        # There must be another ownership set to owner in the same profile in this transaction.
+        # Since cross-record validation is tricky, block demotion here and require transfer flow.
+        errors.add(:base, "Cannot clear owner; use transfer instead")
+      end
+    end
+
+    if destroyed_by_association.nil? && destroyed? && is_owner
+      errors.add(:base, "Cannot delete owner link; use transfer instead")
+    end
   end
 end

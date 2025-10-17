@@ -7,15 +7,15 @@ class Profiles::ClaimOwnershipServiceTest < ActiveSupport::TestCase
     @profile = Profile.create!(github_id: 21001, login: "jrh89")
   end
 
-  test "loftwah links @jrh89 without becoming owner" do
+  test "first submitter becomes owner when no owner exists" do
     result = Profiles::ClaimOwnershipService.call(user: @other_user, profile: @profile)
     assert result.success?
     o = ProfileOwnership.find_by(user_id: @other_user.id, profile_id: @profile.id)
     assert o.present?
-    assert_equal false, o.is_owner
+    assert_equal true, o.is_owner
   end
 
-  test "jrh89 claims @jrh89; loftwah link removed" do
+  test "rightful owner later claims and others removed" do
     Profiles::ClaimOwnershipService.call(user: @other_user, profile: @profile)
     assert ProfileOwnership.exists?(user_id: @other_user.id, profile_id: @profile.id)
 

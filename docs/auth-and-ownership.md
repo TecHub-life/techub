@@ -9,16 +9,14 @@ Login
 
 Ownership and accounts
 
-- A profile has exactly one owner: the signed-in user whose GitHub login matches the profile's
-  `login`.
-- Other signed-in users can still link profiles to their account. They are not owners (no special
-  permissions implied).
-- Conflict resolution: if someone has linked a profile and the rightful owner later submits their
-  own profile, we set them as the owner and remove all other links to that profile.
-- My Profiles lists all profiles you’ve linked or own. If you are the owner, we show an "Owner"
-  badge.
-- Admins (via `/ops/ownerships` or rake) can set/clear the owner link in support situations.
-- Limits: enforce a per-user cap (default 5) on total linked profiles to control abuse/costs.
+- A profile has exactly one owner.
+- First ownership: if a profile has no owner, the first submitter becomes the owner.
+- No non-owner links: we no longer create non-owner links on submission.
+- Rightful owner: if someone else owns a profile and the rightful owner (matching GitHub login)
+  later submits their own profile, they become the owner and all other links are removed.
+- Duplicate submissions by non-owners are rejected.
+- Admins (via `/ops/ownerships` or rake) may transfer ownership or set owner for true orphans.
+- Limits: enforce a per-user cap (default 5) on total profiles to control abuse/costs.
 - Eligibility: enforce `Eligibility::GithubProfileScoreService` threshold on new submissions to
   control costs.
 
@@ -30,9 +28,8 @@ Actions after claim
 
 FAQ
 
-- What does "single owner" mean? There can be many links to a profile, but only one link is marked
-  as the owner. The owner is the GitHub user whose `login` equals the profile's `login`.
-- Can I add profiles I don't own? Yes. You can link any public profile. When the real owner submits
-  their own profile, they become the owner and your link is removed.
-- Do owners have special permissions? No. This flag is used to resolve ownership conflicts and to
-  display the correct badge. Admin-only actions remain behind `/ops`.
+- What does "single owner" mean? A profile always has exactly one owner.
+- Can I add profiles I don't own? You can submit any public profile. If it exists already and you
+  are not the rightful owner, we reject the submission. If you are the rightful owner, you'll take
+  ownership automatically.
+- Do owners have special permissions? Admin-only actions remain behind `/ops`.

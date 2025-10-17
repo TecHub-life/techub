@@ -13,25 +13,30 @@ module Profiles
       ActiveRecord::Base.transaction do
         ownership = ProfileOwnership.find_or_initialize_by(user_id: user.id, profile_id: profile.id)
 
-        # If this user is the rightful owner (login match), set as owner and remove other links
-        if user.login.to_s.downcase == profile.login.to_s.downcase
-          ownership.is_owner = true
-          unless ownership.save
-            return failure(StandardError.new(ownership.errors.full_messages.to_sentence))
-          end
-          # Collect impacted users before deleting
-          impacted_ids = ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).pluck(:user_id)
-          ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).delete_all
+        has_owner = ProfileOwnership.where(profile_id: profile.id, is_owner: true).exists?
 
-          # Notifications (best-effort, outside transaction commit issues tolerated here)
-          Notifications::RecordEventService.call(user: user, event: :ownership_claimed, subject: profile)
-          impacted_ids.uniq.each do |uid|
-            if (u = User.find_by(id: uid))
-              Notifications::RecordEventService.call(user: u, event: :ownership_link_removed, subject: profile)
+        if has_owner
+          # If this user is the rightful owner (login match), transfer ownership to them
+          if user.login.to_s.downcase == profile.login.to_s.downcase
+            ownership.is_owner = true
+            unless ownership.save
+              return failure(StandardError.new(ownership.errors.full_messages.to_sentence))
             end
+            impacted_ids = ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).pluck(:user_id)
+            ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).delete_all
+
+            Notifications::RecordEventService.call(user: user, event: :ownership_claimed, subject: profile)
+            impacted_ids.uniq.each do |uid|
+              if (u = User.find_by(id: uid))
+                Notifications::RecordEventService.call(user: u, event: :ownership_link_removed, subject: profile)
+              end
+            end
+          else
+            # Profile already has an owner and submitter is not the rightful owner; do nothing
           end
         else
-          ownership.is_owner = ownership.is_owner || false
+          # No owner yet: first submitter becomes owner (regardless of login match)
+          ownership.is_owner = true
           unless ownership.save
             return failure(StandardError.new(ownership.errors.full_messages.to_sentence))
           end
