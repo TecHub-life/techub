@@ -56,40 +56,40 @@
 <section class="mx-auto max-w-6xl px-4 py-8">
   <% if @profile.present? %>
     <%# TABBED CONTENT SECTION %>
-    <div class="mb-6" x-data="{ activeTab: 'profile', changeTab(tab) { this.activeTab = tab; window.scrollTo({ top: 0, behavior: 'smooth' }); } }">
+    <div class="mb-6" data-controller="tabs" data-tabs-default-value="profile">
       <%# Tab Navigation - Sticky, Centered with larger text/icons on desktop %>
       <nav class="sticky top-[60px] z-40 -mb-px grid grid-cols-3 place-items-center md:flex md:justify-center lg:justify-around gap-2 sm:gap-3 md:gap-4 lg:gap-6 overflow-x-auto scrollbar-hide bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm pb-px shadow-sm px-4 -mx-4" aria-label="Tabs">
-        <button @click="changeTab('profile')" :class="activeTab === 'profile' ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2">
+        <button data-tabs-target="tab" data-tab-name="profile" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
           </svg>
           <span>Profile</span>
         </button>
-        <button @click="changeTab('overview')" :class="activeTab === 'overview' ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2">
+        <button data-tabs-target="tab" data-tab-name="overview" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
           <span>Overview</span>
         </button>
-        <button @click="changeTab('cards')" :class="activeTab === 'cards' ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2">
+        <button data-tabs-target="tab" data-tab-name="cards" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
           </svg>
           <span>Cards</span>
         </button>
-        <button @click="changeTab('repos')" :class="activeTab === 'repos' ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2">
+        <button data-tabs-target="tab" data-tab-name="repos" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
           </svg>
           <span>Repositories</span>
         </button>
-        <button @click="changeTab('activity')" :class="activeTab === 'activity' ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2">
+        <button data-tabs-target="tab" data-tab-name="activity" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
           <span>Activity</span>
         </button>
-        <button @click="changeTab('stats')" :class="activeTab === 'stats' ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2">
+        <button data-tabs-target="tab" data-tab-name="stats" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap border-b-2 px-2 py-3 text-sm lg:text-base font-medium transition flex items-center gap-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
@@ -100,14 +100,14 @@
       <%# Tab Content %>
       <div class="mt-6">
         <%# Profile Tab (Hero) - Default %>
-        <div x-show="activeTab === 'profile'">
+        <div data-tabs-target="panel" data-tab-panel="profile">
           <%= render partial: 'profiles/tabs/hero', locals: { 
             profile: @profile
           } %>
         </div>
 
         <%# Overview Tab %>
-        <div x-show="activeTab === 'overview'" x-cloak>
+        <div data-tabs-target="panel" data-tab-panel="overview" class="hidden">
           <%= render partial: 'profiles/tabs/overview', locals: { 
             profile: @profile, 
             languages: @languages,
@@ -117,14 +117,14 @@
         </div>
 
         <%# Cards Tab %>
-        <div x-show="activeTab === 'cards'" x-cloak>
+        <div data-tabs-target="panel" data-tab-panel="cards" class="hidden">
           <%= render partial: 'profiles/tabs/cards', locals: { 
             profile: @profile
           } %>
         </div>
 
         <%# Repositories Tab %>
-        <div x-show="activeTab === 'repos'" x-cloak>
+        <div data-tabs-target="panel" data-tab-panel="repos" class="hidden">
           <%= render partial: 'profiles/tabs/repositories', locals: { 
             profile: @profile,
             pinned_repositories: @pinned_repositories,
@@ -133,7 +133,7 @@
         </div>
 
         <%# Activity Tab %>
-        <div x-show="activeTab === 'activity'" x-cloak>
+        <div data-tabs-target="panel" data-tab-panel="activity" class="hidden">
           <%= render partial: 'profiles/tabs/activity', locals: { 
             profile: @profile,
             recent_activity: @recent_activity,
@@ -142,7 +142,7 @@
         </div>
 
         <%# Stats & Traits Tab %>
-        <div x-show="activeTab === 'stats'" x-cloak>
+        <div data-tabs-target="panel" data-tab-panel="stats" class="hidden">
           <%= render partial: 'profiles/tabs/stats', locals: { 
             profile: @profile
           } %>

@@ -19,16 +19,16 @@
           <%# Long bio - expandable on mobile, full on desktop %>
           <div class="text-slate-700 dark:text-slate-300 leading-relaxed text-sm md:text-base">
             <%# Mobile: truncated with Read More %>
-            <div class="md:hidden" x-data="{ expanded: false }">
-              <div x-show="!expanded">
+            <div class="md:hidden" data-controller="expandable">
+              <div data-expandable-target="collapsed">
                 <span><%= about.truncate(200) %></span>
-                <button @click="expanded = true" type="button" class="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline">
+                <button data-action="click->expandable#expand" type="button" class="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline">
                   Read more
                 </button>
               </div>
-              <div x-show="expanded" style="display: none;">
+              <div data-expandable-target="expanded" class="hidden">
                 <span><%= about %></span>
-                <button @click="expanded = false" type="button" class="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline">
+                <button data-action="click->expandable#collapse" type="button" class="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline">
                   Show less
                 </button>
               </div>
