@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_15_000010) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_18_000011) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -155,6 +155,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_15_000010) do
     t.integer "profile_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "is_owner", default: false, null: false
+    t.index ["profile_id"], name: "idx_one_owner_per_profile", unique: true, where: "is_owner = TRUE"
     t.index ["profile_id"], name: "index_profile_ownerships_on_profile_id"
     t.index ["user_id", "profile_id"], name: "index_profile_ownerships_on_user_id_and_profile_id", unique: true
     t.index ["user_id"], name: "index_profile_ownerships_on_user_id"

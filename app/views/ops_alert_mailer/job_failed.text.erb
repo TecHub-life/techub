@@ -12,8 +12,8 @@ Profile error: <%= @profile&.last_pipeline_error %>
 
 Links:
 <% begin %>
-- Profile: <%= Rails.application.routes.url_helpers.profile_url(username: @profile.login) %>
-- Ops Jobs: <%= Rails.application.routes.url_helpers.url_for(controller: '/ops/jobs', action: nil, only_path: false) rescue (Rails.application.routes.url_helpers.root_url + 'ops/jobs') %>
+- Profile: <%= profile_url(username: @profile.login) %>
+- Ops Jobs: <%= root_url + 'ops/jobs' %>
 <% rescue %>
 - Profile: <%= @profile&.login %>
 - Ops Jobs: /ops/jobs

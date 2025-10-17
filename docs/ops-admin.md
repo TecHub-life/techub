@@ -57,3 +57,20 @@ This guide explains how to access and administer background jobs and ops tools.
 
 - Admin routes are private and behind HTTP Basic; do not share credentials.
 - In production, the engine is not mounted unless credentials exist.
+
+## Ownership Management
+
+- Manage ownerships at `/ops/ownerships` (HTTP Basic protected).
+- Actions:
+  - Promote: make a selected link the single owner for that profile (clears current owner flag).
+  - Demote: clear the owner flag for that link.
+  - Remove: delete a link.
+- Rake equivalents:
+  - `rake techub:ownership:list`
+  - `rake techub:ownership:list_profile[login]`
+  - `rake techub:ownership:list_user[user_login]`
+  - `rake techub:ownership:claim[user_login,profile_login]`
+  - `rake techub:ownership:promote[ownership_id]`
+  - `rake techub:ownership:demote[ownership_id]`
+  - `rake techub:ownership:remove[ownership_id]`
+  - `rake techub:ownership:set_owner[profile_login,user_login]`

@@ -1,4 +1,13 @@
 <section class="mx-auto max-w-4xl space-y-6 px-4 py-12 min-h-screen h-full">
+  <% if defined?(@ownership_removed_notices) && @ownership_removed_notices.present? %>
+    <div class="rounded border border-yellow-200 bg-yellow-50 p-4 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+      <ul class="list-disc pl-5 space-y-1">
+        <% @ownership_removed_notices.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
   <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">My Profiles</h1>
   <p class="text-slate-600 dark:text-slate-300">Profiles you’ve submitted or claimed.</p>
 
@@ -10,6 +19,14 @@
             <img src="<%= profile.avatar_url %>" alt="<%= profile.login %>" class="w-10 h-10 rounded">
             <div>
               <a href="<%= profile_path(username: profile.login) %>" class="font-medium text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400">@<%= profile.login %></a>
+              <% if current_user %>
+                <% ownership = ProfileOwnership.find_by(user_id: current_user.id, profile_id: profile.id) %>
+                <% if ownership&.is_owner %>
+                  <span class="ml-2 text-xs px-2 py-0.5 rounded border bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200">
+                    Owner
+                  </span>
+                <% end %>
+              <% end %>
               <% if profile.last_pipeline_status.present? %>
                 <span class="ml-2 text-xs px-2 py-0.5 rounded border
                   <%= case profile.last_pipeline_status
