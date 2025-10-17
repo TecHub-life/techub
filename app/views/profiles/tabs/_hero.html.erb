@@ -106,7 +106,7 @@
           <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.following.to_i %></p>
           <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Following</p>
         </a>
-        <a href="https://github.com/<%= profile.login %>?tab=repositories" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+        <a href="https://github.com/<%= profile.login %>?tab=repositories" target="_blank" rel="noopener" class="col-span-2 sm:col-span-1 rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
           <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.public_repos.to_i %></p>
           <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Repos</p>
         </a>
