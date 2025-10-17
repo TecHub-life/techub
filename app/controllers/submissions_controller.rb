@@ -19,11 +19,7 @@ class SubmissionsController < ApplicationController
 
     # Optimistically link ownership immediately if profile already exists
     if (existing = Profile.for_login(login).first)
-      begin
-        ProfileOwnership.find_or_create_by!(user: actor, profile: existing)
-      rescue ActiveRecord::RecordInvalid
-        # ignore; background job will handle linkage
-      end
+      Profiles::ClaimOwnershipService.call(user: actor, profile: existing)
     end
 
     # Enqueue async submission job (sync + ownership + manual inputs + pipeline)

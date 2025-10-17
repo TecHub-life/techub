@@ -14,8 +14,8 @@ module Profiles
       profile = sync.value
       persisted = Profile.for_login(profile.login).first || profile
 
-      # Link ownership (idempotent)
-      ProfileOwnership.find_or_create_by!(user: actor, profile: persisted)
+      # Link or claim ownership using policy (idempotent)
+      Profiles::ClaimOwnershipService.call(user: actor, profile: persisted)
 
       # Persist optional manual inputs when provided
       url = submitted_scrape_url.to_s.strip

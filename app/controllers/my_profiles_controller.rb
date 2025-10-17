@@ -8,6 +8,22 @@ class MyProfilesController < ApplicationController
       return redirect_to auth_github_path, alert: "Please sign in with GitHub"
     end
     @profiles = Profile.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }).order(:login)
+
+    # One-time notices for removed links (when rightful owner claimed)
+    deliveries = NotificationDelivery.where(user_id: uid, event: "ownership_link_removed", subject_type: "Profile")
+    removed_profile_ids = deliveries.pluck(:subject_id).uniq
+    if removed_profile_ids.any?
+      removed_profiles = Profile.where(id: removed_profile_ids).index_by(&:id)
+      @ownership_removed_notices = removed_profile_ids.map do |pid|
+        p = removed_profiles[pid]
+        next unless p
+        "Your link to @#{p.login} was removed when @#{p.login} claimed ownership."
+      end.compact
+      # Best-effort: clear deliveries so the banner shows once
+      deliveries.delete_all
+    else
+      @ownership_removed_notices = []
+    end
   end
 
   def settings

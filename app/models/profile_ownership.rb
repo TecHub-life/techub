@@ -4,6 +4,7 @@ class ProfileOwnership < ApplicationRecord
 
   validates :user_id, presence: true
   validates :profile_id, presence: true
+  validate :only_one_owner
 
   validate :enforce_user_profile_cap
 
@@ -16,5 +17,12 @@ class ProfileOwnership < ApplicationRecord
     if current_count >= cap
       errors.add(:base, "You have reached the maximum number of profiles (#{cap})")
     end
+  end
+
+  def only_one_owner
+    return unless is_owner && profile_id.present?
+    existing = ProfileOwnership.where(profile_id: profile_id, is_owner: true)
+    existing = existing.where.not(id: id) if id.present?
+    errors.add(:base, "Profile already has an owner") if existing.exists?
   end
 end

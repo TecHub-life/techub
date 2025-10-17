@@ -2,7 +2,7 @@ require "test_helper"
 
 class SubmissionsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(github_id: 1001, login: "tester")
+    @user = User.create!(github_id: 1001, login: "loftwah")
   end
 
   test "requires login" do
@@ -11,10 +11,10 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_match "/auth/github", @response.redirect_url
   end
 
-  test "creates submission, links ownership, stores manual inputs when enabled" do
+  test "loftwah submits @loftwah: links ownership, stores manual inputs" do
     ENV["SUBMISSION_MANUAL_INPUTS_ENABLED"] = "1"
     Profiles::SyncFromGithub.stub :call, ServiceResult.success(Profile.create!(github_id: 2002, login: "loftwah")) do
-      uid = User.find_by(login: "tester").id
+      uid = User.find_by(login: "loftwah").id
       open_session do |sess|
         sess.post create_submission_path, params: {
           login: "loftwah",
@@ -32,5 +32,38 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
     ensure
       ENV.delete("SUBMISSION_MANUAL_INPUTS_ENABLED")
     end
+  end
+
+  test "jrh89 submits @jrh89: removes loftwah link and sets owner" do
+    # loftwah links @jrh89
+    user_loftwah = @user # login: loftwah
+    profile = Profile.create!(github_id: 3003, login: "jrh89")
+    Profiles::SyncFromGithub.stub :call, ServiceResult.success(profile) do
+      open_session do |sess|
+        sess.post create_submission_path, params: { login: "jrh89" }, headers: { "X-Test-User-Id" => user_loftwah.id.to_s }
+        assert_equal 302, sess.response.status
+      end
+    end
+    link_loftwah = ProfileOwnership.find_by(user_id: user_loftwah.id, profile_id: profile.id)
+    assert link_loftwah.present?
+    assert_equal false, link_loftwah.is_owner
+
+    # The rightful owner (user with login jrh89) submits @jrh89
+    user_jrh89 = User.create!(github_id: 1002, login: "jrh89")
+    Profiles::SyncFromGithub.stub :call, ServiceResult.success(profile) do
+      open_session do |sess2|
+        sess2.post create_submission_path, params: { login: "jrh89" }, headers: { "X-Test-User-Id" => user_jrh89.id.to_s }
+        assert_equal 302, sess2.response.status
+      end
+    end
+
+    # Ownership: only B remains, as owner
+    refute ProfileOwnership.exists?(user_id: user_loftwah.id, profile_id: profile.id)
+    link_b = ProfileOwnership.find_by(user_id: user_jrh89.id, profile_id: profile.id)
+    assert link_b.present?
+    assert_equal true, link_b.is_owner
+
+    # An event is recorded for A so My Profiles can show a banner
+    assert NotificationDelivery.exists?(user_id: user_loftwah.id, event: "ownership_link_removed", subject_type: "Profile", subject_id: profile.id)
   end
 end

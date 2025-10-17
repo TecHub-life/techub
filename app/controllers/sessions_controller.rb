@@ -45,8 +45,9 @@ class SessionsController < ApplicationController
       return
     end
 
-    session[:current_user_id] = upsert_result.value.id
-    redirect_to root_path, notice: "Signed in as #{upsert_result.value.login}"
+    user = upsert_result.value
+    session[:current_user_id] = user.id
+    redirect_to root_path, notice: "Signed in as #{user.login}"
   end
 
   def destroy
