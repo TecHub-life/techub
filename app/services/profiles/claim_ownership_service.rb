@@ -18,12 +18,14 @@ module Profiles
         if has_owner
           # If this user is the rightful owner (login match), transfer ownership to them
           if user.login.to_s.downcase == profile.login.to_s.downcase
+            impacted_ids = ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).pluck(:user_id)
+            # Remove all other links (including prior owner) first to satisfy single-owner validation
+            ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).delete_all
+
             ownership.is_owner = true
             unless ownership.save
               return failure(StandardError.new(ownership.errors.full_messages.to_sentence))
             end
-            impacted_ids = ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).pluck(:user_id)
-            ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).delete_all
 
             Notifications::RecordEventService.call(user: user, event: :ownership_claimed, subject: profile)
             impacted_ids.uniq.each do |uid|

@@ -17,9 +17,15 @@ class SubmissionsController < ApplicationController
       return redirect_to submit_path, alert: "You have reached the maximum number of profiles"
     end
 
-    # Existing profile handling: rightful owner may claim; others are rejected
+    # Existing profile handling:
+    # - If no owner yet: allow first submitter to become owner
+    # - If an owner exists and actor is the rightful owner: allow auto-claim
+    # - Otherwise: reject duplicate submission
     if (existing = Profile.for_login(login).first)
-      if actor.login.to_s.downcase == existing.login.to_s.downcase
+      has_owner = ProfileOwnership.where(profile_id: existing.id, is_owner: true).exists?
+      if !has_owner
+        Profiles::ClaimOwnershipService.call(user: actor, profile: existing)
+      elsif actor.login.to_s.downcase == existing.login.to_s.downcase
         Profiles::ClaimOwnershipService.call(user: actor, profile: existing)
       else
         return redirect_to submit_path, alert: "@#{login} already exists."
