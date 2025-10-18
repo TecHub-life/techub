@@ -7,7 +7,11 @@ class MyProfilesController < ApplicationController
     if uid.blank?
       return redirect_to auth_github_path, alert: "Please sign in with GitHub"
     end
-    @profiles = Profile.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }).order(:login)
+    # Only show profiles the user actually owns to avoid confusion with past submissions
+    @profiles = Profile
+      .joins(:profile_ownerships)
+      .where(profile_ownerships: { user_id: uid, is_owner: true })
+      .order(:login)
 
     # One-time notices for removed links (when rightful owner claimed)
     deliveries = NotificationDelivery.where(user_id: uid, event: "ownership_link_removed", subject_type: "Profile")

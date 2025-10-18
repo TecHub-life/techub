@@ -50,8 +50,18 @@ module Screenshots
         # In test, avoid invoking Node: create a tiny PNG header as a placeholder
         File.binwrite(path, "\x89PNG\r\n")
       else
-        ok = Kernel.system(*cmd)
-        return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+        # Capture stdout/stderr for better diagnostics
+        begin
+          require "open3"
+          stdout_str, stderr_str, status = Open3.capture3(*cmd)
+          unless status.success?
+            StructuredLogger.error(message: "screenshot_cmd_failed", login: login, variant: variant, cmd: cmd.join(" "), stdout: stdout_str, stderr: stderr_str) if defined?(StructuredLogger)
+            return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" "), stdout: stdout_str, stderr: stderr_str })
+          end
+        rescue LoadError
+          ok = Kernel.system(*cmd)
+          return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+        end
       end
 
       return failure(StandardError.new("Screenshot not found"), metadata: { expected: path.to_s }) unless File.exist?(path)
