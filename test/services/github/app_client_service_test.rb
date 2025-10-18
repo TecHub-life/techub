@@ -16,15 +16,13 @@ module Github
       end
     end
 
-    test "bubbles up failure when token creation fails and discovery cannot fix" do
+    test "bubbles up failure when token creation fails" do
       Github::AppAuthenticationService.stub :call, ServiceResult.success("jwt-token") do
         stub_request(:post, "https://api.github.com/app/installations/90542889/access_tokens")
           .to_return(status: 404, body: "{}", headers: { "Content-Type" => "application/json" })
 
-        Github::FindInstallationService.stub :call, ServiceResult.failure(StandardError.new("no install")) do
-          result = Github::AppClientService.call(installation_id: 90542889)
-          assert result.failure?
-        end
+        result = Github::AppClientService.call(installation_id: 90542889)
+        assert result.failure?
       end
     end
   end
