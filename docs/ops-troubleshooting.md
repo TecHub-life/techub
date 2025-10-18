@@ -55,7 +55,11 @@ Common Issues
   - Run locally for detailed stdout/stderr: `node script/screenshot.js --url ... --out ...`.
   - Check job logs; `Screenshots::CaptureCardService` logs stdout/stderr on failure.
 - GitHub installation 404 creating access token:
-  - Confirm the GitHub App is installed and `GITHUB_INSTALLATION_ID` matches the installation.
-  - Ensure `GITHUB_APP_ID`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and private key are
-    configured.
-  - Validate from console: `Github::InstallationTokenService.call`.
+  - Symptom: `POST https://api.github.com/app/installations/<id>/access_tokens: 404 - Not Found`.
+  - Root cause: invalid/stale installation id OR the App has zero installations.
+  - Pitfall: local `.env` setting `GITHUB_INSTALLATION_ID` overrides auto-discovery. Remove it unless intentionally pinning.
+  - Fix:
+    1) Ensure the App is installed (GitHub UI → Install App).
+    2) Prefer leaving installation id unset in credentials/env; the app auto-discovers and caches it.
+    3) In prod, POST `/ops/github/fix_installation` (HTTP Basic protected) to refresh the cached id.
+    4) Validate from console: `Github::InstallationTokenService.call`.
