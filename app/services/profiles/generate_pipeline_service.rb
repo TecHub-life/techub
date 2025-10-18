@@ -51,6 +51,7 @@ module Profiles
       end
 
       images = nil
+      ai_partial = false
       if ai
         # 3) Generate AI images (prompts + 4 variants)
         t0 = Time.current
@@ -72,6 +73,7 @@ module Profiles
         if ai_traits.failure?
           StructuredLogger.warn(message: "ai_traits_failed", login: login, error: ai_traits.error.message) if defined?(StructuredLogger)
           record_event(profile, stage: "ai_traits", status: "failed", duration_ms: ((Time.current - t1) * 1000).to_i, message: ai_traits.error.message)
+          ai_partial = true
           # Fallback to heuristic synthesis
           StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
           synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
@@ -158,7 +160,7 @@ module Profiles
           card_id: card_id,
           scraped: scraped
         },
-        metadata: { login: login, provider: provider, upload: upload, optimize: optimize }
+        metadata: { login: login, provider: provider, upload: upload, optimize: optimize, partial: ai_partial }
       )
     rescue StandardError => e
       failure(e)

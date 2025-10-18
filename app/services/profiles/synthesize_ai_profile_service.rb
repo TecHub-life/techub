@@ -45,6 +45,7 @@ module Profiles
         # As a hard guarantee, synthesize a complete heuristic profile rather than failing empty
         StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login) if defined?(StructuredLogger)
         cleaned = heuristic_fallback_traits(profile)
+        attempts << { http_status: resp.status, strict: false, empty: true }
       else
         cleaned = validate_and_normalize(json)
       end
