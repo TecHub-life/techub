@@ -1,36 +1,29 @@
 require "test_helper"
+require "webmock/minitest"
 
 module Github
   class AppClientServiceTest < ActiveSupport::TestCase
     test "returns octokit client when installation token succeeds" do
-      expires_at = Time.current + 1.hour
-      payload = { token: "abc123", expires_at: expires_at, permissions: { contents: "read" } }
+      expires_at = Time.now.utc + 3600
 
-      Github::InstallationTokenService.stub :call, ServiceResult.success(payload) do
-        fake_client = Object.new
+      Github::AppAuthenticationService.stub :call, ServiceResult.success("jwt-token") do
+        stub_request(:post, "https://api.github.com/app/installations/42/access_tokens")
+          .to_return(status: 200, body: { token: "abc123", expires_at: expires_at.iso8601, permissions: { contents: "read" } }.to_json, headers: { "Content-Type" => "application/json" })
 
-        Octokit::Client.stub :new, ->(access_token:) do
-          assert_equal "abc123", access_token
-          fake_client
-        end do
-          result = Github::AppClientService.call(installation_id: 42)
-
-          assert result.success?
-          assert_equal fake_client, result.value
-          assert_equal expires_at, result.metadata[:expires_at]
-        end
+        result = Github::AppClientService.call(installation_id: 42)
+        assert result.success?, -> { result.error&.message }
+        assert_in_delta expires_at.to_i, result.metadata[:expires_at].to_i, 2
       end
     end
 
-    test "returns unauthenticated client when installation token fails (fallback)" do
-      Github::InstallationTokenService.stub :call, ServiceResult.failure(StandardError.new("nope")) do
-        # Expect a fallback Octokit::Client without an access token
-        Octokit::Client.stub :new, ->(**_opts) { :unauth_client } do
-          result = Github::AppClientService.call
+    test "bubbles up failure when token creation fails and discovery cannot fix" do
+      Github::AppAuthenticationService.stub :call, ServiceResult.success("jwt-token") do
+        stub_request(:post, "https://api.github.com/app/installations/90542889/access_tokens")
+          .to_return(status: 404, body: "{}", headers: { "Content-Type" => "application/json" })
 
-          assert result.success?
-          assert_equal :unauth_client, result.value
-          assert_equal "unauthenticated", result.metadata[:fallback]
+        Github::FindInstallationService.stub :call, ServiceResult.failure(StandardError.new("no install")) do
+          result = Github::AppClientService.call(installation_id: 90542889)
+          assert result.failure?
         end
       end
     end

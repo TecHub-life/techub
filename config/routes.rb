@@ -62,7 +62,6 @@ Rails.application.routes.draw do
     post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
     post "/bulk_retry_ai_all", to: "admin#bulk_retry_ai_all", as: :bulk_retry_ai_all
-    post "/github/fix_installation", to: "admin#github_fix_installation", as: :github_fix_installation
     # Profiles admin actions
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
     post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile

@@ -44,16 +44,7 @@ module Ops
       end
 
       # GitHub App installation diagnostics for ops panel
-      begin
-        @configured_installation_id = Github::Configuration.installation_id
-        @env_installation_id = (ENV["GITHUB_INSTALLATION_ID"].presence)
-        @credentials_installation_id = (Rails.application.credentials.dig(:github, :installation_id) rescue nil)
-        discovered = Github::FindInstallationService.call
-        @discovered_installation = discovered.success? ? discovered.value : nil
-        @discovery_error = discovered.failure? ? discovered.error.message : nil
-      rescue => e
-        @discovery_error = e.message
-      end
+      @configured_installation_id = Github::Configuration.installation_id
     end
 
     def send_test_email

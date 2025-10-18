@@ -114,8 +114,7 @@ variable.
 ## GitHub App & OAuth Flow
 
 - `Github::AppAuthenticationService` crafts the JWT needed for App authentication.
-- `Github::InstallationTokenService` + `Github::AppClientService` issue installation tokens so we
-  can talk to the API as the app.
+- `Github::AppClientService` issues installation tokens so we can talk to the API as the app.
 - `Github::UserOauthService` exchanges OAuth codes, while `Github::FetchAuthenticatedUser` retrieves
   the authenticated user profile.
 - `Users::UpsertFromGithub` persists encrypted access tokens and profile info. Sessions are plain
