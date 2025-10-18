@@ -43,7 +43,7 @@ module Ops
         @data_issues_profiles = []
       end
 
-      # GitHub App installation diagnostics for ops panel
+      # GitHub App installation diagnostics for ops panel (read-only)
       @configured_installation_id = Github::Configuration.installation_id
     end
 
@@ -101,16 +101,7 @@ module Ops
       redirect_to ops_admin_path, notice: "Queued AI re-run for all (#{count}) profiles"
     end
 
-    def github_fix_installation
-      discovered = Github::FindInstallationService.call
-      if discovered.success?
-        id = discovered.value[:id]
-        Rails.cache.write("github.installation_id.override", id, expires_in: 7.days)
-        redirect_to ops_admin_path, notice: "GitHub App installation fixed to ID #{id} (#{discovered.value[:account_login]})"
-      else
-        redirect_to ops_admin_path, alert: "Could not discover installation: #{discovered.error.message}"
-      end
-    end
+    # Removed write action for installation id: installation id must be configured explicitly.
 
     private
 

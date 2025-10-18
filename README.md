@@ -106,10 +106,10 @@ active_record_encryption:
 variables. The test suite falls back to deterministic dummy encryption keys so it runs out of the
 box.
 
-The installation id comes from the GitHub UI (`https://github.com/settings/installations/<id>`);
-store it in credentials as shown above or set `GITHUB_INSTALLATION_ID` in your `.env`. If you would
-rather point at a file than paste the key, use the optional `GITHUB_PRIVATE_KEY_PATH` environment
-variable.
+The installation id comes from the GitHub UI (`https://github.com/settings/installations/<id>`).
+Set it explicitly in credentials (`github.installation_id`) or via `GITHUB_INSTALLATION_ID`. There is
+no auto-discovery or admin override; this value must be correct and stable. If you would rather point
+at a file than paste the key, use the optional `GITHUB_PRIVATE_KEY_PATH` environment variable.
 
 ## GitHub App & OAuth Flow
 

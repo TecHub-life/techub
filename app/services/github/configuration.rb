@@ -18,11 +18,7 @@ module Github
       end
 
       def installation_id
-        # Prefer a cached override (set when auto-discovery corrects the ID),
-        # else use configured credentials/env value.
-        cache_value = (Rails.cache.read("github.installation_id.override") rescue nil)
-        return cache_value.to_i if cache_value.present?
-
+        # Single source of truth: credentials or env var only (no auto-discovery, no cache overrides)
         value = fetch_config(:installation_id, env: "GITHUB_INSTALLATION_ID")
         value.present? ? value.to_i : nil
       end
@@ -69,7 +65,8 @@ module Github
       end
 
       def normalize_multiline(input)
-        input.to_s.gsub(/?
+        input.to_s.gsub(/
+?
 /, "
 ")
       end
