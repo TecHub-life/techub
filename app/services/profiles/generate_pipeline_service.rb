@@ -51,6 +51,7 @@ module Profiles
       end
 
       images = nil
+      ai_partial = false
       if ai
         # 3) Generate AI images (prompts + 4 variants)
         t0 = Time.current
@@ -68,10 +69,12 @@ module Profiles
         # 3b) AI text + traits (structured)
         t1 = Time.current
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_traits") if defined?(StructuredLogger)
-        ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile)
+        # Force AI Studio for text traits (Vertex flaky with prose-only responses)
+        ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile, provider: "ai_studio")
         if ai_traits.failure?
           StructuredLogger.warn(message: "ai_traits_failed", login: login, error: ai_traits.error.message) if defined?(StructuredLogger)
           record_event(profile, stage: "ai_traits", status: "failed", duration_ms: ((Time.current - t1) * 1000).to_i, message: ai_traits.error.message)
+          ai_partial = true
           # Fallback to heuristic synthesis
           StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
           synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
@@ -79,6 +82,12 @@ module Profiles
           StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
           record_event(profile, stage: "synth_heuristic", status: "completed", duration_ms: 0)
         else
+          # Propagate partial flag when AI succeeded via fallback inside the service
+          begin
+            meta = ai_traits.metadata if ai_traits.respond_to?(:metadata)
+            ai_partial ||= !!(meta && meta[:partial])
+          rescue StandardError
+          end
           StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_traits", duration_ms: ((Time.current - t1) * 1000).to_i) if defined?(StructuredLogger)
           record_event(profile, stage: "ai_traits", status: "completed", duration_ms: ((Time.current - t1) * 1000).to_i)
         end
@@ -97,6 +106,25 @@ module Profiles
         shot = Screenshots::CaptureCardService.call(login: login, variant: variant, host: host)
         return shot if shot.failure?
         captures[variant] = shot.value
+
+        # Persist/overwrite canonical asset row for lookups in UI and OG routes
+        begin
+          rec = ProfileAssets::RecordService.call(
+            profile: profile,
+            kind: variant,
+            local_path: shot.value[:output_path],
+            public_url: shot.value[:public_url],
+            mime_type: shot.value[:mime_type],
+            width: shot.value[:width],
+            height: shot.value[:height],
+            provider: "screenshot"
+          )
+          unless rec.success?
+            StructuredLogger.warn(message: "record_asset_failed", login: login, variant: variant, error: rec.error&.message) if defined?(StructuredLogger)
+          end
+        rescue StandardError => e
+          StructuredLogger.warn(message: "record_asset_exception", login: login, variant: variant, error: e.message) if defined?(StructuredLogger)
+        end
 
         # Optional: move heavy optimization to background for larger assets
         if optimize
@@ -139,7 +167,7 @@ module Profiles
           card_id: card_id,
           scraped: scraped
         },
-        metadata: { login: login, provider: provider, upload: upload, optimize: optimize }
+        metadata: { login: login, provider: provider, upload: upload, optimize: optimize, partial: ai_partial }
       )
     rescue StandardError => e
       failure(e)

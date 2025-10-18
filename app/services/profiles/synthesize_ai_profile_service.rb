@@ -25,6 +25,7 @@ module Profiles
       conn = client_result.value
 
       attempts = []
+      used_fallback = false
 
       # First attempt (creative within schema)
       resp = conn.post(
@@ -41,9 +42,36 @@ module Profiles
       end
       attempts << { http_status: resp.status, strict: false }
       json = extract_json_from_response(resp.body)
-      return failure(StandardError.new("empty_ai_traits")) if json.blank?
+      if json.blank?
+        attempts << { http_status: resp.status, strict: false, empty: true }
+        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login) if defined?(StructuredLogger)
+        # Try one strict re-ask before falling back
+        resp_strict = conn.post(
+          Gemini::Endpoints.text_generate_path(
+            provider: provider,
+            model: Gemini::Configuration.model,
+            project_id: Gemini::Configuration.project_id,
+            location: Gemini::Configuration.location
+          ),
+          build_payload(ctx, strict: true)
+        )
+        if (200..299).include?(resp_strict.status)
+          attempts << { http_status: resp_strict.status, strict: true }
+          json2 = extract_json_from_response(resp_strict.body)
+          cleaned = validate_and_normalize(json2) if json2.present?
+        else
+          attempts << { http_status: resp_strict.status, strict: true, error: true }
+        end
 
-      cleaned = validate_and_normalize(json)
+        if cleaned.blank?
+          # As a hard guarantee, synthesize a complete heuristic profile rather than failing empty
+          cleaned = heuristic_fallback_traits(profile)
+          used_fallback = true
+        end
+      else
+        cleaned = validate_and_normalize(json)
+      end
+      # If initial cleaned output violates constraints, attempt a strict re-ask before falling back
       unless constraints_ok?(cleaned)
         # Strict re-ask with lower temperature and explicit correction guidance
         resp2 = conn.post(
@@ -103,7 +131,7 @@ module Profiles
       end
 
       StructuredLogger.info(message: "ai_traits_generated", login: profile.login, provider: provider, model: Gemini::Configuration.model, attempts: attempts) if defined?(StructuredLogger)
-      success(record)
+      success(record, metadata: { partial: used_fallback, attempts: attempts })
     rescue Faraday::Error => e
       failure(e)
     end
@@ -189,20 +217,33 @@ module Profiles
     def build_payload(ctx, strict: false)
       instruction = strict ? strict_system_prompt : system_prompt
       temp = strict ? 0.25 : TEMPERATURE
-      {
-        systemInstruction: {
-          parts: [ { text: instruction } ]
-        },
-        contents: [
-          { role: "user", parts: [ { text: ctx.to_json } ] }
-        ],
-        generationConfig: {
-          temperature: temp,
-          maxOutputTokens: 2300,
-          responseMimeType: "application/json",
-          responseSchema: response_schema
+      provider = provider_override.presence || Gemini::Configuration.provider
+
+      if provider == "vertex"
+        # Vertex expects snake_case keys
+        {
+          system_instruction: { parts: [ { text: instruction } ] },
+          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
+          generation_config: {
+            temperature: temp,
+            max_output_tokens: 2300,
+            response_mime_type: "application/json",
+            response_schema: response_schema_for("vertex")
+          }
         }
-      }
+      else
+        # AI Studio uses camelCase
+        {
+          systemInstruction: { parts: [ { text: instruction } ] },
+          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
+          generationConfig: {
+            temperature: temp,
+            maxOutputTokens: 2300,
+            responseMimeType: "application/json",
+            responseSchema: response_schema_for("ai_studio")
+          }
+        }
+      end
     end
 
     def system_prompt
@@ -230,8 +271,8 @@ module Profiles
       PROMPT
     end
 
-    def response_schema
-      {
+    def response_schema_for(provider)
+      base = {
         type: "object",
         properties: {
           short_bio: { type: "string" },
@@ -253,9 +294,16 @@ module Profiles
           spirit_animal: { type: "string" },
           archetype: { type: "string" }
         },
-        required: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype],
-        propertyOrdering: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+        required: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
       }
+
+      # "propertyOrdering" is a non-standard extension that some providers ignore.
+      # Keep it for AI Studio where it's tolerated; omit for Vertex to avoid 400s.
+      if provider != "vertex"
+        base[:propertyOrdering] = %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+      end
+
+      base
     end
 
     def extract_structured_json(parts)
@@ -275,6 +323,19 @@ module Profiles
       first_candidate = candidates.first || {}
       content = dig_value(first_candidate, :content) || {}
       parts = dig_value(content, :parts)
+
+      # First, prefer function-call structured output when present
+      Array(parts).each do |part|
+        fc = dig_value(part, :functionCall) || dig_value(part, :function_call)
+        next unless fc
+        args = dig_value(fc, :args) || dig_value(fc, :arguments)
+        if args.is_a?(Hash)
+          return args
+        elsif args.is_a?(String)
+          parsed = parse_relaxed_json(args)
+          return parsed if parsed.is_a?(Hash)
+        end
+      end
 
       json = extract_structured_json(parts)
       texts = Array(parts).filter_map { |p| dig_value(p, :text) }.join(" ")
@@ -302,6 +363,56 @@ module Profiles
       out["vibe"] = title_cap(out["vibe"].to_s.strip.first(30))
       out["special_move"] = title_cap(out["special_move"].to_s.strip.first(40))
       out
+    end
+
+    # Guarantee: produce a fully valid traits hash from heuristics when AI returns nothing
+    def heuristic_fallback_traits(record)
+      attrs = Profiles::SynthesizeCardService.new(profile: record, persist: false).call
+      if attrs.success?
+        normalized = {
+          "short_bio" => record.summary.to_s.presence || record.bio.to_s.presence || "",
+          "long_bio" => (record.bio.to_s + "\n\n" + record.summary.to_s).strip.presence || record.bio.to_s,
+          "buff" => attrs.value[:vibe].to_s,
+          "buff_description" => "",
+          "weakness" => "",
+          "weakness_description" => "",
+          "flavor_text" => attrs.value[:tagline].to_s,
+          "attack" => attrs.value[:attack].to_i,
+          "defense" => attrs.value[:defense].to_i,
+          "speed" => attrs.value[:speed].to_i,
+          "playing_card" => attrs.value[:playing_card].to_s,
+          "spirit_animal" => attrs.value[:spirit_animal].to_s,
+          "archetype" => attrs.value[:archetype].to_s,
+          "vibe" => attrs.value[:vibe].to_s,
+          "vibe_description" => "",
+          "special_move" => attrs.value[:special_move].to_s,
+          "special_move_description" => "",
+          "tags" => Array(attrs.value[:tags]).map(&:to_s)
+        }
+        validate_and_normalize(normalized)
+      else
+        # As a last resort, populate minimal defaults to satisfy constraints
+        validate_and_normalize({
+          "short_bio" => record.bio.to_s.presence || "",
+          "long_bio" => record.summary.to_s.presence || record.bio.to_s,
+          "buff" => "Builder",
+          "buff_description" => "",
+          "weakness" => "",
+          "weakness_description" => "",
+          "flavor_text" => (record.summary.to_s.presence || record.bio.to_s).to_s.first(80),
+          "attack" => 75,
+          "defense" => 75,
+          "speed" => 75,
+          "playing_card" => fallback_playing_card(record),
+          "spirit_animal" => "Quokka",
+          "archetype" => "The Explorer",
+          "vibe" => "Builder",
+          "vibe_description" => "",
+          "special_move" => "Refactor Surge",
+          "special_move_description" => "",
+          "tags" => %w[developer builder maker open-source devops coder]
+        })
+      end
     end
 
     def constraints_ok?(out)

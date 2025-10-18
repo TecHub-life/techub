@@ -136,6 +136,12 @@ namespace :gemini do
       avatar_path ||= Rails.root.join("public", "avatars", "#{login}.png")
 
       PROVIDER_ORDER.each do |provider|
+        begin
+          Gemini::Configuration.validate!(provider)
+        rescue KeyError => e
+          puts "Skipping #{provider}: #{e.message}"
+          next
+        end
         puts "\n=== Avatar prompt via #{provider} ==="
         result = Gemini::AvatarPromptService.call(
           avatar_path: avatar_path,
@@ -184,6 +190,12 @@ namespace :gemini do
       eligibility_threshold = (ENV["ELIGIBILITY_THRESHOLD"] || Eligibility::GithubProfileScoreService::DEFAULT_THRESHOLD).to_i
 
       PROVIDER_ORDER.each do |provider|
+        begin
+          Gemini::Configuration.validate!(provider)
+        rescue KeyError => e
+          puts "Skipping #{provider}: #{e.message}"
+          next
+        end
         puts "\n=== Avatar generate via #{provider} ==="
         result = Gemini::AvatarImageSuiteService.call(
           login: login,
@@ -229,6 +241,12 @@ namespace :gemini do
       login = args[:login] || ENV["LOGIN"] || "loftwah"
 
       PROVIDER_ORDER.each do |provider|
+        begin
+          Gemini::Configuration.validate!(provider)
+        rescue KeyError => e
+          puts "Skipping #{provider}: #{e.message}"
+          next
+        end
         puts "\n=== Profile story via #{provider} ==="
         result = Profiles::StoryFromProfile.call(login: login, provider: provider)
 

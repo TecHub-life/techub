@@ -12,9 +12,11 @@ module Profiles
       return unless profile
 
       if result.success?
-        profile.update!(last_pipeline_status: "success", last_pipeline_error: nil)
+        partial = result.respond_to?(:metadata) && (result.metadata || {})[:partial]
+        status = partial ? "partial_success" : "success"
+        profile.update!(last_pipeline_status: status, last_pipeline_error: nil)
         Notifications::PipelineNotifierService.call(profile: profile, status: "success")
-        StructuredLogger.info(message: "pipeline_completed", service: self.class.name, login: login, duration_ms: ((Time.current - started) * 1000).to_i)
+        StructuredLogger.info(message: "pipeline_completed", service: self.class.name, login: login, duration_ms: ((Time.current - started) * 1000).to_i, partial: partial)
       else
         profile.update!(last_pipeline_status: "failure", last_pipeline_error: result.error.message)
         Notifications::PipelineNotifierService.call(profile: profile, status: "failure", error_message: result.error.message)

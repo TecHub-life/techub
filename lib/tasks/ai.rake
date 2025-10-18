@@ -1,4 +1,6 @@
 namespace :ai do
+  PROVIDER_ORDER = %w[ai_studio vertex].freeze
+
   desc "Regenerate AI traits for a single profile (ADMIN)"
   task :traits, [ :login ] => :environment do |_, args|
     login = args[:login].to_s.downcase
@@ -48,5 +50,43 @@ namespace :ai do
       end
     end
     exit 1 if failures.any?
+  end
+
+  namespace :traits do
+    desc "Run structured traits generation against both providers for quick verification"
+    task :verify, [ :login ] => :environment do |_, args|
+      login = args[:login].to_s.downcase
+      login = "loftwah" if login.blank?
+
+      prof = Profile.for_login(login).first
+      abort("Profile not found: #{login}") unless prof
+
+      failures = []
+      PROVIDER_ORDER.each do |provider|
+        begin
+          Gemini::Configuration.validate!(provider)
+        rescue KeyError => e
+          puts "Skipping #{provider}: #{e.message}"
+          next
+        end
+        puts "\n=== Traits via #{provider} ==="
+        result = Profiles::SynthesizeAiProfileService.call(profile: prof, provider: provider)
+        if result.success?
+          card = prof.profile_card
+          puts "Provider #{provider} OK."
+          if card
+            puts "- Title: #{card.title}"
+            puts "- Flavor: #{card.flavor_text}"
+            puts "- Tags: #{Array(card.tags).join(', ')}"
+          end
+        else
+          warn "Provider #{provider} FAILED: #{result.error.message}"
+          warn "Metadata: #{result.metadata.inspect}" if result.metadata.present?
+          failures << provider
+        end
+      end
+
+      exit 1 if failures.any?
+    end
   end
 end

@@ -138,26 +138,45 @@ module Gemini
     # endpoint computed via Gemini::Endpoints
 
     def build_payload(provider, image_payload, mime_type, token_limit)
-      {
-        systemInstruction: {
-          parts: [ { text: SYSTEM_PROMPT } ]
-        },
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mime_type, data: image_payload } }
-            ]
+      if provider == "vertex"
+        {
+          system_instruction: { parts: [ { text: SYSTEM_PROMPT } ] },
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                { inline_data: { mime_type: mime_type, data: image_payload } }
+              ]
+            }
+          ],
+          generation_config: {
+            temperature: temperature,
+            max_output_tokens: token_limit,
+            response_mime_type: "application/json",
+            response_schema: response_schema
           }
-        ],
-        generationConfig: {
-          temperature: temperature,
-          maxOutputTokens: token_limit,
-          responseMimeType: "application/json",
-          responseSchema: response_schema
         }
-      }
+      else
+        {
+          systemInstruction: { parts: [ { text: SYSTEM_PROMPT } ] },
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                { inline_data: { mime_type: mime_type, data: image_payload } }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: temperature,
+            maxOutputTokens: token_limit,
+            responseMimeType: "application/json",
+            responseSchema: response_schema
+          }
+        }
+      end
     end
 
     def response_schema
@@ -299,7 +318,7 @@ module Gemini
           project_id: Gemini::Configuration.project_id,
           location: Gemini::Configuration.location
         ),
-        fallback_payload(image_payload, mime_type, token_limit)
+        fallback_payload(provider, image_payload, mime_type, token_limit)
       )
 
       unless (200..299).include?(response.status)
@@ -324,22 +343,40 @@ module Gemini
       failure(e)
     end
 
-    def fallback_payload(image_payload, mime_type, token_limit)
-      {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: FALLBACK_PROMPT },
-              { inline_data: { mime_type: mime_type, data: image_payload } }
-            ]
+    def fallback_payload(provider, image_payload, mime_type, token_limit)
+      if provider == "vertex"
+        {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: FALLBACK_PROMPT },
+                { inline_data: { mime_type: mime_type, data: image_payload } }
+              ]
+            }
+          ],
+          generation_config: {
+            temperature: 0.1,
+            max_output_tokens: token_limit
           }
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: token_limit
         }
-      }
+      else
+        {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: FALLBACK_PROMPT },
+                { inline_data: { mime_type: mime_type, data: image_payload } }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: token_limit
+          }
+        }
+      end
     end
 
     def extract_plain_text(body)
