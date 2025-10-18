@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_18_000011) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_18_031000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -257,6 +257,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_18_000011) do
     t.string "last_pipeline_status"
     t.text "last_pipeline_error"
     t.datetime "last_ai_regenerated_at"
+    t.text "last_sync_error"
+    t.datetime "last_sync_error_at"
     t.index ["github_id"], name: "index_profiles_on_github_id", unique: true
     t.index ["hireable"], name: "index_profiles_on_hireable"
     t.index ["last_ai_regenerated_at"], name: "index_profiles_on_last_ai_regenerated_at"

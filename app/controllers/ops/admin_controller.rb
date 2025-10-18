@@ -32,6 +32,16 @@ module Ops
       rescue StandardError
         @failed_profiles = []
       end
+
+      # Profiles that claim success but are missing expected associated data
+      begin
+        candidates = Profile.where(last_pipeline_status: "success").includes(:profile_card, :profile_languages, :profile_repositories)
+        @data_issues_profiles = candidates.select do |p|
+          p.profile_card.nil? || !p.profile_languages.exists? || !p.profile_repositories.exists?
+        end.first(50)
+      rescue StandardError
+        @data_issues_profiles = []
+      end
     end
 
     def send_test_email
