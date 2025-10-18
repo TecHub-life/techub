@@ -7,7 +7,8 @@ module Storage
     end
 
     def call
-      return failure(StandardError.new("File not found"), metadata: { path: path.to_s }) unless path.exist?
+      str_path = path.to_s
+      return failure(StandardError.new("File not found"), metadata: { path: str_path }) if str_path.strip.empty? || !path.exist?
 
       blob = ActiveStorage::Blob.create_and_upload!(
         io: File.open(path, "rb"),

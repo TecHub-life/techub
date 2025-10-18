@@ -99,13 +99,26 @@ module Gemini
         end
 
         if upload_enabled?
-          upload = Storage::ActiveStorageUploadService.call(
-            path: payload[:output_path],
-            content_type: payload[:mime_type],
-            filename: File.basename(payload[:output_path])
-          )
-          return upload if upload.failure?
-          payload[:public_url] = upload.value[:public_url]
+          begin
+            out_path = payload[:output_path].to_s
+            if out_path.strip.empty? || !File.exist?(out_path)
+              StructuredLogger.warn(message: "avatar_upload_skipped_missing_path", login: login, path: out_path) if defined?(StructuredLogger)
+            else
+              upload = Storage::ActiveStorageUploadService.call(
+                path: out_path,
+                content_type: payload[:mime_type],
+                filename: File.basename(out_path)
+              )
+              if upload.success?
+                payload[:public_url] = upload.value[:public_url]
+              else
+                StructuredLogger.warn(message: "avatar_upload_failed", login: login, error: upload.error&.message, path: out_path) if defined?(StructuredLogger)
+                # continue without public_url
+              end
+            end
+          rescue StandardError => e
+            StructuredLogger.warn(message: "avatar_upload_exception", login: login, error: e.message) if defined?(StructuredLogger)
+          end
         end
 
         generated[key] = payload
