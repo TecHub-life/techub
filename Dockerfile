@@ -36,7 +36,7 @@ RUN apt-get update -qq && \
     set -eux; \
     tmpdir="$(mktemp -d)"; \
     curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IMAGEMAGICK_VERSION}.tar.gz" -o "$tmpdir/ImageMagick.tar.gz"; \
-    if [ -n "${IMAGEMAGICK_SHA256}" ]; then echo "${IMAGEMAGICK_SHA256}  $tmpdir/ImageMagick.tar.gz" | sha256sum -c -; fi; \
+    if [ -n "${IMAGEMAGICK_SHA256:-}" ]; then echo "${IMAGEMAGICK_SHA256}  $tmpdir/ImageMagick.tar.gz" | sha256sum -c -; fi; \
     tar -xzf "$tmpdir/ImageMagick.tar.gz" -C "$tmpdir"; \
     cd "$tmpdir"/ImageMagick-${IMAGEMAGICK_VERSION}; \
     ./configure --disable-docs; \
