@@ -98,6 +98,25 @@ module Profiles
         return shot if shot.failure?
         captures[variant] = shot.value
 
+        # Persist/overwrite canonical asset row for lookups in UI and OG routes
+        begin
+          rec = ProfileAssets::RecordService.call(
+            profile: profile,
+            kind: variant,
+            local_path: shot.value[:output_path],
+            public_url: shot.value[:public_url],
+            mime_type: shot.value[:mime_type],
+            width: shot.value[:width],
+            height: shot.value[:height],
+            provider: "screenshot"
+          )
+          unless rec.success?
+            StructuredLogger.warn(message: "record_asset_failed", login: login, variant: variant, error: rec.error&.message) if defined?(StructuredLogger)
+          end
+        rescue StandardError => e
+          StructuredLogger.warn(message: "record_asset_exception", login: login, variant: variant, error: e.message) if defined?(StructuredLogger)
+        end
+
         # Optional: move heavy optimization to background for larger assets
         if optimize
           begin

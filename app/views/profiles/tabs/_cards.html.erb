@@ -10,31 +10,40 @@
     <p class="text-slate-600 dark:text-slate-400 mb-6">Download and share your AI-generated profile cards on social media.</p>
     
     <% base = Rails.root.join("public", "generated", profile.login) %>
+    <% og_asset = profile.profile_assets.find_by(kind: "og") %>
+    <% card_asset = profile.profile_assets.find_by(kind: "card") %>
+    <% simple_asset = profile.profile_assets.find_by(kind: "simple") %>
     
     <%# Helper to get image path with cache busting %>
     <% 
-      og_img = if File.exist?(base.join("og.jpg"))
+      og_img = if og_asset&.public_url.present?
+        og_asset.public_url
+      elsif File.exist?(base.join("og.jpg")) && (File.size?(base.join("og.jpg")) || 0) > 1024
         ts = File.mtime(base.join("og.jpg")).to_i rescue nil
         "/generated/#{profile.login}/og.jpg#{ts ? "?v=#{ts}" : ""}"
-      elsif File.exist?(base.join("og.png"))
+      elsif File.exist?(base.join("og.png")) && (File.size?(base.join("og.png")) || 0) > 1024
         ts = File.mtime(base.join("og.png")).to_i rescue nil
         "/generated/#{profile.login}/og.png#{ts ? "?v=#{ts}" : ""}"
       else
         (og_image_path(login: profile.login, format: :jpg) rescue nil)
       end
       
-      card_img = if File.exist?(base.join("card.jpg"))
+      card_img = if card_asset&.public_url.present?
+        card_asset.public_url
+      elsif File.exist?(base.join("card.jpg")) && (File.size?(base.join("card.jpg")) || 0) > 1024
         ts = File.mtime(base.join("card.jpg")).to_i rescue nil
         "/generated/#{profile.login}/card.jpg#{ts ? "?v=#{ts}" : ""}"
-      elsif File.exist?(base.join("card.png"))
+      elsif File.exist?(base.join("card.png")) && (File.size?(base.join("card.png")) || 0) > 1024
         ts = File.mtime(base.join("card.png")).to_i rescue nil
         "/generated/#{profile.login}/card.png#{ts ? "?v=#{ts}" : ""}"
       end
       
-      simple_img = if File.exist?(base.join("simple.jpg"))
+      simple_img = if simple_asset&.public_url.present?
+        simple_asset.public_url
+      elsif File.exist?(base.join("simple.jpg")) && (File.size?(base.join("simple.jpg")) || 0) > 1024
         ts = File.mtime(base.join("simple.jpg")).to_i rescue nil
         "/generated/#{profile.login}/simple.jpg#{ts ? "?v=#{ts}" : ""}"
-      elsif File.exist?(base.join("simple.png"))
+      elsif File.exist?(base.join("simple.png")) && (File.size?(base.join("simple.png")) || 0) > 1024
         ts = File.mtime(base.join("simple.png")).to_i rescue nil
         "/generated/#{profile.login}/simple.png#{ts ? "?v=#{ts}" : ""}"
       end

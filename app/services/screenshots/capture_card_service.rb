@@ -62,6 +62,19 @@ module Screenshots
 
       return failure(StandardError.new("Screenshot not found"), metadata: { expected: path.to_s }) unless File.exist?(path)
 
+      # Guard against zero-byte/invalid outputs in non-test environments
+      unless Rails.env.test?
+        begin
+          size_bytes = File.size(path)
+        rescue StandardError
+          size_bytes = 0
+        end
+        if size_bytes.to_i <= 1024
+          StructuredLogger.error(message: "screenshot_empty", login: login, variant: variant, url: url, path: path.to_s, size: size_bytes) if defined?(StructuredLogger)
+          return failure(StandardError.new("screenshot_empty"), metadata: { expected: path.to_s, size: size_bytes, url: url })
+        end
+      end
+
       public_url = nil
       if upload_enabled?
         upload = Storage::ActiveStorageUploadService.call(path: path.to_s, content_type: mime_type, filename: File.basename(path))
