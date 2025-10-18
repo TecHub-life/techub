@@ -27,6 +27,14 @@ class AvatarImageSuiteServiceUploadTest < ActiveSupport::TestCase
       @aspect_ratio = aspect_ratio
     end
     def call
+      # Ensure the output file exists so the upload branch runs
+      begin
+        path = Pathname.new(@output_path.to_s)
+        FileUtils.mkdir_p(path.dirname)
+        File.binwrite(path, "\x89PNG\r\n")
+      rescue StandardError
+        # best-effort: if we fail to write, the service will skip upload
+      end
       ServiceResult.success(
         {
           data: Base64.strict_encode64("fake"),
