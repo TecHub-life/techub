@@ -7,7 +7,11 @@ class MyProfilesController < ApplicationController
     if uid.blank?
       return redirect_to auth_github_path, alert: "Please sign in with GitHub"
     end
-    @profiles = Profile.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }).order(:login)
+    # Only show profiles the user actually owns to avoid confusion with past submissions
+    @profiles = Profile
+      .joins(:profile_ownerships)
+      .where(profile_ownerships: { user_id: uid, is_owner: true })
+      .order(:login)
 
     # One-time notices for removed links (when rightful owner claimed)
     deliveries = NotificationDelivery.where(user_id: uid, event: "ownership_link_removed", subject_type: "Profile")
@@ -119,7 +123,10 @@ class MyProfilesController < ApplicationController
 
   def destroy
     ownership = ProfileOwnership.find_by(user_id: current_user.id, profile_id: @profile.id)
-    return redirect_to my_profiles_path, alert: "You do not own this profile" unless ownership
+    return redirect_to my_profiles_path, alert: "Not linked to this profile" unless ownership
+    if ownership.is_owner
+      return redirect_to my_profiles_path, alert: "You are the owner. Transfer in Ops to remove it."
+    end
     ownership.destroy!
     redirect_to my_profiles_path, notice: "Removed @#{@profile.login} from your profiles"
   end

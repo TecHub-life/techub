@@ -47,3 +47,15 @@ Common Issues
 - 406 on HEAD/allow_browser: benign for HEAD requests from crawlers; normal.
 - No jobs running: confirm workers with `/ops/jobs` and tail job logs.
 - Solid Queue in Puma: controlled by `SOLID_QUEUE_IN_PUMA` in `config/deploy.yml`.
+- Screenshot command failed:
+  - Ensure Node deps installed: `npm ci`.
+  - Install Chromium libs on Linux/WSL:
+    `sudo apt-get install -y libnss3 libatk-bridge2.0-0 libx11-xcb1 libdrm2 libgbm1 libasound2 libxcomposite1 libxrandr2 libxi6 fonts-liberation libxdamage1 libpango-1.0-0 libpangocairo-1.0-0 libcups2 libxkbcommon0`.
+  - Verify URL is reachable (e.g., `http://127.0.0.1:3000/cards/<login>/og`).
+  - Run locally for detailed stdout/stderr: `node script/screenshot.js --url ... --out ...`.
+  - Check job logs; `Screenshots::CaptureCardService` logs stdout/stderr on failure.
+- GitHub installation 404 creating access token:
+  - Confirm the GitHub App is installed and `GITHUB_INSTALLATION_ID` matches the installation.
+  - Ensure `GITHUB_APP_ID`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and private key are
+    configured.
+  - Validate from console: `Github::InstallationTokenService.call`.

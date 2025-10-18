@@ -66,4 +66,38 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
     # An event is recorded for A so My Profiles can show a banner
     assert NotificationDelivery.exists?(user_id: user_loftwah.id, event: "ownership_link_removed", subject_type: "Profile", subject_id: profile.id)
   end
+
+  test "non-rightful submit allowed when no owner exists (becomes owner)" do
+    # Someone (not matching profile login) submits a brand new profile; first submitter becomes owner
+    actor = @user # loftwah
+    Profiles::SyncFromGithub.stub :call, ServiceResult.success(Profile.create!(github_id: 4004, login: "freshuser")) do
+      open_session do |sess|
+        sess.post create_submission_path, params: { login: "freshuser" }, headers: { "X-Test-User-Id" => actor.id.to_s }
+        assert_equal 302, sess.response.status
+      end
+    end
+
+    prof = Profile.for_login("freshuser").first
+    assert_equal "queued", prof.last_pipeline_status
+    link = ProfileOwnership.find_by(user_id: actor.id, profile_id: prof.id)
+    assert link.present?
+    assert_equal true, link.is_owner
+  end
+
+  test "duplicate submission rejected when already owned by different user" do
+    owner = User.create!(github_id: 5005, login: "rightful")
+    profile = Profile.create!(github_id: 6006, login: "rightful")
+    # Seed: rightful owner already owns the profile
+    ProfileOwnership.create!(user: owner, profile: profile, is_owner: true)
+
+    # Another user tries to submit the same profile; should be redirected with alert
+    Profiles::SyncFromGithub.stub :call, ServiceResult.success(profile) do
+      open_session do |sess|
+        sess.post create_submission_path, params: { login: "rightful" }, headers: { "X-Test-User-Id" => @user.id.to_s }
+        assert_equal 302, sess.response.status
+        # After redirect, no new ownership for the actor
+        refute ProfileOwnership.exists?(user_id: @user.id, profile_id: profile.id)
+      end
+    end
+  end
 end

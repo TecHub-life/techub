@@ -20,6 +20,25 @@ Ownership and accounts
 - Eligibility: enforce `Eligibility::GithubProfileScoreService` threshold on new submissions to
   control costs.
 
+My Profiles
+
+- The `My Profiles` page shows only profiles you own (`is_owner: true`).
+- When the rightful owner claims a profile, we remove any stale links to other users and show a
+  one-time banner to those users explaining the removal.
+- Owner badge is not shown in `My Profiles` (ownership is implicit there).
+
+Ownership scenarios
+
+- First-time self-claim: If you submit your own GitHub login and no owner exists, you become the
+  owner.
+- Non-rightful submit allowed when no owner: If you submit a profile that doesn’t match your login
+  and no owner exists, you become the owner (first-come, first-served).
+- Rightful owner later claims: If someone else owns it and the rightful owner submits their own
+  login later, ownership transfers to them and other links are removed.
+- Duplicate submission by non-owner when already owned: Rejected; ownership does not change.
+- Admin transfer: In `/ops/ownerships`, transferring sets the new owner and removes all other links
+  for that profile.
+
 Actions after claim
 
 - Refresh data from GitHub.

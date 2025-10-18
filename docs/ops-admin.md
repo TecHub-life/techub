@@ -84,6 +84,8 @@ There can be many `User`↔`Profile` links, but exactly one link per profile is 
 - A profile must always have exactly one owner.
 - You cannot clear or delete the owner link.
 - To change owners, use Transfer (or Make owner on an existing non-owner link).
+- Transfer semantics: setting a new owner removes all other links (including the previous owner and
+  any non-owner links) to keep a single source of truth.
 - Rake equivalents:
   - `rake techub:ownership:list`
   - `rake techub:ownership:list_profile[login]`

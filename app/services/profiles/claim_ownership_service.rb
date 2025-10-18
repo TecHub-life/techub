@@ -38,6 +38,9 @@ module Profiles
           end
         else
           # No owner yet: first submitter becomes owner (regardless of login match)
+          # Clean up any non-owner links from previous submissions to avoid stray visibility
+          ProfileOwnership.where(profile_id: profile.id, is_owner: false).delete_all
+
           ownership.is_owner = true
           unless ownership.save
             return failure(StandardError.new(ownership.errors.full_messages.to_sentence))

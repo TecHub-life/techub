@@ -93,13 +93,15 @@ context.
    - Pipeline: `Profiles::GeneratePipelineService` orchestrates the above; returns artifact
      paths/ids.
 
-## 6) Ownership & Limits (Planned)
+## 6) Ownership & Limits
 
-- Link `User` ↔ `Profile` (“My Profiles”): claim, list, remove.
-- Enforce per-user cap (default 5) on active profiles.
-- Ownership gate before submission: only allow submission when the user can own it.
-
-Roadmap: PR 13 (“Ownership & limits”) + PR 14 (Eligibility gate in pipeline).
+- My Profiles lists only profiles you own (single-owner model).
+- First-time self-claim: first submitter becomes owner if no owner exists.
+- Non-rightful submit allowed when no owner: first submitter becomes owner.
+- Rightful owner later claims: takeover replaces prior owner; other links removed.
+- Duplicate submission by non-owner when already owned: rejected.
+- Admin transfer: sets new owner; removes other links.
+- Per-user cap: default 5 profiles per user.
 
 ## 7) Where Data Lives
 

@@ -10,9 +10,10 @@ module Ops
 
     def promote
       ActiveRecord::Base.transaction do
-        @ownership.update!(is_owner: true)
         impacted_ids = ProfileOwnership.where(profile_id: @ownership.profile_id).where.not(id: @ownership.id).pluck(:user_id)
+        # Remove all other links first to satisfy single-owner validation
         ProfileOwnership.where(profile_id: @ownership.profile_id).where.not(id: @ownership.id).delete_all
+        @ownership.update!(is_owner: true)
 
         # Best-effort notifications
         Notifications::RecordEventService.call(user: @ownership.user, event: :ownership_claimed, subject: @ownership.profile)
@@ -37,13 +38,13 @@ module Ops
       return redirect_to ops_ownerships_path, alert: "User not found" unless target_user
 
       ActiveRecord::Base.transaction do
-        # Promote or create link for target user to this profile
+        # Remove all links except any existing link for the target user (if present)
+        ProfileOwnership.where(profile_id: @ownership.profile_id).where.not(user_id: target_user.id).delete_all
+
+        # Promote or create link for target user to this profile as the single owner
         link = ProfileOwnership.find_or_initialize_by(user_id: target_user.id, profile_id: @ownership.profile_id)
         link.is_owner = true
         link.save!
-
-        # Remove all other links for this profile except the new owner link
-        ProfileOwnership.where(profile_id: @ownership.profile_id).where.not(id: link.id).delete_all
       end
 
       redirect_to ops_ownerships_path(profile: @ownership.profile.login), notice: "Transferred ownership to @#{target_login}"
