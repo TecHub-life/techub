@@ -49,13 +49,12 @@ Practical steps to run, monitor, and debug TecHub locally and in prod.
 
 ## Image optimization
 
-- Default: uses ImageMagick CLI for safety. libvips is OPT-IN to avoid native crashes on some
-  environments.
-- To enable vips explicitly (faster):
-
-  ```bash
-  IMAGE_OPT_VIPS=1
-  ```
+- Default: libvips via `image_processing` (fast, low memory). Fallback to ImageMagick.
+- Build: ImageMagick 7 installed from source; `magick -version` verified at build time.
+- Runtime flags:
+  - `IMAGE_OPT_VIPS=1` (default in Dockerfile) to use vips
+  - `IM_CLI=magick` or `IM_CLI=convert` to force a specific CLI
+- See `docs/image-optimization.md` for policy and troubleshooting.
 
 ## Common Tasks
 
