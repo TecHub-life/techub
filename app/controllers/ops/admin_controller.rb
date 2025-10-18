@@ -55,6 +55,28 @@ module Ops
       redirect_to ops_admin_path, notice: "Queued smoke test email to #{to}"
     end
 
+    def bulk_retry
+      logins = Array(params[:logins]).map { |s| s.to_s.downcase.strip }.reject(&:blank?)
+      count = 0
+      logins.each do |login|
+        Profiles::GeneratePipelineJob.perform_later(login, ai: false)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued no-AI re-run for #{count} profile(s)"
+    end
+
+    def bulk_retry_ai
+      logins = Array(params[:logins]).map { |s| s.to_s.downcase.strip }.reject(&:blank?)
+      count = 0
+      now = Time.current
+      Profile.where(login: logins).find_each do |p|
+        Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
+        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued AI re-run for #{count} profile(s)"
+    end
+
     private
 
     def tail_log(path, lines)

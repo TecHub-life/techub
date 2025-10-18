@@ -12,6 +12,11 @@ class MyProfilesController < ApplicationController
       .joins(:profile_ownerships)
       .where(profile_ownerships: { user_id: uid, is_owner: true })
       .order(:login)
+    # Ownership cap info for UI (user can own up to cap)
+    cap = (ENV["PROFILE_OWNERSHIP_CAP"].presence || 5).to_i
+    @ownership_cap = cap
+    @ownership_count = User.find_by(id: uid)&.profile_ownerships&.where(is_owner: true)&.count.to_i
+    @ownership_remaining = [ cap - @ownership_count, 0 ].max
 
     # One-time notices for removed links (when rightful owner claimed)
     deliveries = NotificationDelivery.where(user_id: uid, event: "ownership_link_removed", subject_type: "Profile")

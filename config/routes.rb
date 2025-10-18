@@ -58,6 +58,8 @@ Rails.application.routes.draw do
   namespace :ops do
     get "/", to: "admin#index", as: :admin
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
+    post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
+    post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
     # Profiles admin actions
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
     post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile
