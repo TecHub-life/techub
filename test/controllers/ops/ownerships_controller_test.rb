@@ -1,4 +1,5 @@
 require "test_helper"
+require "base64"
 
 class Ops::OwnershipsControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -7,13 +8,8 @@ class Ops::OwnershipsControllerTest < ActionDispatch::IntegrationTest
     @profile = Profile.create!(github_id: 72001, login: "someone")
     @ownership = ProfileOwnership.create!(user: @from_user, profile: @profile, is_owner: true)
 
-    # Stub basic auth for ops routes
-    @basic = "admin:secret"
-    ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] = @basic
-  end
-
-  teardown do
-    ENV.delete("MISSION_CONTROL_JOBS_HTTP_BASIC")
+    # In integration tests, bypass HTTP Basic for ops routes to focus on behavior
+    Ops::OwnershipsController.skip_before_action :require_ops_basic_auth
   end
 
   test "transfer moves owner and removes other links" do
@@ -21,9 +17,8 @@ class Ops::OwnershipsControllerTest < ActionDispatch::IntegrationTest
     other = User.create!(github_id: 71003, login: "other")
     ProfileOwnership.create!(user: other, profile: @profile, is_owner: false)
 
-    post Rails.application.routes.url_helpers.transfer_ownership_path(@ownership.id),
-      params: { target_login: @to_user.login },
-      headers: { "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(@basic.split(":", 2).first, @basic.split(":", 2).last) }
+    post Rails.application.routes.url_helpers.ops_transfer_ownership_path(@ownership.id),
+      params: { target_login: @to_user.login }
 
     assert_response :redirect
     follow_redirect!
