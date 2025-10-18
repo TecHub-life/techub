@@ -41,9 +41,14 @@ module Profiles
       end
       attempts << { http_status: resp.status, strict: false }
       json = extract_json_from_response(resp.body)
-      return failure(StandardError.new("empty_ai_traits")) if json.blank?
-
-      cleaned = validate_and_normalize(json)
+      if json.blank?
+        # As a hard guarantee, synthesize a complete heuristic profile rather than failing empty
+        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login) if defined?(StructuredLogger)
+        cleaned = heuristic_fallback_traits(profile)
+      else
+        cleaned = validate_and_normalize(json)
+      end
+      # If initial cleaned output violates constraints, attempt a strict re-ask before falling back
       unless constraints_ok?(cleaned)
         # Strict re-ask with lower temperature and explicit correction guidance
         resp2 = conn.post(
@@ -302,6 +307,56 @@ module Profiles
       out["vibe"] = title_cap(out["vibe"].to_s.strip.first(30))
       out["special_move"] = title_cap(out["special_move"].to_s.strip.first(40))
       out
+    end
+
+    # Guarantee: produce a fully valid traits hash from heuristics when AI returns nothing
+    def heuristic_fallback_traits(record)
+      attrs = Profiles::SynthesizeCardService.new(profile: record, persist: false).call
+      if attrs.success?
+        normalized = {
+          "short_bio" => record.summary.to_s.presence || record.bio.to_s.presence || "",
+          "long_bio" => (record.bio.to_s + "\n\n" + record.summary.to_s).strip.presence || record.bio.to_s,
+          "buff" => attrs.value[:vibe].to_s,
+          "buff_description" => "",
+          "weakness" => "",
+          "weakness_description" => "",
+          "flavor_text" => attrs.value[:tagline].to_s,
+          "attack" => attrs.value[:attack].to_i,
+          "defense" => attrs.value[:defense].to_i,
+          "speed" => attrs.value[:speed].to_i,
+          "playing_card" => attrs.value[:playing_card].to_s,
+          "spirit_animal" => attrs.value[:spirit_animal].to_s,
+          "archetype" => attrs.value[:archetype].to_s,
+          "vibe" => attrs.value[:vibe].to_s,
+          "vibe_description" => "",
+          "special_move" => attrs.value[:special_move].to_s,
+          "special_move_description" => "",
+          "tags" => Array(attrs.value[:tags]).map(&:to_s)
+        }
+        validate_and_normalize(normalized)
+      else
+        # As a last resort, populate minimal defaults to satisfy constraints
+        validate_and_normalize({
+          "short_bio" => record.bio.to_s.presence || "",
+          "long_bio" => record.summary.to_s.presence || record.bio.to_s,
+          "buff" => "Builder",
+          "buff_description" => "",
+          "weakness" => "",
+          "weakness_description" => "",
+          "flavor_text" => (record.summary.to_s.presence || record.bio.to_s).to_s.first(80),
+          "attack" => 75,
+          "defense" => 75,
+          "speed" => 75,
+          "playing_card" => fallback_playing_card(record),
+          "spirit_animal" => "Quokka",
+          "archetype" => "The Explorer",
+          "vibe" => "Builder",
+          "vibe_description" => "",
+          "special_move" => "Refactor Surge",
+          "special_move_description" => "",
+          "tags" => %w[developer builder maker open-source devops coder]
+        })
+      end
     end
 
     def constraints_ok?(out)
