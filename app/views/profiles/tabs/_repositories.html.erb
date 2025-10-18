@@ -66,9 +66,9 @@
         </svg>
         Top Repositories by Stars
       </h3>
-      <div class="space-y-4">
+      <div class="grid gap-4 lg:grid-cols-2">
         <% top_repositories.first(10).each do |repo| %>
-          <a href="<%= repo.html_url %>" target="_blank" rel="noopener" class="block border-l-4 border-yellow-400 dark:border-yellow-600 pl-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-r transition group">
+          <a href="<%= repo.html_url %>" target="_blank" rel="noopener" class="block border border-slate-200 dark:border-slate-700 border-l-4 border-l-yellow-400 dark:border-l-yellow-600 pl-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition group">
             <div class="flex items-start justify-between gap-4">
               <div class="flex-1 min-w-0">
                 <h4 class="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
