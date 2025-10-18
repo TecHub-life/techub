@@ -43,6 +43,9 @@ techub-474511-de0b7383bd5b.json
 # Debug
 .byebug_history
 
+# Local backups
+*.bak
+
 # Downloaded avatar images
 /public/avatars/*
 !/public/avatars/.keep

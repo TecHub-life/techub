@@ -9,7 +9,12 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=3.3.0
+# Pin ImageMagick version for reproducible builds (update as needed)
+ARG IMAGEMAGICK_VERSION=7.1.1-32
+ARG IMAGEMAGICK_SHA256
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+ARG IMAGEMAGICK_VERSION
+ARG IMAGEMAGICK_SHA256
 
 # Rails app lives here
 WORKDIR /rails
@@ -30,16 +35,19 @@ RUN apt-get update -qq && \
     # Build and install ImageMagick 7 from source to guarantee `magick` CLI
     set -eux; \
     tmpdir="$(mktemp -d)"; \
-    curl -fsSL https://imagemagick.org/archive/ImageMagick.tar.gz -o "$tmpdir/ImageMagick.tar.gz"; \
+    curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IMAGEMAGICK_VERSION}.tar.gz" -o "$tmpdir/ImageMagick.tar.gz"; \
+    if [ -n "${IMAGEMAGICK_SHA256}" ]; then echo "${IMAGEMAGICK_SHA256}  $tmpdir/ImageMagick.tar.gz" | sha256sum -c -; fi; \
     tar -xzf "$tmpdir/ImageMagick.tar.gz" -C "$tmpdir"; \
-    cd "$tmpdir"/ImageMagick-*; \
+    cd "$tmpdir"/ImageMagick-${IMAGEMAGICK_VERSION}; \
     ./configure --disable-docs; \
     make -j"$(nproc)"; \
     make install; \
     ldconfig; \
-    cd /; rm -rf "$tmpdir" && \
-    # Verify IM7 installation
-    magick -version >/dev/null 2>&1
+    # Smoke test: perform a tiny convert to ensure runtime works
+    magick -version >/dev/null 2>&1; \
+    magick -size 1x1 xc:white /tmp/im7-ok.png; \
+    test -s /tmp/im7-ok.png; \
+    cd /; rm -rf "$tmpdir"
 
 # Set production environment
 ENV RAILS_ENV="production" \

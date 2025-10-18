@@ -52,3 +52,4 @@ techub-474511-de0b7383bd5b.json
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+*.bak

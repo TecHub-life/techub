@@ -35,7 +35,7 @@ module Images
             processed = processor.convert("png").call(destination: dst)
           end
 
-          return success({ output_path: processed, format: effective_format, quality: quality })
+          return success({ output_path: processed.to_s, format: effective_format, quality: quality })
         rescue LoadError
           # fall through to magick
         rescue StandardError => e

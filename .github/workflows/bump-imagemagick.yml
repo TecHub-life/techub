@@ -1,0 +1,31 @@
+name: Bump ImageMagick 7
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run bump script
+        run: bash scripts/bump_imagemagick.sh
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore: bump ImageMagick to ${{ env.NEW_IM_VERSION }}'
+          branch: chore/bump-imagemagick
+          title: 'chore: bump ImageMagick to ${{ env.NEW_IM_VERSION }}'
+          body: |
+            Automated bump of ImageMagick to ${{ env.NEW_IM_VERSION }} with SHA256 ${{ env.NEW_IM_SHA256 }}.
+            - This updates ARG IMAGEMAGICK_VERSION and ARG IMAGEMAGICK_SHA256 in Dockerfile.
+            - Build verifies magick -version and performs a 1x1 convert smoke test.
+          labels: dependencies
+          signoff: false
