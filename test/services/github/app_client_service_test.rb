@@ -22,14 +22,16 @@ module Github
       end
     end
 
-    test "bubbles up failure from installation token service" do
-      error = StandardError.new("nope")
+    test "returns unauthenticated client when installation token fails (fallback)" do
+      Github::InstallationTokenService.stub :call, ServiceResult.failure(StandardError.new("nope")) do
+        # Expect a fallback Octokit::Client without an access token
+        Octokit::Client.stub :new, ->(**_opts) { :unauth_client } do
+          result = Github::AppClientService.call
 
-      Github::InstallationTokenService.stub :call, ServiceResult.failure(error) do
-        result = Github::AppClientService.call
-
-        assert result.failure?
-        assert_equal error, result.error
+          assert result.success?
+          assert_equal :unauth_client, result.value
+          assert_equal "unauthenticated", result.metadata[:fallback]
+        end
       end
     end
   end

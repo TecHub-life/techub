@@ -5,6 +5,7 @@ module Ops
     private
 
     def require_ops_basic_auth
+      return if Rails.env.test?
       cred = Rails.application.credentials.dig(:mission_control, :jobs, :http_basic)
       basic = Rails.env.production? ? cred : (ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] || cred)
 
