@@ -25,6 +25,7 @@ module Profiles
       conn = client_result.value
 
       attempts = []
+      used_fallback = false
 
       # First attempt (creative within schema)
       resp = conn.post(
@@ -42,10 +43,31 @@ module Profiles
       attempts << { http_status: resp.status, strict: false }
       json = extract_json_from_response(resp.body)
       if json.blank?
-        # As a hard guarantee, synthesize a complete heuristic profile rather than failing empty
-        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login) if defined?(StructuredLogger)
-        cleaned = heuristic_fallback_traits(profile)
         attempts << { http_status: resp.status, strict: false, empty: true }
+        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login) if defined?(StructuredLogger)
+        # Try one strict re-ask before falling back
+        resp_strict = conn.post(
+          Gemini::Endpoints.text_generate_path(
+            provider: provider,
+            model: Gemini::Configuration.model,
+            project_id: Gemini::Configuration.project_id,
+            location: Gemini::Configuration.location
+          ),
+          build_payload(ctx, strict: true)
+        )
+        if (200..299).include?(resp_strict.status)
+          attempts << { http_status: resp_strict.status, strict: true }
+          json2 = extract_json_from_response(resp_strict.body)
+          cleaned = validate_and_normalize(json2) if json2.present?
+        else
+          attempts << { http_status: resp_strict.status, strict: true, error: true }
+        end
+
+        if cleaned.blank?
+          # As a hard guarantee, synthesize a complete heuristic profile rather than failing empty
+          cleaned = heuristic_fallback_traits(profile)
+          used_fallback = true
+        end
       else
         cleaned = validate_and_normalize(json)
       end
@@ -109,7 +131,7 @@ module Profiles
       end
 
       StructuredLogger.info(message: "ai_traits_generated", login: profile.login, provider: provider, model: Gemini::Configuration.model, attempts: attempts) if defined?(StructuredLogger)
-      success(record)
+      success(record, metadata: { partial: used_fallback, attempts: attempts })
     rescue Faraday::Error => e
       failure(e)
     end
@@ -195,20 +217,37 @@ module Profiles
     def build_payload(ctx, strict: false)
       instruction = strict ? strict_system_prompt : system_prompt
       temp = strict ? 0.25 : TEMPERATURE
-      {
-        systemInstruction: {
-          parts: [ { text: instruction } ]
-        },
-        contents: [
-          { role: "user", parts: [ { text: ctx.to_json } ] }
-        ],
-        generationConfig: {
-          temperature: temp,
-          maxOutputTokens: 2300,
-          responseMimeType: "application/json",
-          responseSchema: response_schema
+      provider = provider_override.presence || Gemini::Configuration.provider
+
+      if provider == "vertex"
+        # Vertex expects snake_case keys for function calling and generation config
+        {
+          system_instruction: { parts: [ { text: instruction } ] },
+          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
+          tools: [ { function_declarations: [ { name: "profile_traits", description: "Return the complete profile traits object strictly matching the schema", parameters: response_schema } ] } ],
+          tool_config: { function_calling_config: { mode: "ANY" } },
+          generation_config: {
+            temperature: temp,
+            max_output_tokens: 2300,
+            response_mime_type: "application/json",
+            response_schema: response_schema
+          }
         }
-      }
+      else
+        # AI Studio uses camelCase
+        {
+          systemInstruction: { parts: [ { text: instruction } ] },
+          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
+          tools: [ { functionDeclarations: [ { name: "profile_traits", description: "Return the complete profile traits object strictly matching the schema", parameters: response_schema } ] } ],
+          toolConfig: { functionCallingConfig: { mode: "ANY" } },
+          generationConfig: {
+            temperature: temp,
+            maxOutputTokens: 2300,
+            responseMimeType: "application/json",
+            responseSchema: response_schema
+          }
+        }
+      end
     end
 
     def system_prompt
@@ -281,6 +320,19 @@ module Profiles
       first_candidate = candidates.first || {}
       content = dig_value(first_candidate, :content) || {}
       parts = dig_value(content, :parts)
+
+      # First, prefer function-call structured output when present
+      Array(parts).each do |part|
+        fc = dig_value(part, :functionCall) || dig_value(part, :function_call)
+        next unless fc
+        args = dig_value(fc, :args) || dig_value(fc, :arguments)
+        if args.is_a?(Hash)
+          return args
+        elsif args.is_a?(String)
+          parsed = parse_relaxed_json(args)
+          return parsed if parsed.is_a?(Hash)
+        end
+      end
 
       json = extract_structured_json(parts)
       texts = Array(parts).filter_map { |p| dig_value(p, :text) }.join(" ")

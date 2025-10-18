@@ -69,7 +69,8 @@ module Profiles
         # 3b) AI text + traits (structured)
         t1 = Time.current
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_traits") if defined?(StructuredLogger)
-        ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile)
+        # Force AI Studio for text traits (Vertex flaky with prose-only responses)
+        ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile, provider: "ai_studio")
         if ai_traits.failure?
           StructuredLogger.warn(message: "ai_traits_failed", login: login, error: ai_traits.error.message) if defined?(StructuredLogger)
           record_event(profile, stage: "ai_traits", status: "failed", duration_ms: ((Time.current - t1) * 1000).to_i, message: ai_traits.error.message)
@@ -81,6 +82,12 @@ module Profiles
           StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
           record_event(profile, stage: "synth_heuristic", status: "completed", duration_ms: 0)
         else
+          # Propagate partial flag when AI succeeded via fallback inside the service
+          begin
+            meta = ai_traits.metadata if ai_traits.respond_to?(:metadata)
+            ai_partial ||= !!(meta && meta[:partial])
+          rescue StandardError
+          end
           StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_traits", duration_ms: ((Time.current - t1) * 1000).to_i) if defined?(StructuredLogger)
           record_event(profile, stage: "ai_traits", status: "completed", duration_ms: ((Time.current - t1) * 1000).to_i)
         end
