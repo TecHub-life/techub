@@ -78,20 +78,36 @@ module Gemini
 
     # endpoint computed via Gemini::Endpoints
 
-    def build_payload(_provider)
-      {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt }
-            ]
+    def build_payload(provider)
+      if provider == "vertex"
+        {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generation_config: {
+            temperature: temperature
           }
-        ],
-        generationConfig: {
-          temperature: temperature
         }
-      }
+      else
+        {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: temperature
+          }
+        }
+      end
     end
 
     def extract_image_data(body)

@@ -220,17 +220,15 @@ module Profiles
       provider = provider_override.presence || Gemini::Configuration.provider
 
       if provider == "vertex"
-        # Vertex expects snake_case keys for function calling and generation config
+        # Vertex expects snake_case keys
         {
           system_instruction: { parts: [ { text: instruction } ] },
           contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
-          tools: [ { function_declarations: [ { name: "profile_traits", description: "Return the complete profile traits object strictly matching the schema", parameters: response_schema } ] } ],
-          tool_config: { function_calling_config: { mode: "ANY" } },
           generation_config: {
             temperature: temp,
             max_output_tokens: 2300,
             response_mime_type: "application/json",
-            response_schema: response_schema
+            response_schema: response_schema_for("vertex")
           }
         }
       else
@@ -238,13 +236,11 @@ module Profiles
         {
           systemInstruction: { parts: [ { text: instruction } ] },
           contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
-          tools: [ { functionDeclarations: [ { name: "profile_traits", description: "Return the complete profile traits object strictly matching the schema", parameters: response_schema } ] } ],
-          toolConfig: { functionCallingConfig: { mode: "ANY" } },
           generationConfig: {
             temperature: temp,
             maxOutputTokens: 2300,
             responseMimeType: "application/json",
-            responseSchema: response_schema
+            responseSchema: response_schema_for("ai_studio")
           }
         }
       end
@@ -275,8 +271,8 @@ module Profiles
       PROMPT
     end
 
-    def response_schema
-      {
+    def response_schema_for(provider)
+      base = {
         type: "object",
         properties: {
           short_bio: { type: "string" },
@@ -298,9 +294,16 @@ module Profiles
           spirit_animal: { type: "string" },
           archetype: { type: "string" }
         },
-        required: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype],
-        propertyOrdering: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+        required: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
       }
+
+      # "propertyOrdering" is a non-standard extension that some providers ignore.
+      # Keep it for AI Studio where it's tolerated; omit for Vertex to avoid 400s.
+      if provider != "vertex"
+        base[:propertyOrdering] = %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+      end
+
+      base
     end
 
     def extract_structured_json(parts)

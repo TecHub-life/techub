@@ -129,29 +129,51 @@ module Profiles
     # endpoint computed via Gemini::Endpoints
 
     def build_payload(prompt, max_tokens)
-      {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: TEMPERATURE,
-          maxOutputTokens: max_tokens,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "object",
-            properties: {
-              story: { type: "string" },
-              tagline: { type: "string" }
-            },
-            required: %w[story tagline]
+      provider = story_provider
+      schema = {
+        type: "object",
+        properties: {
+          story: { type: "string" },
+          tagline: { type: "string" }
+        },
+        required: %w[story tagline]
+      }
+
+      if provider == "vertex"
+        {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generation_config: {
+            temperature: TEMPERATURE,
+            max_output_tokens: max_tokens,
+            response_mime_type: "application/json",
+            response_schema: schema
           }
         }
-      }
+      else
+        {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: TEMPERATURE,
+            maxOutputTokens: max_tokens,
+            responseMimeType: "application/json",
+            responseSchema: schema
+          }
+        }
+      end
     end
 
     def request_story(conn, provider, prompt, max_tokens, attempt_index)
