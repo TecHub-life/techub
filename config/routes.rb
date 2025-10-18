@@ -60,6 +60,8 @@ Rails.application.routes.draw do
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
+    post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
+    post "/bulk_retry_ai_all", to: "admin#bulk_retry_ai_all", as: :bulk_retry_ai_all
     # Profiles admin actions
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
     post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile

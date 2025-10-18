@@ -83,6 +83,17 @@
         </form>
       </div>
     </div>
+
+    <div class="mb-3 flex items-center gap-2">
+      <form action="<%= ops_bulk_retry_all_path %>" method="post">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue No-AI for ALL Profiles</button>
+      </form>
+      <form action="<%= ops_bulk_retry_ai_all_path %>" method="post">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue AI for ALL Profiles</button>
+      </form>
+    </div>
     <% if @failed_profiles.present? %>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">

@@ -77,6 +77,27 @@ module Ops
       redirect_to ops_admin_path, notice: "Queued AI re-run for #{count} profile(s)"
     end
 
+    def bulk_retry_all
+      count = 0
+      Profile.find_each do |p|
+        Profiles::GeneratePipelineJob.perform_later(p.login, ai: false)
+        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued no-AI re-run for all (#{count}) profiles"
+    end
+
+    def bulk_retry_ai_all
+      count = 0
+      now = Time.current
+      Profile.find_each do |p|
+        Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
+        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued AI re-run for all (#{count}) profiles"
+    end
+
     private
 
     def tail_log(path, lines)
