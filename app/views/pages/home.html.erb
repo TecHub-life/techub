@@ -8,9 +8,9 @@
   
   <div class="relative -mt-12 sm:mt-6 lg:-mt-12 py-16 lg:py-24">
     <div class="mx-auto max-w-6xl px-4">
-    <div class="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+    <div class="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
       <!-- Left: Hero Content -->
-      <div class="space-y-4 sm:space-y-8 animate-fade-in text-center lg:text-left">
+      <div class="space-y-3 sm:space-y-5 lg:space-y-6 animate-fade-in text-center lg:text-left">
         <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-all hover:shadow-md hover:scale-105 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300">
           <span class="relative flex h-2 w-2">
             <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
@@ -19,15 +19,15 @@
           <span class="bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent dark:from-slate-200 dark:to-slate-400">TecHub • GitHub Profiles & Insights</span>
         </div>
 
-        <h1 class="text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-6xl">
+        <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl lg:text-5xl">
           Build, Explore, and Share
           <span class="block bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-emerald-400 animate-gradient">
             GitHub Profiles
           </span>
         </h1>
 
-        <!-- Inline hero visual: visible on small and medium; hidden on large -->
-        <div class="mt-6 lg:hidden">
+        <!-- Inline hero visual: visible on small only; hidden on md and up -->
+        <div class="mt-6 md:hidden">
           <div class="relative mx-auto max-w-xs sm:max-w-md">
             <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 rounded-3xl blur-2xl opacity-30"></div>
             <div class="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 bg-white dark:bg-slate-900">
@@ -36,11 +36,11 @@
           </div>
         </div>
 
-        <p class="text-lg sm:text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+        <p class="text-base sm:text-lg lg:text-lg text-slate-600 dark:text-slate-400 leading-normal max-w-2xl mx-auto lg:mx-0">
           TecHub turns public GitHub data into rich, shareable profiles. Choose AI‑generated artwork (or your own) and automatically create profile Cards and OG images enriched with AI‑derived details—archetypes, strengths, interests, and more. All accessible via a simple, JSON‑first API.
         </p>
         
-        <div class="hidden md:flex md:flex-wrap items-center justify-center lg:justify-start gap-4 text-xs md:text-sm text-slate-600 dark:text-slate-400">
+        <div class="hidden md:flex md:flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-slate-600 dark:text-slate-400">
           <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800/50">
             <svg class="h-4 w-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
@@ -88,8 +88,8 @@
 
       </div>
 
-      <!-- Right: Logo/Visual (desktop, large only) -->
-      <div class="hidden lg:flex items-center justify-center mt-4 lg:mt-0 animate-fade-in-delayed">
+      <!-- Right: Logo/Visual (md and up) -->
+      <div class="hidden md:flex items-center justify-center mt-4 lg:mt-0 animate-fade-in-delayed">
         <div class="relative group">
           <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 rounded-3xl blur-2xl opacity-30 group-hover:opacity-50 transition duration-500 animate-pulse-slow"></div>
           <div class="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 bg-white dark:bg-slate-900 transform transition-transform duration-500 group-hover:scale-105">
@@ -105,8 +105,10 @@
 <section class="py-12 sm:py-20 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950">
   <div class="mx-auto max-w-6xl px-4">
     <div class="text-center mb-8 sm:mb-12">
-      <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 mb-4 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-        <svg class="h-4 w-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
+      <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 mb-4 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+        <svg class="h-4 w-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
         <span>How It Works</span>
       </div>
       <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100">From GitHub to Shareable Profiles</h2>
@@ -117,7 +119,7 @@
       <!-- Step 1 -->
       <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <i class="fa-brands fa-github text-2xl"></i>
         </div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">1) Connect a GitHub Profile</h3>
         <p class="mt-2 text-slate-600 dark:text-slate-400">Search any username or sign in to generate your own profile with analytics and public activity.</p>
@@ -125,15 +127,15 @@
       <!-- Step 2 -->
       <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.105 0-2 .895-2 2 0 1.105.895 2 2 2s2-.895 2-2c0-1.105-.895-2-2-2zm0 0v8m0 0l-3 3m3-3l3 3"/></svg>
+          <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
         </div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">2) Generate Artwork & Details</h3>
         <p class="mt-2 text-slate-600 dark:text-slate-400">Pick AI artwork or upload your own. We enrich profiles with AI‑derived traits like archetypes, strengths, and interests.</p>
       </div>
       <!-- Step 3 -->
       <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-4.553a1.5 1.5 0 112.121 2.121L17.121 12.12M15 10l-5 5m0 0l-3-3m3 3v4m0-4h4"/></svg>
+        <div class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400">
+          <i class="fa-solid fa-share-nodes text-2xl"></i>
         </div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">3) Share Cards or Use the API</h3>
         <p class="mt-2 text-slate-600 dark:text-slate-400">One‑click Cards/OG images and a JSON‑first API for automation, dashboards, and embeds.</p>
@@ -143,8 +145,14 @@
 </section>
 
 <!-- Features Section -->
-<section class="py-12 sm:py-24 bg-white dark:bg-slate-900">
-  <div class="mx-auto max-w-6xl px-4">
+<section class="relative py-12 sm:py-24 overflow-hidden">
+  <!-- Animated background gradient -->
+  <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950"></div>
+  
+  <!-- Subtle animated grid pattern -->
+  <div class="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+  
+  <div class="relative mx-auto max-w-6xl px-4">
     <div class="text-center mb-10 sm:mb-20">
       <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 mb-6 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
         <svg class="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
