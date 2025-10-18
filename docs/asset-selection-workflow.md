@@ -23,6 +23,9 @@ generated/uploaded assets. This plan supports a separate PR.
 - Per-variant selection:
   - Allow different avatar and artwork choices for each of the three variants.
 
+  > **Note**: We need to generate the assets for the variants before we can select them. The way we
+  > are generating the assets now is probably wrong for what we actually need.
+
 ### Data Model (proposal)
 
 - Reuse `ProfileAsset` for persisted files (already exists for card/og/simple and uploads).

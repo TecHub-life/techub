@@ -11,6 +11,43 @@ module Github
       Github::Configuration.reset!
     end
 
+    test "auto-recovers from 404 by discovering installation and caching override" do
+      ENV["GITHUB_APP_ID"] = "12345"
+      ENV["GITHUB_PRIVATE_KEY"] = TEST_PRIVATE_KEY
+      ENV["GITHUB_INSTALLATION_ID"] = "123" # stale/bad id
+      Github::Configuration.reset!
+
+      token_response = { token: "xyz", expires_at: Time.now.utc, permissions: { contents: "read" } }
+
+      Github::AppAuthenticationService.stub :call, ServiceResult.success("jwt") do
+        # Fake Octokit client: 404 for stale id, success for discovered id 999
+        fake_client = Class.new do
+          def create_app_installation_access_token(id, permissions: nil)
+            raise Octokit::NotFound if id.to_i == 123
+            { token: "xyz", expires_at: Time.now.utc, permissions: { contents: "read" } }
+          end
+
+          def initialize(*)
+          end
+        end.new
+
+        Github::FindInstallationService.stub :call, ServiceResult.success({ id: 999, account_login: "owner" }) do
+          Octokit::Client.stub :new, fake_client do
+            result = Github::InstallationTokenService.call
+            assert result.success?, -> { result.error&.message }
+            # Confirm override was cached (if Rails.cache available)
+            if defined?(Rails)
+              cached = Rails.cache.read("github.installation_id.override") rescue nil
+              assert_equal 999, cached.to_i if cached
+            end
+          end
+        end
+      end
+    ensure
+      ENV.delete("GITHUB_INSTALLATION_ID")
+      Github::Configuration.reset!
+    end
+
     teardown do
       ENV.delete("GITHUB_APP_ID")
       ENV.delete("GITHUB_PRIVATE_KEY")

@@ -42,6 +42,16 @@ module Ops
       rescue StandardError
         @data_issues_profiles = []
       end
+
+      # GitHub App installation diagnostics for ops panel
+      begin
+        @configured_installation_id = Github::Configuration.installation_id
+        discovered = Github::FindInstallationService.call
+        @discovered_installation = discovered.success? ? discovered.value : nil
+        @discovery_error = discovered.failure? ? discovered.error.message : nil
+      rescue => e
+        @discovery_error = e.message
+      end
     end
 
     def send_test_email
@@ -96,6 +106,17 @@ module Ops
         count += 1
       end
       redirect_to ops_admin_path, notice: "Queued AI re-run for all (#{count}) profiles"
+    end
+
+    def github_fix_installation
+      discovered = Github::FindInstallationService.call
+      if discovered.success?
+        id = discovered.value[:id]
+        Rails.cache.write("github.installation_id.override", id, expires_in: 7.days)
+        redirect_to ops_admin_path, notice: "GitHub App installation fixed to ID #{id} (#{discovered.value[:account_login]})"
+      else
+        redirect_to ops_admin_path, alert: "Could not discover installation: #{discovered.error.message}"
+      end
     end
 
     private

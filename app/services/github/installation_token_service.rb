@@ -11,12 +11,17 @@ module Github
 
       client = Octokit::Client.new(bearer_token: jwt.value)
 
-      # If no installation_id configured, fail fast to avoid accidental API calls
+      # Resolve installation id: prefer configured/cached, else auto-discover
       inst_id = installation_id
-      return failure(StandardError.new("GitHub installation_id missing")) if inst_id.blank?
+      if inst_id.blank? || inst_id.to_i <= 0
+        discovered = Github::FindInstallationService.call
+        return discovered if discovered.failure?
+        inst_id = discovered.value[:id]
+        Rails.cache.write("github.installation_id.override", inst_id, expires_in: 1.day) if defined?(Rails)
+      end
 
       # Only pass permissions if explicitly set, otherwise GitHub may return 500
-      token_response = create_token(client, inst_id, permissions)
+      token_response = create_token(client, inst_id.to_i, permissions)
 
       success(
         {
@@ -37,7 +42,7 @@ module Github
         # Cache the discovered installation id to avoid repeated discovery
         Rails.cache.write("github.installation_id.override", new_id, expires_in: 1.day) if defined?(Rails)
 
-        token_response = create_token(client, new_id, permissions)
+        token_response = create_token(client, new_id.to_i, permissions)
         success({ token: token_response[:token], expires_at: token_response[:expires_at], permissions: token_response[:permissions], installation_id: new_id })
       rescue Octokit::Error => e2
         failure(e2)
