@@ -35,7 +35,7 @@ module Images
             processed = processor.convert("png").call(destination: dst)
           end
 
-          return success({ output_path: processed, format: effective_format, quality: quality })
+          return success({ output_path: processed.to_s, format: effective_format, quality: quality })
         rescue LoadError
           # fall through to magick
         rescue StandardError => e
@@ -63,14 +63,15 @@ module Images
     end
 
     def build_magick_command
-      # Use ImageMagick convert via `magick` CLI as a fallback
+      # Use ImageMagick via `magick` (IM7) when available; otherwise fall back to `convert` (IM6)
+      cli = imagemagick_cli
       src = path.to_s
       dst = output_path.to_s
       case effective_format
       when "jpg", "jpeg"
-        [ "magick", src, "-strip", "-interlace", "Plane", "-quality", quality.to_s, ensure_ext(dst, ".jpg") ]
+        [ cli, src, "-strip", "-interlace", "Plane", "-quality", quality.to_s, ensure_ext(dst, ".jpg") ]
       else # png
-        [ "magick", src, "-strip", "-define", "png:compression-level=9", ensure_ext(dst, ".png") ]
+        [ cli, src, "-strip", "-define", "png:compression-level=9", ensure_ext(dst, ".png") ]
       end
     end
 
@@ -82,6 +83,20 @@ module Images
 
     def ensure_ext(dst, ext)
       File.extname(dst).downcase == ext ? dst : dst.sub(/\.[^.]+\z/, ext)
+    end
+
+    def imagemagick_cli
+      # Allow override via ENV
+      override = ENV["IM_CLI"].to_s.strip
+      return override unless override.empty?
+
+      # Prefer magick when available, otherwise use convert
+      magick_available? ? "magick" : "convert"
+    end
+
+    def magick_available?
+      # Quietly check for magick
+      system("magick -version > /dev/null 2>&1")
     end
   end
 end

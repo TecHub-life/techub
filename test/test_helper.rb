@@ -25,3 +25,6 @@ module ActiveSupport
     # Add more helper methods to be used by all tests here...
   end
 end
+
+# Provide default HTTP Basic for Ops in test environment
+ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] ||= "techub:hunter2"

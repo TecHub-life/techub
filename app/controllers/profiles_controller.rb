@@ -10,12 +10,10 @@ class ProfilesController < ApplicationController
     @profile = Profile.find_by(login: username)
 
     if @profile.present?
-      # Use cached data if it's recent (less than 1 hour old)
-      if @profile.last_synced_at && @profile.last_synced_at > 1.hour.ago
-        load_profile_data
-      else
-        # Refresh if stale
-        refresh_and_load_profile(username)
+      # Always serve cached data; enqueue background refresh if stale
+      load_profile_data
+      if @profile.needs_sync?
+        Profiles::RefreshJob.perform_later(username)
       end
     else
       # Do not auto-create. Redirect to submit flow.
@@ -53,19 +51,10 @@ class ProfilesController < ApplicationController
   end
 
   def refresh_and_load_profile(username)
-    result = Profiles::SyncFromGithub.call(login: username)
-
-    if result.success?
-      @profile = result.value
-      load_profile_data
-    else
-      StructuredLogger.error(message: "Profile sync failed", username: username, error_class: result.error.class.name, error: result.error.message)
-      flash.now[:alert] = if result.error.is_a?(Octokit::NotFound)
-        "GitHub user @#{username} not found."
-      else
-        "Unable to load profile for @#{username} right now. Please try again later."
-      end
-    end
+    # No longer used: refresh is enqueued; retained for compatibility
+    Profiles::RefreshJob.perform_later(username)
+    @profile = Profile.find_by(login: username)
+    load_profile_data if @profile
   end
 
   def render_json_profile
@@ -91,15 +80,15 @@ class ProfilesController < ApplicationController
         last_pipeline_status: @profile.last_pipeline_status,
         last_pipeline_error: @profile.last_pipeline_error
       },
-      summary: @profile_summary,
-      languages: @languages&.map { |lang| { name: lang.name, count: lang.count } },
-      social_accounts: @social_accounts&.map { |sa| { provider: sa.provider, url: sa.url, display_name: sa.display_name } },
-      organizations: @organizations&.map { |org| { login: org.login, name: org.name, description: org.description, avatar_url: org.avatar_url } },
-      top_repositories: @top_repositories&.map { |repo| repository_json(repo) },
-      pinned_repositories: @pinned_repositories&.map { |repo| repository_json(repo) },
-      active_repositories: @active_repositories&.map { |repo| repository_json(repo) },
-      recent_activity: @recent_activity&.as_json,
-      readme: @profile_readme&.as_json,
+      summary: @profile_summary.to_s,
+      languages: Array(@languages).map { |lang| { name: lang.name, count: lang.count } },
+      social_accounts: Array(@social_accounts).map { |sa| { provider: sa.provider, url: sa.url, display_name: sa.display_name } },
+      organizations: Array(@organizations).map { |org| { login: org.login, name: org.name, description: org.description, avatar_url: org.avatar_url } },
+      top_repositories: Array(@top_repositories).map { |repo| repository_json(repo) },
+      pinned_repositories: Array(@pinned_repositories).map { |repo| repository_json(repo) },
+      active_repositories: Array(@active_repositories).map { |repo| repository_json(repo) },
+      recent_activity: @recent_activity&.as_json || {},
+      readme: @profile_readme&.as_json || {},
       card: card && {
         title: card.title,
         tagline: card.tagline,

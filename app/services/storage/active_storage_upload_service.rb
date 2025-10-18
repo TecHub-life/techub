@@ -16,13 +16,7 @@ module Storage
       )
 
       # For public services (e.g., DO Spaces), .url returns a CDN/public URL when configured.
-      success(
-        {
-          public_url: blob.url,
-          key: blob.key,
-          filename: blob.filename.to_s
-        }
-      )
+      success({ public_url: blob.url, key: blob.key, filename: blob.filename.to_s })
     rescue StandardError => e
       failure(e, metadata: { path: path.to_s, filename: filename, content_type: content_type })
     end

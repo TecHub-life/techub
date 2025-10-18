@@ -32,6 +32,19 @@ module Ops
       rescue StandardError
         @failed_profiles = []
       end
+
+      # Profiles that claim success but are missing expected associated data
+      begin
+        candidates = Profile.where(last_pipeline_status: "success").includes(:profile_card, :profile_languages, :profile_repositories)
+        @data_issues_profiles = candidates.select do |p|
+          p.profile_card.nil? || !p.profile_languages.exists? || !p.profile_repositories.exists?
+        end.first(50)
+      rescue StandardError
+        @data_issues_profiles = []
+      end
+
+      # GitHub App installation diagnostics for ops panel (read-only)
+      @configured_installation_id = Github::Configuration.installation_id
     end
 
     def send_test_email
@@ -44,6 +57,51 @@ module Ops
       SystemMailer.with(to: to, message: message).smoke_test.deliver_later
       redirect_to ops_admin_path, notice: "Queued smoke test email to #{to}"
     end
+
+    def bulk_retry
+      logins = Array(params[:logins]).map { |s| s.to_s.downcase.strip }.reject(&:blank?)
+      count = 0
+      logins.each do |login|
+        Profiles::GeneratePipelineJob.perform_later(login, ai: false)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued no-AI re-run for #{count} profile(s)"
+    end
+
+    def bulk_retry_ai
+      logins = Array(params[:logins]).map { |s| s.to_s.downcase.strip }.reject(&:blank?)
+      count = 0
+      now = Time.current
+      Profile.where(login: logins).find_each do |p|
+        Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
+        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued AI re-run for #{count} profile(s)"
+    end
+
+    def bulk_retry_all
+      count = 0
+      Profile.find_each do |p|
+        Profiles::GeneratePipelineJob.perform_later(p.login, ai: false)
+        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued no-AI re-run for all (#{count}) profiles"
+    end
+
+    def bulk_retry_ai_all
+      count = 0
+      now = Time.current
+      Profile.find_each do |p|
+        Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
+        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
+        count += 1
+      end
+      redirect_to ops_admin_path, notice: "Queued AI re-run for all (#{count}) profiles"
+    end
+
+    # Removed write action for installation id: installation id must be configured explicitly.
 
     private
 

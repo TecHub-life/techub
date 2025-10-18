@@ -18,6 +18,7 @@ module Github
       end
 
       def installation_id
+        # Single source of truth: credentials or env var only (no auto-discovery, no cache overrides)
         value = fetch_config(:installation_id, env: "GITHUB_INSTALLATION_ID")
         value.present? ? value.to_i : nil
       end
@@ -64,7 +65,8 @@ module Github
       end
 
       def normalize_multiline(input)
-        input.to_s.gsub(/?
+        input.to_s.gsub(/
+?
 /, "
 ")
       end

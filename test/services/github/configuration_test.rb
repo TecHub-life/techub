@@ -80,6 +80,33 @@ module Github
       end
     end
 
+    test "installation_id reads from ENV when set" do
+      ENV["GITHUB_INSTALLATION_ID"] = "42"
+      Rails.application.stub :credentials, CredentialsStub.new({ github: {} }) do
+        assert_equal 42, Github::Configuration.installation_id
+      end
+    ensure
+      ENV.delete("GITHUB_INSTALLATION_ID")
+    end
+
+    test "installation_id falls back to credentials when ENV missing" do
+      credentials = CredentialsStub.new({ github: { installation_id: 7 } })
+      Rails.application.stub :credentials, credentials do
+        assert_equal 7, Github::Configuration.installation_id
+      end
+    end
+
+    test "installation_id ignores any cache override" do
+      # Write a bogus override to ensure code paths do not read it
+      Rails.cache.write("github.installation_id.override", 999)
+      credentials = CredentialsStub.new({ github: { installation_id: 5 } })
+      Rails.application.stub :credentials, credentials do
+        assert_equal 5, Github::Configuration.installation_id
+      end
+    ensure
+      Rails.cache.delete("github.installation_id.override")
+    end
+
     private
 
     def clear_env!

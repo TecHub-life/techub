@@ -1,3 +1,5 @@
+require "open3"
+
 module Screenshots
   class CaptureCardService < ApplicationService
     DEFAULT_WIDTHS = {
@@ -14,7 +16,8 @@ module Screenshots
     def initialize(login:, variant: "og", host: nil, output_path: nil, wait_ms: 500, type: nil, quality: 85)
       @login = login.to_s.downcase
       @variant = variant.to_s
-      @host = host.presence || ENV["APP_HOST"].presence || "http://127.0.0.1:3000"
+      resolved_host = host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil) || "http://127.0.0.1:3000"
+      @host = resolved_host
       @output_path = output_path
       @wait_ms = wait_ms.to_i
       # In test env, keep PNG for compatibility with existing tests
@@ -29,7 +32,7 @@ module Screenshots
 
       width = DEFAULT_WIDTHS[variant]
       height = DEFAULT_HEIGHTS[variant]
-      url = File.join(host, "/cards/#{login}/#{variant}")
+      url = URI.join(host.to_s.end_with?("/") ? host.to_s : "#{host}/", "cards/#{login}/#{variant}").to_s
 
       path = Pathname.new(output_path.presence || default_output_path)
       FileUtils.mkdir_p(path.dirname)
@@ -50,17 +53,10 @@ module Screenshots
         # In test, avoid invoking Node: create a tiny PNG header as a placeholder
         File.binwrite(path, "\x89PNG\r\n")
       else
-        # Capture stdout/stderr for better diagnostics
-        begin
-          require "open3"
-          stdout_str, stderr_str, status = Open3.capture3(*cmd)
-          unless status.success?
-            StructuredLogger.error(message: "screenshot_cmd_failed", login: login, variant: variant, cmd: cmd.join(" "), stdout: stdout_str, stderr: stderr_str) if defined?(StructuredLogger)
-            return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" "), stdout: stdout_str, stderr: stderr_str })
-          end
-        rescue LoadError
-          ok = Kernel.system(*cmd)
-          return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+        out_str, err_str, status = Open3.capture3(*cmd)
+        unless status.success?
+          StructuredLogger.error(message: "screenshot_command_failed", cmd: cmd.join(" "), stdout: out_str, stderr: err_str) if defined?(StructuredLogger)
+          return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" "), stdout: out_str, stderr: err_str })
         end
       end
 

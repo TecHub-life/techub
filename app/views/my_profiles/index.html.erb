@@ -10,6 +10,7 @@
   <% end %>
   <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">My Profiles</h1>
   <p class="text-slate-600 dark:text-slate-300">Profiles you own.</p>
+  <div class="text-sm text-slate-500 dark:text-slate-400">Owned: <span class="font-mono"><%= @ownership_count %></span> / <span class="font-mono"><%= @ownership_cap %></span> (remaining <span class="font-mono"><%= @ownership_remaining %></span>)</div>
 
   <% if @profiles.any? %>
     <div class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">

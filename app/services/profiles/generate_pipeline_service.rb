@@ -4,7 +4,8 @@ module Profiles
 
     def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, ai: true)
       @login = login.to_s.downcase
-      @host = host.presence || ENV["APP_HOST"].presence || "http://127.0.0.1:3000"
+      resolved_host = host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil) || "http://127.0.0.1:3000"
+      @host = resolved_host
       @provider = provider # nil respects default
       @upload = upload.nil? ? ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase.in?([ "1", "true", "yes" ]) : upload
       @optimize = optimize

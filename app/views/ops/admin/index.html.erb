@@ -8,9 +8,10 @@
   <% end %>
 
   <div class="grid gap-4 sm:grid-cols-2">
+    <%# Removed transient debug warning block for ENV override to simplify UI %>
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Ownerships</div>
-      <div class="mt-1"><a href="<%= ops_ownerships_path %>" class="text-blue-600 dark:text-blue-400">Manage ownerships</a></div>
+      <div class="text-sm text-slate-500 dark:text-slate-400">Users</div>
+      <div class="mt-1"><a href="<%= ops_ownerships_path %>" class="text-blue-600 dark:text-blue-400">Manage users & ownership</a></div>
     </div>
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Adapter</div>
@@ -55,6 +56,45 @@
 
   <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="text-lg font-semibold mb-3">Failed Profiles</h2>
+    <div class="mb-3 grid gap-3 sm:grid-cols-2">
+      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+        <h3 class="text-sm font-semibold mb-2">Bulk Retry (no AI)</h3>
+        <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <label class="text-xs text-slate-500">Select profiles</label>
+          <select name="logins[]" multiple size="8" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+            <% Profile.order(:login).limit(500).pluck(:login).each do |login| %>
+              <option value="<%= login %>">@<%= login %></option>
+            <% end %>
+          </select>
+          <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue No-AI</button>
+        </form>
+      </div>
+      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+        <h3 class="text-sm font-semibold mb-2">Bulk Retry AI</h3>
+        <form action="<%= ops_bulk_retry_ai_path %>" method="post" class="space-y-2">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <label class="text-xs text-slate-500">Select profiles</label>
+          <select name="logins[]" multiple size="8" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+            <% Profile.order(:login).limit(500).pluck(:login).each do |login| %>
+              <option value="<%= login %>">@<%= login %></option>
+            <% end %>
+          </select>
+          <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue AI</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="mb-3 flex items-center gap-2">
+      <form action="<%= ops_bulk_retry_all_path %>" method="post">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue No-AI for ALL Profiles</button>
+      </form>
+      <form action="<%= ops_bulk_retry_ai_all_path %>" method="post">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue AI for ALL Profiles</button>
+      </form>
+    </div>
     <% if @failed_profiles.present? %>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -71,6 +111,8 @@
               <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
                 <td class="py-2 pr-4">
                   <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
+                  <span class="text-slate-400">·</span>
+                  <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
                 </td>
                 <td class="py-2 pr-4"><pre class="whitespace-pre-wrap text-xs text-red-600 dark:text-red-400"><%= (p.last_pipeline_error || "(none)").to_s.truncate(160) %></pre></td>
                 <td class="py-2 pr-4"><%= p.updated_at.strftime('%Y-%m-%d %H:%M') %></td>
@@ -88,6 +130,58 @@
       </div>
     <% else %>
       <p class="text-slate-600 dark:text-slate-300">No failed profiles found.</p>
+    <% end %>
+  </div>
+
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="text-lg font-semibold mb-3">GitHub App Installation</h2>
+    <div class="text-sm text-slate-600 dark:text-slate-300">
+      <div>Configured installation_id: <span class="font-mono"><%= @configured_installation_id || 'nil' %></span></div>
+    </div>
+  </div>
+
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="text-lg font-semibold mb-3">Data Issues (Successful but incomplete)</h2>
+    <% if @data_issues_profiles.present? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <th class="py-2 pr-4">Profile</th>
+              <th class="py-2 pr-4">Missing</th>
+              <th class="py-2 pr-4">Last Synced</th>
+              <th class="py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @data_issues_profiles.each do |p| %>
+              <% missing = [] %>
+              <% missing << 'card' unless p.profile_card.present? %>
+              <% missing << 'languages' unless p.profile_languages.exists? %>
+              <% missing << 'repositories' unless p.profile_repositories.exists? %>
+              <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
+                <td class="py-2 pr-4">
+                  <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
+                  <span class="text-slate-400">·</span>
+                  <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
+                </td>
+                <td class="py-2 pr-4">
+                  <span class="rounded bg-amber-100 px-2 py-0.5 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"><%= missing.join(', ') %></span>
+                </td>
+                <td class="py-2 pr-4"><%= p.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
+                <td class="py-2">
+                  <div class="flex gap-2">
+                    <%= button_to "Retry (no AI)", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%= button_to "Retry AI", ops_retry_profile_ai_path(username: p.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-slate-600 dark:text-slate-300">No data issues detected.</p>
     <% end %>
   </div>
 
