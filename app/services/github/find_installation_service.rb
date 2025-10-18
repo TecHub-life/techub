@@ -5,7 +5,8 @@ module Github
       return jwt if jwt.failure?
 
       client = Octokit::Client.new(bearer_token: jwt.value)
-      installations = client.app_installations
+      # Octokit may not expose app_installations depending on version; call the endpoint directly
+      installations = client.get("/app/installations")
 
       # Choose the first available installation for this App.
       chosen = installations.first

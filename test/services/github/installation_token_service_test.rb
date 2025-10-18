@@ -53,10 +53,18 @@ module Github
       end
     end
 
-    test "returns failure when installation id missing" do
-      result = Github::InstallationTokenService.call(installation_id: nil)
-
-      assert result.failure?
+    test "find installation handles direct GET when octokit lacks app_installations" do
+      Github::AppAuthenticationService.stub :call, ServiceResult.success("jwt") do
+        fake_client = Minitest::Mock.new
+        fake_client.expect(:get, [ { id: 999, account: { login: "owner" } } ], [ "/app/installations" ])
+        Octokit::Client.stub :new, fake_client do
+          result = Github::FindInstallationService.call
+          assert result.success?
+          assert_equal 999, result.value[:id]
+          assert_equal "owner", result.value[:account_login]
+        end
+        fake_client.verify
+      end
     end
   end
 end
