@@ -24,7 +24,7 @@ class PagesController < ApplicationController
     @per_page = (params[:per_page] || default_per).to_i.clamp(1, 60)
     offset = (@page - 1) * @per_page
 
-    scope = Profile.where(last_pipeline_status: "success").includes(:profile_assets, :profile_card)
+    scope = Profile.where(last_pipeline_status: [ "success", "partial_success" ]).includes(:profile_assets, :profile_card)
     if @q.present?
       scope = scope.where("profiles.login LIKE :q OR profiles.name LIKE :q", q: "%#{@q}%")
     end
@@ -54,7 +54,7 @@ class PagesController < ApplicationController
       scope = scope.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }) if uid.present?
     end
     # Build tag cloud (from current successful profiles only)
-    cloud_source = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.tags")
+    cloud_source = Profile.joins(:profile_card).where(last_pipeline_status: [ "success", "partial_success" ]).pluck("profile_cards.tags")
     @tag_cloud = cloud_source.flatten.map { |t| t.to_s.downcase.strip }.reject(&:blank?).tally.sort_by { |(_t, c)| -c }.first(40)
 
     @total = scope.count

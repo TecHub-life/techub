@@ -21,6 +21,14 @@ module Gemini
       }
     }.freeze
 
+    FUN_STYLES = [
+      { name: "anime", cue: "in vibrant anime character style, cel-shaded, expressive eyes, clean line art" },
+      { name: "yellowtoon", cue: "in a yellow-skinned off-brand sitcom cartoon style, bold outlines, minimal shading" },
+      { name: "macfarlane", cue: "in an off-brand cutaway-gag western animation style, flat colors, thick outlines" },
+      { name: "multiverse", cue: "in a zany interdimensional science cartoon vibe, neon accents, surreal props" },
+      { name: "pirate", cue: "as a whimsical pirate persona, tricorn hat, nautical motifs, parchment palette" }
+    ].freeze
+
     def initialize(
       avatar_path:,
       prompt_theme: "TecHub",
@@ -67,6 +75,7 @@ module Gemini
       end
 
       prompts = build_prompts(description, structured)
+      prompts = add_fun_style_alternates(prompts, description, structured)
 
       success(
         {
@@ -166,6 +175,27 @@ module Gemini
           Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
         PROMPT
       end
+    end
+
+    # For 1x1, append a few fun alternates for generation variety
+    def add_fun_style_alternates(prompts, description, structured)
+      base = prompts.dup
+      salient = structured_details(structured)
+      base_1x1 = base["1x1"]
+      return base unless base_1x1.present?
+
+      FUN_STYLES.first(4).each_with_index do |style, idx|
+        key = idx.zero? ? "1x1_alt" : "1x1_alt#{idx+1}"
+        cue = style[:cue]
+        base[key] = <<~PROMPT.squish
+          Portrait prompt alternate: #{style[:name]}.
+          Subject description: #{description}
+          #{salient.any? ? "Key visual traits: #{salient.join('; ')}." : ""}
+          Visual style: #{cue}. Keep identity consistent with source avatar; do not change skin tone or core features.
+          Composition (1:1): #{IMAGE_VARIANTS["1x1"][:guidance]} Output aspect ratio: 1:1.
+        PROMPT
+      end
+      base
     end
 
     def normalize_structured(structured)

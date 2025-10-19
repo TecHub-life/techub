@@ -7,6 +7,12 @@ module Gemini
       "9x16" => { aspect_ratio: "9:16", filename: "avatar-9x16.png" }
     }.freeze
 
+    ALT_VARIANTS = {
+      "1x1_alt" => { aspect_ratio: "1:1", filename: "avatar-1x1-alt.png" },
+      "1x1_alt2" => { aspect_ratio: "1:1", filename: "avatar-1x1-alt2.png" },
+      "1x1_alt3" => { aspect_ratio: "1:1", filename: "avatar-1x1-alt3.png" }
+    }.freeze
+
     def initialize(
       login:,
       avatar_path: nil,
@@ -66,7 +72,8 @@ module Gemini
 
       generated = {}
 
-      VARIANTS.each do |key, variant|
+      all_variants = VARIANTS.merge(ALT_VARIANTS)
+      all_variants.each do |key, variant|
         prompt = prompts[key]
         unless prompt.present?
           return failure(StandardError.new("Missing prompt for #{key} variant"), metadata: { prompts: prompts.keys })
@@ -358,6 +365,9 @@ module Gemini
     def variant_kind(key)
       case key.to_s
       when "1x1" then "avatar_1x1"
+      when "1x1_alt" then "avatar_1x1_alt"
+      when "1x1_alt2" then "avatar_1x1_alt2"
+      when "1x1_alt3" then "avatar_1x1_alt3"
       when "16x9" then "avatar_16x9"
       when "3x1" then "avatar_3x1"
       when "9x16" then "avatar_9x16"
