@@ -1,3 +1,5 @@
+require "socket"
+
 class OpsAlertMailer < ApplicationMailer
   def job_failed
     @profile = params[:profile]
@@ -6,8 +8,15 @@ class OpsAlertMailer < ApplicationMailer
     @metadata = params[:metadata]
     @duration_ms = params[:duration_ms]
 
+    # Runtime context for the template
+    @rails_env = Rails.env
+    @hostname = (Socket.gethostname rescue nil)
+    @pid = Process.pid
+    @app_host = ENV["APP_HOST"].to_s.presence
+    @app_revision = ENV["APP_REVISION"].to_s.presence
+
     to = params[:to]
-    subject = "[TecHub] Job failed: #{@job} for @#{@profile&.login}"
+    subject = "[TecHub][#{Rails.env}] Job failed: #{@job} for @#{@profile&.login}"
 
     mail(to: to, subject: subject)
   end

@@ -12,6 +12,9 @@ module Notifications
       recipients = alert_recipients
       return success(:skipped_no_recipients) if recipients.empty?
 
+      runtime_meta = build_runtime_metadata
+      merged_meta = merge_metadata(@metadata, runtime_meta)
+
       recipients.each do |email|
         OpsAlertMailer
           .with(
@@ -19,7 +22,7 @@ module Notifications
             profile: profile,
             job: job,
             error_message: error_message,
-            metadata: metadata,
+            metadata: merged_meta,
             duration_ms: duration_ms
           )
           .job_failed
@@ -39,7 +42,24 @@ module Notifications
       creds = (Rails.application.credentials.dig(:mission_control, :jobs, :alert_email) rescue nil).to_s.strip
 
       list = [ env, creds ].reject(&:blank?).join(",")
-      list.split(/[,\s]+/).map(&:strip).reject(&:blank?).uniq
+      list.split(/[,
+\s]+/).map(&:strip).reject(&:blank?).uniq
+    end
+
+    def build_runtime_metadata
+      {
+        rails_env: Rails.env,
+        app_host: ENV["APP_HOST"],
+        revision: ENV["APP_REVISION"],
+        hostname: (Socket.gethostname rescue nil),
+        pid: Process.pid
+      }.compact
+    end
+
+    def merge_metadata(original, runtime)
+      base = original.is_a?(Hash) ? original.dup : {}
+      base["runtime"] = runtime
+      base
     end
   end
 end

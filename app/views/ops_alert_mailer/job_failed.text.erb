@@ -4,6 +4,12 @@ Job: <%= @job %>
 Profile: @<%= @profile&.login %>
 Duration: <%= (@duration_ms || 0).to_i %> ms
 
+Environment: <%= @rails_env %>
+Host: <%= @hostname %>
+PID: <%= @pid %>
+APP_HOST: <%= @app_host || '(unset)' %>
+Revision: <%= @app_revision || '(unknown)' %>
+
 Error:
 <%= @error_message %>
 
