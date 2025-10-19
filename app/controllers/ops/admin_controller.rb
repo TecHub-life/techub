@@ -12,6 +12,20 @@ module Ops
         finished_last_hour: nil
       }
 
+      # High-level profile status counts for quick health overview
+      begin
+        raw = Profile.group(:last_pipeline_status).count
+        @status_counts = {
+          success: raw["success"].to_i,
+          partial_success: raw["partial_success"].to_i,
+          failure: raw["failure"].to_i,
+          queued: raw["queued"].to_i,
+          unknown: (raw[nil] || 0).to_i
+        }
+      rescue StandardError
+        @status_counts = { success: 0, partial_success: 0, failure: 0, queued: 0, unknown: 0 }
+      end
+
       if defined?(SolidQueue)
         begin
           @stats[:queued] = (SolidQueue::Job.where(finished_at: nil).count rescue nil)
@@ -31,6 +45,16 @@ module Ops
         @failed_profiles = Profile.where(last_pipeline_status: "failure").order(updated_at: :desc).limit(50)
       rescue StandardError
         @failed_profiles = []
+      end
+
+      # Recent successful profiles (last pipeline success or partial_success)
+      begin
+        @recent_success_profiles = Profile
+          .where(last_pipeline_status: [ "success", "partial_success" ])
+          .order(updated_at: :desc)
+          .limit(50)
+      rescue StandardError
+        @recent_success_profiles = []
       end
 
       # Profiles that claim success but are missing expected associated data
@@ -65,7 +89,7 @@ module Ops
         Profiles::GeneratePipelineJob.perform_later(login, ai: false)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued no-AI re-run for #{count} profile(s)"
+      redirect_to ops_admin_path, notice: "Queued Screenshots-Only re-run for #{count} profile(s)"
     end
 
     def bulk_retry_ai
@@ -77,7 +101,7 @@ module Ops
         p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued AI re-run for #{count} profile(s)"
+      redirect_to ops_admin_path, notice: "Queued Full (AI) re-run for #{count} profile(s)"
     end
 
     def bulk_retry_all
@@ -87,7 +111,7 @@ module Ops
         p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued no-AI re-run for all (#{count}) profiles"
+      redirect_to ops_admin_path, notice: "Queued Screenshots-Only re-run for all (#{count}) profiles"
     end
 
     def bulk_retry_ai_all
@@ -98,7 +122,7 @@ module Ops
         p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued AI re-run for all (#{count}) profiles"
+      redirect_to ops_admin_path, notice: "Queued Full (AI) re-run for all (#{count}) profiles"
     end
 
     # Removed write action for installation id: installation id must be configured explicitly.

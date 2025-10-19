@@ -1,6 +1,6 @@
 module Ops
   class ProfilesController < BaseController
-    before_action :find_profile
+    before_action :find_profile, only: [ :show, :retry, :retry_ai, :destroy ]
 
     def show
       @top_repositories = @profile.top_repositories
@@ -15,16 +15,26 @@ module Ops
       @recent_events = ProfilePipelineEvent.where(profile_id: @profile.id).order(created_at: :desc).limit(50)
     end
 
+    # Lightweight search endpoint for admin autocomplete
+    # GET /ops/profiles/search?q=lo
+    def search
+      q = params[:q].to_s.strip.downcase
+      return render json: [] if q.blank?
+
+      results = Profile.where("LOWER(login) LIKE ?", "%#{q}%").order(:login).limit(20)
+      render json: results.map { |p| { login: p.login } }
+    end
+
     def retry
       Profiles::GeneratePipelineJob.perform_later(@profile.login, ai: false)
       @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-      redirect_to ops_admin_path, notice: "Re-run queued for @#{@profile.login} (no AI)"
+      redirect_to ops_admin_path, notice: "Re-run queued for @#{@profile.login} — Screenshots-Only"
     end
 
     def retry_ai
       Profiles::GeneratePipelineJob.perform_later(@profile.login, ai: true)
       @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
-      redirect_to ops_admin_path, notice: "AI re-run queued for @#{@profile.login}"
+      redirect_to ops_admin_path, notice: "Full (AI) re-run queued for @#{@profile.login}"
     end
 
     def destroy

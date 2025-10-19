@@ -80,6 +80,32 @@ module Ops
       redirect_to ops_ownerships_path, alert: e.message
     end
 
+    # Transfer ownership by specifying profile and target user logins directly
+    # Params: profile_login, target_login
+    def transfer_by_profile
+      plogin = params[:profile_login].to_s.downcase
+      tlogin = params[:target_login].to_s.downcase
+      return redirect_to ops_ownerships_path, alert: "Profile and target required" if plogin.blank? || tlogin.blank?
+
+      profile = Profile.for_login(plogin).first || Profile.find_by(login: plogin)
+      user = User.find_by(login: tlogin)
+      return redirect_to ops_ownerships_path, alert: "Profile not found" unless profile
+      return redirect_to ops_ownerships_path, alert: "User not found" unless user
+
+      ActiveRecord::Base.transaction do
+        # Remove all links except any existing link for the target user (if present)
+        ProfileOwnership.where(profile_id: profile.id).where.not(user_id: user.id).delete_all
+
+        link = ProfileOwnership.find_or_initialize_by(user_id: user.id, profile_id: profile.id)
+        link.is_owner = true
+        link.save!
+      end
+
+      redirect_to ops_ownerships_path(profile: profile.login), notice: "Transferred ownership to @#{tlogin}"
+    rescue StandardError => e
+      redirect_to ops_ownerships_path, alert: e.message
+    end
+
     # Link is no longer supported; profiles have exactly one owner.
 
     def destroy

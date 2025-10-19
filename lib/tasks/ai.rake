@@ -1,6 +1,4 @@
 namespace :ai do
-  PROVIDER_ORDER = %w[ai_studio vertex].freeze
-
   desc "Regenerate AI traits for a single profile (ADMIN)"
   task :traits, [ :login ] => :environment do |_, args|
     login = args[:login].to_s.downcase
@@ -62,7 +60,7 @@ namespace :ai do
       abort("Profile not found: #{login}") unless prof
 
       failures = []
-      PROVIDER_ORDER.each do |provider|
+      Gemini::PROVIDER_ORDER.each do |provider|
         begin
           Gemini::Configuration.validate!(provider)
         rescue KeyError => e
