@@ -45,6 +45,7 @@ Rails.application.routes.draw do
   post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile
   post "/my/profiles/:username/regenerate_ai", to: "my_profiles#regenerate_ai", as: :regenerate_my_profile_ai
   post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
+  post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
 
   # Card previews for screenshotting (HTML views sized for capture)
   get "/cards/:login/og", to: "cards#og", as: :card_og
@@ -53,6 +54,13 @@ Rails.application.routes.draw do
 
   # Direct OG image route (serves/redirects image; enqueues generation if missing)
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
+
+  # Public JSON API for assets
+  namespace :api do
+    namespace :v1 do
+      get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
+    end
+  end
 
   # Ops admin (lightweight panel)
   namespace :ops do

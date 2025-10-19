@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: TecHub Public API
+  version: 0.1.0
+  description: |
+    Public endpoints for consuming TecHub assets.
+servers:
+  - url: https://techub.life
+paths:
+  /api/v1/profiles/{username}/assets:
+    get:
+      summary: List assets for a profile
+      description: Returns profile basics, card metadata, and asset entries for embedding.
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+          description: GitHub username (case-insensitive)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    type: object
+                    properties:
+                      login: { type: string }
+                      display_name: { type: string }
+                      updated_at: { type: string, format: date-time }
+                  card:
+                    type: object
+                    nullable: true
+                    properties:
+                      title: { type: string }
+                      tags:
+                        type: array
+                        items: { type: string }
+                      archetype: { type: string }
+                      spirit_animal: { type: string }
+                      avatar_choice: { type: string, enum: [real, ai] }
+                      bg_choices:
+                        type: object
+                        properties:
+                          card: { type: string }
+                          og: { type: string }
+                          simple: { type: string }
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        kind: { type: string }
+                        public_url: { type: string }
+                        mime_type: { type: string }
+                        width: { type: integer }
+                        height: { type: integer }
+                        provider: { type: string }
+                        updated_at: { type: string, format: date-time }
+        '404':
+          description: Not found

@@ -161,6 +161,30 @@ class MyProfilesController < ApplicationController
     end
   end
 
+  # Select a specific generated asset as the active one for a given kind.
+  # This sets the ProfileAsset public_url/local_path for the canonical kind by copying from another file path/URL.
+  def select_asset
+    kind = params[:kind].to_s
+    source_url = params[:public_url].to_s
+    source_path = params[:local_path].to_s
+    unless %w[og card simple avatar_3x1 avatar_16x9 avatar_1x1].include?(kind)
+      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
+    end
+
+    begin
+      # Update the canonical asset row for kind
+      rec = @profile.profile_assets.find_or_initialize_by(kind: kind)
+      rec.public_url = source_url.presence || rec.public_url
+      rec.local_path = source_path.presence || rec.local_path
+      rec.provider = rec.provider.presence || "user_select"
+      rec.generated_at = Time.current
+      rec.save!
+      redirect_to my_profile_settings_path(username: @profile.login), notice: "Selected #{kind.humanize} image"
+    rescue StandardError => e
+      redirect_to my_profile_settings_path(username: @profile.login), alert: e.message
+    end
+  end
+
   def destroy
     ownership = ProfileOwnership.find_by(user_id: current_user.id, profile_id: @profile.id)
     return redirect_to my_profiles_path, alert: "Not linked to this profile" unless ownership

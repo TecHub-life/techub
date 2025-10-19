@@ -4,6 +4,7 @@ class PagesController < ApplicationController
   end
 
   def directory
+    @layout = params[:layout].presence_in(%w[compact comfortable single]) || "comfortable"
     @q = params[:q].to_s.strip
     @tag = params[:tag].to_s.strip.downcase
     @language = params[:language].to_s.strip.downcase
@@ -15,7 +16,12 @@ class PagesController < ApplicationController
     @spirit = params[:spirit].to_s.strip
     @page = params[:page].to_i
     @page = 1 if @page < 1
-    @per_page = (params[:per_page] || 24).to_i.clamp(1, 60)
+    default_per = case @layout
+    when "single" then 8
+    when "comfortable" then 16
+    else 24
+    end
+    @per_page = (params[:per_page] || default_per).to_i.clamp(1, 60)
     offset = (@page - 1) * @per_page
 
     scope = Profile.where(last_pipeline_status: "success").includes(:profile_assets, :profile_card)
@@ -85,7 +91,17 @@ class PagesController < ApplicationController
   def analytics; end
 
   def docs
-    @marketing_overview = File.read(Rails.root.join("docs", "marketing-overview.md")) if File.exist?(Rails.root.join("docs", "marketing-overview.md"))
+    root = Rails.root.join("docs")
+    @path = params[:path].to_s
+    # Build a simple index of markdown files
+    @docs_index = Dir[root.join("**", "*.md")].map { |p| p.delete_prefix(root.to_s + "/") }.sort
+    # Resolve the requested doc or default
+    rel = @path.presence || "marketing-overview.md"
+    target = root.join(rel)
+    if target.to_s.start_with?(root.to_s) && File.exist?(target) && File.file?(target)
+      @doc_title = rel
+      @doc_markdown = File.read(target)
+    end
   end
 
   def autocomplete
