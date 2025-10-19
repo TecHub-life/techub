@@ -40,11 +40,21 @@ Rails.application.routes.draw do
   get "/profiles/:username", to: "profiles#show", as: :profile
   get "/profiles/:username/status", to: "profiles#status", defaults: { format: :json }
 
+  # Card preview routes (for screenshots)
+  get "/cards/:login/og", to: "cards#og", as: :card_og
+  get "/cards/:login/card", to: "cards#card", as: :card_preview
+  get "/cards/:login/simple", to: "cards#simple", as: :card_simple
+  get "/cards/:login/banner", to: "cards#banner", as: :card_banner
+
   # Ownership (My Profiles) — index and create/destroy will come later
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
   delete "/my/profiles/:username", to: "my_profiles#destroy", as: :remove_my_profile
   get "/my/profiles/:username/settings", to: "my_profiles#settings", as: :my_profile_settings
   patch "/my/profiles/:username/settings", to: "my_profiles#update_settings", as: :update_my_profile_settings
+  post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile
+  post "/my/profiles/:username/regenerate_ai", to: "my_profiles#regenerate_ai", as: :regenerate_my_profile_ai
+  post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
+  post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
   post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile
   post "/my/profiles/:username/regenerate_ai", to: "my_profiles#regenerate_ai", as: :regenerate_my_profile_ai
   post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset

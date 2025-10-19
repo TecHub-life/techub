@@ -49,10 +49,17 @@
       end
     %>
 
-    <%# Cards Grid Layout %>
-    <div class="grid gap-6 md:grid-cols-2">
-      <%# Main Trading Card - Spans full width on md+ %>
-      <div class="md:col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
+    <% if [card_img, og_img, simple_img].all?(&:blank?) %>
+      <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-6 text-center">
+        <div class="mx-auto mb-3 h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-800 grid place-items-center text-slate-500">🎴</div>
+        <p class="text-sm text-slate-600 dark:text-slate-300">No card assets yet. Generate your profile to create shareable cards.</p>
+      </div>
+    <% end %>
+
+    <%# Cards Grid Layout (mobile: 1 col, tablet: 2 col, desktop+: 3 col with main spanning) %>
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+      <%# Main Trading Card - Spans full width on sm+/xl+ %>
+      <div class="sm:col-span-2 xl:col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
         <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <div class="flex items-center gap-2">
             <svg class="h-4 w-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
@@ -61,7 +68,7 @@
             <span>Main Card</span>
           </div>
           <% if card_img.present? %>
-            <a href="<%= card_img %>" download target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
+            <a href="<%= card_img %>" download target="_blank" rel="noopener" class="text-indigo-700 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 dark:text-indigo-300 dark:hover:text-indigo-200 transition" aria-label="Download Main Card">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
               </svg>
@@ -92,7 +99,7 @@
             <span>OG Image</span>
           </div>
           <% if og_img.present? %>
-            <a href="<%= og_img %>" download target="_blank" rel="noopener" class="text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition">
+            <a href="<%= og_img %>" download target="_blank" rel="noopener" class="text-sky-700 hover:text-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-500/60 dark:text-sky-300 dark:hover:text-sky-200 transition" aria-label="Download OG Image">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
               </svg>
@@ -123,7 +130,7 @@
             <span>Simple</span>
           </div>
           <% if simple_img.present? %>
-            <a href="<%= simple_img %>" download target="_blank" rel="noopener" class="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition">
+            <a href="<%= simple_img %>" download target="_blank" rel="noopener" class="text-emerald-700 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:text-emerald-300 dark:hover:text-emerald-200 transition" aria-label="Download Simple Card">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
               </svg>

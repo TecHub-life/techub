@@ -32,7 +32,10 @@
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Users</div>
       <div class="mt-1 text-slate-700 dark:text-slate-300">Owners link profiles to user accounts for submissions, settings, and AI usage.</div>
-      <div class="mt-2"><a href="<%= ops_ownerships_path %>" class="text-blue-600 dark:text-blue-400 underline">Open Users & Ownership</a></div>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <a href="<%= ops_ownerships_path %>" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Users & Ownership</a>
+        <a href="/ops/profiles/<%= Profile.order(:login).limit(1).pluck(:login).first %>" class="rounded border px-2 py-1 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Example Profile Admin</a>
+      </div>
     </div>
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Adapter</div>

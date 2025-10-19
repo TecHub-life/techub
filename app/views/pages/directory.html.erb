@@ -40,9 +40,19 @@
               <div data-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800 max-h-60 overflow-auto"></div>
             </div>
             <div data-controller="autocomplete" data-autocomplete-field-value="tag" data-action="click@window->autocomplete#clickOutside" class="relative">
-              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Tag</label>
-              <input type="text" name="tag" value="<%= h @tag %>" data-autocomplete-target="input" data-action="input->autocomplete#search" placeholder="e.g., ruby, ai" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
+              <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Tags</label>
+              <input type="text" name="tags" value="<%= h @tags&.join(', ') %>" data-autocomplete-target="input" data-action="input->autocomplete#search" placeholder="ruby, ai, rails" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500">
               <div data-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800 max-h-60 overflow-auto"></div>
+              <% if @tags&.any? %>
+                <div class="mt-1 flex flex-wrap gap-1">
+                  <% @tags.each do |t| %>
+                    <span class="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                      #<%= t %>
+                      <a href="<%= directory_path(tags: (@tags - [t]).join(', '), q: @q.presence, language: @language.presence, archetype: @archetype.presence, spirit: @spirit.presence, min_followers: @min_followers, hireable: @hireable ? 1 : nil, active: @active ? 1 : nil, mine: @mine ? 1 : nil) %>" class="ml-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">×</a>
+                    </span>
+                  <% end %>
+                </div>
+              <% end %>
             </div>
             <div data-controller="autocomplete" data-autocomplete-field-value="language" data-action="click@window->autocomplete#clickOutside" class="relative">
               <label class="mb-1 sm:mb-1.5 block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Language</label>
@@ -182,7 +192,11 @@
               <!-- Avatar Badge -->
               <div class="absolute bottom-3 left-3">
                 <div class="h-16 w-16 rounded-full border-2 border-white/90 bg-slate-800 p-0.5 shadow-lg">
-                  <img src="<%= profile.avatar_url %>" alt="<%= profile.login %>" class="h-full w-full rounded-full object-cover">
+                  <% avatar_src = profile.avatar_url %>
+                  <% if (card&.avatar_choice == 'ai') && (asset = profile.profile_assets.find_by(kind: 'avatar_1x1')) %>
+                    <% avatar_src = asset.public_url if asset&.public_url.present? %>
+                  <% end %>
+                  <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="h-full w-full rounded-full object-cover">
                 </div>
               </div>
 

@@ -1,6 +1,6 @@
 module Profiles
   class GeneratePipelineService < ApplicationService
-    VARIANTS = %w[og card simple].freeze
+    VARIANTS = %w[og card simple banner].freeze
 
     def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, ai: true)
       @login = login.to_s.downcase

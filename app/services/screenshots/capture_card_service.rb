@@ -5,12 +5,14 @@ module Screenshots
     DEFAULT_WIDTHS = {
       "og" => 1200,
       "card" => 1280,
-      "simple" => 1280
+      "simple" => 1280,
+      "banner" => 1500
     }.freeze
     DEFAULT_HEIGHTS = {
       "og" => 630,
       "card" => 720,
-      "simple" => 720
+      "simple" => 720,
+      "banner" => 500
     }.freeze
 
     def initialize(login:, variant: "og", host: nil, output_path: nil, wait_ms: 500, type: nil, quality: 85)

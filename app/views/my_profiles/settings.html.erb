@@ -8,8 +8,12 @@
              when 'queued' then 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200'
              when 'success' then 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
              when 'failure' then 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
+             when 'partial_success' then 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200'
              else 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' end %>
         "><%= @profile.last_pipeline_status.capitalize %></span>
+        <% if @profile.last_pipeline_status == 'partial_success' %>
+          <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">Some AI steps failed; we used safe fallbacks. You can retry AI later.</p>
+        <% end %>
       <% end %>
       <% if @profile.last_pipeline_error.present? %>
         <p class="mt-2 text-sm text-red-600 dark:text-red-400"><%= @profile.last_pipeline_error %></p>
@@ -55,7 +59,7 @@
             <span class="text-slate-700 dark:text-slate-300">Allow my AI artwork to be featured publicly (gallery & promos)</span>
           </label>
           <div>
-            <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save</button>
+            <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800" data-disable-with="Saving…">Save</button>
             <a href="/gallery" target="_blank" class="ml-2 text-sm text-blue-600 hover:underline dark:text-blue-400">View public gallery</a>
           </div>
         </form>
@@ -99,7 +103,7 @@
               </div>
             <% end %>
           </div>
-          <button class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save avatar choice</button>
+          <button class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800" data-disable-with="Saving…">Save avatar choice</button>
         </form>
       </div>
       <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -195,7 +199,7 @@
             </div>
           </div>
           <div>
-            <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Backgrounds</button>
+          <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900" data-disable-with="Saving…">Save Backgrounds</button>
           </div>
         </form>
       </div>
@@ -205,14 +209,14 @@
         <div class="grid gap-3 sm:grid-cols-2">
           <div>
             <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">Re-capture screenshots and optimize. No AI cost.</p>
-            <%= button_to "Re-capture Screenshots", regenerate_my_profile_path(username: @profile.login), method: :post, class: "w-full rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900" %>
+            <%= button_to "Re-capture Screenshots", regenerate_my_profile_path(username: @profile.login), method: :post, class: "w-full rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900", data: { disable_with: "Queuing…" } %>
           </div>
           <div>
             <% available = Time.current >= (@ai_regen_available_at || Time.at(0)) %>
             <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">Regenerate AI artwork (weekly limit)</p>
             <%= button_to "Regenerate AI Artwork", regenerate_my_profile_ai_path(username: @profile.login), method: :post,
               class: "w-full rounded px-4 py-2 text-white #{available ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-500 cursor-not-allowed'}",
-              disabled: !available %>
+              disabled: !available, data: { disable_with: "Queuing…" } %>
             <% unless available %>
               <% remaining = (@ai_regen_available_at - Time.current).to_i %>
               <% hrs = (remaining / 3600).floor %>
@@ -225,45 +229,43 @@
 
       <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Social Assets</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Generate common sizes like 1500×500 headers and 400×400 avatars from your artwork.</p>
-        <div class="grid gap-4 md:grid-cols-3">
-          <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-            <div class="text-sm font-medium text-slate-800 dark:text-slate-200">X Header 1500×500</div>
-            <div class="mt-2 aspect-[3/1] overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
-              <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
-              <% header = Dir.exist?(gen_dir) ? Dir[gen_dir.join('x_header_1500x500*.{jpg,png}').to_s].first : nil %>
-              <% if header %>
-                <img src="<%= "/generated/#{@profile.login}/#{File.basename(header)}" %>" alt="1500×500" class="h-full w-full object-cover">
-              <% else %>
-                <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
-              <% end %>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Generated assets sized for major networks. Previews scale to fit your screen; click to open full size.</p>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
+          <% @social_targets.each do |t| %>
+            <% file = Dir.exist?(gen_dir) ? Dir[gen_dir.join("#{t[:kind]}*.{jpg,png}").to_s].first : nil %>
+            <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-sm font-medium text-slate-800 dark:text-slate-200"><%= t[:label] %></div>
+                <% if t[:hint].present? %>
+                  <div class="group relative" aria-label="<%= t[:hint] %>">
+                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px] text-slate-600 dark:border-slate-600 dark:text-slate-300" aria-hidden="true">?</span>
+                    <div class="pointer-events-none invisible absolute right-0 z-10 mt-2 w-48 rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700 opacity-0 shadow-md transition group-hover:visible group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      <%= t[:hint] %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+              <div class="relative mt-2 overflow-hidden rounded bg-slate-100 dark:bg-slate-900" style="aspect-ratio:<%= t[:aspect] %>">
+                <% if file %>
+                  <a href="<%= "/generated/#{@profile.login}/#{File.basename(file)}" %>" target="_blank" rel="noopener" aria-label="Open <%= t[:label] %> full size" class="focus:outline-none focus:ring-2 focus:ring-indigo-500/60">
+                    <img src="<%= "/generated/#{@profile.login}/#{File.basename(file)}" %>" alt="<%= t[:label] %>" class="h-full w-full object-cover" loading="lazy">
+                  </a>
+                <% else %>
+                  <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
+                <% end %>
+                <% if t[:kind] == 'youtube_cover_2560x1440' %>
+                  <%# Safe area 1546x423 overlay as per Sprout guide %>
+                  <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div class="border-2 border-yellow-400/80" style="width:60.39%; height:29.38%"></div>
+                  </div>
+                <% end %>
+              </div>
             </div>
-          </div>
-          <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-            <div class="text-sm font-medium text-slate-800 dark:text-slate-200">X Profile 400×400</div>
-            <div class="mt-2 aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
-              <% square = Dir.exist?(gen_dir) ? Dir[gen_dir.join('x_profile_400*.{jpg,png}').to_s].first : nil %>
-              <% if square %>
-                <img src="<%= "/generated/#{@profile.login}/#{File.basename(square)}" %>" alt="400×400" class="h-full w-full object-cover">
-              <% else %>
-                <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
-              <% end %>
-            </div>
-          </div>
-          <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-            <div class="text-sm font-medium text-slate-800 dark:text-slate-200">X Feed 1600×900</div>
-            <div class="mt-2 aspect-[16/9] overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
-              <% wide = Dir.exist?(gen_dir) ? Dir[gen_dir.join('x_feed_1600x900*.{jpg,png}').to_s].first : nil %>
-              <% if wide %>
-                <img src="<%= "/generated/#{@profile.login}/#{File.basename(wide)}" %>" alt="1600×900" class="h-full w-full object-cover">
-              <% else %>
-                <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
-              <% end %>
-            </div>
-          </div>
+          <% end %>
         </div>
         <div class="mt-3">
-          <%= button_to "Generate Social Assets", ops_generate_social_assets_path(username: @profile.login), method: :post, form: { data: { turbo: false } }, class: "rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700" %>
+          <%= button_to "Generate Social Assets", ops_generate_social_assets_path(username: @profile.login), method: :post, form: { data: { turbo: false } }, class: "rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700", data: { disable_with: "Generating…" } %>
         </div>
       </div>
 

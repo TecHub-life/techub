@@ -17,6 +17,11 @@ class CardsController < ApplicationController
     render :simple
   end
 
+  # 1500x500 — banner (3:1)
+  def banner
+    render :banner
+  end
+
   private
 
   def load_profile
