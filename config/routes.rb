@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   get "/faq", to: "pages#faq"
   get "/analytics", to: "pages#analytics"
   get "/docs", to: "pages#docs"
+  get "/gallery", to: "pages#gallery"
   get "/api-docs", to: "api_docs#show"
   get "/api-docs/spec.yaml", to: "api_docs#spec", as: :api_docs_spec
   get "/motifs", to: "pages#motifs"
@@ -67,6 +68,7 @@ Rails.application.routes.draw do
   # Ops admin (lightweight panel)
   namespace :ops do
     get "/", to: "admin#index", as: :admin
+    post "/axiom_smoke", to: "admin#axiom_smoke", as: :axiom_smoke
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
@@ -87,6 +89,7 @@ Rails.application.routes.draw do
     post "/ownerships/:id/transfer", to: "ownerships#transfer", as: :transfer_ownership
     delete "/ownerships/:id", to: "ownerships#destroy", as: :destroy_ownership
     get "/users/search", to: "users#search", as: :search_users
+    post "/profiles/:username/generate_social_assets", to: "profiles#generate_social_assets", as: :generate_social_assets
   end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)

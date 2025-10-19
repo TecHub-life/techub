@@ -51,11 +51,15 @@
 
         <!-- Card Attributes -->
         <div>
-          <div class="mb-2 sm:mb-3 flex items-center justify-between">
-            <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Card Attributes</h3>
-            <%= link_to motifs_path, class: "text-[11px] sm:text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" do %>
-              Browse Archetypes & Spirit Animals →
-            <% end %>
+          <div class="mb-2 sm:mb-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Card Attributes</h3>
+              <%= link_to motifs_path, class: "inline-flex items-center gap-1 rounded-lg border border-indigo-200/50 bg-indigo-50/50 px-2 py-1 text-[11px] sm:text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-300" do %>
+                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M11.3 1.046a1 1 0 011.4 0l6.25 6.25a1 1 0 010 1.414l-6.25 6.25a1 1 0 01-1.4-1.414L16.086 9.5H1a1 1 0 110-2h15.086L11.3 2.46a1 1 0 010-1.414z"/></svg>
+                <span>Motifs & Lore</span>
+              <% end %>
+            </div>
+            <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Explore archetypes and spirit animals used on cards.</p>
           </div>
           <div class="grid gap-3 sm:gap-4 sm:grid-cols-2">
             <div>
@@ -134,8 +138,8 @@
     <!-- Cards Grid -->
     <% grid_classes = case @layout
        when 'single' then 'grid-cols-1'
-       when 'comfortable' then 'sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
-       else 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+       when 'comfortable' then 'sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2'
+       else 'sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
        end %>
     <div class="grid gap-6 <%= grid_classes %> items-stretch">
       <% @profiles.each do |profile| %>

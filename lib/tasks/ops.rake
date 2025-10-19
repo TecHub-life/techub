@@ -1,4 +1,19 @@
 namespace :ops do
+  desc "Smoke test Axiom: emit a StructuredLogger event"
+  task :axiom_smoke, [ :message ] => :environment do |_, args|
+    msg = args[:message].presence || "hello_world"
+    if defined?(StructuredLogger)
+      StructuredLogger.info(message: "axiom_smoke", sample: msg, invoked_by: ENV["USER"])
+      puts "✓ Emitted axiom_smoke log: #{msg}"
+      puts "If AXIOM_TOKEN and AXIOM_DATASET are set, this should appear in Axiom."
+    else
+      warn "StructuredLogger not defined"
+      exit 1
+    end
+  end
+end
+
+namespace :ops do
   desc "Send a smoke test email (to=, message=)"
   task :send_test_email, [ :to, :message ] => :environment do |_t, args|
     to = args[:to]

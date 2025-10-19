@@ -1,6 +1,6 @@
 module Gemini
   class AvatarPromptService < ApplicationService
-    DEFAULT_STYLE_PROFILE = "neon-lit anime portrait with confident tech leader energy".freeze
+    DEFAULT_STYLE_PROFILE = "cinematic tech illustration with abstract motifs; tasteful, modern, and legible without overbearing faces".freeze
 
     IMAGE_VARIANTS = {
       "1x1" => {
@@ -9,15 +9,15 @@ module Gemini
       },
       "16x9" => {
         aspect_ratio: "16:9",
-        guidance: "Layout-aware OG composition with strong negative space for overlays; visual motifs from profile data (languages as color ribbons, repos as constellations, activity as arcs). Optional small subject cameo only if avatar clearly depicts a human; keep off-center, low-contrast. No text or logos."
+        guidance: "Layout-aware OG composition with strong negative space for overlays; visual motifs from profile data (languages as color ribbons, repos as constellations, activity as arcs). Optional small subject cameo only if avatar clearly depicts a human; keep off-center, low-contrast, and under 15% of frame. Strictly no text, watermarks, or logos."
       },
       "3x1" => {
         aspect_ratio: "3:1",
-        guidance: "Ultra-wide banner with high-contrast yet unobtrusive abstract motifs; prioritize safe edges and central negative space for card UI. Use profile-inspired symbolism (language strands, repository nodes, subtle activity trails). Absolutely no person depiction, no text, no logos."
+        guidance: "Ultra-wide banner with high-contrast yet unobtrusive abstract motifs; prioritize safe edges and central negative space for card UI. Use profile-inspired symbolism (language strands, repository nodes, subtle activity trails). Do not include faces or people. Absolutely no text or logos."
       },
       "9x16" => {
         aspect_ratio: "9:16",
-        guidance: "Vertical supporting art with layered gradients and subtle geometric meshes; carry profile-inspired motifs tastefully. No text or logos; avoid literal portrait."
+        guidance: "Vertical supporting art with layered gradients and subtle geometric meshes; carry profile-inspired motifs tastefully. No text or logos; avoid literal portraits."
       }
     }.freeze
 

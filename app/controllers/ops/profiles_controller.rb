@@ -1,5 +1,19 @@
 module Ops
   class ProfilesController < BaseController
+    def generate_social_assets
+      login = params[:username].to_s.downcase
+      result = Profiles::GenerateSocialAssetsService.call(login: login, upload: true)
+      if result.success?
+        redirect_to ops_admin_path, notice: "Generated social assets for @#{login}"
+      else
+        redirect_to ops_admin_path, alert: (result.error&.message || "Failed to generate social assets")
+      end
+    end
+  end
+end
+
+module Ops
+  class ProfilesController < BaseController
     before_action :find_profile, only: [ :show, :retry, :retry_ai, :destroy ]
 
     def show

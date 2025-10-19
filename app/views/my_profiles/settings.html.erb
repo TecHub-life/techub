@@ -47,26 +47,64 @@
     <!-- Main: Actions and Assets -->
     <div class="md:col-span-2 space-y-6">
       <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Avatar Selection</h2>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Privacy & Sharing</h2>
         <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-2">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <% choice = @profile.profile_card&.avatar_choice || 'real' %>
-          <div class="flex items-center gap-4 text-sm">
-            <label class="inline-flex items-center gap-2">
-              <input type="radio" name="avatar_choice" value="real" <%= 'checked' if choice == 'real' %> class="h-4 w-4 text-blue-600 focus:ring-blue-500">
-              <span class="text-slate-700 dark:text-slate-300">Use my GitHub photo</span>
-            </label>
-            <label class="inline-flex items-center gap-2">
-              <input type="radio" name="avatar_choice" value="ai" <%= 'checked' if choice == 'ai' %> class="h-4 w-4 text-blue-600 focus:ring-blue-500">
-              <span class="text-slate-700 dark:text-slate-300">Use fun AI photo</span>
-            </label>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" name="ai_art_opt_in" value="1" <%= 'checked' if @profile.ai_art_opt_in %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+            <span class="text-slate-700 dark:text-slate-300">Allow my AI artwork to be featured publicly (gallery & promos)</span>
+          </label>
+          <div>
+            <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save</button>
+            <a href="/gallery" target="_blank" class="ml-2 text-sm text-blue-600 hover:underline dark:text-blue-400">View public gallery</a>
           </div>
-          <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save avatar choice</button>
         </form>
       </div>
       <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Background Selection</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Choose how backgrounds render for Card, OG, and Simple. Options: AI (latest), Default image, or a solid color.</p>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Avatar Selection</h2>
+        <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-3">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <% choice = @profile.profile_card&.avatar_choice || 'real' %>
+          <div class="grid gap-3 sm:grid-cols-4">
+            <label class="block cursor-pointer">
+              <input type="radio" name="avatar_choice" value="real" <%= 'checked' if choice == 'real' %> class="peer sr-only">
+              <div class="rounded border border-slate-300 p-2 peer-checked:border-indigo-500 dark:border-slate-700">
+                <div class="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
+                  <img src="<%= @profile.avatar_url %>" alt="GitHub avatar" class="h-full w-full object-cover">
+                </div>
+                <div class="mt-2 text-center text-xs text-slate-700 dark:text-slate-300">GitHub avatar</div>
+              </div>
+            </label>
+
+            <% base = Rails.root.join('public','generated', @profile.login) %>
+            <% ai_opts = [] %>
+            <% if Dir.exist?(base) %>
+              <% ai_opts = Dir[base.join('avatar-1x1*.{jpg,jpeg,png}').to_s].first(3) %>
+            <% end %>
+            <% ai_opts.each_with_index do |path, idx| %>
+              <label class="block cursor-pointer">
+                <input type="radio" name="avatar_choice" value="ai" <%= 'checked' if choice == 'ai' %> class="peer sr-only">
+                <div class="rounded border border-slate-300 p-2 peer-checked:border-indigo-500 dark:border-slate-700">
+                  <div class="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
+                    <img src="<%= "/generated/#{@profile.login}/#{File.basename(path)}" %>" alt="AI avatar <%= idx+1 %>" class="h-full w-full object-cover">
+                  </div>
+                  <div class="mt-2 text-center text-xs text-slate-700 dark:text-slate-300">AI avatar <%= idx+1 %></div>
+                </div>
+              </label>
+            <% end %>
+
+            <% if ai_opts.empty? %>
+              <div class="sm:col-span-3 text-sm text-slate-600 dark:text-slate-300">
+                No AI avatars yet. Use Regenerate AI Artwork to create some options.
+              </div>
+            <% end %>
+          </div>
+          <button class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save avatar choice</button>
+        </form>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">Background Defaults</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Set default background behavior for Card, OG, and Simple. You can override results by uploading per‑variant images below.</p>
         <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-3">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <div class="flex items-center gap-2">
@@ -83,20 +121,23 @@
                 <option value="color" <%= 'selected' if sel == 'color' %>>Solid color</option>
               </select>
               <input type="color" name="bg_color_card" value="<%= @profile.profile_card&.bg_color_card || '#0f172a' %>" class="mt-2 h-9 w-16 rounded border border-slate-300 dark:border-slate-600" title="Card color">
-              <div class="mt-2 grid grid-cols-3 gap-2 text-xs">
-                <div>
-                  <label class="block">Crop X</label>
-                  <input type="number" step="0.01" min="0" max="1" name="bg_fx_card" value="<%= @profile.profile_card&.bg_fx_card || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+              <details class="mt-2 text-xs">
+                <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: Crop & zoom</summary>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block">Crop X</label>
+                    <input type="number" step="0.01" min="0" max="1" name="bg_fx_card" value="<%= @profile.profile_card&.bg_fx_card || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
+                  <div>
+                    <label class="block">Crop Y</label>
+                    <input type="number" step="0.01" min="0" max="1" name="bg_fy_card" value="<%= @profile.profile_card&.bg_fy_card || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
+                  <div>
+                    <label class="block">Zoom</label>
+                    <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_card" value="<%= @profile.profile_card&.bg_zoom_card || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
                 </div>
-                <div>
-                  <label class="block">Crop Y</label>
-                  <input type="number" step="0.01" min="0" max="1" name="bg_fy_card" value="<%= @profile.profile_card&.bg_fy_card || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-                </div>
-                <div>
-                  <label class="block">Zoom</label>
-                  <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_card" value="<%= @profile.profile_card&.bg_zoom_card || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-                </div>
-              </div>
+              </details>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">OG background</label>
@@ -107,20 +148,23 @@
                 <option value="color" <%= 'selected' if sel == 'color' %>>Solid color</option>
               </select>
               <input type="color" name="bg_color_og" value="<%= @profile.profile_card&.bg_color_og || '#0f172a' %>" class="mt-2 h-9 w-16 rounded border border-slate-300 dark:border-slate-600" title="OG color">
-              <div class="mt-2 grid grid-cols-3 gap-2 text-xs">
-                <div>
-                  <label class="block">Crop X</label>
-                  <input type="number" step="0.01" min="0" max="1" name="bg_fx_og" value="<%= @profile.profile_card&.bg_fx_og || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+              <details class="mt-2 text-xs">
+                <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: Crop & zoom</summary>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block">Crop X</label>
+                    <input type="number" step="0.01" min="0" max="1" name="bg_fx_og" value="<%= @profile.profile_card&.bg_fx_og || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
+                  <div>
+                    <label class="block">Crop Y</label>
+                    <input type="number" step="0.01" min="0" max="1" name="bg_fy_og" value="<%= @profile.profile_card&.bg_fy_og || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
+                  <div>
+                    <label class="block">Zoom</label>
+                    <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_og" value="<%= @profile.profile_card&.bg_zoom_og || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
                 </div>
-                <div>
-                  <label class="block">Crop Y</label>
-                  <input type="number" step="0.01" min="0" max="1" name="bg_fy_og" value="<%= @profile.profile_card&.bg_fy_og || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-                </div>
-                <div>
-                  <label class="block">Zoom</label>
-                  <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_og" value="<%= @profile.profile_card&.bg_zoom_og || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-                </div>
-              </div>
+              </details>
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Simple background</label>
@@ -131,20 +175,23 @@
                 <option value="color" <%= 'selected' if sel == 'color' %>>Solid color</option>
               </select>
               <input type="color" name="bg_color_simple" value="<%= @profile.profile_card&.bg_color_simple || '#0f172a' %>" class="mt-2 h-9 w-16 rounded border border-slate-300 dark:border-slate-600" title="Simple color">
-              <div class="mt-2 grid grid-cols-3 gap-2 text-xs">
-                <div>
-                  <label class="block">Crop X</label>
-                  <input type="number" step="0.01" min="0" max="1" name="bg_fx_simple" value="<%= @profile.profile_card&.bg_fx_simple || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+              <details class="mt-2 text-xs">
+                <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: Crop & zoom</summary>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block">Crop X</label>
+                    <input type="number" step="0.01" min="0" max="1" name="bg_fx_simple" value="<%= @profile.profile_card&.bg_fx_simple || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
+                  <div>
+                    <label class="block">Crop Y</label>
+                    <input type="number" step="0.01" min="0" max="1" name="bg_fy_simple" value="<%= @profile.profile_card&.bg_fy_simple || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
+                  <div>
+                    <label class="block">Zoom</label>
+                    <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_simple" value="<%= @profile.profile_card&.bg_zoom_simple || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
+                  </div>
                 </div>
-                <div>
-                  <label class="block">Crop Y</label>
-                  <input type="number" step="0.01" min="0" max="1" name="bg_fy_simple" value="<%= @profile.profile_card&.bg_fy_simple || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-                </div>
-                <div>
-                  <label class="block">Zoom</label>
-                  <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_simple" value="<%= @profile.profile_card&.bg_zoom_simple || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-                </div>
-              </div>
+              </details>
             </div>
           </div>
           <div>
@@ -176,28 +223,57 @@
         </div>
       </div>
 
-      <div class="grid gap-6 md:grid-cols-3">
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">OG</h3>
-          <% if @asset_og&.public_url.present? %>
-            <a href="<%= @asset_og.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">View</a>
-          <% else %>
-            <a href="<%= og_image_path(login: @profile.login) %>" target="_blank" class="text-blue-600 dark:text-blue-400">Generate/Fetch</a>
-          <% end %>
-          <div class="mt-3">
-            <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <input type="hidden" name="kind" value="og">
-              <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
-              <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
-            </form>
+      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Social Assets</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Generate common sizes like 1500×500 headers and 400×400 avatars from your artwork.</p>
+        <div class="grid gap-4 md:grid-cols-3">
+          <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+            <div class="text-sm font-medium text-slate-800 dark:text-slate-200">X Header 1500×500</div>
+            <div class="mt-2 aspect-[3/1] overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
+              <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
+              <% header = Dir.exist?(gen_dir) ? Dir[gen_dir.join('x_header_1500x500*.{jpg,png}').to_s].first : nil %>
+              <% if header %>
+                <img src="<%= "/generated/#{@profile.login}/#{File.basename(header)}" %>" alt="1500×500" class="h-full w-full object-cover">
+              <% else %>
+                <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
+              <% end %>
+            </div>
+          </div>
+          <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+            <div class="text-sm font-medium text-slate-800 dark:text-slate-200">X Profile 400×400</div>
+            <div class="mt-2 aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
+              <% square = Dir.exist?(gen_dir) ? Dir[gen_dir.join('x_profile_400*.{jpg,png}').to_s].first : nil %>
+              <% if square %>
+                <img src="<%= "/generated/#{@profile.login}/#{File.basename(square)}" %>" alt="400×400" class="h-full w-full object-cover">
+              <% else %>
+                <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
+              <% end %>
+            </div>
+          </div>
+          <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+            <div class="text-sm font-medium text-slate-800 dark:text-slate-200">X Feed 1600×900</div>
+            <div class="mt-2 aspect-[16/9] overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
+              <% wide = Dir.exist?(gen_dir) ? Dir[gen_dir.join('x_feed_1600x900*.{jpg,png}').to_s].first : nil %>
+              <% if wide %>
+                <img src="<%= "/generated/#{@profile.login}/#{File.basename(wide)}" %>" alt="1600×900" class="h-full w-full object-cover">
+              <% else %>
+                <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
+              <% end %>
+            </div>
           </div>
         </div>
+        <div class="mt-3">
+          <%= button_to "Generate Social Assets", ops_generate_social_assets_path(username: @profile.login), method: :post, form: { data: { turbo: false } }, class: "rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700" %>
+        </div>
+      </div>
+
+      <% uploads_enabled = ActiveModel::Type::Boolean.new.cast(ENV["ENABLE_UPLOADS"] || "true") %>
+      <div class="grid gap-6 md:grid-cols-3">
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">Card</h3>
           <div class="flex items-start gap-3">
             <div class="shrink-0">
-              <div class="relative w-[320px] h-[180px] overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
+              <div class="relative w-full max-w-[320px] h-[180px] mx-auto overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
                 <iframe src="<%= card_preview_path(login: @profile.login) %>" title="Card preview" style="width:1280px; height:720px; transform:scale(0.25); transform-origin: top left; border:0;" loading="lazy"></iframe>
               </div>
               <div class="mt-2">
@@ -205,6 +281,15 @@
               </div>
             </div>
             <div class="flex-1">
+              <% card_generated_at = @asset_card&.generated_at || @asset_card&.updated_at %>
+              <% card_settings_updated_at = @profile.profile_card&.updated_at %>
+              <% card_stale = card_generated_at && card_settings_updated_at && card_settings_updated_at > card_generated_at %>
+              <% if card_generated_at %>
+                <p class="text-xs text-slate-500">Last captured <%= time_ago_in_words(card_generated_at) %> ago</p>
+              <% end %>
+              <% if card_stale %>
+                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">Settings changed since last capture — re-capture recommended.</p>
+              <% end %>
               <% if @asset_card&.public_url.present? %>
                 <a href="<%= @asset_card.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">Custom image</a>
               <% else %>
@@ -214,9 +299,13 @@
                 <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
                   <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
                   <input type="hidden" name="kind" value="card">
-                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
-                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
+                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
+                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload custom</button>
                 </form>
+                <p class="mt-1 text-xs text-slate-500">Uploads replace the generated background for Card.</p>
+                <% unless uploads_enabled %>
+                  <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
+                <% end %>
               </div>
             </div>
           </div>
@@ -226,7 +315,7 @@
           <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">OG</h3>
           <div class="flex items-start gap-3">
             <div class="shrink-0">
-              <div class="relative w-[300px] h-[158px] overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
+              <div class="relative w-full max-w-[300px] h-[158px] mx-auto overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
                 <iframe src="<%= card_og_path(login: @profile.login) %>" title="OG preview" style="width:1200px; height:630px; transform:scale(0.25); transform-origin: top left; border:0;" loading="lazy"></iframe>
               </div>
               <div class="mt-2">
@@ -234,27 +323,42 @@
               </div>
             </div>
             <div class="flex-1">
+              <% og_generated_at = @asset_og&.generated_at || @asset_og&.updated_at %>
+              <% og_settings_updated_at = @profile.profile_card&.updated_at %>
+              <% og_stale = og_generated_at && og_settings_updated_at && og_settings_updated_at > og_generated_at %>
+              <% if og_generated_at %>
+                <p class="text-xs text-slate-500">Last captured <%= time_ago_in_words(og_generated_at) %> ago</p>
+              <% end %>
+              <% if og_stale %>
+                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">Settings changed since last capture — re-capture recommended.</p>
+              <% end %>
               <% if @asset_og&.public_url.present? %>
-                <a href="<%= @asset_og.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">Custom image</a>
+                <a href="<%= @asset_og.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">View image</a>
               <% else %>
-                <span class="text-slate-600 dark:text-slate-300 text-sm">Using generated background</span>
+                <a href="<%= og_image_path(login: @profile.login) %>" target="_blank" class="text-blue-600 dark:text-blue-400">Generate/Fetch</a>
               <% end %>
               <div class="mt-3">
                 <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
                   <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
                   <input type="hidden" name="kind" value="og">
-                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
-                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
+                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
+                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload custom</button>
                 </form>
+                <p class="mt-1 text-xs text-slate-500">Uploads replace the generated background for OG.</p>
+                <% unless uploads_enabled %>
+                  <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
+                <% end %>
               </div>
             </div>
           </div>
         </div>
+
+        
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">Simple</h3>
           <div class="flex items-start gap-3">
             <div class="shrink-0">
-              <div class="relative w-[320px] h-[180px] overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
+              <div class="relative w-full max-w-[320px] h-[180px] mx-auto overflow-hidden rounded border border-slate-200 bg-slate-900 dark:border-slate-700">
                 <iframe src="<%= card_simple_path(login: @profile.login) %>" title="Simple preview" style="width:1280px; height:720px; transform:scale(0.25); transform-origin: top left; border:0;" loading="lazy"></iframe>
               </div>
               <div class="mt-2">
@@ -262,6 +366,15 @@
               </div>
             </div>
             <div class="flex-1">
+              <% simple_generated_at = @asset_simple&.generated_at || @asset_simple&.updated_at %>
+              <% simple_settings_updated_at = @profile.profile_card&.updated_at %>
+              <% simple_stale = simple_generated_at && simple_settings_updated_at && simple_settings_updated_at > simple_generated_at %>
+              <% if simple_generated_at %>
+                <p class="text-xs text-slate-500">Last captured <%= time_ago_in_words(simple_generated_at) %> ago</p>
+              <% end %>
+              <% if simple_stale %>
+                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">Settings changed since last capture — re-capture recommended.</p>
+              <% end %>
               <% if @asset_simple&.public_url.present? %>
                 <a href="<%= @asset_simple.public_url %>" target="_blank" class="text-blue-600 dark:text-blue-400">Custom image</a>
               <% else %>
@@ -271,9 +384,13 @@
                 <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data">
                   <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
                   <input type="hidden" name="kind" value="simple">
-                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300">
-                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Upload custom</button>
+                  <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
+                  <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload custom</button>
                 </form>
+                <p class="mt-1 text-xs text-slate-500">Uploads replace the generated background for Simple.</p>
+                <% unless uploads_enabled %>
+                  <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
+                <% end %>
               </div>
             </div>
           </div>

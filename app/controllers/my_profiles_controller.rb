@@ -49,8 +49,14 @@ class MyProfilesController < ApplicationController
     record = @profile.profile_card || @profile.build_profile_card
     # Allow: ai | default | color
     permitted = params.permit(:bg_choice_card, :bg_color_card, :bg_choice_og, :bg_color_og, :bg_choice_simple, :bg_color_simple, :avatar_choice,
-      :bg_fx_card, :bg_fy_card, :bg_zoom_card, :bg_fx_og, :bg_fy_og, :bg_zoom_og, :bg_fx_simple, :bg_fy_simple, :bg_zoom_simple)
+      :bg_fx_card, :bg_fy_card, :bg_zoom_card, :bg_fx_og, :bg_fy_og, :bg_zoom_og, :bg_fx_simple, :bg_fy_simple, :bg_zoom_simple, :ai_art_opt_in)
     attrs = permitted.to_h
+
+    # Update profile-level flags
+    if permitted.key?(:ai_art_opt_in)
+      @profile.ai_art_opt_in = ActiveModel::Type::Boolean.new.cast(permitted[:ai_art_opt_in])
+      @profile.save(validate: false)
+    end
 
     # If user chose "Use these background settings for all card types",
     # propagate Card choices to OG and Simple before saving.

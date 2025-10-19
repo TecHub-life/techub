@@ -64,6 +64,19 @@ class PagesController < ApplicationController
     @has_prev = @page > 1
   end
 
+  def gallery
+    # Public gallery: opted-in profiles with AI-generated assets in their generated folder
+    @profiles = Profile.where(ai_art_opt_in: true).includes(:profile_assets).limit(500)
+    @items = []
+    @profiles.each do |p|
+      base = Rails.root.join("public", "generated", p.login)
+      next unless Dir.exist?(base)
+      Dir[base.join("avatar-*.{jpg,jpeg,png}").to_s].first(8).each do |path|
+        @items << { login: p.login, kind: File.basename(path), url: "/generated/#{p.login}/#{File.basename(path)}" }
+      end
+    end
+  end
+
   def motifs
     # Canonical catalogs with counts from current successful profiles
     rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.spirit_animal", "profile_cards.archetype")
