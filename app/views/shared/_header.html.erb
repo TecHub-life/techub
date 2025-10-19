@@ -22,6 +22,7 @@
         <i class="fa-solid fa-circle-question text-[18px] leading-none align-middle"></i>
         <span class="leading-none">FAQ</span>
       <% end %>
+      <%= link_to "Open Source", "https://github.com/loftwah/techub", target: "_blank", rel: "noopener", class: "transition-all hover:scale-105" %>
       <%= link_to submit_path, data: { turbo: false }, class: "#{nav_link_class(submit_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
         <i class="fa-solid fa-paper-plane text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Submit</span>

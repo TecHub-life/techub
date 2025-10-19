@@ -22,6 +22,12 @@ This guide explains how to access and administer background jobs and ops tools.
   - Jobs (running/failed/all)
   - Workers and recurring tasks
 
+## Leaderboards & Webhooks
+
+- Leaderboards: buttons in `/ops` to “Rebuild All” and “Capture OG”.
+- Webhooks (optional): see `docs/github-webhooks-setup.md` for a step-by-step guide. If not
+  configured, scheduled jobs still keep data fresh.
+
 ## Credentials
 
 - Development (`.env`):

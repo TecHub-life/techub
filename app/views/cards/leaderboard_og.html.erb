@@ -1,0 +1,20 @@
+<% kind = params[:kind].presence || "followers_gain_30d" %>
+<% window = params[:window].presence || "30d" %>
+<% lb = Leaderboard.where(kind: kind, window: window).order(as_of: :desc).first %>
+<% entries = Array(lb&.entries).first(3) %>
+<div class="w-[1200px] h-[630px] bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-10 flex flex-col gap-8">
+  <div class="flex items-center justify-between">
+    <div class="text-3xl font-extrabold">TecHub Podium</div>
+    <div class="text-sm opacity-80">as of <%= lb&.as_of || Date.today %></div>
+  </div>
+  <div class="grid grid-cols-3 gap-6">
+    <% entries.each_with_index do |e, idx| %>
+      <div class="rounded-xl bg-white/10 p-6">
+        <div class="text-xl font-bold">#<%= idx+1 %></div>
+        <div class="mt-2 text-2xl font-extrabold">@<%= e["login"] || e[:login] %></div>
+        <div class="text-sm opacity-80">Score: <%= e["value"] || e[:value] %></div>
+      </div>
+    <% end %>
+  </div>
+</div>
+

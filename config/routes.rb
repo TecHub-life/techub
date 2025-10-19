@@ -45,6 +45,7 @@ Rails.application.routes.draw do
   get "/cards/:login/card", to: "cards#card", as: :card_preview
   get "/cards/:login/simple", to: "cards#simple", as: :card_simple
   get "/cards/:login/banner", to: "cards#banner", as: :card_banner
+  get "/cards/leaderboard/og", to: "cards#leaderboard_og", as: :leaderboard_og
 
   # Ownership (My Profiles)
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
@@ -64,6 +65,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
       get "/leaderboards", to: "leaderboards#index", defaults: { format: :json }
+      get "/leaderboards/podium", to: "leaderboards#podium", defaults: { format: :json }
     end
   end
 
@@ -76,6 +78,12 @@ Rails.application.routes.draw do
     post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
     post "/bulk_retry_ai_all", to: "admin#bulk_retry_ai_all", as: :bulk_retry_ai_all
+    resources :admin, only: [] do
+      collection do
+        post :rebuild_leaderboards
+        post :capture_leaderboard_og
+      end
+    end
     # Profiles admin actions
     get "/profiles/search", to: "profiles#search", as: :search_profiles
     get "/profiles/:username", to: "profiles#show", as: :profile_admin

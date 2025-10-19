@@ -19,7 +19,14 @@ module Screenshots
       @login = login.to_s.downcase
       @variant = variant.to_s
       resolved_host = host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil) || "http://127.0.0.1:3000"
-      @host = resolved_host
+      # Validate host to be an http(s) URL
+      begin
+        uri = URI.parse(resolved_host.to_s)
+        raise URI::InvalidURIError unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+        @host = uri.to_s
+      rescue URI::InvalidURIError
+        @host = "http://127.0.0.1:3000"
+      end
       @output_path = output_path
       @wait_ms = wait_ms.to_i
       # In test env, keep PNG for compatibility with existing tests

@@ -71,6 +71,22 @@ module Ops
       @configured_installation_id = Github::Configuration.installation_id
     end
 
+    def rebuild_leaderboards
+      kinds = Leaderboard::KINDS
+      windows = Leaderboard::WINDOWS
+      kinds.each do |k|
+        windows.each do |w|
+          Leaderboards::ComputeService.call(kind: k, window: w, as_of: Date.today)
+        end
+      end
+      redirect_to ops_admin_path, notice: "Leaderboards rebuilt"
+    end
+
+    def capture_leaderboard_og
+      Leaderboards::CaptureOgJob.perform_later(kind: params[:kind].presence || "followers_gain_30d", window: params[:window].presence || "30d")
+      redirect_to ops_admin_path, notice: "Leaderboard OG capture enqueued"
+    end
+
     def send_test_email
       to = params[:to].presence
       message = params[:message]

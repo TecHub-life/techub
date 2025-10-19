@@ -22,6 +22,11 @@ class CardsController < ApplicationController
     render :banner
   end
 
+  # Leaderboard OG card (1200x630)
+  def leaderboard_og
+    render :leaderboard_og
+  end
+
   private
 
   def load_profile

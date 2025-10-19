@@ -76,7 +76,7 @@ module Images
 
     def imagemagick_cli
       override = ENV["IM_CLI"].to_s.strip
-      return override unless override.empty?
+      return override if %w[magick convert].include?(override)
       system("magick -version > /dev/null 2>&1") ? "magick" : "convert"
     end
   end

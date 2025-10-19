@@ -1,9 +1,34 @@
-shared: &shared
-  refresh_loftwah_profile:
-    class: Profiles::RefreshJob
+shared: &shared # Periodic queue maintenance
+  clear_solid_queue_finished_jobs:
+    command: 'SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)'
+    schedule: 'every hour at minute 12'
+
+  # Profile hygiene and freshness
+  refresh_profile_tags:
+    class: Profiles::RefreshTagsJob
     args:
-      - 'loftwah'
-    schedule: every 30 minutes
+      - { limit: 200 }
+    schedule: 'every 2 hours'
+  refresh_stale_profiles:
+    class: Profiles::RefreshStaleJob
+    args:
+      - { limit: 200, stale_after: 21600 }
+    schedule: 'every 3 hours'
+  cleanup_profile_tags:
+    class: Profiles::CleanupTagsJob
+    args:
+      - { limit: 500 }
+    schedule: 'every day at 02:30'
+
+  # Leaderboards
+  rebuild_leaderboards_daily:
+    class: Leaderboards::RebuildJob
+    schedule: 'every day at 03:15'
+  capture_leaderboard_og_daily:
+    class: Leaderboards::CaptureOgJob
+    args:
+      - { kind: 'followers_gain_30d', window: '30d' }
+    schedule: 'every day at 03:20'
 
 development:
   <<: *shared
@@ -12,19 +37,3 @@ test: {}
 
 production:
   <<: *shared
-  clear_solid_queue_finished_jobs:
-    command: 'SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)'
-    schedule: every hour at minute 12
-  refresh_profile_tags:
-    class: Profiles::RefreshTagsJob
-    args:
-      - { limit: 200 }
-    schedule: every 2 hours
-  refresh_stale_profiles:
-    class: Profiles::RefreshStaleJob
-    args:
-      - { limit: 200, stale_after: 21600 }
-    schedule: every 3 hours
-  rebuild_leaderboards_daily:
-    class: Leaderboards::RebuildJob
-    schedule: every day at 03:15
