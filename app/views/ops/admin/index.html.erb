@@ -11,7 +11,8 @@
     <%# Removed transient debug warning block for ENV override to simplify UI %>
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Users</div>
-      <div class="mt-1"><a href="<%= ops_ownerships_path %>" class="text-blue-600 dark:text-blue-400">Manage users & ownership</a></div>
+      <div class="mt-1 text-slate-700 dark:text-slate-300">Owners link profiles to user accounts for submissions, settings, and AI usage.</div>
+      <div class="mt-2"><a href="<%= ops_ownerships_path %>" class="text-blue-600 dark:text-blue-400 underline">Open Users & Ownership</a></div>
     </div>
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Adapter</div>
@@ -40,6 +41,101 @@
   </div>
 
   <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="text-lg font-semibold mb-3">Quick Ownership</h2>
+    <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Transfer ownership by GitHub login. Profiles have exactly one owner. Set Owner is mainly for legacy orphaned profiles.</p>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+        <h3 class="text-sm font-semibold mb-2">Set Owner (orphaned only)</h3>
+        <form action="<%= ops_set_owner_ownership_path %>" method="post" class="space-y-2">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+            <label class="block text-xs text-slate-500">Profile login</label>
+            <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+          </div>
+          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+            <label class="block text-xs text-slate-500">Target user login</label>
+            <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+          </div>
+          <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Set Owner</button>
+        </form>
+      </div>
+      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+        <h3 class="text-sm font-semibold mb-2">Transfer Owner</h3>
+        <form action="<%= ops_transfer_by_profile_ownership_path %>" method="post" class="space-y-2">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+            <label class="block text-xs text-slate-500">Profile login</label>
+            <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+          </div>
+          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+            <label class="block text-xs text-slate-500">New owner (user login)</label>
+            <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+          </div>
+          <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Transfer</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="text-lg font-semibold mb-3">Recent Successful Profiles</h2>
+    <% if @recent_success_profiles.present? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <th class="py-2 pr-4">Profile</th>
+              <th class="py-2 pr-4">Status</th>
+              <th class="py-2 pr-4">Last Synced</th>
+              <th class="py-2 pr-4">Last AI Regen</th>
+              <th class="py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @recent_success_profiles.each do |p| %>
+              <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
+                <td class="py-2 pr-4">
+                  <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
+                  <span class="text-slate-400">·</span>
+                  <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
+                </td>
+                <td class="py-2 pr-4">
+                  <% status = p.last_pipeline_status %>
+                  <% cls = case status
+                           when 'success' then 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                           when 'partial_success' then 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                           else 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                         end %>
+                  <% tip = case status
+                           when 'success' then 'Full success'
+                           when 'partial_success' then 'Partial: succeeded via fallback (e.g., heuristics/screenshots)'
+                           else nil
+                         end %>
+                  <span class="rounded px-2 py-0.5 text-xs font-semibold <%= cls %>" <%= "title=\"#{h tip}\"" if tip.present? %>><%= status %></span>
+                </td>
+                <td class="py-2 pr-4"><%= p.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
+                <td class="py-2 pr-4"><%= p.last_ai_regenerated_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
+                <td class="py-2">
+                  <div class="flex flex-wrap gap-2">
+                    <%= button_to "Retry — Screenshots‑Only", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%= button_to "Retry — Full (AI)", ops_retry_profile_ai_path(username: p.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-slate-600 dark:text-slate-300">No successful runs recorded yet.</p>
+    <% end %>
+  </div>
+
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Email Smoke Test</h2>
     <%= form_with url: ops_send_test_email_path, method: :post, local: true, class: "space-y-3" do |f| %>
       <div>
@@ -54,11 +150,47 @@
     <% end %>
   </div>
 
+  <!-- Profile Status Summary -->
   <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-3">Failed Profiles</h2>
+    <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
+      Profile Status
+      <span class="inline-flex items-center" title="Partial = succeeded via fallback (e.g., AI traits or images fell back to heuristics/screenshots). Failure = last pipeline run failed at some stage. Queued = run enqueued.">
+        <svg class="h-4 w-4 text-slate-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M18 10A8 8 0 112 10a8 8 0 0116 0zM9 8a1 1 0 112 0v5a1 1 0 11-2 0V8zm1-4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
+        </svg>
+      </span>
+    </h2>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+        <div class="text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Success</div>
+        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:success] %></div>
+      </div>
+      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+        <div class="text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">Partial</div>
+        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:partial_success] %></div>
+      </div>
+      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+        <div class="text-xs uppercase tracking-wide text-red-600 dark:text-red-400">Failure</div>
+        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:failure] %></div>
+      </div>
+      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+        <div class="text-xs uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Queued</div>
+        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:queued] %></div>
+      </div>
+      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+        <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Unknown</div>
+        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:unknown] %></div>
+      </div>
+    </div>
+    <p class="mt-3 text-xs text-slate-600 dark:text-slate-400">Status reflects the last pipeline run per profile.</p>
+  </div>
+
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="text-lg font-semibold mb-1">Failed Profiles</h2>
+    <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Run options: <span class="font-medium">Screenshots‑Only</span> runs sync + screenshots (no AI budget). <span class="font-medium">Full (AI)</span> includes AI artwork + traits generation.</p>
     <div class="mb-3 grid gap-3 sm:grid-cols-2">
       <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Bulk Retry (no AI)</h3>
+        <h3 class="text-sm font-semibold mb-2">Bulk Retry — Screenshots‑Only</h3>
         <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <label class="text-xs text-slate-500">Select profiles</label>
@@ -67,11 +199,11 @@
               <option value="<%= login %>">@<%= login %></option>
             <% end %>
           </select>
-          <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue No-AI</button>
+          <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue Screenshots‑Only</button>
         </form>
       </div>
       <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Bulk Retry AI</h3>
+        <h3 class="text-sm font-semibold mb-2">Bulk Retry — Full (AI)</h3>
         <form action="<%= ops_bulk_retry_ai_path %>" method="post" class="space-y-2">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <label class="text-xs text-slate-500">Select profiles</label>
@@ -80,7 +212,7 @@
               <option value="<%= login %>">@<%= login %></option>
             <% end %>
           </select>
-          <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue AI</button>
+          <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue Full (AI)</button>
         </form>
       </div>
     </div>
@@ -88,11 +220,11 @@
     <div class="mb-3 flex items-center gap-2">
       <form action="<%= ops_bulk_retry_all_path %>" method="post">
         <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue No-AI for ALL Profiles</button>
+        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue Screenshots‑Only for ALL Profiles</button>
       </form>
       <form action="<%= ops_bulk_retry_ai_all_path %>" method="post">
         <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue AI for ALL Profiles</button>
+        <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue Full (AI) for ALL Profiles</button>
       </form>
     </div>
     <% if @failed_profiles.present? %>
@@ -118,8 +250,8 @@
                 <td class="py-2 pr-4"><%= p.updated_at.strftime('%Y-%m-%d %H:%M') %></td>
                 <td class="py-2">
                   <div class="flex gap-2">
-                    <%= button_to "Retry (no AI)", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%= button_to "Retry AI", ops_retry_profile_ai_path(username: p.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
+                    <%= button_to "Retry — Screenshots‑Only", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%= button_to "Retry — Full (AI)", ops_retry_profile_ai_path(username: p.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
                     <%= button_to "Delete", ops_destroy_profile_path(username: p.login), method: :delete, form: { data: { turbo_confirm: "Delete @#{p.login}? This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
                   </div>
                 </td>

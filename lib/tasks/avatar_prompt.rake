@@ -1,8 +1,6 @@
 namespace :gemini do
-  PROVIDER_ORDER = %w[ai_studio vertex].freeze
-
   def self.each_provider
-    PROVIDER_ORDER.each do |provider|
+    Gemini::PROVIDER_ORDER.each do |provider|
       yield provider
     end
   end
@@ -135,7 +133,7 @@ namespace :gemini do
 
       avatar_path ||= Rails.root.join("public", "avatars", "#{login}.png")
 
-      PROVIDER_ORDER.each do |provider|
+      Gemini::PROVIDER_ORDER.each do |provider|
         begin
           Gemini::Configuration.validate!(provider)
         rescue KeyError => e
@@ -189,7 +187,7 @@ namespace :gemini do
       require_eligibility = [ "1", "true", "yes" ].include?(ENV["REQUIRE_ELIGIBILITY"].to_s.downcase)
       eligibility_threshold = (ENV["ELIGIBILITY_THRESHOLD"] || Eligibility::GithubProfileScoreService::DEFAULT_THRESHOLD).to_i
 
-      PROVIDER_ORDER.each do |provider|
+      Gemini::PROVIDER_ORDER.each do |provider|
         begin
           Gemini::Configuration.validate!(provider)
         rescue KeyError => e
@@ -240,7 +238,7 @@ namespace :gemini do
       verbose = [ "1", "true", "yes" ].include?(ENV["VERBOSE"].to_s.downcase)
       login = args[:login] || ENV["LOGIN"] || "loftwah"
 
-      PROVIDER_ORDER.each do |provider|
+      Gemini::PROVIDER_ORDER.each do |provider|
         begin
           Gemini::Configuration.validate!(provider)
         rescue KeyError => e

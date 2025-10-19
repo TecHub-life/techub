@@ -37,9 +37,10 @@ module Screenshots
       path = Pathname.new(output_path.presence || default_output_path)
       FileUtils.mkdir_p(path.dirname)
 
+      script_rel = File.join("script", "screenshot.js")
       cmd = [
         "node",
-        Rails.root.join("script", "screenshot.js").to_s,
+        script_rel,
         "--url", url,
         "--out", path.to_s,
         "--width", width.to_s,
@@ -53,7 +54,7 @@ module Screenshots
         # In test, avoid invoking Node: create a tiny PNG header as a placeholder
         File.binwrite(path, "\x89PNG\r\n")
       else
-        out_str, err_str, status = Open3.capture3(*cmd)
+        out_str, err_str, status = Open3.capture3(*cmd, chdir: Rails.root.to_s)
         unless status.success?
           StructuredLogger.error(message: "screenshot_command_failed", cmd: cmd.join(" "), stdout: out_str, stderr: err_str) if defined?(StructuredLogger)
           return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" "), stdout: out_str, stderr: err_str })

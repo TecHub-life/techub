@@ -61,7 +61,7 @@ class MyProfilesController < ApplicationController
     # Re-capture non-AI screenshots and optimize only
     Profiles::GeneratePipelineJob.perform_later(@profile.login, ai: false)
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "Re-capture queued for @#{@profile.login} (no AI cost)"
+    redirect_to my_profile_settings_path(username: @profile.login), notice: "Re-capture queued for @#{@profile.login} — Screenshots-Only (no AI cost)"
   end
 
   def regenerate_ai
@@ -74,7 +74,7 @@ class MyProfilesController < ApplicationController
 
     Profiles::GeneratePipelineJob.perform_later(@profile.login, ai: true)
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "AI regeneration queued for @#{@profile.login} (weekly limit)"
+    redirect_to my_profile_settings_path(username: @profile.login), notice: "Full (AI) regeneration queued for @#{@profile.login} (weekly limit)"
   end
 
   def upload_asset

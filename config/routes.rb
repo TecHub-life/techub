@@ -63,6 +63,7 @@ Rails.application.routes.draw do
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
     post "/bulk_retry_ai_all", to: "admin#bulk_retry_ai_all", as: :bulk_retry_ai_all
     # Profiles admin actions
+    get "/profiles/search", to: "profiles#search", as: :search_profiles
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
     post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile
     post "/profiles/:username/retry_ai", to: "profiles#retry_ai", as: :retry_profile_ai
@@ -70,6 +71,7 @@ Rails.application.routes.draw do
     # Ownerships admin
     get "/ownerships", to: "ownerships#index", as: :ownerships
     post "/ownerships/set_owner", to: "ownerships#set_owner", as: :set_owner_ownership
+    post "/ownerships/transfer_by_profile", to: "ownerships#transfer_by_profile", as: :transfer_by_profile_ownership
     # link removed: single-owner model enforced
     post "/ownerships/:id/promote", to: "ownerships#promote", as: :promote_ownership
     post "/ownerships/:id/transfer", to: "ownerships#transfer", as: :transfer_ownership
