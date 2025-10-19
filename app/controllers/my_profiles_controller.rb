@@ -48,9 +48,44 @@ class MyProfilesController < ApplicationController
   def update_settings
     record = @profile.profile_card || @profile.build_profile_card
     # Allow: ai | default | color
-    permitted = params.permit(:bg_choice_card, :bg_color_card, :bg_choice_og, :bg_color_og, :bg_choice_simple, :bg_color_simple)
-    record.assign_attributes(permitted.to_h)
+    permitted = params.permit(:bg_choice_card, :bg_color_card, :bg_choice_og, :bg_color_og, :bg_choice_simple, :bg_color_simple, :avatar_choice,
+      :bg_fx_card, :bg_fy_card, :bg_zoom_card, :bg_fx_og, :bg_fy_og, :bg_zoom_og, :bg_fx_simple, :bg_fy_simple, :bg_zoom_simple)
+    attrs = permitted.to_h
+
+    # If user chose "Use these background settings for all card types",
+    # propagate Card choices to OG and Simple before saving.
+    apply_everywhere = ActiveModel::Type::Boolean.new.cast(params[:apply_everywhere])
+    if apply_everywhere
+      if attrs.key?("bg_choice_card")
+        attrs["bg_choice_og"] = attrs["bg_choice_card"]
+        attrs["bg_choice_simple"] = attrs["bg_choice_card"]
+      end
+      if attrs.key?("bg_color_card")
+        attrs["bg_color_og"] = attrs["bg_color_card"]
+        attrs["bg_color_simple"] = attrs["bg_color_card"]
+      end
+      # Propagate crop/zoom controls if provided for Card
+      %w[bg_fx bg_fy bg_zoom].each do |base|
+        card_key = "#{base}_card"
+        next unless attrs.key?(card_key)
+        attrs["#{base}_og"] = attrs[card_key]
+        attrs["#{base}_simple"] = attrs[card_key]
+      end
+    end
+
+    record.assign_attributes(attrs)
     if record.save
+      # Structured log for observability
+      StructuredLogger.info(
+        message: "settings_updated",
+        controller: self.class.name,
+        login: @profile.login,
+        apply_everywhere: apply_everywhere,
+        avatar_choice: record.avatar_choice,
+        bg_choice_card: record.bg_choice_card,
+        bg_choice_og: record.bg_choice_og,
+        bg_choice_simple: record.bg_choice_simple
+      ) if defined?(StructuredLogger)
       redirect_to my_profile_settings_path(username: @profile.login), notice: "Settings updated"
     else
       redirect_to my_profile_settings_path(username: @profile.login), alert: "Could not save settings"

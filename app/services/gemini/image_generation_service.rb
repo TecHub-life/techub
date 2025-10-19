@@ -79,7 +79,10 @@ module Gemini
     # endpoint computed via Gemini::Endpoints
 
     def build_payload(provider)
+      include_ratio = include_aspect_hint?
       if provider == "vertex"
+        cfg = { temperature: temperature }
+        cfg[:aspectRatio] = aspect_ratio if include_ratio
         {
           contents: [
             {
@@ -89,11 +92,11 @@ module Gemini
               ]
             }
           ],
-          generation_config: {
-            temperature: temperature
-          }
+          generation_config: cfg
         }
       else
+        cfg = { temperature: temperature }
+        cfg[:aspectRatio] = aspect_ratio if include_ratio
         {
           contents: [
             {
@@ -103,9 +106,7 @@ module Gemini
               ]
             }
           ],
-          generationConfig: {
-            temperature: temperature
-          }
+          generationConfig: cfg
         }
       end
     end
@@ -135,6 +136,12 @@ module Gemini
       path = Pathname.new(output_path)
       FileUtils.mkdir_p(path.dirname)
       File.binwrite(path, decoded_bytes)
+    end
+
+    def include_aspect_hint?
+      flag = ENV["GEMINI_INCLUDE_ASPECT_HINT"].to_s
+      return true if flag.blank? # default on
+      [ "1", "true", "yes" ].include?(flag.downcase)
     end
   end
 end

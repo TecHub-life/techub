@@ -150,7 +150,7 @@ module Gemini
           Subject description: #{description}
           #{traits_line}
           #{profile_traits}
-          Visual guidance: Use the avatar as inspiration only; do not copy it verbatim. If the avatar is not a human photo, avoid rendering a realistic human face—use emblematic or stylized representation instead.
+          Visual guidance: Preserve the subject’s identity and key facial features. Maintain consistent skin tone, hair, and facial structure while allowing stylistic treatment. If the avatar is not a human photo, do not invent a realistic face—use emblematic or stylized representation instead.
           Visual style: #{style_profile}. #{theme_line}
           Composition (#{variant[:aspect_ratio]}): #{variant[:guidance]} Output aspect ratio: #{variant[:aspect_ratio]}.
         PROMPT

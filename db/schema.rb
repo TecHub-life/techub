@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_18_031000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_19_000004) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -124,6 +124,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_18_031000) do
     t.text "avatar_description"
     t.string "ai_model"
     t.string "prompt_version"
+    t.string "avatar_choice", default: "real", null: false
     t.index ["profile_id"], name: "index_profile_cards_on_profile_id", unique: true
   end
 

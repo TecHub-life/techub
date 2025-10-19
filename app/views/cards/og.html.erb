@@ -22,7 +22,10 @@
   <% if choice == 'color' %>
     <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
   <% elsif bg_url %>
-    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-28 pointer-events-none">
+    <% fx = (@profile.profile_card&.bg_fx_og || 0.5) %>
+    <% fy = (@profile.profile_card&.bg_fy_og || 0.5) %>
+    <% zoom = (@profile.profile_card&.bg_zoom_og || 1.0) %>
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover opacity-28 pointer-events-none" style="<%= bg_style_from(fx: fx, fy: fy, zoom: zoom) %>">
   <% end %>
   <div class="absolute inset-0 bg-gradient-to-b from-gray-900/55 to-gray-900/85"></div>
 
@@ -115,8 +118,11 @@
       <div class="flex-shrink-0 -ml-8">
         <div class="w-80 h-80 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
           <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-            <% if @profile.avatar_url.present? %>
-              <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
+            <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
+            <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
+            <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
+            <% if avatar_src.present? %>
+              <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
             <% else %>
               <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
             <% end %>

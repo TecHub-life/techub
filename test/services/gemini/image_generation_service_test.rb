@@ -167,5 +167,33 @@ module Gemini
 
       stubs.verify_stubbed_calls
     end
+
+    test "includes aspect ratio hint when enabled" do
+      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post("/v1beta/models/gemini-2.5-flash-image:generateContent") do |env|
+          body = JSON.parse(env.body)
+          assert_equal "16:9", body.dig("generationConfig", "aspectRatio"), "expected aspectRatio hint to be present"
+          [ 200, { "content-type" => "application/json" }, { "candidates" => [ { "content" => { "parts" => [ { "inlineData" => { "mimeType" => "image/png", "data" => SAMPLE_IMAGE_BASE64 } } ] } } ] } ]
+        end
+      end
+
+      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
+        f.request :json
+        f.response :json
+        f.adapter :test, stubs
+      end
+
+      orig = ENV["GEMINI_INCLUDE_ASPECT_HINT"]
+      ENV["GEMINI_INCLUDE_ASPECT_HINT"] = "1"
+      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
+        Gemini::Configuration.stub :provider, "ai_studio" do
+          result = Gemini::ImageGenerationService.call(prompt: "Landscape", aspect_ratio: "16:9")
+          assert result.success?
+        end
+      end
+      ENV["GEMINI_INCLUDE_ASPECT_HINT"] = orig
+
+      stubs.verify_stubbed_calls
+    end
   end
 end
