@@ -121,7 +121,7 @@ namespace :credentials do
 
   # ---- Tasks ----
   desc "Generate config/credentials.example.yml (masked, schema‑aware)"
-  task :example => :environment do
+  task example: :environment do
     root = Rails.application.credentials.respond_to?(:config) ? Rails.application.credentials.config : Rails.application.credentials
     creds = deep_convert_to_hash(root)
     schema = expected_credentials_schema
@@ -133,7 +133,7 @@ namespace :credentials do
   end
 
   desc "Generate .env.from_credentials.example (flattened, values blank)"
-  task :env => :environment do
+  task env: :environment do
     root = Rails.application.credentials.respond_to?(:config) ? Rails.application.credentials.config : Rails.application.credentials
     creds = deep_convert_to_hash(root)
     flattened = flatten_hash_to_env_keys(creds)
@@ -151,13 +151,12 @@ namespace :credentials do
 
   # ---- Backwards‑compat aliases ----
   desc "(alias) Export masked credentials to config/credentials.example.yml"
-  task :export_example_yaml => :environment do
+  task export_example_yaml: :environment do
     Rake::Task["credentials:example"].invoke
   end
 
   desc "(alias) Export flattened .env.from_credentials.example from credentials"
-  task :export_env_example => :environment do
+  task export_env_example: :environment do
     Rake::Task["credentials:env"].invoke
   end
 end
-

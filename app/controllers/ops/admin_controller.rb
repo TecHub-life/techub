@@ -141,7 +141,7 @@ module Ops
     def axiom_smoke
       msg = params[:message].presence || "hello_world"
       if defined?(StructuredLogger)
-        StructuredLogger.info(message: "ops_axiom_smoke", sample: msg, request_id: request.request_id)
+        StructuredLogger.info({ message: "ops_axiom_smoke", sample: msg, request_id: request.request_id, env: Rails.env }, force_axiom: true)
       end
       redirect_to ops_admin_path, notice: "Emitted Axiom smoke log"
     end

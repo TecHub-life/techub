@@ -1,6 +1,7 @@
 class ApiDocsController < ApplicationController
   def show
-    @spec_path = openapi_spec_path
+    # Path used by the HTML page to fetch the spec YAML
+    @spec_path = api_docs_spec_path
   end
 
   def spec

@@ -41,7 +41,7 @@ module Gemini
         assert_equal prompts["1x1"], result.value[:image_prompt], "primary prompt should mirror 1x1 variant"
         assert_equal "ai_studio", result.metadata[:provider]
         assert_equal "TecHub", result.metadata[:theme]
-        assert_equal "neon-lit anime portrait with confident tech leader energy", result.metadata[:style_profile]
+        assert_equal "cinematic tech illustration with abstract motifs; tasteful, modern, and legible without overbearing faces", result.metadata[:style_profile]
       end
     end
 
