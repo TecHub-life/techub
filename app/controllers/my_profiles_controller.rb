@@ -48,9 +48,50 @@ class MyProfilesController < ApplicationController
   def update_settings
     record = @profile.profile_card || @profile.build_profile_card
     # Allow: ai | default | color
-    permitted = params.permit(:bg_choice_card, :bg_color_card, :bg_choice_og, :bg_color_og, :bg_choice_simple, :bg_color_simple)
-    record.assign_attributes(permitted.to_h)
+    permitted = params.permit(:bg_choice_card, :bg_color_card, :bg_choice_og, :bg_color_og, :bg_choice_simple, :bg_color_simple, :avatar_choice,
+      :bg_fx_card, :bg_fy_card, :bg_zoom_card, :bg_fx_og, :bg_fy_og, :bg_zoom_og, :bg_fx_simple, :bg_fy_simple, :bg_zoom_simple, :ai_art_opt_in)
+    attrs = permitted.to_h
+
+    # Update profile-level flags
+    if permitted.key?(:ai_art_opt_in)
+      @profile.ai_art_opt_in = ActiveModel::Type::Boolean.new.cast(permitted[:ai_art_opt_in])
+      @profile.save(validate: false)
+    end
+
+    # If user chose "Use these background settings for all card types",
+    # propagate Card choices to OG and Simple before saving.
+    apply_everywhere = ActiveModel::Type::Boolean.new.cast(params[:apply_everywhere])
+    if apply_everywhere
+      if attrs.key?("bg_choice_card")
+        attrs["bg_choice_og"] = attrs["bg_choice_card"]
+        attrs["bg_choice_simple"] = attrs["bg_choice_card"]
+      end
+      if attrs.key?("bg_color_card")
+        attrs["bg_color_og"] = attrs["bg_color_card"]
+        attrs["bg_color_simple"] = attrs["bg_color_card"]
+      end
+      # Propagate crop/zoom controls if provided for Card
+      %w[bg_fx bg_fy bg_zoom].each do |base|
+        card_key = "#{base}_card"
+        next unless attrs.key?(card_key)
+        attrs["#{base}_og"] = attrs[card_key]
+        attrs["#{base}_simple"] = attrs[card_key]
+      end
+    end
+
+    record.assign_attributes(attrs)
     if record.save
+      # Structured log for observability
+      StructuredLogger.info(
+        message: "settings_updated",
+        controller: self.class.name,
+        login: @profile.login,
+        apply_everywhere: apply_everywhere,
+        avatar_choice: record.avatar_choice,
+        bg_choice_card: record.bg_choice_card,
+        bg_choice_og: record.bg_choice_og,
+        bg_choice_simple: record.bg_choice_simple
+      ) if defined?(StructuredLogger)
       redirect_to my_profile_settings_path(username: @profile.login), notice: "Settings updated"
     else
       redirect_to my_profile_settings_path(username: @profile.login), alert: "Could not save settings"
@@ -121,6 +162,30 @@ class MyProfilesController < ApplicationController
       end
 
       redirect_to my_profile_settings_path(username: @profile.login), notice: "Updated #{kind.humanize} image"
+    rescue StandardError => e
+      redirect_to my_profile_settings_path(username: @profile.login), alert: e.message
+    end
+  end
+
+  # Select a specific generated asset as the active one for a given kind.
+  # This sets the ProfileAsset public_url/local_path for the canonical kind by copying from another file path/URL.
+  def select_asset
+    kind = params[:kind].to_s
+    source_url = params[:public_url].to_s
+    source_path = params[:local_path].to_s
+    unless %w[og card simple avatar_3x1 avatar_16x9 avatar_1x1].include?(kind)
+      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
+    end
+
+    begin
+      # Update the canonical asset row for kind
+      rec = @profile.profile_assets.find_or_initialize_by(kind: kind)
+      rec.public_url = source_url.presence || rec.public_url
+      rec.local_path = source_path.presence || rec.local_path
+      rec.provider = rec.provider.presence || "user_select"
+      rec.generated_at = Time.current
+      rec.save!
+      redirect_to my_profile_settings_path(username: @profile.login), notice: "Selected #{kind.humanize} image"
     rescue StandardError => e
       redirect_to my_profile_settings_path(username: @profile.login), alert: e.message
     end

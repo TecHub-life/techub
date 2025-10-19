@@ -47,6 +47,13 @@ orchestration pipeline.
 **Summary**: Use Ruby `Net::HTTP` + `Nokogiri` for submission URL scraping with SSRF protections,
 caps, and timeouts; consider Puppeteer fallback only if needed.
 
+### [ADR-0005: Image generation model strategy — Gemini vs Imagen](./adr/0005-image-model-strategy-gemini-vs-imagen.md)
+
+**Status**: Proposed  
+**Date**: 2025-10-12  
+**Summary**: Use Ruby `Net::HTTP` + `Nokogiri` for submission URL scraping with SSRF protections,
+caps, and timeouts; consider Puppeteer fallback only if needed.
+
 ## ADR Template
 
 When creating new ADRs, use this template:

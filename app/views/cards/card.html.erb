@@ -28,7 +28,10 @@
     <% if choice == 'color' %>
       <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
     <% elsif bg_url %>
-      <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover object-center opacity-100">
+      <% fx = (@profile.profile_card&.bg_fx_card || 0.5) %>
+      <% fy = (@profile.profile_card&.bg_fy_card || 0.5) %>
+      <% zoom = (@profile.profile_card&.bg_zoom_card || 1.0) %>
+      <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover opacity-100" style="<%= bg_style_from(fx: fx, fy: fy, zoom: zoom) %>">
     <% end %>
     <div class="absolute inset-0 bg-gradient-to-b from-black/5 via-black/10 to-black/20"></div>
     <%# Top-right corner marker should sit inside the banner area %>
@@ -41,8 +44,11 @@
   <div class="absolute left-12 top-[216px] -translate-y-12 transform z-40">
     <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-[0_10px_40px_rgba(59,130,246,0.45)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-        <% if @profile.avatar_url.present? %>
-          <img src="<%= @profile.avatar_url %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
+        <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
+        <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
+        <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
+        <% if avatar_src.present? %>
+          <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
         <% else %>
           <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
         <% end %>

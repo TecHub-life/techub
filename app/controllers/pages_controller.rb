@@ -4,6 +4,7 @@ class PagesController < ApplicationController
   end
 
   def directory
+    @layout = params[:layout].presence_in(%w[compact comfortable single]) || "comfortable"
     @q = params[:q].to_s.strip
     @tag = params[:tag].to_s.strip.downcase
     @language = params[:language].to_s.strip.downcase
@@ -15,7 +16,12 @@ class PagesController < ApplicationController
     @spirit = params[:spirit].to_s.strip
     @page = params[:page].to_i
     @page = 1 if @page < 1
-    @per_page = (params[:per_page] || 24).to_i.clamp(1, 60)
+    default_per = case @layout
+    when "single" then 8
+    when "comfortable" then 16
+    else 24
+    end
+    @per_page = (params[:per_page] || default_per).to_i.clamp(1, 60)
     offset = (@page - 1) * @per_page
 
     scope = Profile.where(last_pipeline_status: "success").includes(:profile_assets, :profile_card)
@@ -58,6 +64,19 @@ class PagesController < ApplicationController
     @has_prev = @page > 1
   end
 
+  def gallery
+    # Public gallery: opted-in profiles with AI-generated assets in their generated folder
+    @profiles = Profile.where(ai_art_opt_in: true).includes(:profile_assets).limit(500)
+    @items = []
+    @profiles.each do |p|
+      base = Rails.root.join("public", "generated", p.login)
+      next unless Dir.exist?(base)
+      Dir[base.join("avatar-*.{jpg,jpeg,png}").to_s].first(8).each do |path|
+        @items << { login: p.login, kind: File.basename(path), url: "/generated/#{p.login}/#{File.basename(path)}" }
+      end
+    end
+  end
+
   def motifs
     # Canonical catalogs with counts from current successful profiles
     rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.spirit_animal", "profile_cards.archetype")
@@ -85,7 +104,17 @@ class PagesController < ApplicationController
   def analytics; end
 
   def docs
-    @marketing_overview = File.read(Rails.root.join("docs", "marketing-overview.md")) if File.exist?(Rails.root.join("docs", "marketing-overview.md"))
+    root = Rails.root.join("docs")
+    @path = params[:path].to_s
+    # Build a simple index of markdown files
+    @docs_index = Dir[root.join("**", "*.md")].map { |p| p.delete_prefix(root.to_s + "/") }.sort
+    # Resolve the requested doc or default
+    rel = @path.presence || "marketing-overview.md"
+    target = root.join(rel)
+    if target.to_s.start_with?(root.to_s) && File.exist?(target) && File.file?(target)
+      @doc_title = rel
+      @doc_markdown = File.read(target)
+    end
   end
 
   def autocomplete

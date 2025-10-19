@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_18_031000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_19_010101) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -124,6 +124,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_18_031000) do
     t.text "avatar_description"
     t.string "ai_model"
     t.string "prompt_version"
+    t.string "avatar_choice", default: "real", null: false
     t.index ["profile_id"], name: "index_profile_cards_on_profile_id", unique: true
   end
 
@@ -259,6 +260,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_18_031000) do
     t.datetime "last_ai_regenerated_at"
     t.text "last_sync_error"
     t.datetime "last_sync_error_at"
+    t.boolean "ai_art_opt_in", default: false, null: false
+    t.index ["ai_art_opt_in"], name: "index_profiles_on_ai_art_opt_in"
     t.index ["github_id"], name: "index_profiles_on_github_id", unique: true
     t.index ["hireable"], name: "index_profiles_on_hireable"
     t.index ["last_ai_regenerated_at"], name: "index_profiles_on_last_ai_regenerated_at"

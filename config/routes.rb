@@ -11,6 +11,9 @@ Rails.application.routes.draw do
   get "/faq", to: "pages#faq"
   get "/analytics", to: "pages#analytics"
   get "/docs", to: "pages#docs"
+  get "/gallery", to: "pages#gallery"
+  get "/api-docs", to: "api_docs#show"
+  get "/api-docs/spec.yaml", to: "api_docs#spec", as: :api_docs_spec
   get "/motifs", to: "pages#motifs"
   # Account settings
   get "/settings/account", to: "accounts#edit", as: :edit_account
@@ -45,6 +48,7 @@ Rails.application.routes.draw do
   post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile
   post "/my/profiles/:username/regenerate_ai", to: "my_profiles#regenerate_ai", as: :regenerate_my_profile_ai
   post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
+  post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
 
   # Card previews for screenshotting (HTML views sized for capture)
   get "/cards/:login/og", to: "cards#og", as: :card_og
@@ -54,9 +58,17 @@ Rails.application.routes.draw do
   # Direct OG image route (serves/redirects image; enqueues generation if missing)
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
 
+  # Public JSON API for assets
+  namespace :api do
+    namespace :v1 do
+      get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
+    end
+  end
+
   # Ops admin (lightweight panel)
   namespace :ops do
     get "/", to: "admin#index", as: :admin
+    post "/axiom_smoke", to: "admin#axiom_smoke", as: :axiom_smoke
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
@@ -77,6 +89,7 @@ Rails.application.routes.draw do
     post "/ownerships/:id/transfer", to: "ownerships#transfer", as: :transfer_ownership
     delete "/ownerships/:id", to: "ownerships#destroy", as: :destroy_ownership
     get "/users/search", to: "users#search", as: :search_users
+    post "/profiles/:username/generate_social_assets", to: "profiles#generate_social_assets", as: :generate_social_assets
   end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)
