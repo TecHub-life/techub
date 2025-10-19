@@ -56,6 +56,7 @@ module Screenshots
         # In test, avoid invoking Node: create a tiny PNG header as a placeholder
         File.binwrite(path, "\x89PNG\r\n")
       else
+        # Ensure we execute with a fixed working directory and safe argument array
         out_str, err_str, status = Open3.capture3(*cmd, chdir: Rails.root.to_s)
         unless status.success?
           StructuredLogger.error(message: "screenshot_command_failed", cmd: cmd.join(" "), stdout: out_str, stderr: err_str) if defined?(StructuredLogger)

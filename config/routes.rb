@@ -63,6 +63,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
+      get "/leaderboards", to: "leaderboards#index", defaults: { format: :json }
     end
   end
 

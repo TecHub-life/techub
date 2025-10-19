@@ -18,7 +18,10 @@ class OgController < ApplicationController
     end
 
     # Fallback to local filesystem under public/generated/<login>/
-    base = Rails.root.join("public", "generated", login)
+    # Sanitize login for filesystem usage to prevent path traversal
+    safe_login = profile.login.to_s.downcase.gsub(/[^a-z0-9\-]/, "")
+    return head :bad_request if safe_login.blank?
+    base = Rails.root.join("public", "generated", safe_login)
     path = nil
     if format.to_s.downcase == "jpg"
       path = base.join("og.jpg")

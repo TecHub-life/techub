@@ -54,6 +54,7 @@ module Images
         [ cli, src_path.to_s, "-auto-orient", "-resize", "#{width}x#{height}^", "-gravity", "center", "-extent", "#{width}x#{height}", dst ]
       end
 
+      # Execute with array form to avoid shell interpolation
       ok = system(*cmd)
       return failure(StandardError.new("Resize failed"), metadata: { cmd: cmd.join(" ") }) unless ok
       success({ output_path: dst, width: width, height: height })

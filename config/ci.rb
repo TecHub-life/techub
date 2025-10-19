@@ -52,8 +52,9 @@ end
 
 run!("db:prepare") { system("bin/rails db:prepare") }
 run!("db:setup:queue") { system("bin/rails db:setup:queue") }
-run!("rubocop") { system("bin/rubocop") }
+run!("rubocop") { system("bin/rubocop -A && bin/rubocop") }
 run!("prettier") { system("npm run --silent prettier:check") }
+run!("brakeman") { system("bin/brakeman -q -w2 --no-exit-on-warn") }
 run!("test") { system("bin/rails test") }
 
 # Optional Docker build + smoke test

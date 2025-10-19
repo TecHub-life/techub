@@ -25,3 +25,6 @@ production:
     args:
       - { limit: 200, stale_after: 21600 }
     schedule: every 3 hours
+  rebuild_leaderboards_daily:
+    class: Leaderboards::RebuildJob
+    schedule: every day at 03:15
