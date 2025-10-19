@@ -11,6 +11,8 @@ Rails.application.routes.draw do
   get "/faq", to: "pages#faq"
   get "/analytics", to: "pages#analytics"
   get "/docs", to: "pages#docs"
+  get "/api-docs", to: "api_docs#show"
+  get "/api-docs/spec.yaml", to: "api_docs#spec", as: :api_docs_spec
   get "/motifs", to: "pages#motifs"
   # Account settings
   get "/settings/account", to: "accounts#edit", as: :edit_account
