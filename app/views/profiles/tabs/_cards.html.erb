@@ -25,7 +25,7 @@
         ts = File.mtime(base.join("og.png")).to_i rescue nil
         "/generated/#{profile.login}/og.png#{ts ? "?v=#{ts}" : ""}"
       else
-        (og_image_path(login: profile.login, format: :jpg) rescue nil)
+        nil
       end
       
       card_img = if card_asset&.public_url.present?

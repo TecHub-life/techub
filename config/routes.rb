@@ -46,7 +46,7 @@ Rails.application.routes.draw do
   get "/cards/:login/simple", to: "cards#simple", as: :card_simple
   get "/cards/:login/banner", to: "cards#banner", as: :card_banner
 
-  # Ownership (My Profiles) — index and create/destroy will come later
+  # Ownership (My Profiles)
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
   delete "/my/profiles/:username", to: "my_profiles#destroy", as: :remove_my_profile
   get "/my/profiles/:username/settings", to: "my_profiles#settings", as: :my_profile_settings
@@ -55,15 +55,6 @@ Rails.application.routes.draw do
   post "/my/profiles/:username/regenerate_ai", to: "my_profiles#regenerate_ai", as: :regenerate_my_profile_ai
   post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
   post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
-  post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile
-  post "/my/profiles/:username/regenerate_ai", to: "my_profiles#regenerate_ai", as: :regenerate_my_profile_ai
-  post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
-  post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
-
-  # Card previews for screenshotting (HTML views sized for capture)
-  get "/cards/:login/og", to: "cards#og", as: :card_og
-  get "/cards/:login/card", to: "cards#card", as: :card_preview
-  get "/cards/:login/simple", to: "cards#simple", as: :card_simple
 
   # Direct OG image route (serves/redirects image; enqueues generation if missing)
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
@@ -94,8 +85,6 @@ Rails.application.routes.draw do
     get "/ownerships", to: "ownerships#index", as: :ownerships
     post "/ownerships/set_owner", to: "ownerships#set_owner", as: :set_owner_ownership
     post "/ownerships/transfer_by_profile", to: "ownerships#transfer_by_profile", as: :transfer_by_profile_ownership
-    # link removed: single-owner model enforced
-    post "/ownerships/:id/promote", to: "ownerships#promote", as: :promote_ownership
     post "/ownerships/:id/transfer", to: "ownerships#transfer", as: :transfer_ownership
     delete "/ownerships/:id", to: "ownerships#destroy", as: :destroy_ownership
     get "/users/search", to: "users#search", as: :search_users

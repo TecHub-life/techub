@@ -72,7 +72,10 @@ module Gemini
 
       generated = {}
 
-      all_variants = VARIANTS.merge(ALT_VARIANTS)
+      # Always generate base variants; include ALT variants only if prompts are provided for them
+      base_variants = VARIANTS
+      optional_alt_variants = ALT_VARIANTS.select { |alt_key, _| prompts[alt_key].present? }
+      all_variants = base_variants.merge(optional_alt_variants)
       all_variants.each do |key, variant|
         prompt = prompts[key]
         unless prompt.present?

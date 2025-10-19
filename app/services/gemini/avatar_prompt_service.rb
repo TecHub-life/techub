@@ -75,7 +75,9 @@ module Gemini
       end
 
       prompts = build_prompts(description, structured)
-      prompts = add_fun_style_alternates(prompts, description, structured)
+      if ENV["AVATAR_FUN_ALTS"].to_s.downcase.in?([ "1", "true", "yes" ]) || Rails.env.production?
+        prompts = add_fun_style_alternates(prompts, description, structured)
+      end
 
       success(
         {
