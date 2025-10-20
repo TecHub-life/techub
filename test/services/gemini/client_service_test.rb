@@ -16,10 +16,12 @@ module Gemini
         def fake_auth.access_token; "t"; end
 
         Google::Auth::ServiceAccountCredentials.stub :make_creds, fake_auth do
-          result = Gemini::ClientService.call
-          assert result.success?
-          conn = result.value
-          assert_equal "Bearer t", conn.headers["Authorization"]
+          Gemini::Configuration.stub :provider, "vertex" do
+            result = Gemini::ClientService.call
+            assert result.success?
+            conn = result.value
+            assert_equal "Bearer t", conn.headers["Authorization"]
+          end
         end
       end
     end

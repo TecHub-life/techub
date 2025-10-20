@@ -61,9 +61,9 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: "techub.life" }
   config.action_mailer.delivery_method = :resend
 
-  # Set host for ActiveStorage URLs
+  # Set host for ActiveStorage URLs (prefer AppHost/current credentials over ENV)
   config.after_initialize do
-    ActiveStorage::Current.url_options = { host: ENV.fetch("APP_HOST", "https://techub.life") }
+    ActiveStorage::Current.url_options = { host: (defined?(AppHost) ? AppHost.current : ENV.fetch("APP_HOST", "https://techub.life")) }
   end
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via rails credentials:edit.
