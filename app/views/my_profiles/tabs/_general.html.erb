@@ -1,0 +1,61 @@
+<%# General Settings Tab %>
+<div class="space-y-6">
+  <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Privacy & Sharing</h2>
+    <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-4">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <label class="inline-flex items-center gap-3 text-sm md:text-base cursor-pointer">
+        <input type="checkbox" name="ai_art_opt_in" value="1" <%= 'checked' if @profile.ai_art_opt_in %> class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600">
+        <span class="text-slate-700 dark:text-slate-300">Allow my AI artwork to be featured publicly (gallery & promos)</span>
+      </label>
+      <div class="flex items-center gap-3">
+        <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600" data-disable-with="Saving…">Save Changes</button>
+        <a href="/gallery" target="_blank" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">View public gallery →</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Avatar Selection</h2>
+    <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-4">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <% choice = @profile.profile_card&.avatar_choice || 'real' %>
+      <% base = Rails.root.join('public','generated', @profile.login) %>
+      <% ai_opts = [] %>
+      <% if Dir.exist?(base) %>
+        <% ai_opts = Dir[base.join('avatar-1x1*.{jpg,jpeg,png}').to_s].first(3) %>
+      <% end %>
+      
+      <% if ai_opts.empty? %>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">
+          No AI avatars yet. Use Regenerate AI Artwork to create some options.
+        </p>
+      <% end %>
+      
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
+        <label class="cursor-pointer">
+          <input type="radio" name="avatar_choice" value="real" <%= 'checked' if choice == 'real' %> class="peer sr-only">
+          <div class="rounded border-2 border-slate-300 p-2 peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 dark:border-slate-700 dark:peer-checked:ring-indigo-900 transition">
+            <div class="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
+              <img src="<%= @profile.avatar_url %>" alt="GitHub avatar" class="h-full w-full object-cover">
+            </div>
+            <div class="mt-1.5 text-center text-xs font-medium text-slate-700 dark:text-slate-300">GitHub</div>
+          </div>
+        </label>
+
+        <% ai_opts.each_with_index do |path, idx| %>
+          <label class="cursor-pointer">
+            <input type="radio" name="avatar_choice" value="ai" <%= 'checked' if choice == 'ai' %> class="peer sr-only">
+            <div class="rounded border-2 border-slate-300 p-2 peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 dark:border-slate-700 dark:peer-checked:ring-indigo-900 transition">
+              <div class="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
+                <img src="<%= "/generated/#{@profile.login}/#{File.basename(path)}" %>" alt="AI avatar <%= idx+1 %>" class="h-full w-full object-cover">
+              </div>
+              <div class="mt-1.5 text-center text-xs font-medium text-slate-700 dark:text-slate-300">AI <%= idx+1 %></div>
+            </div>
+          </label>
+        <% end %>
+      </div>
+      <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600" data-disable-with="Saving…">Save Avatar Choice</button>
+    </form>
+  </div>
+</div>
