@@ -177,3 +177,51 @@
     </div>
   </div>
 </div>
+
+<%# Social assets previews (per-target) %>
+<div class="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+  <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+    <svg class="h-6 w-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+    </svg>
+    Social Assets
+  </h3>
+  <p class="text-slate-600 dark:text-slate-400 mb-4">Ready-to-share images sized for each network. Click to open full size.</p>
+  <% gen_dir = Rails.root.join('public','generated', profile.login) %>
+  <% social_targets = [
+      { kind: "x_profile_400", label: "X Profile 400×400", aspect: "1/1" },
+      { kind: "x_header_1500x500", label: "X Header 1500×500", aspect: "3/1" },
+      { kind: "x_feed_1600x900", label: "X Feed 1600×900", aspect: "16/9" },
+      { kind: "ig_square_1080", label: "Instagram 1080×1080", aspect: "1/1" },
+      { kind: "ig_portrait_1080x1350", label: "Instagram 1080×1350", aspect: "4/5" },
+      { kind: "ig_landscape_1080x566", label: "Instagram 1080×566", aspect: "1080/566" },
+      { kind: "fb_post_1080", label: "Facebook 1080×1080", aspect: "1/1" },
+      { kind: "fb_cover_851x315", label: "Facebook Cover 851×315", aspect: "851/315" },
+      { kind: "linkedin_profile_400", label: "LinkedIn Profile 400×400", aspect: "1/1" },
+      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover 1584×396", aspect: "4/1" },
+      { kind: "youtube_cover_2560x1440", label: "YouTube Cover 2560×1440", aspect: "16/9" },
+      { kind: "og_1200x630", label: "OpenGraph 1200×630", aspect: "1200/630" }
+    ] %>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <% social_targets.each do |t| %>
+      <% file = Dir.exist?(gen_dir) ? Dir[gen_dir.join("#{t[:kind]}*.{jpg,png}").to_s].first : nil %>
+      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+        <div class="text-sm font-medium text-slate-800 dark:text-slate-200"><%= t[:label] %></div>
+        <div class="relative mt-2 overflow-hidden rounded bg-slate-100 dark:bg-slate-900" style="aspect-ratio:<%= t[:aspect] %>">
+          <% if file %>
+            <a href="<%= "/generated/#{profile.login}/#{File.basename(file)}" %>" target="_blank" rel="noopener" class="focus:outline-none focus:ring-2 focus:ring-indigo-500/60">
+              <img src="<%= "/generated/#{profile.login}/#{File.basename(file)}" %>" alt="<%= t[:label] %>" class="h-full w-full object-cover" loading="lazy">
+            </a>
+          <% else %>
+            <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
+          <% end %>
+          <% if t[:kind] == 'youtube_cover_2560x1440' %>
+            <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div class="border-2 border-yellow-400/80" style="width:60.39%; height:29.38%"></div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

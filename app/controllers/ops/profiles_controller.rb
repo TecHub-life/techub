@@ -2,12 +2,10 @@ module Ops
   class ProfilesController < BaseController
     def generate_social_assets
       login = params[:username].to_s.downcase
-      result = Profiles::GenerateSocialAssetsService.call(login: login, upload: true)
-      if result.success?
-        redirect_to ops_admin_path, notice: "Generated social assets for @#{login}"
-      else
-        redirect_to ops_admin_path, alert: (result.error&.message || "Failed to generate social assets")
+      Screenshots::CaptureCardService::SOCIAL_VARIANTS.each do |kind|
+        Screenshots::CaptureCardJob.perform_later(login: login, variant: kind)
       end
+      redirect_to ops_admin_path, notice: "Enqueued social screenshots for @#{login}"
     end
   end
 end

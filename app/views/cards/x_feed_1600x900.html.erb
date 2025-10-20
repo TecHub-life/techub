@@ -1,0 +1,40 @@
+<%# 1600x900 – X feed image. Background = supporting AI art (16x9 preferred). Compact identity chips. %>
+<div class="relative h-[900px] w-[1600px] overflow-hidden bg-slate-900">
+  <%# Background selection: prefer 16x9 -> card -> og -> 3x1 %>
+  <% bg_url = nil %>
+  <% if (asset = @profile.profile_assets.find_by(kind: 'avatar_16x9'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'card'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'og'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'avatar_3x1'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% else %>
+    <% base = Rails.root.join('public','generated', @profile.login) %>
+    <% local = Dir[base.join('avatar-16x9*.{jpg,jpeg,png}').to_s].first || Dir[base.join('card*.{jpg,jpeg,png}').to_s].first || Dir[base.join('og*.{jpg,jpeg,png}').to_s].first || Dir[base.join('avatar-3x1*.{jpg,jpeg,png}').to_s].first %>
+    <% bg_url = "/generated/#{@profile.login}/#{File.basename(local)}" if local %>
+  <% end %>
+  <% if bg_url.present? %>
+    <img src="<%= bg_url %>" alt="feed" class="absolute inset-0 h-full w-full object-cover opacity-95">
+  <% else %>
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black"></div>
+  <% end %>
+  <div class="absolute inset-0 bg-black/35"></div>
+
+  <div class="absolute inset-0 flex items-end p-10">
+    <div class="flex items-center gap-4">
+      <div class="h-16 w-16 overflow-hidden rounded-full border-2 border-white/80 shadow-lg">
+        <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
+        <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
+        <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
+        <img src="<%= avatar_src %>" alt="avatar" class="h-full w-full object-cover" />
+      </div>
+      <div>
+        <div class="text-white text-3xl font-bold drop-shadow-sm"><%= @profile.display_name %></div>
+        <div class="text-sky-300 text-lg">@<%= @profile.login %></div>
+      </div>
+    </div>
+  </div>
+</div>
+

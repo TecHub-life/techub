@@ -164,6 +164,17 @@ module Profiles
       StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
       record_event(profile, stage: "screenshots", status: "completed")
 
+      # 6) Capture social-target screenshots (no resizing path)
+      begin
+        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "social_assets") if defined?(StructuredLogger)
+        Screenshots::CaptureCardService::SOCIAL_VARIANTS.each do |kind|
+          Screenshots::CaptureCardJob.perform_later(login: login, variant: kind, host: host)
+        end
+        StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "social_assets") if defined?(StructuredLogger)
+      rescue StandardError => e
+        StructuredLogger.warn(message: "social_assets_exception", login: login, error: e.message) if defined?(StructuredLogger)
+      end
+
       # Card is expected to be persisted either by AI traits synthesis or heuristic fallback
       card_id = profile.profile_card&.id
 
