@@ -14,6 +14,8 @@ Rails.application.configure do
       ts: time.utc.iso8601(3),
       level: severity,
       request_id: Current.request_id,
+      job_id: Current.job_id,
+      app_version: (ENV["APP_VERSION"].presence || ENV["GIT_SHA"].presence),
       user_id: Current.user_id,
       ip: Current.ip,
       ua: Current.user_agent,
