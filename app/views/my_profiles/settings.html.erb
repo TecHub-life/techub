@@ -27,15 +27,13 @@
       <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">Your Profiles</h2>
       <% owned = current_user&.profiles&.order(:login) || [] %>
       <% if owned.any? %>
-        <ul class="space-y-1 text-sm">
+        <select id="profile-select" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-500" data-safe-navigation="true">
           <% owned.each do |p| %>
-            <li>
-              <a href="<%= my_profile_settings_path(username: p.login) %>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                @<%= p.login %>
-              </a>
-            </li>
+            <option value="<%= my_profile_settings_path(username: p.login) %>" <%= 'selected' if p.login == @profile.login %>>
+              @<%= p.login %>
+            </option>
           <% end %>
-        </ul>
+        </select>
       <% else %>
         <p class="text-slate-600 dark:text-slate-300 text-sm">No profiles yet.</p>
       <% end %>
