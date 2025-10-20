@@ -109,6 +109,9 @@ module Gemini
     # endpoint computed via Gemini::Endpoints
 
     def build_payload(provider)
+      # Gemini image generation (both Vertex and AI Studio) expects aspect ratio nested under
+      # generationConfig.imageConfig.aspectRatio. Do NOT send mimeType/responseMimeType; detect
+      # returned type from inlineData.mimeType and transcode locally if needed. See ADR-0005.
       include_ratio = include_aspect_hint?
       cfg = { temperature: temperature }
       if include_ratio

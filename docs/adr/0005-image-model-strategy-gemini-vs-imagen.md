@@ -17,17 +17,18 @@ relevant image paths:
   flexibility
 - Imagen — specialized, photorealism-oriented image generator
 
-Docs indicate: Gemini supports text-to-image with `contents` and returns base64 inlineData. Imagen
-is available via the same API with different strengths and pricing. Aspect ratio is set via
-`generationConfig.aspectRatio` (or provider-specific casing) rather than an explicit width/height.
-References: [Gemini image generation](https://ai.google.dev/gemini-api/docs/image-generation),
+Docs indicate: Gemini supports text-to-image with `contents` and returns base64 `inlineData`. Aspect
+ratio is set via `generationConfig.imageConfig.aspectRatio` (camelCase) rather than an explicit
+width/height. Do not send `mimeType`/`responseMimeType` for Gemini; detect from response
+(`inlineData.mimeType` for REST) and transcode locally as needed. References:
+[Gemini image generation](https://ai.google.dev/gemini-api/docs/image-generation),
 [Imagen](https://ai.google.dev/gemini-api/docs/imagen).
 
 Our system currently:
 
 - Targets `gemini-2.5-flash-image` by default
 - Supports both AI Studio (API key) and Vertex endpoints
-- Sends `contents` with a single text part and `generationConfig` including `aspectRatio` when
+- Sends `contents` with a single text part and `generationConfig.imageConfig.aspectRatio` when
   enabled
 - Extracts base64 image data via `candidates[0].content.parts[].inlineData.data`
 - Post-processes to JPEG by default for size and performance
@@ -37,8 +38,8 @@ Our system currently:
 - Default to Gemini Native Image generation ("Nano Banana") for all avatar and background variants.
 - Keep the provider abstraction, allowing Imagen to be toggled per-variant in the future when higher
   photorealism or typography precision is required.
-- Continue passing `aspectRatio` in generation config and handling conversion/cropping in
-  post-processing.
+- Continue passing `imageConfig.aspectRatio` in generation config and handling conversion/cropping
+  in post-processing.
 - Maintain multi-variant generation (1x1, 16:9, 3:1, 9:16) for flexible placements, and layer
   social-specific sizes via post-process resize/crop rather than direct model generation of every
   resolution.
@@ -69,6 +70,7 @@ Trade-offs:
 ## References
 
 - Gemini Image Generation: https://ai.google.dev/gemini-api/docs/image-generation
+- Gemini REST schema: https://ai.google.dev/api/rest/v1beta/models.generateContent
 - Imagen via Gemini API: https://ai.google.dev/gemini-api/docs/imagen
 - Social sizes reference (guidance):
   https://sproutsocial.com/insights/social-media-image-sizes-guide/
