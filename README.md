@@ -82,6 +82,9 @@ Copy `.env.example` to `.env` and fill in the values. Key settings:
   (URL + repos) pre-steps.
 - `GENERATED_IMAGE_UPLOAD`: when set to `1`/`true`/`yes`, generated assets are uploaded to Active
   Storage (DigitalOcean Spaces in production) and public URLs recorded alongside local paths.
+- `ASSET_REDIRECT_ALLOWED_HOSTS`: comma-separated hostnames allowed for off-host redirects to
+  uploaded asset URLs (e.g., your CDN or Spaces endpoint). If unset, the app serves local copies
+  when available and does not redirect to external hosts.
 - `IMAGE_OPT_BG_THRESHOLD`: minimum file size in bytes to trigger background image optimization.
   Defaults to `300000` (≈300KB). Smaller files get a quick inline pass; larger files are optimized
   via a Solid Queue job on the `images` queue and optionally re-uploaded.
