@@ -1,11 +1,14 @@
 module Images
   class ResizeService < ApplicationService
+    require "open3"
+
     def initialize(src_path:, output_path:, width:, height:, fit: "cover")
       @src_path = Pathname.new(src_path)
       @output_path = Pathname.new(output_path)
       @width = width.to_i
       @height = height.to_i
-      @fit = fit.to_s
+      allowed = %w[contain fill cover]
+      @fit = allowed.include?(fit.to_s) ? fit.to_s : "cover"
     end
 
     def call
@@ -55,8 +58,11 @@ module Images
       end
 
       # Execute with array form to avoid shell interpolation
-      ok = system(*cmd)
-      return failure(StandardError.new("Resize failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+      out_str, err_str, status = Open3.capture3(*cmd)
+      unless status.success?
+        StructuredLogger.error(message: "imagemagick_resize_failed", cmd: cmd.join(" "), stdout: out_str, stderr: err_str, path: src_path.to_s) if defined?(StructuredLogger)
+        return failure(StandardError.new("Resize failed"), metadata: { cmd: cmd.join(" "), stdout: out_str, stderr: err_str })
+      end
       success({ output_path: dst, width: width, height: height })
     rescue StandardError => e
       failure(e)
