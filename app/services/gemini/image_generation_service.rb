@@ -110,44 +110,30 @@ module Gemini
 
     def build_payload(provider)
       include_ratio = include_aspect_hint?
-      if provider == "vertex"
-        cfg = { temperature: temperature }
-        cfg[:aspectRatio] = aspect_ratio if include_ratio
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt }
-              ]
-            }
-          ],
-          generationConfig: cfg,
-          mimeType: mime_type
-        }
-      else
-        cfg = { temperature: temperature }
-        cfg[:aspectRatio] = aspect_ratio if include_ratio
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt }
-              ]
-            }
-          ],
-          generationConfig: cfg,
-          responseMimeType: mime_type
-        }
+      cfg = { temperature: temperature }
+      if include_ratio
+        cfg[:imageConfig] = { aspectRatio: aspect_ratio }
       end
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: prompt }
+            ]
+          }
+        ],
+        generationConfig: cfg
+      }
     end
 
     # Build payload but force a specific field name for output type to maximize compatibility
     def build_payload_with_mime_field(provider, field_name)
       include_ratio = include_aspect_hint?
       cfg = { temperature: temperature }
-      cfg[:aspectRatio] = aspect_ratio if include_ratio
+      if include_ratio
+        cfg[:imageConfig] = { aspectRatio: aspect_ratio }
+      end
       base = {
         contents: [
           {
@@ -157,11 +143,7 @@ module Gemini
         ],
         generationConfig: cfg
       }
-      if field_name.to_s == "mimeType"
-        base[:mimeType] = mime_type
-      else
-        base[:responseMimeType] = mime_type
-      end
+      # No longer sets mime fields; kept for compatibility signature
       base
     end
 

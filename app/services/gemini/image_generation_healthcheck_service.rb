@@ -26,7 +26,6 @@ module Gemini
       else
         {
           contents: [ { role: "user", parts: [ { text: "Generate a 32x32 PNG of a red dot on white." } ] } ],
-          mimeType: "image/png",
           generationConfig: { maxOutputTokens: 1, temperature: 0 }
         }
       end
