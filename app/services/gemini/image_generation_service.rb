@@ -93,7 +93,7 @@ module Gemini
             }
           ],
           generationConfig: cfg,
-          responseMimeType: mime_type
+          mimeType: mime_type
         }
       else
         cfg = { temperature: temperature }

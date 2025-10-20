@@ -19,12 +19,14 @@ module Gemini
       end
       payload = if Gemini::Configuration.provider == "ai_studio"
         {
-          contents: [ { role: "user", parts: [ { text: "Create a small red dot on white" } ] } ]
+          contents: [ { role: "user", parts: [ { text: "Create a small red dot on white" } ] } ],
+          responseMimeType: "image/png",
+          generationConfig: { maxOutputTokens: 1, temperature: 0 }
         }
       else
         {
           contents: [ { role: "user", parts: [ { text: "Generate a 32x32 PNG of a red dot on white." } ] } ],
-          responseMimeType: "image/png",
+          mimeType: "image/png",
           generationConfig: { maxOutputTokens: 1, temperature: 0 }
         }
       end
