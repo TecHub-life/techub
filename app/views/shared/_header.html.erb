@@ -6,28 +6,29 @@
     <% end %>
 
     <nav class="hidden lg:flex items-center gap-4 lg:gap-8 text-sm lg:text-base font-medium text-slate-600 dark:text-slate-300">
-      <%= link_to directory_path, class: "#{nav_link_class(directory_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+      <%= link_to directory_path, class: "#{nav_link_class(directory_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(directory_path) ? 'page' : nil) } do %>
         <i class="fa-solid fa-folder-open text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Directory</span>
       <% end %>
-      <%= link_to leaderboards_path, class: "#{nav_link_class(leaderboards_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+      <%= link_to leaderboards_path, class: "#{nav_link_class(leaderboards_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(leaderboards_path) ? 'page' : nil) } do %>
         <i class="fa-solid fa-trophy text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Leaderboards</span>
       <% end %>
-      <%= link_to analytics_path, class: "#{nav_link_class(analytics_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+      <%= link_to analytics_path, class: "#{nav_link_class(analytics_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(analytics_path) ? 'page' : nil) } do %>
         <i class="fa-solid fa-chart-line text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Analytics</span>
       <% end %>
-      <%= link_to faq_path, class: "#{nav_link_class(faq_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+      <%= link_to faq_path, class: "#{nav_link_class(faq_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(faq_path) ? 'page' : nil) } do %>
         <i class="fa-solid fa-circle-question text-[18px] leading-none align-middle"></i>
         <span class="leading-none">FAQ</span>
       <% end %>
-      <%= link_to submit_path, data: { turbo: false }, class: "#{nav_link_class(submit_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+      <%= link_to "Open Source", "https://github.com/loftwah/techub", target: "_blank", rel: "noopener", class: "transition-all hover:scale-105" %>
+      <%= link_to submit_path, data: { turbo: false }, class: "#{nav_link_class(submit_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(submit_path) ? 'page' : nil) } do %>
         <i class="fa-solid fa-paper-plane text-[18px] leading-none align-middle"></i>
         <span class="leading-none">Submit</span>
       <% end %>
       <% if current_user %>
-        <%= link_to my_profiles_path, class: "#{nav_link_class(my_profiles_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+        <%= link_to my_profiles_path, class: "#{nav_link_class(my_profiles_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(my_profiles_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-id-badge text-[18px] leading-none align-middle"></i>
           <span class="leading-none">My Profiles</span>
         <% end %>
@@ -68,29 +69,29 @@
   <div id="mobile-menu" class="lg:hidden hidden border-t border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
     <div class="mx-auto max-w-6xl px-4 py-3">
       <div class="flex flex-col gap-2 text-slate-700 dark:text-slate-200">
-        <%= link_to directory_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800" do %>
+        <%= link_to directory_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(directory_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-folder-open text-[18px]"></i>
           <span>Directory</span>
         <% end %>
-        <%= link_to leaderboards_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800" do %>
+        <%= link_to leaderboards_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(leaderboards_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-trophy text-[18px]"></i>
           <span>Leaderboards</span>
         <% end %>
-        <%= link_to analytics_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800" do %>
+        <%= link_to analytics_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(analytics_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-chart-line text-[18px]"></i>
           <span>Analytics</span>
         <% end %>
-        <%= link_to faq_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800" do %>
+        <%= link_to faq_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(faq_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-circle-question text-[18px]"></i>
           <span>FAQ</span>
         <% end %>
-        <%= link_to submit_path, data: { turbo: false }, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800" do %>
+        <%= link_to submit_path, data: { turbo: false }, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(submit_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-paper-plane text-[18px]"></i>
           <span>Submit</span>
         <% end %>
 
         <% if current_user %>
-          <%= link_to my_profiles_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800" do %>
+          <%= link_to my_profiles_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(my_profiles_path) ? 'page' : nil) } do %>
             <i class="fa-solid fa-id-badge text-[18px]"></i>
             <span>My Profiles</span>
           <% end %>

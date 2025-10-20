@@ -32,21 +32,78 @@ module Gemini
       return client_result if client_result.failure?
 
       conn = client_result.value
-      response = conn.post(
-        Gemini::Endpoints.image_generate_path(
-          provider: provider,
-          image_model: Gemini::Configuration.image_model,
-          project_id: Gemini::Configuration.project_id,
-          location: Gemini::Configuration.location
-        ),
-        build_payload(provider)
+      endpoint = Gemini::Endpoints.image_generate_path(
+        provider: provider,
+        image_model: Gemini::Configuration.image_model,
+        project_id: Gemini::Configuration.project_id,
+        location: Gemini::Configuration.location
       )
 
+      # First attempt with provider-specific canonical payload
+      payload = build_payload(provider)
+      response = conn.post(endpoint, payload)
+
       unless (200..299).include?(response.status)
-        return failure(
-          StandardError.new("Gemini image generation failed"),
-          metadata: { http_status: response.status, body: response.body }
-        )
+        # Auto-recover from provider field-name mismatches by retrying with alternate key
+        normalized_body = normalize_to_hash(response.body)
+        error_message = dig_value(normalized_body || {}, :error).to_s + response.body.to_s
+
+        retried = false
+        if response.status.to_i == 400
+          if provider == "vertex" && error_message.include?("responseMimeType")
+            alt_payload = build_payload_with_mime_field(provider, :responseMimeType)
+            begin
+              alt_resp = conn.post(endpoint, alt_payload)
+              response = alt_resp
+              retried = true
+            rescue Faraday::Error
+              # fall through to failure
+            end
+          elsif provider == "ai_studio" && error_message.include?("mimeType")
+            alt_payload = build_payload_with_mime_field(provider, :mimeType)
+            begin
+              alt_resp = conn.post(endpoint, alt_payload)
+              response = alt_resp
+              retried = true
+            rescue Faraday::Error
+              # fall through to failure
+            end
+          end
+        end
+
+        unless (200..299).include?(response.status)
+          # Provider auto-fallback: Vertex → AI Studio on known field errors
+          if provider == "vertex" && response.status.to_i == 400 && provider_field_error?(error_message)
+            begin
+              fallback_provider = "ai_studio"
+              fb_client = Gemini::ClientService.call(provider: fallback_provider)
+              if fb_client.success?
+                fb_conn = fb_client.value
+                fb_endpoint = Gemini::Endpoints.image_generate_path(
+                  provider: fallback_provider,
+                  image_model: Gemini::Configuration.image_model,
+                  project_id: Gemini::Configuration.project_id,
+                  location: Gemini::Configuration.location
+                )
+                fb_payload = build_payload(fallback_provider)
+                fb_resp = fb_conn.post(fb_endpoint, fb_payload)
+                if (200..299).include?(fb_resp.status)
+                  response = fb_resp
+                  provider = fallback_provider
+                end
+              end
+            rescue Faraday::Error
+              # swallow and return original failure below
+            end
+          end
+
+          unless (200..299).include?(response.status)
+            return failure(
+              StandardError.new("Gemini image generation failed"),
+              metadata: { http_status: response.status, body: response.body, retried_with_alternate_field: retried }
+            )
+          end
+        end
       end
 
       image_data = extract_image_data(response.body)
@@ -79,36 +136,55 @@ module Gemini
     # endpoint computed via Gemini::Endpoints
 
     def build_payload(provider)
+      # Gemini image generation (both Vertex and AI Studio) expects aspect ratio nested under
+      # generationConfig.imageConfig.aspectRatio. Do NOT send mimeType/responseMimeType; detect
+      # returned type from inlineData.mimeType and transcode locally if needed. See ADR-0005.
       include_ratio = include_aspect_hint?
-      if provider == "vertex"
-        cfg = { temperature: temperature }
-        cfg[:aspectRatio] = aspect_ratio if include_ratio
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt }
-              ]
-            }
-          ],
-          generation_config: cfg
-        }
-      else
-        cfg = { temperature: temperature }
-        cfg[:aspectRatio] = aspect_ratio if include_ratio
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt }
-              ]
-            }
-          ],
-          generationConfig: cfg
-        }
+      cfg = { temperature: temperature }
+      if include_ratio
+        cfg[:imageConfig] = { aspectRatio: aspect_ratio }
       end
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: prompt }
+            ]
+          }
+        ],
+        generationConfig: cfg
+      }
+    end
+
+    def provider_field_error?(error_message)
+      return false if error_message.to_s.strip.empty?
+      msg = error_message.to_s
+      msg.include?("Unknown name \"aspectRatio\"") ||
+        msg.include?("Unknown name \"mimeType\"") ||
+        msg.include?("responseMimeType") ||
+        msg.include?("generation_config") ||
+        msg.include?("fieldViolations")
+    end
+
+    # Build payload but force a specific field name for output type to maximize compatibility
+    def build_payload_with_mime_field(provider, field_name)
+      include_ratio = include_aspect_hint?
+      cfg = { temperature: temperature }
+      if include_ratio
+        cfg[:imageConfig] = { aspectRatio: aspect_ratio }
+      end
+      base = {
+        contents: [
+          {
+            role: "user",
+            parts: [ { text: prompt } ]
+          }
+        ],
+        generationConfig: cfg
+      }
+      # No longer sets mime fields; kept for compatibility signature
+      base
     end
 
     def extract_image_data(body)

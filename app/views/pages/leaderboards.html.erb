@@ -1,11 +1,87 @@
-<section class="mx-auto max-w-4xl space-y-6 px-4 py-12">
-  <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Leaderboards</h1>
-  <p class="text-slate-600 dark:text-slate-300">
-    Leaderboards highlight the most electric builders each week: shipping velocity, PR merges,
-    star growth, and more. Aggregations run asynchronously so daily updates remain cheap.
-  </p>
-  <p class="text-sm text-slate-500 dark:text-slate-400">
-    GitHub webhook events trigger recalculations instantly when workflow runs or releases land.
-    User-authenticated actions let you attribute boosts, reactions, and challenges directly.
-  </p>
+<section class="mx-auto max-w-6xl space-y-8 px-4 py-12">
+  <div class="flex items-center justify-between gap-4">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Leaderboards</h1>
+    <form class="flex items-center gap-2" method="get" action="/leaderboards">
+      <select name="kind" class="rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+        <option value="followers_total">Most Followers</option>
+        <option value="followers_gain_7d">Biggest Follower Gains (7d)</option>
+        <option value="followers_gain_30d" selected>Biggest Follower Gains (30d)</option>
+        <option value="stars_total">Most Stars</option>
+        <option value="stars_gain_7d">Biggest Star Gains (7d)</option>
+        <option value="stars_gain_30d">Biggest Star Gains (30d)</option>
+        <option value="repos_most_starred">Top Star Repos</option>
+      </select>
+      <select name="window" class="rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+        <option value="7d">7 days</option>
+        <option value="30d" selected>30 days</option>
+        <option value="90d">90 days</option>
+        <option value="all">All-time</option>
+      </select>
+      <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700">Update</button>
+    </form>
+  </div>
+
+  <%# Fetch leaderboard via API for now (SSR) %>
+  <% kind = params[:kind].presence || "followers_gain_30d" %>
+  <% window = params[:window].presence || "30d" %>
+  <% lb = Leaderboard.where(kind: kind, window: window).order(as_of: :desc).first %>
+  <% if lb.blank? %>
+    <% result = Leaderboards::ComputeService.call(kind: kind, window: window, as_of: Date.today) %>
+    <% lb = result.success? ? result.value : nil %>
+  <% end %>
+
+  <% if lb.present? %>
+    <% entries = Array(lb.entries) %>
+    <% podium = entries.first(3) %>
+    <% rest = entries.drop(3) %>
+
+    <div class="grid gap-6 md:grid-cols-3">
+      <% podium.each_with_index do |e, idx| %>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-6 shadow">
+          <div class="flex items-center justify-between">
+            <span class="text-2xl font-extrabold <%= idx == 0 ? 'text-amber-500' : idx == 1 ? 'text-slate-400' : 'text-amber-700' %>">#<%= idx+1 %></span>
+            <span class="text-sm text-slate-500">as of <%= lb.as_of %></span>
+          </div>
+          <div class="mt-4 flex items-center gap-3">
+            <div class="h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-800 grid place-items-center">
+              <span class="text-slate-600 dark:text-slate-300">🏆</span>
+            </div>
+            <div>
+              <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">@<%= e["login"] || e[:login] %></div>
+              <div class="text-sm text-slate-600 dark:text-slate-300">Score: <%= e["value"] || e[:value] %></div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="mt-8 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+      <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+        <thead class="bg-slate-50 dark:bg-slate-900">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">User</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Score</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-950">
+          <% rest.each_with_index do |e, i| %>
+            <tr>
+              <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><%= i+4 %></td>
+              <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">@<%= e["login"] || e[:login] %></td>
+              <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100"><%= e["value"] || e[:value] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-6">
+      <p class="text-slate-700 dark:text-slate-300">Leaderboard is warming up. Check back shortly.</p>
+    </div>
+  <% end %>
+
+  <div class="text-sm text-slate-500 dark:text-slate-400">
+    <p>Planned: auto-generate a podium card image daily for OG/twitter meta via background jobs.</p>
+  </div>
 </section>

@@ -216,6 +216,35 @@ Milestone — E2E Auth → Submit → Generate status
 - See `docs/user-journey.md` for the end-to-end flow and data ownership.
 - See `docs/submit-manual-inputs-workflow.md` for the manual inputs spec.
 
+PR 21 — AppSec: exec hardening + scanner tuning
+
+- Exec safety: keep array-form exec for ImageMagick and Node; capture stdout/stderr via `Open3` and
+  log failures (DONE for resize/screenshots).
+- Input validation: whitelist `fit` values (contain/fill/cover) and raise on invalid; coerce numeric
+  args; validate host as HTTP(S) URL (DONE; raise added for `fit`).
+- Brakeman tuning: add `config/brakeman.ignore` for two medium “Command Injection” false-positives
+  with justification; keep job advisory in CI.
+- Weak advisories triage:
+  - MyProfilesController: ensure generated paths are derived from sanitized login; guard against
+    traversal; document rationale or patch.
+  - PagesController: constrain `params[:path]` to known docs folder and allowed basenames; reject
+    anything else.
+  - OgController: verify `allow_other_host` redirect is intentionally fed by trusted data or add
+    domain allowlist.
+  - Settings view glob: ensure safe login usage or move lookup behind a helper that enforces safe
+    patterns.
+- CodeQL: verify default branch has zero new alerts; document policy — new alerts block merges;
+  legacy baseline allowed with suppressions where justified.
+- Tests: add unit tests for `fit` validation and failure logging paths.
+
+Definition of Done
+
+- CI: tests green; RuboCop/Prettier clean.
+- Brakeman: only intentional ignores remain; weak advisory decisions documented or fixed.
+- CodeQL: green on default branch; suppression comments link to this PR where applicable.
+- Docs: `docs/appsec-ops-overview.md` references this PR in “Roadmap and Gaps”; ignore policy and
+  locations documented.
+
 ## Operational policies
 
 - Prompts never request on-image text or logos; traits are non-visual anchors only
@@ -230,6 +259,33 @@ Milestone — E2E Auth → Submit → Generate status
 - API endpoints for programmatic card access
 - Physical printing pipeline
 - Leaderboards/trending, marketplace integrations, mobile client
+
+- Gemini image provider compatibility (Vertex ↔ AI Studio)
+  - Current mitigation: force `gemini.provider: ai_studio` for images to unblock pipelines
+  - Provider-specific payloads: implement and verify correct request schema per provider/model
+    - Vertex: confirm nesting/field names for image aspect ratio and config (no unknown fields)
+    - AI Studio: maintain current working schema
+  - Auto-fallback: on Vertex 400 INVALID_ARGUMENT with fieldViolations, auto-switch to AI Studio and
+    continue; record event and provider used
+  - Healthchecks/canaries:
+    - Expose provider-selectable image healthcheck (both providers) and add hourly canary runs
+    - Alert on non-2xx with body excerpt and affected provider/model/location
+  - Tests (provider matrix):
+    - Unit tests for payload builders and response parsers (Vertex/AI Studio; image/text)
+    - Integration smokes with recorded fixtures for both providers and image models
+    - CI gate to prevent regressions
+  - Feature flags/config:
+    - Per-stage provider override (images vs traits)
+    - Global kill-switch to disable Vertex for images
+    - Document precedence: credentials > env > inference
+  - Observability & UX:
+    - Structured logs: provider, model, endpoint, http_status, field_violations
+    - Surface last image provider on profile status page/admin
+    - Ops runbook: quotas, regions, model access, common 400/403/429 remedies
+  - Acceptance criteria:
+    - Vertex image requests succeed with correct schema OR auto-fallback seamlessly uses AI Studio
+    - Healthchecks green for both providers in prod; canary alerts wired
+    - Test matrix and CI checks in place; docs and runbook updated
 
 Raw Profiles deprecation
 

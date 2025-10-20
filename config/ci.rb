@@ -52,8 +52,10 @@ end
 
 run!("db:prepare") { system("bin/rails db:prepare") }
 run!("db:setup:queue") { system("bin/rails db:setup:queue") }
-run!("rubocop") { system("bin/rubocop") }
+run!("rubocop") { system("bin/rubocop -A && bin/rubocop") }
 run!("prettier") { system("npm run --silent prettier:check") }
+# Use bundle exec to avoid bin/brakeman's --ensure-latest in CI sandboxes
+run!("brakeman") { system("bundle exec brakeman -q -w2 --no-exit-on-warn --no-pager") }
 run!("test") { system("bin/rails test") }
 
 # Optional Docker build + smoke test

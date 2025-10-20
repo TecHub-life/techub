@@ -14,14 +14,14 @@
     }
   ],
   "structured": {
-    "description": "A man with a bald head and a prominent reddish-brown beard is presented in a professional headshot, wearing a dark suit and a bright blue tie. He is smiling warmly, conveying an approachable and confident demeanor against a dark blue background featuring a glowing digital network pattern. The overall presentation suggests a modern and technologically-oriented professional.",
+    "description": "A man with a bald head and a full, reddish-brown beard is presented from the chest up, wearing professional business attire. He is smiling warmly towards the viewer, set against a dark blue background adorned with a luminous digital network pattern. The overall presentation suggests a blend of professionalism and approachability, suitable for a corporate or tech-oriented profile picture.",
     "facial_features": "Bald head, full reddish-brown beard, dark eyebrows, and visible teeth.",
-    "expression": "A warm, open-mouthed smile.",
+    "expression": "A broad, friendly smile with a direct gaze.",
     "attire": "Black suit jacket, white collared shirt, and a bright blue patterned necktie.",
-    "palette": "Dominant colours include dark blue, black, white, and reddish-brown, accented by bright blue and glowing white-blue points.",
-    "background": "A dark blue background featuring a glowing, interconnected network or constellation pattern.",
+    "palette": "Dominant colours include dark blue, black, white, and reddish-brown, accented by bright blue and glowing white points. The lighting is bright and even on the subject, contrasting with the darker, illuminated background.",
+    "background": "A dark blue background featuring a glowing, interconnected network of lines and dots, suggesting a digital or technological theme.",
     "mood": "Professional and approachable."
   },
   "theme": "TecHub",
-  "style_profile": "neon-lit anime portrait with confident tech leader energy"
+  "style_profile": "cinematic tech illustration with abstract motifs; tasteful, modern, and legible without overbearing faces"
 }

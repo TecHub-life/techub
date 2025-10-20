@@ -1,6 +1,6 @@
 module Profiles
   class GeneratePipelineService < ApplicationService
-    VARIANTS = %w[og card simple].freeze
+    VARIANTS = %w[og card simple banner].freeze
 
     def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, ai: true)
       @login = login.to_s.downcase
@@ -56,15 +56,23 @@ module Profiles
         # 3) Generate AI images (prompts + 4 variants)
         t0 = Time.current
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_images") if defined?(StructuredLogger)
+        # Allow images provider override independent from global provider
+        images_provider = provider.presence || ENV["GEMINI_IMAGES_PROVIDER"].to_s.presence
         images = Gemini::AvatarImageSuiteService.call(
           login: login,
-          provider: provider,
-          filename_suffix: provider,
+          provider: images_provider,
+          filename_suffix: images_provider,
           output_dir: Rails.root.join("public", "generated")
         )
-        return images if images.failure?
-        StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_images", duration_ms: ((Time.current - t0) * 1000).to_i) if defined?(StructuredLogger)
-        record_event(profile, stage: "ai_images", status: "completed", duration_ms: ((Time.current - t0) * 1000).to_i)
+        if images.failure?
+          # Degrade gracefully: record event, mark partial, continue to screenshots + heuristic card
+          ai_partial = true
+          StructuredLogger.warn(message: "ai_images_failed", login: login, error: images.error.message) if defined?(StructuredLogger)
+          record_event(profile, stage: "ai_images", status: "failed", duration_ms: ((Time.current - t0) * 1000).to_i, message: images.error.message)
+        else
+          StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_images", duration_ms: ((Time.current - t0) * 1000).to_i) if defined?(StructuredLogger)
+          record_event(profile, stage: "ai_images", status: "completed", duration_ms: ((Time.current - t0) * 1000).to_i)
+        end
 
         # 3b) AI text + traits (structured)
         t1 = Time.current

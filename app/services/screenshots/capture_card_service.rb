@@ -5,19 +5,28 @@ module Screenshots
     DEFAULT_WIDTHS = {
       "og" => 1200,
       "card" => 1280,
-      "simple" => 1280
+      "simple" => 1280,
+      "banner" => 1500
     }.freeze
     DEFAULT_HEIGHTS = {
       "og" => 630,
       "card" => 720,
-      "simple" => 720
+      "simple" => 720,
+      "banner" => 500
     }.freeze
 
     def initialize(login:, variant: "og", host: nil, output_path: nil, wait_ms: 500, type: nil, quality: 85)
       @login = login.to_s.downcase
       @variant = variant.to_s
       resolved_host = host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil) || "http://127.0.0.1:3000"
-      @host = resolved_host
+      # Validate host to be an http(s) URL
+      begin
+        uri = URI.parse(resolved_host.to_s)
+        raise URI::InvalidURIError unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+        @host = uri.to_s
+      rescue URI::InvalidURIError
+        @host = "http://127.0.0.1:3000"
+      end
       @output_path = output_path
       @wait_ms = wait_ms.to_i
       # In test env, keep PNG for compatibility with existing tests
@@ -54,6 +63,7 @@ module Screenshots
         # In test, avoid invoking Node: create a tiny PNG header as a placeholder
         File.binwrite(path, "\x89PNG\r\n")
       else
+        # Ensure we execute with a fixed working directory and safe argument array
         out_str, err_str, status = Open3.capture3(*cmd, chdir: Rails.root.to_s)
         unless status.success?
           StructuredLogger.error(message: "screenshot_command_failed", cmd: cmd.join(" "), stdout: out_str, stderr: err_str) if defined?(StructuredLogger)

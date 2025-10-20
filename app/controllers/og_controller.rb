@@ -13,12 +13,23 @@ class OgController < ApplicationController
     # Prefer recorded asset row
     asset = profile.profile_assets.find_by(kind: "og")
     if asset&.public_url.present?
-      response.headers["Cache-Control"] = cache_header
-      return redirect_to asset.public_url, allow_other_host: true
+      begin
+        url = URI.parse(asset.public_url.to_s)
+        allowed = ENV["ASSET_REDIRECT_ALLOWED_HOSTS"].to_s.split(/[,\s]+/).reject(&:blank?)
+        if url.is_a?(URI::HTTP) && url.host.present? && allowed.include?(url.host)
+          response.headers["Cache-Control"] = cache_header
+          return redirect_to url.to_s, allow_other_host: true
+        end
+      rescue URI::InvalidURIError
+        # fall through to local fallback
+      end
     end
 
     # Fallback to local filesystem under public/generated/<login>/
-    base = Rails.root.join("public", "generated", login)
+    # Sanitize login for filesystem usage to prevent path traversal
+    safe_login = profile.login.to_s.downcase.gsub(/[^a-z0-9\-]/, "")
+    return head :bad_request if safe_login.blank?
+    base = Rails.root.join("public", "generated", safe_login)
     path = nil
     if format.to_s.downcase == "jpg"
       path = base.join("og.jpg")

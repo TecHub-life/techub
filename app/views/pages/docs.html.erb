@@ -12,10 +12,9 @@
   </aside>
   <main>
     <h1 class="mb-4 text-3xl font-bold text-slate-900 dark:text-slate-100">Documentation</h1>
-    <% if @doc_markdown.present? %>
-      <% html = Commonmarker.to_html(@doc_markdown) rescue @doc_markdown %>
+    <% if @doc_html.present? %>
       <article class="prose prose-slate max-w-none dark:prose-invert">
-        <%= raw html %>
+        <%= @doc_html.html_safe %>
       </article>
     <% else %>
       <p class="text-slate-600 dark:text-slate-300">Select a document from the left.</p>

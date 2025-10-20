@@ -51,6 +51,19 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
    bin/ci
    ```
 
+## Docs Map
+
+- Backups (Ops): docs/ops-backups.md
+- Ops Runbook: docs/ops-runbook.md
+- Storage: docs/storage.md
+- Ops Admin: docs/ops-admin.md
+- AppSec Overview: docs/appsec-ops-overview.md
+- Observability (Axiom/OTEL): docs/observability/axiom-opentelemetry.md
+- Image Optimization: docs/image-optimization.md
+- OG Images: docs/og-images.md
+- ADR Index: docs/adr-index.md
+- Contributing: CONTRIBUTING.md
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in the values. Key settings:
@@ -70,6 +83,9 @@ Copy `.env.example` to `.env` and fill in the values. Key settings:
   (URL + repos) pre-steps.
 - `GENERATED_IMAGE_UPLOAD`: when set to `1`/`true`/`yes`, generated assets are uploaded to Active
   Storage (DigitalOcean Spaces in production) and public URLs recorded alongside local paths.
+- `ASSET_REDIRECT_ALLOWED_HOSTS`: comma-separated hostnames allowed for off-host redirects to
+  uploaded asset URLs (e.g., your CDN or Spaces endpoint). If unset, the app serves local copies
+  when available and does not redirect to external hosts.
 - `IMAGE_OPT_BG_THRESHOLD`: minimum file size in bytes to trigger background image optimization.
   Defaults to `300000` (≈300KB). Smaller files get a quick inline pass; larger files are optimized
   via a Solid Queue job on the `images` queue and optionally re-uploaded.
@@ -200,6 +216,18 @@ Notes:
 - `REGISTRY_USERNAME` defaults to the maintainer account; override if pushing from a different user.
 - `.kamal/secrets` only references `KAMAL_REGISTRY_PASSWORD` and reads `RAILS_MASTER_KEY` from
   `config/master.key`.
+
+### Production Smoke Checks
+
+Run these on your server after deploy to validate storage and screenshots end‑to‑end:
+
+```bash
+kamal app exec -i web -- bin/rails runner 'puts({app_host: (defined?(AppHost) ? AppHost.current : nil), svc: Rails.configuration.active_storage.service}.inspect)'
+kamal app exec -i web -- bin/rails runner 'puts ActiveStorage::Blob.services.fetch(Rails.configuration.active_storage.service).inspect'
+kamal app exec -i web -- bin/rails runner 'b=ActiveStorage::Blob.create_and_upload!(io: StringIO.new("hi"), filename:"probe.txt"); puts b.url'
+kamal app exec -i worker -- bin/rails "profiles:pipeline[loftwah,$(bin/rails runner 'print AppHost.current')]"
+kamal app exec -i web -- bin/rails runner 'p Profile.for_login("loftwah").first.profile_assets.order(:created_at).pluck(:kind,:public_url,:local_path)'
+```
 
 ## Docker Compose (Local)
 

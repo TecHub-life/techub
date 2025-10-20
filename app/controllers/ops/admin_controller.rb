@@ -71,6 +71,63 @@ module Ops
       @configured_installation_id = Github::Configuration.installation_id
     end
 
+    def rebuild_leaderboards
+      kinds = Leaderboard::KINDS
+      windows = Leaderboard::WINDOWS
+      kinds.each do |k|
+        windows.each do |w|
+          Leaderboards::ComputeService.call(kind: k, window: w, as_of: Date.today)
+        end
+      end
+      redirect_to ops_admin_path, notice: "Leaderboards rebuilt"
+    end
+
+    def capture_leaderboard_og
+      Leaderboards::CaptureOgJob.perform_later(kind: params[:kind].presence || "followers_gain_30d", window: params[:window].presence || "30d")
+      redirect_to ops_admin_path, notice: "Leaderboard OG capture enqueued"
+    end
+
+    def backups_create
+      result = Backups::CreateService.call
+      if result.success?
+        redirect_to ops_admin_path, notice: "Backup uploaded (#{result.value[:keys].size} files)"
+      else
+        redirect_to ops_admin_path, alert: "Backup failed: #{result.error}"
+      end
+    end
+
+    def backups_prune
+      result = Backups::PruneService.call
+      if result.success?
+        redirect_to ops_admin_path, notice: "Pruned #{result.value[:deleted]} backup object(s)"
+      else
+        redirect_to ops_admin_path, alert: "Prune failed: #{result.error}"
+      end
+    end
+
+    def backups_doctor
+      result = Backups::DoctorService.call
+      if result.success?
+        meta = result.metadata
+        msg = "Backup OK — bucket=#{meta[:bucket]} prefix=#{meta[:prefix]} region=#{meta[:region]} sample=#{meta[:sample_count]}"
+        redirect_to ops_admin_path, notice: msg
+      else
+        redirect_to ops_admin_path, alert: "Backup check failed: #{result.error}"
+      end
+    end
+
+    def backups_doctor_write
+      unless params[:confirm].to_s == "YES"
+        return redirect_to ops_admin_path, alert: "Confirm=YES required"
+      end
+      result = Backups::WriteProbeService.call
+      if result.success?
+        redirect_to ops_admin_path, notice: "Write probe ok — #{result.value[:key]}"
+      else
+        redirect_to ops_admin_path, alert: "Write probe failed: #{result.error}"
+      end
+    end
+
     def send_test_email
       to = params[:to].presence
       message = params[:message]

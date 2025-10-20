@@ -37,12 +37,29 @@ class MyProfilesController < ApplicationController
 
   def settings
     # @profile loaded by before_action
-    @asset_og = @profile.profile_assets.find_by(kind: "og")
-    @asset_card = @profile.profile_assets.find_by(kind: "card")
-    @asset_simple = @profile.profile_assets.find_by(kind: "simple")
+    assets = @profile.profile_assets.where(kind: %w[og card simple]).index_by(&:kind)
+    @asset_og = assets["og"]
+    @asset_card = assets["card"]
+    @asset_simple = assets["simple"]
 
     # For UI: compute AI regen availability
     @ai_regen_available_at = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
+
+    # Social targets for preview (label + aspect ratio class)
+    @social_targets = [
+      { kind: "x_profile_400", label: "X Profile 400×400", aspect: "1/1", hint: "Profile picture • Round crop" },
+      { kind: "x_header_1500x500", label: "X Header 1500×500", aspect: "3/1", hint: "Profile header banner" },
+      { kind: "x_feed_1600x900", label: "X Feed 1600×900", aspect: "16/9", hint: "Landscape post" },
+      { kind: "ig_square_1080", label: "Instagram 1080×1080", aspect: "1/1", hint: "Square post" },
+      { kind: "ig_portrait_1080x1350", label: "Instagram 1080×1350", aspect: "4/5", hint: "Portrait post (tall)" },
+      { kind: "ig_landscape_1080x566", label: "Instagram 1080×566", aspect: "1080/566", hint: "Landscape post" },
+      { kind: "fb_post_1080", label: "Facebook 1080×1080", aspect: "1/1", hint: "Square post" },
+      { kind: "fb_cover_851x315", label: "Facebook Cover 851×315", aspect: "851/315", hint: "Page cover image" },
+      { kind: "linkedin_profile_400", label: "LinkedIn Profile 400×400", aspect: "1/1", hint: "Profile picture • Round crop" },
+      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover 1584×396", aspect: "4/1", hint: "Profile/company cover" },
+      { kind: "youtube_cover_2560x1440", label: "YouTube Cover 2560×1440", aspect: "16/9", hint: "Channel art (mind safe area)" },
+      { kind: "og_1200x630", label: "OpenGraph 1200×630", aspect: "1200/630", hint: "Link preview image" }
+    ]
   end
 
   def update_settings
@@ -79,6 +96,12 @@ class MyProfilesController < ApplicationController
       end
     end
 
+    # Guard: avatar_choice can be 'real' or 'ai'
+    if attrs.key?("avatar_choice")
+      choice = attrs["avatar_choice"].to_s
+      attrs["avatar_choice"] = (choice == "ai") ? "ai" : "real"
+    end
+
     record.assign_attributes(attrs)
     if record.save
       # Structured log for observability
@@ -99,6 +122,13 @@ class MyProfilesController < ApplicationController
   end
 
   def regenerate
+    # Soft throttle to avoid abuse/cost: block if screenshots ran in the last 10 minutes
+    recent = ProfilePipelineEvent.where(profile_id: @profile.id, stage: "screenshots").order(created_at: :desc).limit(1).pluck(:created_at).first rescue nil
+    if recent && recent > 10.minutes.ago
+      wait_m = ((recent + 10.minutes - Time.current) / 60.0).ceil
+      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Please wait ~#{wait_m}m before re-capturing screenshots again"
+    end
+
     # Re-capture non-AI screenshots and optimize only
     Profiles::GeneratePipelineJob.perform_later(@profile.login, ai: false)
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
@@ -132,6 +162,9 @@ class MyProfilesController < ApplicationController
     begin
       # Upload to Active Storage / Spaces if enabled
       content_type = file.content_type.presence || "application/octet-stream"
+      unless content_type.start_with?("image/")
+        return redirect_to my_profile_settings_path(username: @profile.login), alert: "Only image uploads are allowed"
+      end
       filename = "#{@profile.login}-#{kind}-custom#{File.extname(file.original_filename.to_s)}"
       up = Storage::ActiveStorageUploadService.call(path: file.path, content_type: content_type, filename: filename)
       return redirect_to my_profile_settings_path(username: @profile.login), alert: (up.error&.message || "Upload failed") if up.failure?
@@ -139,13 +172,16 @@ class MyProfilesController < ApplicationController
       public_url = up.value[:public_url]
 
       # Best-effort: copy to public/generated for local fallback
-      begin
-        dir = Rails.root.join("public", "generated", @profile.login)
-        FileUtils.mkdir_p(dir)
-        target = dir.join("#{kind}-custom#{File.extname(filename)}")
-        FileUtils.cp(file.path, target)
-      rescue StandardError
-        # ignore copy failures
+      safe_login = @profile.login.to_s.downcase.gsub(/[^a-z0-9\-]/, "")
+      if safe_login.present?
+        begin
+          dir = Rails.root.join("public", "generated", safe_login)
+          FileUtils.mkdir_p(dir)
+          target = dir.join("#{kind}-custom#{File.extname(filename)}")
+          FileUtils.cp(file.path, target)
+        rescue StandardError
+          # ignore copy failures
+        end
       end
 
       # Record/overwrite canonical asset row

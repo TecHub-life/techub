@@ -13,8 +13,9 @@ What the tests cover (at a glance)
 - Screenshot capture (Screenshots::CaptureCardService)
   - Success path returns PNG output and metadata (width/height, mime type); test env avoids Node.
   - Failure path exercised by stubbing Rails.env and Kernel.system.
+  - Variants covered: og (1200×630), card (1280×720), banner (1500×500)
 - Card routes and views
-  - /cards/:login/(og|card|simple) render fixed-size frames (1200×630, 1280×720).
+  - /cards/:login/(og|card|simple|banner) render fixed-size frames (1200×630, 1280×720, 1500×500).
 - Upload to cloud (ActiveStorage)
   - ActiveStorageUploadService returns a public URL (stubbed; no network).
   - Avatar image suite integration adds public_url when upload is enabled.
@@ -33,6 +34,17 @@ What the tests cover (at a glance)
   - `bin/rails test test/services/gemini/avatar_image_suite_service_upload_test.rb`
   - `bin/rails test test/services/storage/active_storage_upload_service_test.rb`
 
+Integration: GitHub permissions
+
+- Location: `test/integration/github_permissions_test.rb`
+- Default behavior: skipped unless a token is provided.
+- CI workflow "Integration — GitHub Permissions" runs nightly and on `main`:
+  - If `secrets.GITHUB_TEST_TOKEN` (a PAT) is set with `read:user`, `read:org`, and `user:email`,
+    all tests run.
+  - Otherwise, it falls back to `GITHUB_TOKEN` and runs all checks except the email address test.
+  - To run locally, set `GITHUB_TEST_TOKEN`; add `GITHUB_TEST_REQUIRE_EMAIL=1` to include the email
+    test.
+
 Manual verification flow
 
 1. Generate AI artwork and write artifacts
@@ -43,6 +55,15 @@ Manual verification flow
    - `APP_HOST=http://127.0.0.1:3000 bundle exec rake "screenshots:capture[loftwah,og]"`
    - Writes to `public/generated/<login>/` and records ProfileAsset; set `GENERATED_IMAGE_UPLOAD=1`
      to also upload.
+4. Social assets
+
+- Generate post-processed sizes in settings (Generate Social Assets button)
+- Or via `Profiles::GenerateSocialAssetsService` for automation
+
+Smoke tests
+
+- Axiom: `bin/rails ops:axiom_smoke` emits a forced log (requires AXIOM_TOKEN/DATASET)
+- Gemini health: `/up/gemini` and `/up/gemini/image`
 
 Logging
 

@@ -6,7 +6,14 @@ class PagesController < ApplicationController
   def directory
     @layout = params[:layout].presence_in(%w[compact comfortable single]) || "comfortable"
     @q = params[:q].to_s.strip
-    @tag = params[:tag].to_s.strip.downcase
+    # Support multiple tags via `tags` (CSV or array) or legacy `tag`
+    raw_tags = params[:tags]
+    if raw_tags.is_a?(Array)
+      @tags = raw_tags.map { |t| t.to_s.downcase.strip }.reject(&:blank?).uniq
+    else
+      csv = raw_tags.presence || params[:tag].to_s
+      @tags = csv.to_s.split(/[,\s]+/).map { |t| t.downcase.strip }.reject(&:blank?).uniq
+    end
     @language = params[:language].to_s.strip.downcase
     @hireable = ActiveModel::Type::Boolean.new.cast(params[:hireable])
     @mine = ActiveModel::Type::Boolean.new.cast(params[:mine])
@@ -24,12 +31,14 @@ class PagesController < ApplicationController
     @per_page = (params[:per_page] || default_per).to_i.clamp(1, 60)
     offset = (@page - 1) * @per_page
 
-    scope = Profile.where(last_pipeline_status: "success").includes(:profile_assets, :profile_card)
+    scope = Profile.where(last_pipeline_status: [ "success", "partial_success" ]).includes(:profile_assets, :profile_card)
     if @q.present?
       scope = scope.where("profiles.login LIKE :q OR profiles.name LIKE :q", q: "%#{@q}%")
     end
-    if @tag.present?
-      scope = scope.joins(:profile_card).where("lower(profile_cards.tags) LIKE ?", "%\"#{@tag}\"%")
+    if @tags.any?
+      likes = @tags.map { |_| "lower(profile_cards.tags) LIKE ?" }.join(" OR ")
+      vals = @tags.map { |t| "%\"#{t}\"%" }
+      scope = scope.joins(:profile_card).where(likes, *vals)
     end
     if @archetype.present?
       scope = scope.joins(:profile_card).where("profile_cards.archetype = ?", @archetype)
@@ -54,7 +63,7 @@ class PagesController < ApplicationController
       scope = scope.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }) if uid.present?
     end
     # Build tag cloud (from current successful profiles only)
-    cloud_source = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.tags")
+    cloud_source = Profile.joins(:profile_card).where(last_pipeline_status: [ "success", "partial_success" ]).pluck("profile_cards.tags")
     @tag_cloud = cloud_source.flatten.map { |t| t.to_s.downcase.strip }.reject(&:blank?).tally.sort_by { |(_t, c)| -c }.first(40)
 
     @total = scope.count
@@ -108,12 +117,24 @@ class PagesController < ApplicationController
     @path = params[:path].to_s
     # Build a simple index of markdown files
     @docs_index = Dir[root.join("**", "*.md")].map { |p| p.delete_prefix(root.to_s + "/") }.sort
-    # Resolve the requested doc or default
-    rel = @path.presence || "marketing-overview.md"
+    # Resolve the requested doc or default strictly from index (no arbitrary paths)
+    rel = @path.presence_in(@docs_index) || "marketing-overview.md"
     target = root.join(rel)
-    if target.to_s.start_with?(root.to_s) && File.exist?(target) && File.file?(target)
+    if File.exist?(target) && File.file?(target)
       @doc_title = rel
-      @doc_markdown = File.read(target)
+      md = File.read(target)
+      begin
+        html = Commonmarker.to_html(md)
+      rescue StandardError
+        html = md
+      end
+      # Rewrite relative image URLs to /docs/... for proper serving
+      # Matches src="something" where something does not start with http(s) or /
+      rewritten = html.gsub(/src=\"(?!https?:)(?!\/)([^\"]+)\"/) { |m| "src=\"/docs/#{$1}\"" }
+      # Sanitize the HTML to avoid XSS from embedded HTML in markdown
+      allowed_tags = %w[p br strong em b i u a img h1 h2 h3 h4 h5 h6 ul ol li blockquote pre code hr table thead tbody tr th td]
+      allowed_attrs = %w[href src alt title class]
+      @doc_html = sanitize(rewritten, tags: allowed_tags, attributes: allowed_attrs)
     end
   end
 

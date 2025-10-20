@@ -1,0 +1,65 @@
+name: Integration — GitHub Permissions
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # nightly UTC
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  github-permissions:
+    name: Run GitHub permissions integration tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install Node dependencies (cached)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-fund --no-audit --loglevel=error
+          else
+            npm install --no-fund --no-audit --loglevel=error
+          fi
+
+      - name: Prepare database
+        run: |
+          bin/rails db:prepare
+
+      - name: Prepare token environment
+        env:
+          SECRET_PAT: ${{ secrets.GITHUB_TEST_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Prefer repo secret PAT if provided; otherwise fall back to the workflow GITHUB_TOKEN
+          if [ -n "$SECRET_PAT" ]; then
+            echo "GITHUB_TEST_TOKEN=$SECRET_PAT" >> "$GITHUB_ENV"
+            echo "GITHUB_TEST_REQUIRE_EMAIL=1" >> "$GITHUB_ENV"
+          else
+            echo "GITHUB_TEST_TOKEN=$GITHUB_TOKEN" >> "$GITHUB_ENV"
+            # GitHub Actions token cannot read user emails; skip that assertion
+            echo "GITHUB_TEST_REQUIRE_EMAIL=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Run GitHub permissions tests
+        env:
+          DISABLE_PARALLEL_TESTS: '1'
+        run: |
+          bin/rails test --verbose test/integration/github_permissions_test.rb

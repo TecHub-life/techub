@@ -1,11 +1,18 @@
 module Images
   class ResizeService < ApplicationService
+    require "open3"
+
     def initialize(src_path:, output_path:, width:, height:, fit: "cover")
       @src_path = Pathname.new(src_path)
       @output_path = Pathname.new(output_path)
       @width = width.to_i
       @height = height.to_i
-      @fit = fit.to_s
+      allowed = %w[contain fill cover]
+      fit_str = fit.to_s
+      unless allowed.include?(fit_str)
+        raise ArgumentError, "invalid fit: #{fit_str} (allowed: #{allowed.join(', ')})"
+      end
+      @fit = fit_str
     end
 
     def call
@@ -54,8 +61,12 @@ module Images
         [ cli, src_path.to_s, "-auto-orient", "-resize", "#{width}x#{height}^", "-gravity", "center", "-extent", "#{width}x#{height}", dst ]
       end
 
-      ok = system(*cmd)
-      return failure(StandardError.new("Resize failed"), metadata: { cmd: cmd.join(" ") }) unless ok
+      # Execute with array form to avoid shell interpolation
+      out_str, err_str, status = Open3.capture3(*cmd)
+      unless status.success?
+        StructuredLogger.error(message: "imagemagick_resize_failed", cmd: cmd.join(" "), stdout: out_str, stderr: err_str, path: src_path.to_s) if defined?(StructuredLogger)
+        return failure(StandardError.new("Resize failed"), metadata: { cmd: cmd.join(" "), stdout: out_str, stderr: err_str })
+      end
       success({ output_path: dst, width: width, height: height })
     rescue StandardError => e
       failure(e)
@@ -75,7 +86,7 @@ module Images
 
     def imagemagick_cli
       override = ENV["IM_CLI"].to_s.strip
-      return override unless override.empty?
+      return override if %w[magick convert].include?(override)
       system("magick -version > /dev/null 2>&1") ? "magick" : "convert"
     end
   end

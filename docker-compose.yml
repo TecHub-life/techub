@@ -8,7 +8,8 @@ services:
       NODE_ENV: production
       APP_HOST: http://localhost:3000
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
-      ACTIVE_STORAGE_SERVICE: local
+      # Use DO Spaces in prod compose to validate encrypted credentials end-to-end
+      ACTIVE_STORAGE_SERVICE: do_spaces
       DISABLE_FORCE_SSL: '1'
     volumes:
       - ./config/master.key:/rails/config/master.key:ro
@@ -22,7 +23,7 @@ services:
       NODE_ENV: production
       APP_HOST: http://web
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
-      ACTIVE_STORAGE_SERVICE: local
+      ACTIVE_STORAGE_SERVICE: do_spaces
       DISABLE_FORCE_SSL: '1'
     volumes:
       - ./config/master.key:/rails/config/master.key:ro

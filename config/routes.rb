@@ -40,7 +40,14 @@ Rails.application.routes.draw do
   get "/profiles/:username", to: "profiles#show", as: :profile
   get "/profiles/:username/status", to: "profiles#status", defaults: { format: :json }
 
-  # Ownership (My Profiles) — index and create/destroy will come later
+  # Card preview routes (for screenshots)
+  get "/cards/:login/og", to: "cards#og", as: :card_og
+  get "/cards/:login/card", to: "cards#card", as: :card_preview
+  get "/cards/:login/simple", to: "cards#simple", as: :card_simple
+  get "/cards/:login/banner", to: "cards#banner", as: :card_banner
+  get "/cards/leaderboard/og", to: "cards#leaderboard_og", as: :leaderboard_og
+
+  # Ownership (My Profiles)
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
   delete "/my/profiles/:username", to: "my_profiles#destroy", as: :remove_my_profile
   get "/my/profiles/:username/settings", to: "my_profiles#settings", as: :my_profile_settings
@@ -50,11 +57,6 @@ Rails.application.routes.draw do
   post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
   post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
 
-  # Card previews for screenshotting (HTML views sized for capture)
-  get "/cards/:login/og", to: "cards#og", as: :card_og
-  get "/cards/:login/card", to: "cards#card", as: :card_preview
-  get "/cards/:login/simple", to: "cards#simple", as: :card_simple
-
   # Direct OG image route (serves/redirects image; enqueues generation if missing)
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
 
@@ -62,6 +64,8 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
+      get "/leaderboards", to: "leaderboards#index", defaults: { format: :json }
+      get "/leaderboards/podium", to: "leaderboards#podium", defaults: { format: :json }
     end
   end
 
@@ -74,6 +78,16 @@ Rails.application.routes.draw do
     post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
     post "/bulk_retry_ai_all", to: "admin#bulk_retry_ai_all", as: :bulk_retry_ai_all
+    resources :admin, only: [] do
+      collection do
+        post :rebuild_leaderboards
+        post :capture_leaderboard_og
+        post :backups_create
+        post :backups_prune
+        post :backups_doctor
+        post :backups_doctor_write
+      end
+    end
     # Profiles admin actions
     get "/profiles/search", to: "profiles#search", as: :search_profiles
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
@@ -84,8 +98,6 @@ Rails.application.routes.draw do
     get "/ownerships", to: "ownerships#index", as: :ownerships
     post "/ownerships/set_owner", to: "ownerships#set_owner", as: :set_owner_ownership
     post "/ownerships/transfer_by_profile", to: "ownerships#transfer_by_profile", as: :transfer_by_profile_ownership
-    # link removed: single-owner model enforced
-    post "/ownerships/:id/promote", to: "ownerships#promote", as: :promote_ownership
     post "/ownerships/:id/transfer", to: "ownerships#transfer", as: :transfer_ownership
     delete "/ownerships/:id", to: "ownerships#destroy", as: :destroy_ownership
     get "/users/search", to: "users#search", as: :search_users

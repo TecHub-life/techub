@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_19_010101) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_20_120002) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -37,6 +37,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_19_010101) do
     t.integer "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "leaderboards", force: :cascade do |t|
+    t.string "kind", null: false
+    t.string "window", default: "30d", null: false
+    t.date "as_of", null: false
+    t.json "entries", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind", "window", "as_of"], name: "index_leaderboards_on_kind_and_window_and_as_of", unique: true
   end
 
   create_table "notification_deliveries", force: :cascade do |t|
@@ -125,7 +135,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_19_010101) do
     t.string "ai_model"
     t.string "prompt_version"
     t.string "avatar_choice", default: "real", null: false
+    t.index ["archetype"], name: "index_profile_cards_on_archetype"
     t.index ["profile_id"], name: "index_profile_cards_on_profile_id", unique: true
+    t.index ["spirit_animal"], name: "index_profile_cards_on_spirit_animal"
   end
 
   create_table "profile_languages", force: :cascade do |t|
@@ -262,6 +274,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_19_010101) do
     t.datetime "last_sync_error_at"
     t.boolean "ai_art_opt_in", default: false, null: false
     t.index ["ai_art_opt_in"], name: "index_profiles_on_ai_art_opt_in"
+    t.index ["followers"], name: "index_profiles_on_followers"
     t.index ["github_id"], name: "index_profiles_on_github_id", unique: true
     t.index ["hireable"], name: "index_profiles_on_hireable"
     t.index ["last_ai_regenerated_at"], name: "index_profiles_on_last_ai_regenerated_at"

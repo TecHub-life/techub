@@ -3,7 +3,7 @@ namespace :screenshots do
   task :capture, [ :login, :variant, :host, :out ] => :environment do |_, args|
     login = (args[:login] || ENV["LOGIN"] || "loftwah").to_s
     variant = (args[:variant] || ENV["VARIANT"] || "og").to_s
-    host = args[:host] || ENV["APP_HOST"]
+    host = args[:host] || ENV["APP_HOST"] || (defined?(AppHost) ? AppHost.current : nil)
     out = args[:out]
 
     result = Screenshots::CaptureCardService.call(login: login, variant: variant, host: host, output_path: out)
@@ -36,7 +36,7 @@ namespace :screenshots do
   desc "Enqueue screenshot jobs for all variants (og, card, simple)"
   task :enqueue_all, [ :login, :host ] => :environment do |_, args|
     login = (args[:login] || ENV["LOGIN"] || "loftwah").to_s
-    host = args[:host] || ENV["APP_HOST"]
+    host = args[:host] || ENV["APP_HOST"] || (defined?(AppHost) ? AppHost.current : nil)
 
     %w[og card simple].each do |variant|
       Screenshots::CaptureCardJob.perform_later(login: login, variant: variant, host: host)

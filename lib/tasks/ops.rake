@@ -3,8 +3,9 @@ namespace :ops do
   task :axiom_smoke, [ :message ] => :environment do |_, args|
     msg = args[:message].presence || "hello_world"
     if defined?(StructuredLogger)
-      StructuredLogger.info(message: "axiom_smoke", sample: msg, invoked_by: ENV["USER"])
-      puts "✓ Emitted axiom_smoke log: #{msg}"
+      # Force Axiom forwarding regardless of env flag
+      StructuredLogger.info({ message: "axiom_smoke", sample: msg, invoked_by: ENV["USER"], env: Rails.env }, force_axiom: true)
+      puts "✓ Emitted axiom_smoke log (force_axiom): #{msg}"
       puts "If AXIOM_TOKEN and AXIOM_DATASET are set, this should appear in Axiom."
     else
       warn "StructuredLogger not defined"

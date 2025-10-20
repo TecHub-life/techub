@@ -1,6 +1,18 @@
 require "test_helper"
 
 class ProfilesControllerTest < ActionDispatch::IntegrationTest
+  test "cards tab shows empty-state when no assets" do
+    profile = Profile.create!(github_id: 2, login: "emptycase")
+    get "/profiles/emptycase"
+    assert_response :success
+    assert_select "div", text: /Shareable Trading Cards/
+    assert_select "p", text: /No card assets yet/  # empty-state message appears
+  end
+end
+
+require "test_helper"
+
+class ProfilesControllerTest < ActionDispatch::IntegrationTest
   test "shows existing profile" do
     profile = Profile.create!(
       github_id: 12345,

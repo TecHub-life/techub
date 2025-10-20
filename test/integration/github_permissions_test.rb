@@ -37,6 +37,9 @@ class GithubPermissionsTest < ActiveSupport::TestCase
 
   test "can access user email addresses with current permissions" do
     skip "Set GITHUB_TEST_TOKEN to run integration tests" unless ENV["GITHUB_TEST_TOKEN"]
+    # In CI, we fall back to GITHUB_TOKEN which cannot read user emails.
+    # Only run this when explicitly allowed (PAT with user:email scope).
+    skip "Email scope not enabled" unless ENV["GITHUB_TEST_REQUIRE_EMAIL"] == "1"
 
     client = Octokit::Client.new(access_token: ENV["GITHUB_TEST_TOKEN"])
 

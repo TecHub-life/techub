@@ -64,6 +64,15 @@ class CaptureCardServiceTest < ActiveSupport::TestCase
     FileUtils.rm_f(Rails.root.join("tmp", "card-dim.png"))
   end
 
+  test "banner dimensions are 1500x500" do
+    result = Screenshots::CaptureCardService.call(login: "loftwah", variant: "banner", host: "http://127.0.0.1:3000", output_path: Rails.root.join("tmp", "banner-dim.png").to_s)
+    assert result.success?
+    assert_equal 1500, result.value[:width]
+    assert_equal 500, result.value[:height]
+  ensure
+    FileUtils.rm_f(Rails.root.join("tmp", "banner-dim.png"))
+  end
+
   test "resolves host via AppHost and enforces production domain" do
     begin
       Object.const_set(:AppHost, Module.new) unless defined?(AppHost)

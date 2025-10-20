@@ -26,15 +26,22 @@ class Profile < ApplicationRecord
 
   # Repository methods
   def top_repositories
-    profile_repositories.where(repository_type: "top").order(stargazers_count: :desc)
+    profile_repositories
+      .where(repository_type: "top")
+      .includes(:repository_topics)
+      .order(stargazers_count: :desc)
   end
 
   def pinned_repositories
-    profile_repositories.where(repository_type: "pinned")
+    profile_repositories
+      .where(repository_type: "pinned")
+      .includes(:repository_topics)
   end
 
   def active_repositories
-    profile_repositories.where(repository_type: "active")
+    profile_repositories
+      .where(repository_type: "active")
+      .includes(:repository_topics)
   end
 
   def active_repositories_filtered

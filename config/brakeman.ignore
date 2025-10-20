@@ -1,0 +1,46 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "a87882ab9525dc2c91724d75cc723892476c77713d40f164cb93b02ff877a148",
+      "note": "Array-form exec with Open3.capture3; inputs validated (width/height ints, fit whitelisted). No shell interpolation.",
+      "who": "loftwah",
+      "created_at": "2025-10-20 00:00:00 +0000"
+    },
+    {
+      "fingerprint": "a9441147937e7840a70e638f2879b403e32ffbd979fc439c3d868b5b23e14d6c",
+      "note": "Array-form exec with Open3.capture3; URL/host validated as HTTP(S), type whitelisted, numeric args coerced. No shell interpolation.",
+      "who": "loftwah",
+      "created_at": "2025-10-20 00:00:00 +0000"
+    },
+    {
+      "fingerprint": "9f515dbbf5641231a840ea2a9a6ffa6c4b9036065df7083c28e23539ae806118",
+      "note": "Docs path constrained to @docs_index; reads only files under Rails.root/docs. No traversal or arbitrary file access.",
+      "who": "loftwah",
+      "created_at": "2025-10-20 00:00:00 +0000"
+    },
+    {
+      "fingerprint": "b2379840d0165dd4dcbd87fdc57e45b14563e289a8720c26443a30fb591aaee2",
+      "note": "Gallery glob restricted to sanitized login under public/generated/<login>. Model attribute sanitized to [a-z0-9-].",
+      "who": "loftwah",
+      "created_at": "2025-10-20 00:00:00 +0000"
+    },
+    {
+      "fingerprint": "d3b3f01aea65e0ae80a8ea268c90c5e378f602b213065877a755df15b6a7f608",
+      "note": "Local send_file path uses sanitized login under public/generated/<login>/og.*; no user-controlled path segments beyond safe login.",
+      "who": "loftwah",
+      "created_at": "2025-10-20 00:00:00 +0000"
+    },
+    {
+      "fingerprint": "deafe169f30a3400f65df0ec743b824e03fdd894b389f241e494c35290ff34a3",
+      "note": "mkdir_p uses sanitized login path under public/generated; directory creation only, no file reading; safe segment enforcement.",
+      "who": "loftwah",
+      "created_at": "2025-10-20 00:00:00 +0000"
+    },
+    {
+      "fingerprint": "d926d9a1e5d2f37f946c4da968808208c96506a5637d592f4def9dd684e13be9",
+      "note": "Markdown is converted then sanitized with explicit allowlist before rendering; view uses html_safe on sanitized content only.",
+      "who": "loftwah",
+      "created_at": "2025-10-20 00:00:00 +0000"
+    }
+  ]
+}
