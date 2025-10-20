@@ -265,7 +265,8 @@ Definition of Done
   - Provider-specific payloads: implement and verify correct request schema per provider/model
     - Vertex: confirm nesting/field names for image aspect ratio and config (no unknown fields)
     - AI Studio: maintain current working schema
-  - Auto-fallback: on Vertex 400 INVALID_ARGUMENT with fieldViolations, auto-switch to AI Studio and continue; record event and provider used
+  - Auto-fallback: on Vertex 400 INVALID_ARGUMENT with fieldViolations, auto-switch to AI Studio and
+    continue; record event and provider used
   - Healthchecks/canaries:
     - Expose provider-selectable image healthcheck (both providers) and add hourly canary runs
     - Alert on non-2xx with body excerpt and affected provider/model/location

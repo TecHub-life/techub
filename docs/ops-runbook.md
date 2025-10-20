@@ -32,8 +32,10 @@ Practical steps to run, monitor, and debug TecHub locally and in prod.
 ### Gemini providers
 
 - Provider resolution precedence: credentials `gemini.provider` > env `GEMINI_PROVIDER` > inference
-- Images-specific override: env `GEMINI_IMAGES_PROVIDER` (e.g., set to `ai_studio` to force images only)
-- Auto-fallback: when Vertex image requests return 400 field violations, service will retry via AI Studio and log provider used
+- Images-specific override: env `GEMINI_IMAGES_PROVIDER` (e.g., set to `ai_studio` to force images
+  only)
+- Auto-fallback: when Vertex image requests return 400 field violations, service will retry via AI
+  Studio and log provider used
 
 Verify in console:
 
