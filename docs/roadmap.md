@@ -260,6 +260,32 @@ Definition of Done
 - Physical printing pipeline
 - Leaderboards/trending, marketplace integrations, mobile client
 
+- Gemini image provider compatibility (Vertex ↔ AI Studio)
+  - Current mitigation: force `gemini.provider: ai_studio` for images to unblock pipelines
+  - Provider-specific payloads: implement and verify correct request schema per provider/model
+    - Vertex: confirm nesting/field names for image aspect ratio and config (no unknown fields)
+    - AI Studio: maintain current working schema
+  - Auto-fallback: on Vertex 400 INVALID_ARGUMENT with fieldViolations, auto-switch to AI Studio and continue; record event and provider used
+  - Healthchecks/canaries:
+    - Expose provider-selectable image healthcheck (both providers) and add hourly canary runs
+    - Alert on non-2xx with body excerpt and affected provider/model/location
+  - Tests (provider matrix):
+    - Unit tests for payload builders and response parsers (Vertex/AI Studio; image/text)
+    - Integration smokes with recorded fixtures for both providers and image models
+    - CI gate to prevent regressions
+  - Feature flags/config:
+    - Per-stage provider override (images vs traits)
+    - Global kill-switch to disable Vertex for images
+    - Document precedence: credentials > env > inference
+  - Observability & UX:
+    - Structured logs: provider, model, endpoint, http_status, field_violations
+    - Surface last image provider on profile status page/admin
+    - Ops runbook: quotas, regions, model access, common 400/403/429 remedies
+  - Acceptance criteria:
+    - Vertex image requests succeed with correct schema OR auto-fallback seamlessly uses AI Studio
+    - Healthchecks green for both providers in prod; canary alerts wired
+    - Test matrix and CI checks in place; docs and runbook updated
+
 Raw Profiles deprecation
 
 - Remove public references and links to `/raw_profiles` in UI (landing, examples)

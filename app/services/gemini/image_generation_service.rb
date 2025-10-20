@@ -72,10 +72,37 @@ module Gemini
         end
 
         unless (200..299).include?(response.status)
-          return failure(
-            StandardError.new("Gemini image generation failed"),
-            metadata: { http_status: response.status, body: response.body, retried_with_alternate_field: retried }
-          )
+          # Provider auto-fallback: Vertex → AI Studio on known field errors
+          if provider == "vertex" && response.status.to_i == 400 && provider_field_error?(error_message)
+            begin
+              fallback_provider = "ai_studio"
+              fb_client = Gemini::ClientService.call(provider: fallback_provider)
+              if fb_client.success?
+                fb_conn = fb_client.value
+                fb_endpoint = Gemini::Endpoints.image_generate_path(
+                  provider: fallback_provider,
+                  image_model: Gemini::Configuration.image_model,
+                  project_id: Gemini::Configuration.project_id,
+                  location: Gemini::Configuration.location
+                )
+                fb_payload = build_payload(fallback_provider)
+                fb_resp = fb_conn.post(fb_endpoint, fb_payload)
+                if (200..299).include?(fb_resp.status)
+                  response = fb_resp
+                  provider = fallback_provider
+                end
+              end
+            rescue Faraday::Error
+              # swallow and return original failure below
+            end
+          end
+
+          unless (200..299).include?(response.status)
+            return failure(
+              StandardError.new("Gemini image generation failed"),
+              metadata: { http_status: response.status, body: response.body, retried_with_alternate_field: retried }
+            )
+          end
         end
       end
 
@@ -128,6 +155,16 @@ module Gemini
         ],
         generationConfig: cfg
       }
+    end
+
+    def provider_field_error?(error_message)
+      return false if error_message.to_s.strip.empty?
+      msg = error_message.to_s
+      msg.include?("Unknown name \"aspectRatio\"") ||
+        msg.include?("Unknown name \"mimeType\"") ||
+        msg.include?("responseMimeType") ||
+        msg.include?("generation_config") ||
+        msg.include?("fieldViolations")
     end
 
     # Build payload but force a specific field name for output type to maximize compatibility

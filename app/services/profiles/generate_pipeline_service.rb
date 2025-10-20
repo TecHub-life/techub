@@ -56,10 +56,12 @@ module Profiles
         # 3) Generate AI images (prompts + 4 variants)
         t0 = Time.current
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_images") if defined?(StructuredLogger)
+        # Allow images provider override independent from global provider
+        images_provider = provider.presence || ENV["GEMINI_IMAGES_PROVIDER"].to_s.presence
         images = Gemini::AvatarImageSuiteService.call(
           login: login,
-          provider: provider,
-          filename_suffix: provider,
+          provider: images_provider,
+          filename_suffix: images_provider,
           output_dir: Rails.root.join("public", "generated")
         )
         if images.failure?
