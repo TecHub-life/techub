@@ -57,6 +57,7 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
 - Ops Runbook: docs/ops-runbook.md
 - Ops Admin: docs/ops-admin.md
 - AppSec Overview: docs/appsec-ops-overview.md
+- Observability (Axiom/OTEL): docs/observability/axiom-opentelemetry.md
 - Image Optimization: docs/image-optimization.md
 - OG Images: docs/og-images.md
 - ADR Index: docs/adr-index.md

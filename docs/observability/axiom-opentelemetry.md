@@ -15,9 +15,28 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
 
 ### Log fields
 
-- Base fields: `ts`, `level`, `request_id`, `user_id`, `ip`, `ua`, `path`, `method`
+- Base fields: `ts`, `level`, `request_id`, `job_id`, `app_version`, `user_id`, `ip`, `ua`, `path`,
+  `method`
 - Payload: arbitrary keys depending on call site
 - Emit programmatically via `StructuredLogger.info/warn/error/debug(hash_or_message, extra: ...)`.
+
+Release correlation
+
+- Set `APP_VERSION` (preferred) or `GIT_SHA` in the environment to annotate every log with
+  `app_version`.
+  - Example (Kamal): `APP_VERSION=$(git rev-parse --short HEAD) bin/kamal deploy`
+
+Job correlation
+
+- All ActiveJob runs include `job_id` automatically and log `job_start`, `job_finish`, and
+  `job_error` with durations.
+
+Forwarding controls
+
+- Set `AXIOM_TOKEN` and `AXIOM_DATASET` to enable log forwarding (best-effort; failures are
+  swallowed).
+- Forwarding is on in production by default; to enable in other envs set `AXIOM_ENABLED=1`.
+- You can force a one-off send with `StructuredLogger.info(..., force_axiom: true)`.
 
 ## Traces (OpenTelemetry)
 

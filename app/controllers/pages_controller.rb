@@ -130,7 +130,11 @@ class PagesController < ApplicationController
       end
       # Rewrite relative image URLs to /docs/... for proper serving
       # Matches src="something" where something does not start with http(s) or /
-      @doc_html = html.gsub(/src=\"(?!https?:)(?!\/)([^\"]+)\"/) { |m| "src=\"/docs/#{$1}\"" }
+      rewritten = html.gsub(/src=\"(?!https?:)(?!\/)([^\"]+)\"/) { |m| "src=\"/docs/#{$1}\"" }
+      # Sanitize the HTML to avoid XSS from embedded HTML in markdown
+      allowed_tags = %w[p br strong em b i u a img h1 h2 h3 h4 h5 h6 ul ol li blockquote pre code hr table thead tbody tr th td]
+      allowed_attrs = %w[href src alt title class]
+      @doc_html = sanitize(rewritten, tags: allowed_tags, attributes: allowed_attrs)
     end
   end
 
