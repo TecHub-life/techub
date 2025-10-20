@@ -101,3 +101,24 @@ Gemini::AvatarImageSuiteService.call(login: "loftwah")
   bin/kamal setup
   bin/kamal deploy
   ```
+
+### Storage & Screenshots (Quick Checks)
+
+Run these after a deploy to validate credentials, storage, and screenshots:
+
+```bash
+# Host and storage service
+kamal app exec -i web -- bin/rails runner 'puts({app_host: (defined?(AppHost) ? AppHost.current : nil), svc: Rails.configuration.active_storage.service}.inspect)'
+kamal app exec -i web -- bin/rails runner 'puts ActiveStorage::Blob.services.fetch(Rails.configuration.active_storage.service).inspect'
+
+# Upload probe
+kamal app exec -i web -- bin/rails runner 'b=ActiveStorage::Blob.create_and_upload!(io: StringIO.new("hi"), filename:"probe.txt"); puts b.url'
+
+# Full pipeline for a user
+kamal app exec -i worker -- bin/rails "profiles:pipeline[loftwah,$(bin/rails runner 'print AppHost.current')]"
+
+# Asset records
+kamal app exec -i web -- bin/rails runner 'p Profile.for_login("loftwah").first.profile_assets.order(:created_at).pluck(:kind,:public_url,:local_path)'
+```
+
+See `docs/storage.md` for detailed troubleshooting.

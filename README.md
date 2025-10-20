@@ -55,6 +55,7 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
 
 - Backups (Ops): docs/ops-backups.md
 - Ops Runbook: docs/ops-runbook.md
+- Storage: docs/storage.md
 - Ops Admin: docs/ops-admin.md
 - AppSec Overview: docs/appsec-ops-overview.md
 - Observability (Axiom/OTEL): docs/observability/axiom-opentelemetry.md
@@ -215,6 +216,18 @@ Notes:
 - `REGISTRY_USERNAME` defaults to the maintainer account; override if pushing from a different user.
 - `.kamal/secrets` only references `KAMAL_REGISTRY_PASSWORD` and reads `RAILS_MASTER_KEY` from
   `config/master.key`.
+
+### Production Smoke Checks
+
+Run these on your server after deploy to validate storage and screenshots end‑to‑end:
+
+```bash
+kamal app exec -i web -- bin/rails runner 'puts({app_host: (defined?(AppHost) ? AppHost.current : nil), svc: Rails.configuration.active_storage.service}.inspect)'
+kamal app exec -i web -- bin/rails runner 'puts ActiveStorage::Blob.services.fetch(Rails.configuration.active_storage.service).inspect'
+kamal app exec -i web -- bin/rails runner 'b=ActiveStorage::Blob.create_and_upload!(io: StringIO.new("hi"), filename:"probe.txt"); puts b.url'
+kamal app exec -i worker -- bin/rails "profiles:pipeline[loftwah,$(bin/rails runner 'print AppHost.current')]"
+kamal app exec -i web -- bin/rails runner 'p Profile.for_login("loftwah").first.profile_assets.order(:created_at).pluck(:kind,:public_url,:local_path)'
+```
 
 ## Docker Compose (Local)
 
