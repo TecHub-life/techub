@@ -172,7 +172,7 @@ module Gemini
       stubs = Faraday::Adapter::Test::Stubs.new do |stub|
         stub.post("/v1beta/models/gemini-2.5-flash-image:generateContent") do |env|
           body = JSON.parse(env.body)
-          assert_equal "16:9", body.dig("generationConfig", "aspectRatio"), "expected aspectRatio hint to be present"
+          assert_equal "16:9", body.dig("generationConfig", "imageConfig", "aspectRatio"), "expected aspectRatio hint to be present"
           [ 200, { "content-type" => "application/json" }, { "candidates" => [ { "content" => { "parts" => [ { "inlineData" => { "mimeType" => "image/png", "data" => SAMPLE_IMAGE_BASE64 } } ] } } ] } ]
         end
       end
