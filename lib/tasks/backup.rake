@@ -74,3 +74,43 @@ namespace :db do
     end
   end
 end
+    desc "Plan: print JSON for Spaces bucket policy and lifecycle (no network)"
+    task plan: :environment do
+      creds = (Rails.application.credentials.dig(:do_spaces) rescue {}) || {}
+      bucket = ENV["BACKUP_BUCKET"] || creds[:backup_bucket_name] || creds[:bucket_name]
+      prefix = ENV["BACKUP_PREFIX"] || creds[:backup_prefix] || "db_backups"
+      days = (ENV["BACKUP_RETENTION_DAYS"] || creds[:backup_retention_days] || 14).to_i
+
+      policy = {
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Sid: "DenyPublicReadBackupsPrefix",
+            Effect: "Deny",
+            Principal: "*",
+            Action: ["s3:GetObject"],
+            Resource: "arn:aws:s3:::%{bucket}/%{prefix}/*" % { bucket: bucket, prefix: prefix },
+            Condition: { Bool: { "aws:SecureTransport": "true" } }
+          }
+        ]
+      }
+
+      lifecycle = {
+        Rules: [
+          {
+            ID: "db-backups-expire-#{days}d",
+            Filter: { Prefix: "#{prefix}/" },
+            Status: "Enabled",
+            Expiration: { Days: days }
+          }
+        ]
+      }
+
+      puts "Bucket:  #{bucket}"
+      puts "Prefix:  #{prefix}"
+      puts "Retention days: #{days}"
+      puts "\n# Bucket Policy JSON (deny public read on prefix)\n"
+      puts JSON.pretty_generate(policy)
+      puts "\n# Lifecycle JSON (expire after #{days} days)\n"
+      puts JSON.pretty_generate(lifecycle)
+    end
