@@ -53,9 +53,11 @@ Owner: \***\*\_\_\*\*** Updated: \***\*\_\_\*\***
     views using avatar circle.
 
 - [ ] Motifs: system artwork (archetypes and spirit animals)
-  - Boot ensure: on app start, ensure motif images exist for `MOTIFS_THEME` (default `core`); generate only missing.
+  - Boot ensure: on app start, ensure motif images exist for `MOTIFS_THEME` (default `core`);
+    generate only missing.
   - Rake: `rake motifs:generate[THEME,ENSURE_ONLY]` and `rake motifs:ensure[THEME]` for manual runs.
-  - Storage: global library under `public/library/(archetypes|spirit_animals)/<theme>/` with `*-<variant>.jpg`.
+  - Storage: global library under `public/library/(archetypes|spirit_animals)/<theme>/` with
+    `*-<variant>.jpg`.
   - Decoupling: system motifs are global; not tied to profiles or avatar assets.
   - Admin: later, ops panel to add new themes and (re)generate subsets; buttons greyed when present.
   - DoD: boot-time ensure works; rake tasks generate assets; docs updated.
