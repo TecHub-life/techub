@@ -1,0 +1,28 @@
+<%# 2560x1440 – YouTube channel art. Background = supporting AI art (16x9). %>
+<section class="relative h-[1440px] w-[2560px] overflow-hidden bg-slate-900">
+  <% bg_url = nil %>
+  <% if (asset = @profile.profile_assets.find_by(kind: 'avatar_16x9'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'card'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'og'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'avatar_3x1'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% else %>
+    <% base = Rails.root.join('public','generated', @profile.login) %>
+    <% local = Dir[base.join('avatar-16x9*.{jpg,jpeg,png}').to_s].first || Dir[base.join('card*.{jpg,jpeg,png}').to_s].first || Dir[base.join('og*.{jpg,jpeg,png}').to_s].first || Dir[base.join('avatar-3x1*.{jpg,jpeg,png}').to_s].first %>
+    <% bg_url = "/generated/#{@profile.login}/#{File.basename(local)}" if local %>
+  <% end %>
+  <% if bg_url.present? %>
+    <img src="<%= bg_url %>" alt="cover" class="absolute inset-0 h-full w-full object-cover">
+  <% else %>
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-700 via-sky-600 to-cyan-500"></div>
+  <% end %>
+  <div class="absolute inset-0 bg-black/20"></div>
+  <%# Safe area overlay (1546x423 centered per common guidance) %>
+  <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+    <div class="border-4 border-yellow-400/80" style="width:60.39%; height:29.38%"></div>
+  </div>
+</section>
+

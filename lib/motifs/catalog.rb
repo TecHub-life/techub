@@ -63,5 +63,18 @@ module Motifs
     def spirit_animal_names
       spirit_animals.map(&:first)
     end
+
+    # Utility helpers for system artwork generation
+    def to_slug(name)
+      name.to_s.downcase.strip.gsub(/[^a-z0-9\s-]/, "").gsub(/\s+/, "-")
+    end
+
+    def archetype_entries
+      archetypes.map { |name, desc| { name: name, description: desc, slug: to_slug(name) } }
+    end
+
+    def spirit_animal_entries
+      spirit_animals.map { |name, desc| { name: name, description: desc, slug: to_slug(name) } }
+    end
   end
 end

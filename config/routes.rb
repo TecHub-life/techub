@@ -45,6 +45,20 @@ Rails.application.routes.draw do
   get "/cards/:login/card", to: "cards#card", as: :card_preview
   get "/cards/:login/simple", to: "cards#simple", as: :card_simple
   get "/cards/:login/banner", to: "cards#banner", as: :card_banner
+  # Social-target routes
+  get "/cards/:login/x_profile_400", to: "cards#x_profile_400"
+  get "/cards/:login/x_header_1500x500", to: "cards#x_header_1500x500"
+  get "/cards/:login/x_feed_1600x900", to: "cards#x_feed_1600x900"
+  get "/cards/:login/ig_square_1080", to: "cards#ig_square_1080"
+  get "/cards/:login/ig_portrait_1080x1350", to: "cards#ig_portrait_1080x1350"
+  get "/cards/:login/ig_landscape_1080x566", to: "cards#ig_landscape_1080x566"
+  get "/cards/:login/fb_post_1080", to: "cards#fb_post_1080"
+  get "/cards/:login/fb_cover_851x315", to: "cards#fb_cover_851x315"
+  get "/cards/:login/linkedin_profile_400", to: "cards#linkedin_profile_400"
+  get "/cards/:login/linkedin_cover_1584x396", to: "cards#linkedin_cover_1584x396"
+  get "/cards/:login/youtube_cover_2560x1440", to: "cards#youtube_cover_2560x1440"
+  # Explicit OG name variant
+  get "/cards/:login/og_1200x630", to: "cards#og_1200x630"
   get "/cards/leaderboard/og", to: "cards#leaderboard_og", as: :leaderboard_og
 
   # Ownership (My Profiles)

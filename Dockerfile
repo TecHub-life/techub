@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# (syntax directive removed to avoid pulling docker/dockerfile frontend from Docker Hub)
 # check=error=true
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
@@ -9,10 +9,13 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=3.3.0
+# Base image repo and tag are configurable; default to official Ruby slim
+ARG RUBY_BASE=docker.io/library/ruby
+ARG RUBY_TAG=${RUBY_VERSION}-slim
 # Pin ImageMagick version for reproducible builds (update as needed)
 ARG IMAGEMAGICK_VERSION=7.1.1-32
 ARG IMAGEMAGICK_SHA256
-FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+FROM ${RUBY_BASE}:${RUBY_TAG} AS base
 ARG IMAGEMAGICK_VERSION
 ARG IMAGEMAGICK_SHA256
 

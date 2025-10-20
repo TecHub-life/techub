@@ -1,5 +1,112 @@
 # Roadmap
 
+## Definitions and Policies (Authoritative)
+
+- Avatar AI art (what): AI‑generated 1×1 portrait variants intended ONLY for avatar circles in
+  cards/social views. User chooses: GitHub avatar OR one of AI 1×1 variants.
+- Supporting AI art (what): AI‑generated background artwork used behind card/social compositions.
+  Targeted aspect ratios: 16×9 (primary), 9×16 (portrait), 3×1 (header). These are BACKGROUNDS only,
+  never avatars.
+- 3×1 policy: Direct 3×1 AI is flaky; prefer composing banner/header via our `banner`/platform views
+  using 16×9 with crop/zoom; 3×1 AI may be generated optionally but is never the only source.
+- Upload policy: User uploads are disabled by default (no public UI). Admin/ops may override for
+  emergencies.
+- Non‑mixing: Avatars come only from GitHub avatar or AI 1×1. Backgrounds come only from supporting
+  AI art or admin override. No resizing shortcuts across domains.
+- Staleness + regeneration: Per‑target settings (avatar/background/crop) track updated_at. If newer
+  than last capture, UI marks “stale” and queues recapture on action.
+
+## End‑to‑End User Flow (Owner)
+
+1. Sign in with GitHub and submit profile (e.g., `loftwah`).
+2. Pipeline runs (sync → AI traits/images → screenshots). On success:
+   - Profile page → Cards tab shows `og`, `card`, `simple`, `banner` and per‑platform social images.
+   - Settings → Social Assets shows all targets with previews and Generate button.
+3. Settings: For each target, choose avatar (GitHub or AI 1×1) and background (AI 16×9/9×16/3×1 or
+   default). Safe defaults apply.
+4. If settings change, targets are marked stale; “Generate” triggers screenshot job and (optional)
+   upload; previews update on completion.
+
+## Immediate Roadmap (Do Not Skip)
+
+Owner: \***\*\_\_\*\*** Updated: \***\*\_\_\*\***
+
+- [ ] Social assets: derive ONLY from dedicated card views/screenshots
+  - Source of truth:
+    - x_header, fb_cover, linkedin_cover → `cards/:login/banner` screenshot view
+    - x_feed, youtube_cover, og_1200x630 → `cards/:login/og` screenshot view
+    - profile squares (x/ig/fb/linkedin) → dedicated `cards/:login/avatar_square` view with selected
+      avatar
+    - ig_portrait → dedicated `cards/:login/portrait` view with selected avatar
+  - Remove `src_kind` from social generation; deprecate resizing service in favor of card views per
+    target
+  - No cross‑mixing: AI art is not used for card/banners; screenshots are not used as avatars
+  - DoD: per‑target views exist and are captured by screenshot job; settings lets user select
+    avatar/background per target; tests enforce mapping
+
+- [ ] AI character styles/variants for avatars (no service changes)
+  - Generate multiple 1×1 variants per profile using distinct, reusable style recipes (e.g., robot,
+    retro game, alien, synthwave, painterly). Use existing image generator only; do not modify the
+    service.
+  - Record variants in asset library; surface choices in Settings for avatar selection.
+  - DoD: at least 3 style buckets per profile; selectable in Settings; shows in all card/social
+    views using avatar circle.
+
+- [ ] Motifs: system artwork (archetypes and spirit animals)
+  - Boot ensure: on app start, ensure motif images exist for `MOTIFS_THEME` (default `core`);
+    generate only missing.
+  - Rake: `rake motifs:generate[THEME,ENSURE_ONLY]` and `rake motifs:ensure[THEME]` for manual runs.
+  - Storage: global library under `public/library/(archetypes|spirit_animals)/<theme>/` with
+    `*-<variant>.jpg`.
+  - Decoupling: system motifs are global; not tied to profiles or avatar assets.
+  - Admin: later, ops panel to add new themes and (re)generate subsets; buttons greyed when present.
+  - DoD: boot-time ensure works; rake tasks generate assets; docs updated.
+  - Lore: generate `*.json` per motif with `short_lore` and `long_lore` via Gemini; fallback to
+    catalog description.
+  - Variants: default to 1x1 and 16x9 (drop 3x1); update tests accordingly.
+  - Tests: add unit tests for lore JSON shape and presence; verify ensure/generate flows; CI task
+    lists library counts.
+
+- [ ] Axiom + OTEL
+  - Logs: verify dataset ingest via ops smoke action
+  - Traces: add OTEL gems + initializer exporting to Axiom OTLP
+  - DoD: smoke visible in Axiom; traces present for web requests and jobs
+
+- [ ] Docs/OpenAPI reliability
+  - Remove CDN for ReDoc and Font Awesome; use vendored/gem assets
+  - Dark/light theme parity; images render via safe rewrite
+  - DoD: page functional offline; consistent styling
+
+- [ ] Directory UX
+  - Prominent link: “Motifs & Lore” from directory filters header
+  - Tags: chip‑based multi‑select using existing autocomplete
+  - DoD: link placement approved; multi‑select works
+
+- [ ] Guardrails (don’t break generation/storage again)
+  - Contract tests: `AvatarImageSuiteService`, `ActiveStorageUploadService`
+  - Pipeline step tests (mock providers) assert outputs are written/recorded
+  - Feature flags to isolate AI from screenshots
+  - DoD: tests in CI; flags documented
+
+- [ ] Dimension telemetry (under observability)
+  - Record actual width/height for generated AI images and screenshots in logs/metadata to confirm
+    common AR results (often 1×1) and inform composition defaults.
+  - DoD: log fields present; simple report in ops.
+
+Non‑mixing policy (must follow)
+
+- AI assets: only `avatar_*` variants and motif portraits
+- Card assets: only from card routes (`og`, `card`, `simple`, `banner`) via screenshots
+- Social assets: post‑processed from their designated source classes above
+- Violations must be rejected in PR review
+
+Implementation constraints (no surprises)
+
+- Do not modify AI image generation service or storage upload service for this work.
+- Remove user uploads UI for images (admin-only if retained). Build views around likely 1×1 inputs;
+  rely on object-cover in views, not per-user crop/zoom controls.
+- Ship as cohesive changes to views, screenshot variants, and settings only.
+
 ## Current state and gaps (explicit)
 
 - Public profile page UI remains interim; Product v1 layout still pending (cards‑first).

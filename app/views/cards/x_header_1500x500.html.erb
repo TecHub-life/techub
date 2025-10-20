@@ -1,0 +1,39 @@
+<%# 1500x500 – X header cover. Background = supporting AI art (3x1 preferred). Optional small avatar chip + handle. %>
+<section class="relative h-[500px] w-[1500px] overflow-hidden bg-slate-900">
+  <%# Resolve background: prefer 3x1 -> card -> og -> 16x9 (object-cover) %>
+  <% bg_url = nil %>
+  <% if (asset = @profile.profile_assets.find_by(kind: 'avatar_3x1'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'card'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'og'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'avatar_16x9'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% else %>
+    <% base = Rails.root.join('public','generated', @profile.login) %>
+    <% local = Dir[base.join('avatar-3x1*.{jpg,jpeg,png}').to_s].first || Dir[base.join('card*.{jpg,jpeg,png}').to_s].first || Dir[base.join('og*.{jpg,jpeg,png}').to_s].first || Dir[base.join('avatar-16x9*.{jpg,jpeg,png}').to_s].first %>
+    <% bg_url = "/generated/#{@profile.login}/#{File.basename(local)}" if local %>
+  <% end %>
+  <% if bg_url.present? %>
+    <img src="<%= bg_url %>" alt="header" class="absolute inset-0 h-full w-full object-cover">
+  <% else %>
+    <div class="absolute inset-0 bg-gradient-to-r from-indigo-700 via-sky-600 to-cyan-500"></div>
+  <% end %>
+  <div class="absolute inset-0 bg-black/30"></div>
+  <div class="absolute inset-0 flex items-center justify-between px-12">
+    <div>
+      <div class="text-2xl font-bold text-white drop-shadow">@<%= @profile.login %></div>
+      <% if (t = @profile.profile_card&.tagline).present? %>
+        <div class="mt-1 text-white/90 text-sm"><%= t %></div>
+      <% end %>
+    </div>
+    <div class="h-20 w-20 overflow-hidden rounded-full border-4 border-white/80 shadow-xl">
+      <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
+      <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
+      <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
+      <img src="<%= avatar_src %>" alt="avatar" class="h-full w-full object-cover" />
+    </div>
+  </div>
+</section>
+

@@ -1,0 +1,28 @@
+<%# 1080x1350 – Instagram portrait. Background = supporting AI art (16x9/9x16/3x1). %>
+<div class="relative h-[1350px] w-[1080px] overflow-hidden bg-slate-900">
+  <% bg_url = nil %>
+  <% if (asset = @profile.profile_assets.find_by(kind: 'avatar_16x9'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'avatar_3x1'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'card'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% elsif (asset = @profile.profile_assets.find_by(kind: 'og'))&.public_url.present? %>
+    <% bg_url = asset.public_url %>
+  <% else %>
+    <% base = Rails.root.join('public','generated', @profile.login) %>
+    <% local = Dir[base.join('avatar-16x9*.{jpg,jpeg,png}').to_s].first || Dir[base.join('avatar-3x1*.{jpg,jpeg,png}').to_s].first || Dir[base.join('card*.{jpg,jpeg,png}').to_s].first || Dir[base.join('og*.{jpg,jpeg,png}').to_s].first %>
+    <% bg_url = "/generated/#{@profile.login}/#{File.basename(local)}" if local %>
+  <% end %>
+  <% if bg_url.present? %>
+    <img src="<%= bg_url %>" alt="background" class="absolute inset-0 h-full w-full object-cover">
+  <% else %>
+    <div class="absolute inset-0 bg-gradient-to-b from-indigo-700 via-sky-600 to-cyan-500"></div>
+  <% end %>
+  <div class="absolute inset-0 bg-black/25"></div>
+  <div class="absolute inset-x-0 bottom-0 p-10">
+    <div class="text-white text-4xl font-bold drop-shadow-sm"><%= @profile.display_name %></div>
+    <div class="text-sky-300 text-2xl">@<%= @profile.login %></div>
+  </div>
+</div>
+

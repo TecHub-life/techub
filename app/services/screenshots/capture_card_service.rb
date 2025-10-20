@@ -2,17 +2,62 @@ require "open3"
 
 module Screenshots
   class CaptureCardService < ApplicationService
+    # Single source of truth for social-target variants
+    SOCIAL_VARIANTS = %w[
+      x_profile_400
+      x_header_1500x500
+      x_feed_1600x900
+      ig_square_1080
+      ig_portrait_1080x1350
+      ig_landscape_1080x566
+      fb_post_1080
+      fb_cover_851x315
+      linkedin_profile_400
+      linkedin_cover_1584x396
+      youtube_cover_2560x1440
+      og_1200x630
+    ].freeze
     DEFAULT_WIDTHS = {
+      # Existing
       "og" => 1200,
       "card" => 1280,
       "simple" => 1280,
-      "banner" => 1500
+      "banner" => 1500,
+      # Social targets
+      "x_profile_400" => 400,
+      "x_header_1500x500" => 1500,
+      "x_feed_1600x900" => 1600,
+      "ig_square_1080" => 1080,
+      "ig_portrait_1080x1350" => 1080,
+      "ig_landscape_1080x566" => 1080,
+      "fb_post_1080" => 1080,
+      "fb_cover_851x315" => 851,
+      "linkedin_profile_400" => 400,
+      "linkedin_cover_1584x396" => 1584,
+      "youtube_cover_2560x1440" => 2560,
+      # Explicit OG alias
+      "og_1200x630" => 1200
     }.freeze
     DEFAULT_HEIGHTS = {
+      # Existing
       "og" => 630,
       "card" => 720,
       "simple" => 720,
-      "banner" => 500
+      "banner" => 500,
+      # Social targets
+      "x_profile_400" => 400,
+      "x_header_1500x500" => 500,
+      "x_feed_1600x900" => 900,
+      "ig_square_1080" => 1080,
+      "ig_portrait_1080x1350" => 1350,
+      "ig_landscape_1080x566" => 566,
+      "fb_post_1080" => 1080,
+      "fb_cover_851x315" => 315,
+      "linkedin_profile_400" => 400,
+      "linkedin_cover_1584x396" => 396,
+      "youtube_cover_2560x1440" => 1440,
+      # Explicit OG alias
+      "og_1200x630" => 630
     }.freeze
 
     def initialize(login:, variant: "og", host: nil, output_path: nil, wait_ms: 500, type: nil, quality: 85)

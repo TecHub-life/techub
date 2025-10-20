@@ -109,12 +109,10 @@ namespace :social do
     abort "Provide LOGINS=login1,login2" if logins.empty?
     upload = %w[1 true yes].include?(ENV["UPLOAD"].to_s.downcase)
     logins.each do |login|
-      res = Profiles::GenerateSocialAssetsService.call(login: login, upload: upload)
-      if res.success?
-        puts "Generated social assets for @#{login}: #{res.value[:produced].map { |h| h[:kind] }.join(', ')}"
-      else
-        warn "Failed to generate for @#{login}: #{res.error&.message}"
+      Screenshots::CaptureCardService::SOCIAL_VARIANTS.each do |kind|
+        Screenshots::CaptureCardJob.perform_later(login: login, variant: kind)
       end
+      puts "Enqueued social screenshots for @#{login}: #{Screenshots::CaptureCardService::SOCIAL_VARIANTS.join(', ')}"
     end
   end
 
@@ -123,13 +121,11 @@ namespace :social do
     upload = %w[1 true yes].include?(ENV["UPLOAD"].to_s.downcase)
     count = 0
     Profile.find_each do |p|
-      res = Profiles::GenerateSocialAssetsService.call(login: p.login, upload: upload)
-      if res.success?
-        count += 1
-      else
-        warn "Failed for @#{p.login}: #{res.error&.message}"
+      Screenshots::CaptureCardService::SOCIAL_VARIANTS.each do |kind|
+        Screenshots::CaptureCardJob.perform_later(login: p.login, variant: kind)
       end
+      count += 1
     end
-    puts "Generated social assets for #{count} profile(s)"
+    puts "Enqueued social screenshots for #{count} profile(s)"
   end
 end
