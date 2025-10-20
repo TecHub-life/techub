@@ -3,7 +3,7 @@ name: Integration — GitHub Permissions
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 3 * * *" # nightly UTC
+    - cron: '0 3 * * *' # nightly UTC
   push:
     branches:
       - main

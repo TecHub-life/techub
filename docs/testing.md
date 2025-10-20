@@ -39,9 +39,11 @@ Integration: GitHub permissions
 - Location: `test/integration/github_permissions_test.rb`
 - Default behavior: skipped unless a token is provided.
 - CI workflow "Integration — GitHub Permissions" runs nightly and on `main`:
-  - If `secrets.GITHUB_TEST_TOKEN` (a PAT) is set with `read:user`, `read:org`, and `user:email`, all tests run.
+  - If `secrets.GITHUB_TEST_TOKEN` (a PAT) is set with `read:user`, `read:org`, and `user:email`,
+    all tests run.
   - Otherwise, it falls back to `GITHUB_TOKEN` and runs all checks except the email address test.
-  - To run locally, set `GITHUB_TEST_TOKEN`; add `GITHUB_TEST_REQUIRE_EMAIL=1` to include the email test.
+  - To run locally, set `GITHUB_TEST_TOKEN`; add `GITHUB_TEST_REQUIRE_EMAIL=1` to include the email
+    test.
 
 Manual verification flow
 
