@@ -37,9 +37,10 @@ class MyProfilesController < ApplicationController
 
   def settings
     # @profile loaded by before_action
-    @asset_og = @profile.profile_assets.find_by(kind: "og")
-    @asset_card = @profile.profile_assets.find_by(kind: "card")
-    @asset_simple = @profile.profile_assets.find_by(kind: "simple")
+    assets = @profile.profile_assets.where(kind: %w[og card simple]).index_by(&:kind)
+    @asset_og = assets["og"]
+    @asset_card = assets["card"]
+    @asset_simple = assets["simple"]
 
     # For UI: compute AI regen availability
     @ai_regen_available_at = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
@@ -161,6 +162,9 @@ class MyProfilesController < ApplicationController
     begin
       # Upload to Active Storage / Spaces if enabled
       content_type = file.content_type.presence || "application/octet-stream"
+      unless content_type.start_with?("image/")
+        return redirect_to my_profile_settings_path(username: @profile.login), alert: "Only image uploads are allowed"
+      end
       filename = "#{@profile.login}-#{kind}-custom#{File.extname(file.original_filename.to_s)}"
       up = Storage::ActiveStorageUploadService.call(path: file.path, content_type: content_type, filename: filename)
       return redirect_to my_profile_settings_path(username: @profile.login), alert: (up.error&.message || "Upload failed") if up.failure?

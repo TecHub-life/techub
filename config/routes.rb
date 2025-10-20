@@ -82,6 +82,8 @@ Rails.application.routes.draw do
       collection do
         post :rebuild_leaderboards
         post :capture_leaderboard_og
+        post :backups_create
+        post :backups_prune
       end
     end
     # Profiles admin actions

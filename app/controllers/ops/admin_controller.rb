@@ -87,6 +87,24 @@ module Ops
       redirect_to ops_admin_path, notice: "Leaderboard OG capture enqueued"
     end
 
+    def backups_create
+      result = Backups::CreateService.call
+      if result.success?
+        redirect_to ops_admin_path, notice: "Backup uploaded (#{result.value[:keys].size]} files)"
+      else
+        redirect_to ops_admin_path, alert: "Backup failed: #{result.error}"
+      end
+    end
+
+    def backups_prune
+      result = Backups::PruneService.call
+      if result.success?
+        redirect_to ops_admin_path, notice: "Pruned #{result.value[:deleted]} backup object(s)"
+      else
+        redirect_to ops_admin_path, alert: "Prune failed: #{result.error}"
+      end
+    end
+
     def send_test_email
       to = params[:to].presence
       message = params[:message]
