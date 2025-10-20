@@ -52,11 +52,13 @@ Owner: \***\*\_\_\*\*** Updated: \***\*\_\_\*\***
   - DoD: at least 3 style buckets per profile; selectable in Settings; shows in all card/social
     views using avatar circle.
 
-- [ ] Motifs: portraits + lore (archetypes and spirit animals)
-  - Rake: `rake motifs:generate[THEME]` generates portrait sets and lore JSON (short + long)
-  - Ops: button to (re)generate motifs by theme (e.g., Halloween/Christmas)
-  - Storage: record in `ProfileAssets` under `motif_*` kinds; selectable site‑wide
-  - DoD: assets/lore visible in admin; selectable in settings where applicable; docs added
+- [ ] Motifs: system artwork (archetypes and spirit animals)
+  - Boot ensure: on app start, ensure motif images exist for `MOTIFS_THEME` (default `core`); generate only missing.
+  - Rake: `rake motifs:generate[THEME,ENSURE_ONLY]` and `rake motifs:ensure[THEME]` for manual runs.
+  - Storage: global library under `public/library/(archetypes|spirit_animals)/<theme>/` with `*-<variant>.jpg`.
+  - Decoupling: system motifs are global; not tied to profiles or avatar assets.
+  - Admin: later, ops panel to add new themes and (re)generate subsets; buttons greyed when present.
+  - DoD: boot-time ensure works; rake tasks generate assets; docs updated.
 
 - [ ] Axiom + OTEL
   - Logs: verify dataset ingest via ops smoke action
