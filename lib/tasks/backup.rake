@@ -88,7 +88,7 @@ end
             Sid: "DenyPublicReadBackupsPrefix",
             Effect: "Deny",
             Principal: "*",
-            Action: ["s3:GetObject"],
+            Action: [ "s3:GetObject" ],
             Resource: "arn:aws:s3:::%{bucket}/%{prefix}/*" % { bucket: bucket, prefix: prefix },
             Condition: { Bool: { "aws:SecureTransport": "true" } }
           }

@@ -82,13 +82,16 @@ Example lifecycle (keep 21 days) — apply in your S3 console/IaC:
 
 ### DigitalOcean Spaces: Apply Policy/Lifecycle from CLI
 
-You can apply these safely yourself using AWS CLI against your Spaces endpoint (S3‑compatible). Replace `nyc3` and bucket names as appropriate.
+You can apply these safely yourself using AWS CLI against your Spaces endpoint (S3‑compatible).
+Replace `nyc3` and bucket names as appropriate.
 
 Prereqs:
+
 - `awscli` installed locally or on an ops box
 - Access key with write/policy permissions for the bucket
 
 Env setup (bash):
+
 ```bash
 export AWS_ACCESS_KEY_ID="<do_spaces_access_key_id>"
 export AWS_SECRET_ACCESS_KEY="<do_spaces_secret_access_key>"
@@ -98,7 +101,8 @@ BUCKET="techub-db-backups"
 PREFIX="db_backups"
 ```
 
-1) Deny public read for the backup prefix (when reusing a public bucket):
+1. Deny public read for the backup prefix (when reusing a public bucket):
+
 ```bash
 cat > /tmp/spaces-policy.json <<JSON
 {
@@ -120,7 +124,8 @@ JSON
 aws --endpoint-url "$ENDPOINT" s3api put-bucket-policy --bucket "$BUCKET" --policy file:///tmp/spaces-policy.json
 ```
 
-2) Lifecycle rule (expire after 21 days):
+2. Lifecycle rule (expire after 21 days):
+
 ```bash
 cat > /tmp/spaces-lifecycle.json <<JSON
 {
@@ -139,7 +144,9 @@ aws --endpoint-url "$ENDPOINT" s3api put-bucket-lifecycle-configuration \
   --lifecycle-configuration file:///tmp/spaces-lifecycle.json
 ```
 
-Note: Some Spaces features lag S3 parity. If `put-bucket-policy`/`put-bucket-lifecycle-configuration` are rejected, apply equivalents via the DigitalOcean Control Panel.
+Note: Some Spaces features lag S3 parity. If
+`put-bucket-policy`/`put-bucket-lifecycle-configuration` are rejected, apply equivalents via the
+DigitalOcean Control Panel.
 
 ## Operational Notes
 
