@@ -61,6 +61,11 @@ Owner: \***\*\_\_\*\*** Updated: \***\*\_\_\*\***
   - Decoupling: system motifs are global; not tied to profiles or avatar assets.
   - Admin: later, ops panel to add new themes and (re)generate subsets; buttons greyed when present.
   - DoD: boot-time ensure works; rake tasks generate assets; docs updated.
+  - Lore: generate `*.json` per motif with `short_lore` and `long_lore` via Gemini; fallback to
+    catalog description.
+  - Variants: default to 1x1 and 16x9 (drop 3x1); update tests accordingly.
+  - Tests: add unit tests for lore JSON shape and presence; verify ensure/generate flows; CI task
+    lists library counts.
 
 - [ ] Axiom + OTEL
   - Logs: verify dataset ingest via ops smoke action

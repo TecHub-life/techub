@@ -14,11 +14,20 @@
       <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">Archetypes</h2>
       <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <% @archetype_catalog.each do |item| %>
+          <% slug = Motifs::Catalog.to_slug(item[:name]) %>
+          <% img_url = "/library/archetypes/core/#{slug}-1x1.jpg" %>
+          <% lore_path = Rails.root.join('public','library','archetypes','core',"#{slug}.json") %>
+          <% lore = nil; if File.exist?(lore_path); lore = JSON.parse(File.read(lore_path)) rescue nil; end %>
           <li class="p-4">
             <div class="flex items-start justify-between gap-3">
-              <div>
-                <a href="<%= directory_path(archetype: item[:name]) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= item[:name] %></a>
-                <p class="text-sm text-slate-600 dark:text-slate-400"><%= item[:description] %></p>
+              <div class="flex gap-4 items-start">
+                <div class="w-14 h-14 rounded overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
+                  <img src="<%= img_url %>" alt="<%= item[:name] %>" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <a href="<%= directory_path(archetype: item[:name]) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= item[:name] %></a>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= lore&.dig('short_lore').presence || item[:description] %></p>
+                </div>
               </div>
               <% if item[:count].to_i > 0 %>
                 <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200"><%= item[:count] %></span>
@@ -33,11 +42,20 @@
       <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">Spirit Animals</h2>
       <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <% @spirit_catalog.each do |item| %>
+          <% slug = Motifs::Catalog.to_slug(item[:name]) %>
+          <% img_url = "/library/spirit_animals/core/#{slug}-1x1.jpg" %>
+          <% lore_path = Rails.root.join('public','library','spirit_animals','core',"#{slug}.json") %>
+          <% lore = nil; if File.exist?(lore_path); lore = JSON.parse(File.read(lore_path)) rescue nil; end %>
           <li class="p-4">
             <div class="flex items-start justify-between gap-3">
-              <div>
-                <a href="<%= directory_path(spirit: item[:name]) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= item[:name] %></a>
-                <p class="text-sm text-slate-600 dark:text-slate-400"><%= item[:description] %></p>
+              <div class="flex gap-4 items-start">
+                <div class="w-14 h-14 rounded overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
+                  <img src="<%= img_url %>" alt="<%= item[:name] %>" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <a href="<%= directory_path(spirit: item[:name]) %>" class="font-medium text-slate-900 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"><%= item[:name] %></a>
+                  <p class="text-sm text-slate-600 dark:text-slate-400"><%= lore&.dig('short_lore').presence || item[:description] %></p>
+                </div>
               </div>
               <% if item[:count].to_i > 0 %>
                 <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200"><%= item[:count] %></span>

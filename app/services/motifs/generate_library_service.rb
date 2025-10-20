@@ -1,12 +1,17 @@
+require "set"
 module Motifs
   class GenerateLibraryService < ApplicationService
     DEFAULT_THEME = "core".freeze
-    DEFAULT_VARIANTS = [ "16:9", "21:9" ].freeze # 16x9 primary, 21:9 approximates 3x1 banner
+    DEFAULT_VARIANTS = [ "1:1", "16:9" ].freeze # 1x1 (universal), 16x9 (OG/banner base)
 
-    def initialize(theme: DEFAULT_THEME, ensure_only: false, variants: DEFAULT_VARIANTS)
+    def initialize(theme: DEFAULT_THEME, ensure_only: false, variants: DEFAULT_VARIANTS, lore_only: false, images_only: false, only: nil, limit: nil)
       @theme = sanitize_theme(theme)
       @ensure_only = !!ensure_only
       @variants = Array(variants).presence || DEFAULT_VARIANTS
+      @lore_only = !!lore_only
+      @images_only = !!images_only
+      @only_slugs = normalize_only(only)
+      @limit = limit.to_i if limit
     end
 
     def call
@@ -29,11 +34,28 @@ module Motifs
 
     private
 
-    attr_reader :theme, :ensure_only, :variants
+    attr_reader :theme, :ensure_only, :variants, :lore_only, :images_only, :only_slugs, :limit
 
     def generate_set(kind:, entries: [])
       results = []
+      entries = apply_filters(entries)
       entries.each do |entry|
+        upsert_motif(kind: kind, entry: entry)
+        # Ensure lore exists (JSON) alongside images
+        begin
+          lore_status = ensure_lore(kind: kind, entry: entry)
+          results << { slug: entry[:slug], aspect_ratio: "lore", status: lore_status[:status], path: lore_status[:path] }
+        rescue StandardError => e
+          results << { slug: entry[:slug], aspect_ratio: "lore", status: "error", error: e.message }
+        end
+
+        # Lore-only mode
+        unless images_only
+          # already handled above via ensure_lore
+        end
+
+        next if lore_only
+
         variants.each do |aspect_ratio|
           out_path = output_path_for(kind: kind, slug: entry[:slug], aspect_ratio: aspect_ratio)
           if ensure_only && File.exist?(out_path)
@@ -68,6 +90,7 @@ module Motifs
           rescue StandardError
           end
 
+          record_image(kind: kind, slug: entry[:slug], aspect_ratio: aspect_ratio, abs_path: final_path)
           results << { slug: entry[:slug], aspect_ratio: aspect_ratio, status: "generated", path: final_path }
         end
       end
@@ -78,16 +101,36 @@ module Motifs
       t.to_s.downcase.strip.gsub(/[^a-z0-9\s-]/, "").gsub(/\s+/, "-").presence || DEFAULT_THEME
     end
 
+    def normalize_only(val)
+      return nil if val.nil?
+      list = Array(val).join(",")
+      slugs = list.split(/[,\s]+/).map { |s| s.to_s.strip }.reject(&:blank?).map { |n| Motifs::Catalog.to_slug(n) }
+      slugs.presence
+    end
+
+    def apply_filters(entries)
+      out = entries
+      if only_slugs
+        set = only_slugs.to_set
+        out = out.select { |e| set.include?(e[:slug]) }
+      end
+      if limit && limit > 0
+        out = out.first(limit)
+      end
+      out
+    end
+
     def output_path_for(kind:, slug:, aspect_ratio:)
       variant_suffix = case aspect_ratio.to_s
       when "16:9" then "16x9"
-      when "21:9" then "3x1"
+      when "1:1" then "1x1"
       when "1:1" then "1x1"
       when "9:16" then "9x16"
       else aspect_ratio.to_s.tr(":", "x")
       end
       base_dir = Rails.root.join("public", "library", kind.to_s, theme)
-      File.join(base_dir, "#{slug}-#{variant_suffix}.png")
+      # We track .jpg as the canonical output to avoid re-generation due to PNG->JPG conversion
+      File.join(base_dir, "#{slug}-#{variant_suffix}.jpg")
     end
 
     def build_prompt(kind:, name:, description:)
@@ -104,6 +147,69 @@ module Motifs
         Composition: centered emblem on subtle tech-themed background.
         Output: illustration only.
       PROMPT
+    end
+
+    def lore_path_for(kind:, slug:)
+      base_dir = Rails.root.join("public", "library", kind.to_s, theme)
+      File.join(base_dir, "#{slug}.json")
+    end
+
+    def ensure_lore(kind:, entry:)
+      path = lore_path_for(kind: kind, slug: entry[:slug])
+      if ensure_only && File.exist?(path)
+        persist_lore(kind: kind, entry: entry, payload: JSON.parse(File.read(path)) rescue {})
+        return { status: "present", path: path }
+      end
+      return { status: "present", path: path } if File.exist?(path)
+
+      # Generate structured lore JSON (short/long) via Gemini text API
+      lore = Motifs::GenerateLoreService.call(
+        name: entry[:name],
+        description: entry[:description]
+      )
+      if lore.failure?
+        # Fallback minimal lore using catalog description
+        payload = { name: entry[:name], slug: entry[:slug], short_lore: entry[:description].to_s.first(140), long_lore: entry[:description].to_s }
+        FileUtils.mkdir_p(File.dirname(path))
+        File.write(path, JSON.pretty_generate(payload))
+        persist_lore(kind: kind, entry: entry, payload: payload)
+        { status: "generated_fallback", path: path }
+      else
+        payload = lore.value.merge({ name: entry[:name], slug: entry[:slug] })
+        FileUtils.mkdir_p(File.dirname(path))
+        File.write(path, JSON.pretty_generate(payload))
+        persist_lore(kind: kind, entry: entry, payload: payload)
+        { status: "generated", path: path }
+      end
+    end
+
+    def upsert_motif(kind:, entry:)
+      rec = Motif.find_or_initialize_by(kind: kind.to_s.singularize, slug: entry[:slug], theme: theme)
+      rec.name = entry[:name]
+      rec.save!
+    rescue StandardError
+    end
+
+    def persist_lore(kind:, entry:, payload: {})
+      rec = Motif.find_or_initialize_by(kind: kind.to_s.singularize, slug: entry[:slug], theme: theme)
+      rec.name = entry[:name]
+      rec.short_lore = payload["short_lore"].to_s.presence || rec.short_lore
+      rec.long_lore = payload["long_lore"].to_s.presence || rec.long_lore
+      rec.save!
+    rescue StandardError
+    end
+
+    def record_image(kind:, slug:, aspect_ratio:, abs_path:)
+      rec = Motif.find_by(kind: kind.to_s.singularize, slug: slug, theme: theme)
+      return unless rec
+      public_path = abs_path.to_s.sub(Rails.root.join("public").to_s, "")
+      if aspect_ratio.to_s == "1:1"
+        rec.image_1x1_path = public_path
+      elsif aspect_ratio.to_s == "16:9"
+        rec.image_16x9_path = public_path
+      end
+      rec.save!
+    rescue StandardError
     end
   end
 end
