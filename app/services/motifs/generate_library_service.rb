@@ -157,17 +157,27 @@ module Motifs
     def ensure_lore(kind:, entry:)
       path = lore_path_for(kind: kind, slug: entry[:slug])
       if ensure_only && File.exist?(path)
-        persist_lore(kind: kind, entry: entry, payload: JSON.parse(File.read(path)) rescue {})
+        begin
+          payload = JSON.parse(File.read(path))
+        rescue StandardError
+          payload = {}
+        end
+        persist_lore(kind: kind, entry: entry, payload: payload)
         return { status: "present", path: path }
       end
       return { status: "present", path: path } if File.exist?(path)
 
       # Generate structured lore JSON (short/long) via Gemini text API
-      lore = Motifs::GenerateLoreService.call(
-        name: entry[:name],
-        description: entry[:description]
-      )
-      if lore.failure?
+      begin
+        lore = Motifs::GenerateLoreService.call(
+          name: entry[:name],
+          description: entry[:description]
+        )
+      rescue StandardError
+        lore = nil
+      end
+
+      if lore.nil? || (lore.respond_to?(:failure?) && lore.failure?)
         # Fallback minimal lore using catalog description
         payload = { name: entry[:name], slug: entry[:slug], short_lore: entry[:description].to_s.first(140), long_lore: entry[:description].to_s }
         FileUtils.mkdir_p(File.dirname(path))
@@ -193,8 +203,10 @@ module Motifs
     def persist_lore(kind:, entry:, payload: {})
       rec = Motif.find_or_initialize_by(kind: kind.to_s.singularize, slug: entry[:slug], theme: theme)
       rec.name = entry[:name]
-      rec.short_lore = payload["short_lore"].to_s.presence || rec.short_lore
-      rec.long_lore = payload["long_lore"].to_s.presence || rec.long_lore
+      short_val = payload.is_a?(Hash) ? (payload["short_lore"] || payload[:short_lore]) : nil
+      long_val  = payload.is_a?(Hash) ? (payload["long_lore"]  || payload[:long_lore])  : nil
+      rec.short_lore = short_val.to_s.presence || rec.short_lore
+      rec.long_lore  = long_val.to_s.presence  || rec.long_lore
       rec.save!
     rescue StandardError
     end
