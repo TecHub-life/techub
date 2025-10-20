@@ -3,7 +3,8 @@ module Gemini
     VARIANTS = {
       "1x1" => { aspect_ratio: "1:1", filename: "avatar-1x1.png" },
       "16x9" => { aspect_ratio: "16:9", filename: "avatar-16x9.png" },
-      "3x1" => { aspect_ratio: "3:1", filename: "avatar-3x1.png" },
+      # Gemini image API supports 21:9 but not 3:1; map banner to 21:9
+      "3x1" => { aspect_ratio: "21:9", filename: "avatar-3x1.png" },
       "9x16" => { aspect_ratio: "9:16", filename: "avatar-9x16.png" }
     }.freeze
 
