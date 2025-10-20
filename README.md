@@ -51,6 +51,17 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
    bin/ci
    ```
 
+## Docs Map
+
+- Backups (Ops): docs/ops-backups.md
+- Ops Runbook: docs/ops-runbook.md
+- Ops Admin: docs/ops-admin.md
+- AppSec Overview: docs/appsec-ops-overview.md
+- Image Optimization: docs/image-optimization.md
+- OG Images: docs/og-images.md
+- ADR Index: docs/adr-index.md
+- Contributing: CONTRIBUTING.md
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in the values. Key settings:

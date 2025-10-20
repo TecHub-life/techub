@@ -15,6 +15,15 @@ approach.
   - CI gates: `bundle audit` and `npm audit --audit-level=high` can be added as non-blocking
     reports; promote to blocking if signal/noise is acceptable.
 
+- **Static analysis (software)**
+  - Ruby: Brakeman runs in CI non-interactively with
+    `bundle exec brakeman -q -w2 --no-exit-on-warn`.
+    - Non-interactive: our `bin/brakeman` disables `--ensure-latest` in CI to avoid prompts.
+    - Advisory by default: CI does not fail on warnings; treat the job as signal for PR discussion.
+    - Strict option (recommended for security-sensitive work): run a separate job with
+      `bundle exec brakeman -q --exit-on-warn` and a baseline/waiver file, or rerun locally.
+  - JS/CSS: Prettier runs in CI; add `eslint`/`stylelint` later if needed.
+
 - **Build and supply chain (software)**
   - Reproducible builds: pin base images and OS packages in `Dockerfile`; avoid `latest` tags.
     Prefer distroless/minimal images for runtime.

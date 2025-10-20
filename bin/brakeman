@@ -2,6 +2,9 @@
 require "rubygems"
 require "bundler/setup"
 
-ARGV.unshift("--ensure-latest")
+# Only enforce latest interactively; disable in CI or when explicitly turned off.
+unless ENV["CI"] || ENV["BRAKEMAN_NO_ENSURE_LATEST"] == "1"
+  ARGV.unshift("--ensure-latest")
+end
 
 load Gem.bin_path("brakeman", "brakeman")
