@@ -59,6 +59,8 @@ module Motifs
         variants.each do |aspect_ratio|
           out_path = output_path_for(kind: kind, slug: entry[:slug], aspect_ratio: aspect_ratio)
           if ensure_only && File.exist?(out_path)
+            # Ensure DB paths/URLs are recorded even when file already exists
+            record_image(kind: kind, slug: entry[:slug], aspect_ratio: aspect_ratio, abs_path: out_path)
             results << { slug: entry[:slug], aspect_ratio: aspect_ratio, status: "present", path: out_path }
             next
           end
@@ -214,14 +216,52 @@ module Motifs
     def record_image(kind:, slug:, aspect_ratio:, abs_path:)
       rec = Motif.find_by(kind: kind.to_s.singularize, slug: slug, theme: theme)
       return unless rec
+
+      # Store public-relative path for local serving fallback
       public_path = abs_path.to_s.sub(Rails.root.join("public").to_s, "")
       if aspect_ratio.to_s == "1:1"
         rec.image_1x1_path = public_path
       elsif aspect_ratio.to_s == "16:9"
         rec.image_16x9_path = public_path
       end
+
+      # Upload to object storage in production (or when explicitly enabled) and persist CDN URL
+      if upload_enabled?
+        begin
+          if File.exist?(abs_path.to_s)
+            upload = Storage::ActiveStorageUploadService.call(
+              path: abs_path.to_s,
+              content_type: content_type_for_ext(File.extname(abs_path.to_s)),
+              filename: File.basename(abs_path.to_s)
+            )
+            if upload.success?
+              url = upload.value[:public_url]
+              if aspect_ratio.to_s == "1:1"
+                rec.image_1x1_url = url
+              elsif aspect_ratio.to_s == "16:9"
+                rec.image_16x9_url = url
+              end
+            end
+          end
+        rescue StandardError
+          # best-effort; keep local path fallback
+        end
+      end
+
       rec.save!
     rescue StandardError
+    end
+
+    def upload_enabled?
+      flag = ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase
+      [ "1", "true", "yes" ].include?(flag) || Rails.env.production?
+    end
+
+    def content_type_for_ext(ext)
+      case ext.to_s.downcase
+      when ".jpg", ".jpeg" then "image/jpeg"
+      else "image/png"
+      end
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_20_120002) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_21_001000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -47,6 +47,26 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_120002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kind", "window", "as_of"], name: "index_leaderboards_on_kind_and_window_and_as_of", unique: true
+  end
+
+  create_table "motifs", force: :cascade do |t|
+    t.string "kind", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.string "theme", default: "core", null: false
+    t.text "short_lore"
+    t.text "long_lore"
+    t.string "image_1x1_path"
+    t.string "image_16x9_path"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "image_1x1_url"
+    t.string "image_16x9_url"
+    t.index ["image_16x9_url"], name: "index_motifs_on_image_16x9_url"
+    t.index ["image_1x1_url"], name: "index_motifs_on_image_1x1_url"
+    t.index ["kind", "slug", "theme"], name: "index_motifs_on_kind_and_slug_and_theme", unique: true
+    t.index ["kind"], name: "index_motifs_on_kind"
+    t.index ["theme"], name: "index_motifs_on_theme"
   end
 
   create_table "notification_deliveries", force: :cascade do |t|

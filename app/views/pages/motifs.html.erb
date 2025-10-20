@@ -15,8 +15,8 @@
       <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <% @archetype_catalog.each do |item| %>
           <% slug = Motifs::Catalog.to_slug(item[:name]) %>
-          <% img_url = "/library/archetypes/core/#{slug}-1x1.jpg" %>
           <% rec = Motif.find_by(kind: 'archetype', theme: 'core', slug: slug) %>
+          <% img_url = rec&.image_1x1_url.presence || rec&.image_1x1_path.presence || "/library/archetypes/core/#{slug}-1x1.jpg" %>
           <li class="p-4">
             <div class="flex items-start justify-between gap-3">
               <div class="flex gap-4 items-start">
@@ -42,8 +42,8 @@
       <ul class="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <% @spirit_catalog.each do |item| %>
           <% slug = Motifs::Catalog.to_slug(item[:name]) %>
-          <% img_url = "/library/spirit_animals/core/#{slug}-1x1.jpg" %>
           <% rec = Motif.find_by(kind: 'spirit_animal', theme: 'core', slug: slug) %>
+          <% img_url = rec&.image_1x1_url.presence || rec&.image_1x1_path.presence || "/library/spirit_animals/core/#{slug}-1x1.jpg" %>
           <li class="p-4">
             <div class="flex items-start justify-between gap-3">
               <div class="flex gap-4 items-start">
