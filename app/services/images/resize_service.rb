@@ -8,7 +8,11 @@ module Images
       @width = width.to_i
       @height = height.to_i
       allowed = %w[contain fill cover]
-      @fit = allowed.include?(fit.to_s) ? fit.to_s : "cover"
+      fit_str = fit.to_s
+      unless allowed.include?(fit_str)
+        raise ArgumentError, "invalid fit: #{fit_str} (allowed: #{allowed.join(', ')})"
+      end
+      @fit = fit_str
     end
 
     def call

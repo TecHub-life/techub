@@ -216,6 +216,26 @@ Milestone — E2E Auth → Submit → Generate status
 - See `docs/user-journey.md` for the end-to-end flow and data ownership.
 - See `docs/submit-manual-inputs-workflow.md` for the manual inputs spec.
 
+PR 21 — AppSec: exec hardening + scanner tuning
+
+- Exec safety: keep array-form exec for ImageMagick and Node; capture stdout/stderr via `Open3` and log failures (DONE for resize/screenshots).
+- Input validation: whitelist `fit` values (contain/fill/cover) and raise on invalid; coerce numeric args; validate host as HTTP(S) URL (DONE; raise added for `fit`).
+- Brakeman tuning: add `config/brakeman.ignore` for two medium “Command Injection” false-positives with justification; keep job advisory in CI.
+- Weak advisories triage:
+  - MyProfilesController: ensure generated paths are derived from sanitized login; guard against traversal; document rationale or patch.
+  - PagesController: constrain `params[:path]` to known docs folder and allowed basenames; reject anything else.
+  - OgController: verify `allow_other_host` redirect is intentionally fed by trusted data or add domain allowlist.
+  - Settings view glob: ensure safe login usage or move lookup behind a helper that enforces safe patterns.
+- CodeQL: verify default branch has zero new alerts; document policy — new alerts block merges; legacy baseline allowed with suppressions where justified.
+- Tests: add unit tests for `fit` validation and failure logging paths.
+
+Definition of Done
+
+- CI: tests green; RuboCop/Prettier clean.
+- Brakeman: only intentional ignores remain; weak advisory decisions documented or fixed.
+- CodeQL: green on default branch; suppression comments link to this PR where applicable.
+- Docs: `docs/appsec-ops-overview.md` references this PR in “Roadmap and Gaps”; ignore policy and locations documented.
+
 ## Operational policies
 
 - Prompts never request on-image text or logos; traits are non-visual anchors only

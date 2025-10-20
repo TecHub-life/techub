@@ -117,10 +117,10 @@ class PagesController < ApplicationController
     @path = params[:path].to_s
     # Build a simple index of markdown files
     @docs_index = Dir[root.join("**", "*.md")].map { |p| p.delete_prefix(root.to_s + "/") }.sort
-    # Resolve the requested doc or default
-    rel = @path.presence || "marketing-overview.md"
+    # Resolve the requested doc or default strictly from index (no arbitrary paths)
+    rel = @path.presence_in(@docs_index) || "marketing-overview.md"
     target = root.join(rel)
-    if target.to_s.start_with?(root.to_s) && File.exist?(target) && File.file?(target)
+    if File.exist?(target) && File.file?(target)
       @doc_title = rel
       md = File.read(target)
       begin

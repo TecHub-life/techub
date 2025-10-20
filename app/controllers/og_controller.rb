@@ -13,8 +13,16 @@ class OgController < ApplicationController
     # Prefer recorded asset row
     asset = profile.profile_assets.find_by(kind: "og")
     if asset&.public_url.present?
-      response.headers["Cache-Control"] = cache_header
-      return redirect_to asset.public_url, allow_other_host: true
+      begin
+        url = URI.parse(asset.public_url.to_s)
+        allowed = ENV["ASSET_REDIRECT_ALLOWED_HOSTS"].to_s.split(/[,\s]+/).reject(&:blank?)
+        if url.is_a?(URI::HTTP) && url.host.present? && allowed.include?(url.host)
+          response.headers["Cache-Control"] = cache_header
+          return redirect_to url.to_s, allow_other_host: true
+        end
+      rescue URI::InvalidURIError
+        # fall through to local fallback
+      end
     end
 
     # Fallback to local filesystem under public/generated/<login>/

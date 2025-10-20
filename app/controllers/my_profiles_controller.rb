@@ -172,13 +172,16 @@ class MyProfilesController < ApplicationController
       public_url = up.value[:public_url]
 
       # Best-effort: copy to public/generated for local fallback
-      begin
-        dir = Rails.root.join("public", "generated", @profile.login)
-        FileUtils.mkdir_p(dir)
-        target = dir.join("#{kind}-custom#{File.extname(filename)}")
-        FileUtils.cp(file.path, target)
-      rescue StandardError
-        # ignore copy failures
+      safe_login = @profile.login.to_s.downcase.gsub(/[^a-z0-9\-]/, "")
+      if safe_login.present?
+        begin
+          dir = Rails.root.join("public", "generated", safe_login)
+          FileUtils.mkdir_p(dir)
+          target = dir.join("#{kind}-custom#{File.extname(filename)}")
+          FileUtils.cp(file.path, target)
+        rescue StandardError
+          # ignore copy failures
+        end
       end
 
       # Record/overwrite canonical asset row

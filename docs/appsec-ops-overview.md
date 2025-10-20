@@ -149,6 +149,7 @@ Responsibilities
   hostnames.
 - Add Trivy/Grype scanning step in CI pipeline.
 - Add Brakeman static analysis and `bundle audit` as advisory CI jobs.
+- PR 21 in `docs/roadmap.md`: tune scanners (Brakeman/CodeQL) and finalize exec/input validation.
 - Implement OTEL by default in production with Axiom OTLP endpoint.
 - Implement leaderboards storage and API, plus UI dropdown and date range controls.
 - Define PII policy for logs/traces/metrics; scrub or hash identifiers where not needed.
