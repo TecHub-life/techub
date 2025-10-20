@@ -1,10 +1,10 @@
 namespace :db do
   namespace :backup do
-    desc "Create a database backup to S3 (BACKUP_S3_BUCKET required)"
+    desc "Create a database backup to object storage (requires BACKUP_BUCKET or DO_SPACES_BUCKET)"
     task create: :environment do
       result = Backups::CreateService.call
       if result.success?
-        puts "Uploaded #{result.value[:keys].size} file(s) to s3://#{result.value[:bucket]}"
+        puts "Uploaded #{result.value[:keys].size} file(s) to bucket: #{result.value[:bucket]}"
         result.value[:keys].each { |k| puts " - #{k}" }
       else
         warn "Backup failed: #{result.error}"
@@ -35,6 +35,40 @@ namespace :db do
         puts "Restored group #{result.value[:restored_group]} with files: #{result.value[:files].join(", ")}"
       else
         warn "Restore failed: #{result.error}"
+        exit 1
+      end
+    end
+
+    desc "Doctor: print resolved backup configuration and attempt a non-destructive list"
+    task doctor: :environment do
+      result = Backups::DoctorService.call
+      data = result.metadata
+      puts "Backup Doctor"
+      puts "  bucket:  #{data[:bucket]}"
+      puts "  prefix:  #{data[:prefix]}"
+      puts "  region:  #{data[:region]}"
+      puts "  endpoint: #{data[:endpoint] || '(default)'}"
+      if result.success?
+        puts "  can_list: #{data[:can_list]} (sample_count=#{data[:sample_count]})"
+        puts "OK"
+      else
+        warn "  can_list: false"
+        warn "  error:    #{result.error.respond_to?(:message) ? result.error.message : result.error}"
+        exit 1
+      end
+    end
+
+    desc "Doctor (write): attempt a write+delete probe under the backup prefix (requires CONFIRM=YES)"
+    task doctor_write: :environment do
+      unless ENV["CONFIRM"].to_s.upcase == "YES"
+        warn "Set CONFIRM=YES to perform write+delete probe"
+        exit 1
+      end
+      result = Backups::WriteProbeService.call
+      if result.success?
+        puts "Write probe succeeded (wrote+deleted): s3://#{result.value[:bucket]}/#{result.value[:key]}"
+      else
+        warn "Write probe failed: #{result.error}"
         exit 1
       end
     end

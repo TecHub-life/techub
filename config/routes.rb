@@ -84,6 +84,8 @@ Rails.application.routes.draw do
         post :capture_leaderboard_og
         post :backups_create
         post :backups_prune
+        post :backups_doctor
+        post :backups_doctor_write
       end
     end
     # Profiles admin actions

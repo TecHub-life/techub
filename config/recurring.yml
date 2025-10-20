@@ -30,7 +30,7 @@ shared: &shared # Periodic queue maintenance
       - { kind: 'followers_gain_30d', window: '30d' }
     schedule: 'every day at 03:20'
 
-  # Database backups (requires BACKUP_S3_BUCKET env and IAM creds)
+  # Database backups (requires BACKUP_BUCKET or DO_SPACES_BUCKET env and IAM creds)
   db_backup_daily:
     class: Backups::CreateJob
     schedule: 'every day at 02:00'

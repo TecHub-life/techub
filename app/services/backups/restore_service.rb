@@ -2,9 +2,11 @@ require "aws-sdk-s3"
 
 module Backups
   class RestoreService < ApplicationService
-    def initialize(bucket: ENV["BACKUP_S3_BUCKET"], prefix: ENV["BACKUP_S3_PREFIX"] || "db_backups", group: nil, confirm: ENV["CONFIRM"])
-      @bucket = bucket
-      @prefix = prefix.to_s.gsub(%r{/*$}, "")
+    def initialize(bucket: nil, prefix: nil, group: nil, confirm: ENV["CONFIRM"])
+      creds = (Rails.application.credentials.dig(:do_spaces) rescue {}) || {}
+      resolved_prefix = prefix || ENV["BACKUP_PREFIX"] || ENV["BACKUP_S3_PREFIX"] || creds[:backup_prefix] || "db_backups"
+      @bucket = bucket || ENV["BACKUP_BUCKET"] || ENV["DO_SPACES_BACKUP_BUCKET"] || creds[:backup_bucket_name] || ENV["DO_SPACES_BUCKET"] || creds[:bucket_name]
+      @prefix = resolved_prefix.to_s.gsub(%r{/*$}, "")
       @group = group # timestamp string or 'latest'
       @confirm = confirm
     end
@@ -12,9 +14,9 @@ module Backups
     def call
       return failure("Restore is disabled; set ALLOW_DB_RESTORE=1") unless allowed?
       return failure("CONFIRM=YES required") unless @confirm.to_s.upcase == "YES"
-      return failure("BACKUP_S3_BUCKET not configured") if @bucket.to_s.strip.empty?
+      return failure("Backup bucket not configured") if @bucket.to_s.strip.empty?
 
-      client = Aws::S3::Client.new
+      client = s3_client
       base = File.join(@prefix, Rails.env) + "/"
 
       group = @group
@@ -70,6 +72,22 @@ module Backups
 
     def parse_ts(str)
       Time.strptime(str.to_s, "%Y%m%d-%H%M%S") rescue nil
+    end
+
+    def s3_client
+      creds = (Rails.application.credentials.dig(:do_spaces) rescue {}) || {}
+      endpoint = ENV["DO_SPACES_ENDPOINT"] || ENV["AWS_S3_ENDPOINT"] || creds[:endpoint]
+      region = ENV["DO_SPACES_REGION"] || ENV["AWS_REGION"] || creds[:region] || "us-east-1"
+      access_key = ENV["DO_SPACES_ACCESS_KEY_ID"] || ENV["AWS_ACCESS_KEY_ID"] || creds[:access_key_id]
+      secret_key = ENV["DO_SPACES_SECRET_ACCESS_KEY"] || ENV["AWS_SECRET_ACCESS_KEY"] || creds[:secret_access_key]
+
+      opts = { region: region }
+      opts[:endpoint] = endpoint if endpoint.present?
+      opts[:force_path_style] = true if endpoint.present?
+      if access_key.present? && secret_key.present?
+        opts[:credentials] = Aws::Credentials.new(access_key, secret_key)
+      end
+      Aws::S3::Client.new(opts)
     end
   end
 end
