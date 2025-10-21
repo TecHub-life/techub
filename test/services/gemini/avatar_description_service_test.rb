@@ -63,6 +63,7 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
+          AppSetting.set_bool(:ai_image_descriptions, true)
           result = Gemini::ImageDescriptionService.call(
             image_path: @avatar_path.to_s,
             prompt: "Give me a sentence."
@@ -74,6 +75,8 @@ module Gemini
           assert_equal "ai_studio", result.metadata[:provider]
           assert_equal "Optimistic open-source champion.", result.metadata.dig(:structured, "mood")
           refute result.metadata[:fallback_used], "fallback should not be used"
+        ensure
+          AppSetting.set_bool(:ai_image_descriptions, false)
         end
       end
 
@@ -129,12 +132,15 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
+          AppSetting.set_bool(:ai_image_descriptions, true)
           result = Gemini::ImageDescriptionService.call(image_path: @avatar_path.to_s)
 
           assert result.success?, "expected fallback to succeed"
           assert_match(/copper beard/, result.value)
           assert result.metadata[:fallback_used], "expected fallback flag in metadata"
           assert_equal "ai_studio", result.metadata[:provider]
+        ensure
+          AppSetting.set_bool(:ai_image_descriptions, false)
         end
       end
 
@@ -142,6 +148,7 @@ module Gemini
     end
 
     test "returns failure when image file is missing" do
+      AppSetting.set_bool(:ai_image_descriptions, true)
       result = Gemini::ImageDescriptionService.call(image_path: "tmp/missing-avatar.png")
 
       assert result.failure?, "expected failure when avatar file missing"
@@ -167,9 +174,12 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
+          AppSetting.set_bool(:ai_image_descriptions, true)
           result = Gemini::ImageDescriptionService.call(image_path: @avatar_path.to_s)
 
           assert result.failure?, "expected failure when description missing"
+        ensure
+          AppSetting.set_bool(:ai_image_descriptions, false)
         end
       end
 
@@ -214,6 +224,7 @@ module Gemini
         Gemini::Configuration.stub :provider, "vertex" do
           Gemini::Configuration.stub :project_id, "test-proj" do
             Gemini::Configuration.stub :location, "us-central1" do
+              AppSetting.set_bool(:ai_image_descriptions, true)
               result = Gemini::ImageDescriptionService.call(
                 image_path: @avatar_path.to_s,
                 prompt: "Summarize the avatar."
@@ -222,6 +233,8 @@ module Gemini
               assert result.success?
               assert_equal "vertex", result.metadata[:provider]
               assert_includes result.value, "developer in a denim jacket"
+            ensure
+              AppSetting.set_bool(:ai_image_descriptions, false)
             end
           end
         end
@@ -273,11 +286,14 @@ module Gemini
         ServiceResult.success(dummy_conn)
       end do
         Gemini::Configuration.stub :provider, "vertex" do
+          AppSetting.set_bool(:ai_image_descriptions, true)
           result = Gemini::ImageDescriptionService.call(image_path: @avatar_path.to_s, provider: "ai_studio")
 
           assert result.success?
           assert_equal [ "ai_studio" ], calls
           assert_equal "ai_studio", result.metadata[:provider]
+        ensure
+          AppSetting.set_bool(:ai_image_descriptions, false)
         end
       end
 

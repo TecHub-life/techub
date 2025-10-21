@@ -34,6 +34,7 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
+          AppSetting.set_bool(:ai_images, true)
           output_path = Rails.root.join("tmp", "generated-avatar.png")
           FileUtils.rm_f(output_path)
 
@@ -49,6 +50,8 @@ module Gemini
           assert_equal output_path.to_s, result.value[:output_path]
           assert File.exist?(output_path), "expected generated file to exist"
           assert_equal "png-bytes", File.binread(output_path)
+        ensure
+          AppSetting.set_bool(:ai_images, false)
         end
       end
 
@@ -72,8 +75,11 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
+          AppSetting.set_bool(:ai_images, true)
           result = Gemini::ImageGenerationService.call(prompt: "Tech portrait", aspect_ratio: "1:1")
           assert result.failure?
+        ensure
+          AppSetting.set_bool(:ai_images, false)
         end
       end
 
@@ -111,11 +117,14 @@ module Gemini
         Gemini::Configuration.stub :provider, "vertex" do
           Gemini::Configuration.stub :project_id, "test-proj" do
             Gemini::Configuration.stub :location, "us-central1" do
+              AppSetting.set_bool(:ai_images, true)
               result = Gemini::ImageGenerationService.call(prompt: "Neon TecHub landscape", aspect_ratio: "3:1")
 
               assert result.success?
               assert_equal "vertex", result.metadata[:provider]
               assert_equal SAMPLE_IMAGE_BASE64, result.value[:data]
+            ensure
+              AppSetting.set_bool(:ai_images, false)
             end
           end
         end
@@ -157,11 +166,14 @@ module Gemini
         ServiceResult.success(dummy_conn)
       end do
         Gemini::Configuration.stub :provider, "vertex" do
+          AppSetting.set_bool(:ai_images, true)
           result = Gemini::ImageGenerationService.call(prompt: "Override prompt", aspect_ratio: "1:1", provider: "ai_studio")
 
           assert result.success?
           assert_equal [ "ai_studio" ], calls
           assert_equal "ai_studio", result.metadata[:provider]
+        ensure
+          AppSetting.set_bool(:ai_images, false)
         end
       end
 
@@ -187,8 +199,11 @@ module Gemini
       ENV["GEMINI_INCLUDE_ASPECT_HINT"] = "1"
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
+          AppSetting.set_bool(:ai_images, true)
           result = Gemini::ImageGenerationService.call(prompt: "Landscape", aspect_ratio: "16:9")
           assert result.success?
+        ensure
+          AppSetting.set_bool(:ai_images, false)
         end
       end
       ENV["GEMINI_INCLUDE_ASPECT_HINT"] = orig
