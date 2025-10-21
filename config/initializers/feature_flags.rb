@@ -9,9 +9,9 @@ module FeatureFlags
     if defined?(AppSetting)
       case k
       when :ai_images
-        return AppSetting.get_bool(:ai_images, default: false)
+        return AppSetting.get_bool(:ai_images, default: Rails.env.test?)
       when :ai_image_descriptions
-        return AppSetting.get_bool(:ai_image_descriptions, default: false)
+        return AppSetting.get_bool(:ai_image_descriptions, default: Rails.env.test?)
       end
     end
 
