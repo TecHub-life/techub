@@ -48,6 +48,21 @@ module Gemini
     end
 
     def call
+      # If image descriptions are taped off, synthesize directly from profile context
+      if !FeatureFlags.enabled?(:ai_image_descriptions) && profile_context_present?
+        description, structured = synthesize_from_profile(profile_context)
+        prompts = build_prompts(description, structured)
+        if ENV["AVATAR_FUN_ALTS"].to_s.downcase.in?([ "1", "true", "yes" ]) || Rails.env.production?
+          prompts = add_fun_style_alternates(prompts, description, structured)
+        end
+        return success({
+          avatar_description: description,
+          structured_description: structured,
+          image_prompt: prompts["1x1"],
+          image_prompts: prompts
+        }, metadata: { theme: prompt_theme, style_profile: style_profile, fallback_profile_used: true })
+      end
+
       description_result = description_service.call(
         avatar_path: avatar_path,
         provider: provider_override

@@ -267,7 +267,7 @@
         </div>
       </div>
 
-      <% uploads_enabled = ActiveModel::Type::Boolean.new.cast(ENV["ENABLE_UPLOADS"] || "true") %>
+      <% uploads_enabled = (defined?(AppSetting) ? AppSetting.get_bool(:user_uploads_enabled, default: true) : ActiveModel::Type::Boolean.new.cast(ENV["ENABLE_UPLOADS"] || "true")) %>
       <div class="grid gap-6 md:grid-cols-3">
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h3 class="font-medium text-slate-900 dark:text-slate-100 mb-2">Card</h3>

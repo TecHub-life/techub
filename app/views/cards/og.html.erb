@@ -15,6 +15,9 @@
     <% file = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first || Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
     <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
   <% end %>
+  <% if bg_url.nil? %>
+    <% bg_url = '/default-card.jpg' %>
+  <% end %>
 <% elsif choice == 'default' %>
   <% bg_url = '/default-card.jpg' %>
 <% end %>

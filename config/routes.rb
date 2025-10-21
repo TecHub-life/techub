@@ -41,6 +41,8 @@ Rails.application.routes.draw do
   get "/profiles/:username/status", to: "profiles#status", defaults: { format: :json }
 
   # Card preview routes (for screenshots)
+  # Leaderboard OG (static) must be defined BEFORE dynamic :login routes to avoid clashes
+  get "/cards/leaderboard/og", to: "cards#leaderboard_og", as: :leaderboard_og
   get "/cards/:login/og", to: "cards#og", as: :card_og
   get "/cards/:login/card", to: "cards#card", as: :card_preview
   get "/cards/:login/simple", to: "cards#simple", as: :card_simple
@@ -59,7 +61,7 @@ Rails.application.routes.draw do
   get "/cards/:login/youtube_cover_2560x1440", to: "cards#youtube_cover_2560x1440"
   # Explicit OG name variant
   get "/cards/:login/og_1200x630", to: "cards#og_1200x630"
-  get "/cards/leaderboard/og", to: "cards#leaderboard_og", as: :leaderboard_og
+
 
   # Ownership (My Profiles)
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
@@ -100,6 +102,8 @@ Rails.application.routes.draw do
         post :backups_prune
         post :backups_doctor
         post :backups_doctor_write
+        post :update_ai_caps
+        post :update_access
       end
     end
     # Profiles admin actions

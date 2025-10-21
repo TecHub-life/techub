@@ -160,6 +160,9 @@ module Screenshots
     end
 
     def upload_enabled?
+      if defined?(AppSetting)
+        return AppSetting.get_bool(:generated_image_upload, default: Rails.env.production?)
+      end
       flag = ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase
       [ "1", "true", "yes" ].include?(flag) || Rails.env.production?
     end

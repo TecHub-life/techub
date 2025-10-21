@@ -20,5 +20,3 @@ class CreateMotifs < ActiveRecord::Migration[8.0]
     add_index :motifs, :theme
   end
 end
-
-

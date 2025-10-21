@@ -27,6 +27,99 @@
     </div>
   <% end %>
 
+  <!-- AI Capabilities -->
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">AI Capabilities</h2>
+    <div class="text-sm text-slate-600 dark:text-slate-300 mb-3">
+      Provider: <code><%= @ai_caps[:provider] || 'n/a' %></code>
+      <span class="mx-2">·</span>
+      Model: <code><%= @ai_caps[:model] || 'n/a' %></code>
+    </div>
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <% [
+        ['Image Generation', :image_generation],
+        ['Image Descriptions', :image_descriptions],
+        ['Text Output', :text_output],
+        ['Structured Output', :structured_output]
+      ].each do |label, key| %>
+        <% on = @ai_caps[key] %>
+        <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+          <div class="flex items-center justify-between">
+            <div class="text-slate-800 dark:text-slate-200 text-sm font-medium"><%= label %></div>
+            <% if on %>
+              <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">On</span>
+            <% else %>
+              <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Off</span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Image modules default Off to control costs with Gemini 2.5 Flash. Text modules depend on valid Gemini config.</p>
+
+    <div class="mt-4">
+      <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Toggle Image Modules</h3>
+      <form action="<%= update_ai_caps_ops_admin_index_path %>" method="post" class="space-y-2">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <label class="inline-flex items-center gap-2 text-sm">
+          <input type="checkbox" name="ai_images" value="1" <%= 'checked' if @ai_caps[:image_generation] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+          <span class="text-slate-700 dark:text-slate-300">Enable AI Image Generation</span>
+        </label>
+        <br>
+        <label class="inline-flex items-center gap-2 text-sm">
+          <input type="checkbox" name="ai_image_descriptions" value="1" <%= 'checked' if @ai_caps[:image_descriptions] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+          <span class="text-slate-700 dark:text-slate-300">Enable AI Image Descriptions</span>
+        </label>
+        <div>
+          <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Pipeline Manifest -->
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Pipeline</h2>
+    <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Visibility of stages, gates, and outputs. Edit code in <code>Profiles::GeneratePipelineService</code>; this list helps you see everything in one place.</p>
+    <div class="grid gap-2 sm:grid-cols-2">
+      <% @pipeline_manifest.each do |st| %>
+        <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+          <div class="flex items-center justify-between">
+            <div class="text-slate-800 dark:text-slate-200 text-sm font-medium"><%= st[:label] %></div>
+            <% if st[:enabled] %>
+              <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">On</span>
+            <% else %>
+              <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Off</span>
+            <% end %>
+          </div>
+          <div class="mt-1 text-xs text-slate-600 dark:text-slate-400"><%= st[:description] %></div>
+          <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Produces: <%= Array(st[:produces]).join(', ') %></div>
+          <% if st[:gated_by].present? %>
+            <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Gated by: <code><%= st[:gated_by] %></code></div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Access Control -->
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Access Control</h2>
+    <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">Gate sign-in to approved GitHub accounts until launch. Toggle open access to let anyone sign in. Settings persist in the database.</p>
+    <form action="<%= update_access_ops_admin_index_path %>" method="post" class="space-y-3">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="open_access" name="open_access" value="1" <%= 'checked' if @open_access %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+        <label for="open_access" class="text-slate-800 dark:text-slate-200">Open access (allow all accounts)</label>
+      </div>
+      <div>
+        <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Allowed GitHub logins (comma or space separated)</label>
+        <input type="text" name="allowed_logins" value="<%= h @allowed_logins %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="loftwah, jrh89">
+      </div>
+      <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Access Settings</button>
+    </form>
+  </div>
+
   <div class="grid gap-4 sm:grid-cols-2">
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Database Backups</div>

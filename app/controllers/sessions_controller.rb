@@ -46,6 +46,18 @@ class SessionsController < ApplicationController
     end
 
     user = upsert_result.value
+    # Enforce access policy (whitelist until open)
+    begin
+      Access::Policy.seed_defaults!
+    rescue StandardError
+      # best-effort; ignore seeding errors
+    end
+    unless Access::Policy.allowed?(user.login)
+      reset_session
+      msg = "We're not open yet. Only approved accounts can sign in (ask in Ops)."
+      return redirect_to root_path, alert: msg
+    end
+
     session[:current_user_id] = user.id
     redirect_to root_path, notice: "Signed in as #{user.login}"
   end

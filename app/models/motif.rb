@@ -4,5 +4,3 @@ class Motif < ApplicationRecord
   validates :kind, inclusion: { in: KINDS }
   validates :name, :slug, :theme, presence: true
 end
-
-

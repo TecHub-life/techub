@@ -37,6 +37,13 @@ module Gemini
     end
 
     def call
+      unless FeatureFlags.enabled?(:ai_image_descriptions)
+        return failure(
+          StandardError.new("image_descriptions_disabled"),
+          metadata: { reason: "AI avatar image descriptions are disabled to control costs; prompts will use profile context instead." }
+        )
+      end
+
       return failure(StandardError.new("Avatar path is blank")) if avatar_path.blank?
 
       resolved_path = resolve_path(avatar_path)
