@@ -1,6 +1,6 @@
 <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
 <% card_prefs = @profile.profile_card %>
-<% choice = card_prefs&.bg_choice_card || 'ai' %>
+<% choice = card_prefs&.bg_choice_card || 'default' %>
 <% color_hex = (card_prefs&.bg_color_card || '#0f172a') %>
 
 <% # Resolve image based on choice: 'ai' prefers 3x1 → card → 16x9; 'default' uses /default-card.jpg; 'color' none %>
@@ -21,10 +21,10 @@
     <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
   <% end %>
   <% if bg_url.nil? %>
-    <% bg_url = '/default-card.jpg' %>
+    <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :card) %>
   <% end %>
 <% elsif choice == 'default' %>
-  <% bg_url = '/default-card.jpg' %>
+  <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :card) %>
 <% end %>
 <div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-[216px_504px]">
   <div class="relative row-start-1 h-[216px] overflow-hidden z-10">

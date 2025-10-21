@@ -1,4 +1,21 @@
 module CardsHelper
+  # Pick a deterministic supporting-art image from app/assets based on login and desired aspect.
+  # aspect: :card (16x9), :og (16x9), :simple (16x9), :banner (3x1), :square (1x1)
+  def supporting_art_url_for(login:, aspect: :og)
+    base = Rails.root.join("app", "assets", "images")
+    # For now, re-use 1x1 library for all variants; pipeline scales/crops in templates.
+    dir = base.join("supporting-art-1x1")
+    files = Dir[dir.join("*.{jpg,jpeg,png}").to_s]
+    return asset_path("default-card.jpg") if files.empty?
+    idx = login.to_s.hash % files.length
+    rel = Pathname.new(files[idx]).relative_path_from(base).to_s
+    asset_path(rel)
+  rescue StandardError
+    asset_path("default-card.jpg")
+  end
+end
+
+module CardsHelper
   # Build inline styles for background <img> based on normalized crop/zoom values.
   # fx/fy are floats in [0,1]; zoom is a float where 1.0 means no zoom.
   def bg_style_from(fx:, fy:, zoom:)
