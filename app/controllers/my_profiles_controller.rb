@@ -42,12 +42,12 @@ class MyProfilesController < ApplicationController
     puts "Session user ID: #{session[:current_user_id]}"
     puts "Request path: #{request.path}"
     puts "Request method: #{request.method}"
-    
+
     # @profile loaded by before_action
     puts "@profile after before_action: #{@profile&.login || 'NIL'}"
     puts "@profile ID: #{@profile&.id || 'NIL'}"
     puts "@profile class: #{@profile.class.name if @profile.present?}"
-    
+
     if @profile.blank?
       puts "🚨 ERROR: @profile is blank! This means the profile lookup failed."
       puts "Available profiles for user #{current_user&.id}:"
@@ -58,9 +58,9 @@ class MyProfilesController < ApplicationController
       end
       return redirect_to my_profiles_path, alert: "Profile not found - DEBUG: Check Rails logs"
     end
-    
+
     puts "✅ Profile loaded successfully: #{@profile.login}"
-    
+
     assets = @profile.profile_assets.where(kind: %w[og card simple]).index_by(&:kind)
     @asset_og = assets["og"]
     @asset_card = assets["card"]
