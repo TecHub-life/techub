@@ -6,12 +6,12 @@ module CardsHelper
     # For now, re-use 1x1 library for all variants; pipeline scales/crops in templates.
     dir = base.join("supporting-art-1x1")
     files = Dir[dir.join("*.{jpg,jpeg,png}").to_s]
-    return asset_path("default-card.jpg") if files.empty?
+    return asset_path("techub-hero.jpg") if files.empty?
     idx = login.to_s.hash % files.length
     rel = Pathname.new(files[idx]).relative_path_from(base).to_s
     asset_path(rel)
   rescue StandardError
-    asset_path("default-card.jpg")
+    asset_path("techub-hero.jpg")
   end
 end
 

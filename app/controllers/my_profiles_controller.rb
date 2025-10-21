@@ -36,7 +36,31 @@ class MyProfilesController < ApplicationController
   end
 
   def settings
+    puts "=== 🚨 CONTROLLER DEBUG: Settings action called ==="
+    puts "Params username: #{params[:username]}"
+    puts "Current user: #{current_user&.id}"
+    puts "Session user ID: #{session[:current_user_id]}"
+    puts "Request path: #{request.path}"
+    puts "Request method: #{request.method}"
+    
     # @profile loaded by before_action
+    puts "@profile after before_action: #{@profile&.login || 'NIL'}"
+    puts "@profile ID: #{@profile&.id || 'NIL'}"
+    puts "@profile class: #{@profile.class.name if @profile.present?}"
+    
+    if @profile.blank?
+      puts "🚨 ERROR: @profile is blank! This means the profile lookup failed."
+      puts "Available profiles for user #{current_user&.id}:"
+      if current_user.present?
+        current_user.profiles.each do |p|
+          puts "  - #{p.login} (ID: #{p.id})"
+        end
+      end
+      return redirect_to my_profiles_path, alert: "Profile not found - DEBUG: Check Rails logs"
+    end
+    
+    puts "✅ Profile loaded successfully: #{@profile.login}"
+    
     assets = @profile.profile_assets.where(kind: %w[og card simple]).index_by(&:kind)
     @asset_og = assets["og"]
     @asset_card = assets["card"]
@@ -60,6 +84,7 @@ class MyProfilesController < ApplicationController
       { kind: "youtube_cover_2560x1440", label: "YouTube Cover 2560×1440", aspect: "16/9", hint: "Channel art (mind safe area)" },
       { kind: "og_1200x630", label: "OpenGraph 1200×630", aspect: "1200/630", hint: "Link preview image" }
     ]
+    puts "✅ Settings action completed successfully"
   end
 
   def update_settings

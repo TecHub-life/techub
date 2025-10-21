@@ -3,36 +3,42 @@
   <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
     <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Your AI Asset Library</h2>
     <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">Pick a previously generated asset as the active image.</p>
-  <% safe_login = @profile.login.to_s.downcase.gsub(/[^a-z0-9\-]/, "") %>
-  <% base = Rails.root.join('public','generated', safe_login) %>
-  <% gallery = Dir.exist?(base) ? Dir[base.join('*.{jpg,jpeg,png}').to_s] : [] %>
-  <% if gallery.any? %>
-    <div class="grid gap-3 sm:grid-cols-3">
-      <% gallery.first(12).each do |path| %>
-        <% fname = File.basename(path) %>
-        <div class="rounded border border-slate-200 p-2 dark:border-slate-700">
-          <img src="<%= "/generated/#{safe_login}/#{fname}" %>" alt="<%= fname %>" class="h-24 w-full object-cover rounded">
-          <div class="mt-2 flex items-center justify-between gap-2 text-xs">
-            <span class="truncate" title="<%= fname %>"><%= fname %></span>
-            <form action="<%= select_my_profile_asset_path(username: @profile.login) %>" method="post" class="flex items-center gap-1">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <input type="hidden" name="local_path" value="<%= path %>">
-              <select name="kind" class="rounded border border-slate-300 bg-white px-1 py-0.5 dark:border-slate-700 dark:bg-slate-900">
-                <option value="og">OG</option>
-                <option value="card">Card</option>
-                <option value="simple">Simple</option>
-                <option value="avatar_3x1">Banner 3×1</option>
-                <option value="avatar_16x9">16×9</option>
-                <option value="avatar_1x1">1×1</option>
-              </select>
-              <button class="rounded border px-2 py-0.5 dark:border-slate-700">Use</button>
-            </form>
-          </div>
+
+    <% if @profile.present? %>
+      <% safe_login = @profile.login.to_s.downcase.gsub(/[^a-z0-9\-]/, "") %>
+      <% base = Rails.root.join('public','generated', safe_login) %>
+      <% gallery = Dir.exist?(base) ? Dir[base.join('*.{jpg,jpeg,png}').to_s] : [] %>
+
+      <% if gallery.any? %>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <% gallery.first(12).each do |path| %>
+            <% fname = File.basename(path) %>
+            <div class="rounded border border-slate-200 p-2 dark:border-slate-700">
+              <img src="<%= "/generated/#{safe_login}/#{fname}" %>" alt="<%= fname %>" class="h-24 w-full object-cover rounded">
+              <div class="mt-2 flex items-center justify-between gap-2 text-xs">
+                <span class="truncate" title="<%= fname %>"><%= fname %></span>
+                <form action="<%= select_my_profile_asset_path(username: @profile.login) %>" method="post" class="flex items-center gap-1">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <input type="hidden" name="local_path" value="<%= path %>">
+                  <select name="kind" class="rounded border border-slate-300 bg-white px-1 py-0.5 dark:border-slate-700 dark:bg-slate-900">
+                    <option value="og">OG</option>
+                    <option value="card">Card</option>
+                    <option value="simple">Simple</option>
+                    <option value="avatar_3x1">Banner 3×1</option>
+                    <option value="avatar_16x9">16×9</option>
+                    <option value="avatar_1x1">1×1</option>
+                  </select>
+                  <button class="rounded border px-2 py-0.5 dark:border-slate-700">Use</button>
+                </form>
+              </div>
+            </div>
+          <% end %>
         </div>
+      <% else %>
+        <p class="text-sm text-slate-600 dark:text-slate-300">No generated assets yet. Regenerate AI artwork to add items.</p>
       <% end %>
-    </div>
-  <% else %>
-    <p class="text-sm text-slate-600 dark:text-slate-300">No generated assets yet. Regenerate AI artwork to add items.</p>
-  <% end %>
+    <% else %>
+      <p class="text-sm text-slate-600 dark:text-slate-300">Profile not available.</p>
+    <% end %>
   </div>
 </div>

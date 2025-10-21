@@ -56,10 +56,10 @@
       </div>
     <% end %>
 
-    <%# Cards Grid Layout (mobile: 1 col, tablet: 2 col, desktop+: 3 col with main spanning) %>
-    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-      <%# Main Trading Card - Spans full width on sm+/xl+ %>
-      <div class="sm:col-span-2 xl:col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
+    <%# Cards Grid Layout - Responsive: 1 col mobile, 2 col tablet, 3 col desktop, 4 col xl %>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <%# Main Trading Card - Responsive sizing %>
+      <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
         <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <div class="flex items-center gap-2">
             <svg class="h-4 w-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
@@ -76,11 +76,11 @@
           <% end %>
         </div>
         <% if card_img.present? %>
-          <div class="aspect-[3/2] overflow-hidden">
-            <img src="<%= card_img %>" alt="Main trading card for <%= profile.display_name %>" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900">
+          <div class="w-full" style="aspect-ratio: 16/9;">
+            <img src="<%= card_img %>" alt="Main trading card" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
           </div>
         <% else %>
-          <div class="aspect-[3/2] flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800">
+          <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: 16/9;">
             <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
@@ -89,7 +89,7 @@
         <% end %>
       </div>
 
-      <%# OpenGraph Image - Takes 1 column %>
+      <%# OpenGraph Image %>
       <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
         <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <div class="flex items-center gap-2">
@@ -107,11 +107,11 @@
           <% end %>
         </div>
         <% if og_img.present? %>
-          <div class="aspect-[9/16] overflow-hidden">
-            <img src="<%= og_img %>" alt="OpenGraph image for <%= profile.display_name %>" class="w-full h-full object-cover bg-slate-100 dark:bg-slate-900" loading="lazy">
+          <div class="w-full" style="aspect-ratio: 1200/630;">
+            <img src="<%= og_img %>" alt="OG Image" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
           </div>
         <% else %>
-          <div class="aspect-[9/16] flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800">
+          <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: 1200/630;">
             <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
@@ -120,7 +120,7 @@
         <% end %>
       </div>
 
-      <%# Simple Card - Takes 1 column %>
+      <%# Simple Card - Responsive layout %>
       <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
         <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <div class="flex items-center gap-2">
@@ -138,11 +138,11 @@
           <% end %>
         </div>
         <% if simple_img.present? %>
-          <div class="aspect-[9/16] overflow-hidden">
-            <img src="<%= simple_img %>" alt="Simple card for <%= profile.display_name %>" class="w-full h-full object-cover bg-slate-100 dark:bg-slate-900" loading="lazy">
+          <div class="w-full" style="aspect-ratio: 16/9;">
+            <img src="<%= simple_img %>" alt="Simple card" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
           </div>
         <% else %>
-          <div class="aspect-[9/16] flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800">
+          <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: 16/9;">
             <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
