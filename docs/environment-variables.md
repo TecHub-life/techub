@@ -91,9 +91,7 @@ Build/Deploy/Dev convenience (env is fine)
   - Refs: Dockerfile:62, docs/image-optimization.md, app/services/images/optimize_service.rb:61.
 - Generated image upload (legacy) `GENERATED_IMAGE_UPLOAD`
   - Now superseded by `AppSetting[:generated_image_upload]`; env kept as fallback only.
-- Motifs bootstrap: `MOTIFS_THEME`, `MOTIFS_BOOTSTRAP`, `MOTIFS_BOOTSTRAP_IMAGES`
-  - Non-critical boot helper. Consider moving to a rake task instead of initializer.
-  - Refs: config/initializers/motifs_bootstrap.rb:7.
+- (Removed) Motifs bootstrap env: these were tied to motif generators that no longer exist.
 - Rake/script helpers: `UPLOAD`, `SMOKE_LOGIN`
   - Limited to task context; safe to leave in env for ad‑hoc runs.
 
@@ -106,8 +104,6 @@ Build/Deploy/Dev convenience (env is fine)
 - Next PR
   - Migrate `SUBMISSION_MANUAL_INPUTS_ENABLED` and `REQUIRE_PROFILE_ELIGIBILITY` to DB toggles with
     Ops UI.
-  - Replace `MOTIFS_*` initializer with a rake task (`rake motifs:ensure`) and remove the boot‑time
-    env reads.
   - Optionally move `IMAGE_OPT_*` to AppSetting if you want runtime tuning in Ops.
 
 ## TL;DR

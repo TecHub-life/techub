@@ -1,8 +1,9 @@
 ### Unused/Obsolete Code Candidates
 
-- Motifs generation stack (mark for removal):
-  - `app/services/motifs/generate_library_service.rb`
-  - `app/services/motifs/generate_lore_service.rb`
-  - `app/jobs/motifs/ensure_job.rb`
-- Verify call sites before deletion; current references are limited to the motifs job and internal
-  service calls. No routes or schedules auto-run these in production.
+Currently none. The previous motif generators and job were removed:
+
+- app/services/motifs/generate_library_service.rb (deleted)
+- app/services/motifs/generate_lore_service.rb (deleted)
+- app/jobs/motifs/ensure_job.rb (deleted)
+
+Re-run periodic audits after major refactors.
