@@ -2,11 +2,11 @@ require "test_helper"
 require "securerandom"
 
 module Gemini
-  class AvatarDescriptionServiceTest < ActiveSupport::TestCase
+  class ImageDescriptionServiceTest < ActiveSupport::TestCase
     SAMPLE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==".freeze
 
     setup do
-      unique = "avatar-description-test-#{Process.pid}-#{SecureRandom.hex(6)}.png"
+      unique = "image-description-test-#{Process.pid}-#{SecureRandom.hex(6)}.png"
       @avatar_path = Rails.root.join("tmp", unique)
       FileUtils.mkdir_p(@avatar_path.dirname)
       File.binwrite(@avatar_path, Base64.decode64(SAMPLE_PNG_BASE64))
@@ -21,7 +21,7 @@ module Gemini
         stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |env|
           assert_equal "application/json", env.request_headers["Content-Type"]
           body = JSON.parse(env.body)
-          assert_equal Gemini::AvatarDescriptionService::SYSTEM_PROMPT, body.dig("systemInstruction", "parts", 0, "text")
+          assert_equal Gemini::ImageDescriptionService::SYSTEM_PROMPT, body.dig("systemInstruction", "parts", 0, "text")
           assert_equal "application/json", body.dig("generationConfig", "responseMimeType")
           assert body.dig("generationConfig", "responseSchema").present?, "expected response schema"
           parts = body.fetch("contents").first.fetch("parts")
@@ -63,8 +63,8 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
-          result = Gemini::AvatarDescriptionService.call(
-            avatar_path: @avatar_path.to_s,
+          result = Gemini::ImageDescriptionService.call(
+            image_path: @avatar_path.to_s,
             prompt: "Give me a sentence."
           )
 
@@ -129,7 +129,7 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
-          result = Gemini::AvatarDescriptionService.call(avatar_path: @avatar_path.to_s)
+          result = Gemini::ImageDescriptionService.call(image_path: @avatar_path.to_s)
 
           assert result.success?, "expected fallback to succeed"
           assert_match(/copper beard/, result.value)
@@ -142,7 +142,7 @@ module Gemini
     end
 
     test "returns failure when image file is missing" do
-      result = Gemini::AvatarDescriptionService.call(avatar_path: "tmp/missing-avatar.png")
+      result = Gemini::ImageDescriptionService.call(image_path: "tmp/missing-avatar.png")
 
       assert result.failure?, "expected failure when avatar file missing"
       assert_match(/not found/, result.error.message)
@@ -167,7 +167,7 @@ module Gemini
 
       Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
         Gemini::Configuration.stub :provider, "ai_studio" do
-          result = Gemini::AvatarDescriptionService.call(avatar_path: @avatar_path.to_s)
+          result = Gemini::ImageDescriptionService.call(image_path: @avatar_path.to_s)
 
           assert result.failure?, "expected failure when description missing"
         end
@@ -214,8 +214,8 @@ module Gemini
         Gemini::Configuration.stub :provider, "vertex" do
           Gemini::Configuration.stub :project_id, "test-proj" do
             Gemini::Configuration.stub :location, "us-central1" do
-              result = Gemini::AvatarDescriptionService.call(
-                avatar_path: @avatar_path.to_s,
+              result = Gemini::ImageDescriptionService.call(
+                image_path: @avatar_path.to_s,
                 prompt: "Summarize the avatar."
               )
 
@@ -273,7 +273,7 @@ module Gemini
         ServiceResult.success(dummy_conn)
       end do
         Gemini::Configuration.stub :provider, "vertex" do
-          result = Gemini::AvatarDescriptionService.call(avatar_path: @avatar_path.to_s, provider: "ai_studio")
+          result = Gemini::ImageDescriptionService.call(image_path: @avatar_path.to_s, provider: "ai_studio")
 
           assert result.success?
           assert_equal [ "ai_studio" ], calls

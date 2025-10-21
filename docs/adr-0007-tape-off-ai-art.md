@@ -12,7 +12,7 @@ Decision:
 - Add feature flags to disable AI image generation and avatar image descriptions while keeping the
   codepaths and public interfaces intact.
   - `GEMINI_AI_IMAGES_ENABLED` (default: off) — gates `Gemini::ImageGenerationService`.
-  - `GEMINI_IMAGE_DESCRIPTIONS_ENABLED` (default: off) — gates `Gemini::AvatarDescriptionService`.
+  - `GEMINI_IMAGE_DESCRIPTIONS_ENABLED` (default: off) — gates `Gemini::ImageDescriptionService`.
 - When disabled, the services immediately return a failure result with a descriptive reason in
   metadata. Upstream callers already degrade gracefully:
   - `Profiles::GeneratePipelineService` marks the run partial and continues with screenshots.

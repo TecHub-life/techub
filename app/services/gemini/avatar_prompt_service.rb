@@ -33,7 +33,7 @@ module Gemini
       avatar_path:,
       prompt_theme: "TecHub",
       style_profile: DEFAULT_STYLE_PROFILE,
-      description_service: Gemini::AvatarDescriptionService,
+      description_service: Gemini::ImageDescriptionService,
       provider: nil,
       profile_context: nil, # optional: { name:, summary:, languages:[], top_repositories:[], organizations:[] }
       include_profile_traits: true
@@ -64,7 +64,7 @@ module Gemini
       end
 
       description_result = description_service.call(
-        avatar_path: avatar_path,
+        image_path: avatar_path,
         provider: provider_override
       )
 

@@ -16,7 +16,7 @@ module Gemini
         metadata: { provider: "ai_studio", structured: structured }
       )
 
-      Gemini::AvatarDescriptionService.stub :call, description_result do
+      Gemini::ImageDescriptionService.stub :call, description_result do
         result = Gemini::AvatarPromptService.call(avatar_path: "public/avatars/demo.png")
 
         assert result.success?
@@ -48,7 +48,7 @@ module Gemini
     test "bubbles up description failures" do
       failure = ServiceResult.failure(StandardError.new("nope"))
 
-      Gemini::AvatarDescriptionService.stub :call, failure do
+      Gemini::ImageDescriptionService.stub :call, failure do
         result = Gemini::AvatarPromptService.call(avatar_path: "public/avatars/demo.png")
 
         assert result.failure?
@@ -58,7 +58,7 @@ module Gemini
 
     test "passes provider override to description service" do
       calls = []
-      Gemini::AvatarDescriptionService.stub :call, ->(**kwargs) do
+      Gemini::ImageDescriptionService.stub :call, ->(**kwargs) do
         calls << kwargs
         ServiceResult.failure(StandardError.new("forced stop"))
       end do

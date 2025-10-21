@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require_relative "../config/environment"
+
+path = ARGV[0]
+abort("usage: bin/image_description <path>") unless path && !path.strip.empty?
+
+result = Gemini::ImageDescriptionService.call(image_path: path)
+if result.success?
+  puts result.value
+  if (structured = result.metadata && result.metadata[:structured])
+    warn "structured: #{structured.to_json}"
+  end
+else
+  warn "error: #{result.error&.message}"
+  warn "metadata: #{result.metadata.inspect}"
+  exit 1
+end
+
+
