@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+login="${1:-loftwah}"
+host="${APP_HOST:-http://127.0.0.1:3000}"
+
+exec bundle exec rake "profiles:pipeline[${login},${host}]"
+
+

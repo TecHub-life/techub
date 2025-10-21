@@ -69,6 +69,41 @@ module Ops
 
       # GitHub App installation diagnostics for ops panel (read-only)
       @configured_installation_id = Github::Configuration.installation_id
+
+      # Access settings
+      @open_access = AppSetting.get_bool(:open_access, default: false)
+      @allowed_logins = Array(AppSetting.get_json(:allowed_logins, default: Access::Policy::DEFAULT_ALLOWED)).map { |l| l.to_s.downcase }.uniq.join(", ")
+
+      # AI capabilities state (for visibility)
+      begin
+        Gemini::Configuration.validate!
+        model_ok = true
+      rescue StandardError
+        model_ok = false
+      end
+      @ai_caps = {
+        image_generation: FeatureFlags.enabled?(:ai_images),
+        image_descriptions: FeatureFlags.enabled?(:ai_image_descriptions),
+        text_output: model_ok,            # Gemini text endpoint available
+        structured_output: model_ok,      # Structured JSON via response schema
+        provider: (Gemini::Configuration.provider rescue nil),
+        model: (Gemini::Configuration.model rescue nil)
+      }
+
+      # Pipeline visibility (read-only manifest)
+      @pipeline_manifest = if defined?(Profiles::PipelineManifest)
+        Profiles::PipelineManifest.evaluated
+      else
+        []
+      end
+    end
+
+    def update_ai_caps
+      AppSetting.set_bool(:ai_images, ActiveModel::Type::Boolean.new.cast(params[:ai_images]))
+      AppSetting.set_bool(:ai_image_descriptions, ActiveModel::Type::Boolean.new.cast(params[:ai_image_descriptions]))
+      redirect_to ops_admin_path, notice: "AI capability flags updated"
+    rescue StandardError => e
+      redirect_to ops_admin_path, alert: "Failed to update AI flags: #{e.message}"
     end
 
     def rebuild_leaderboards
@@ -126,6 +161,19 @@ module Ops
       else
         redirect_to ops_admin_path, alert: "Write probe failed: #{result.error}"
       end
+    end
+
+    # Access control: update allowed GitHub logins and open/closed toggle
+    def update_access
+      allowed = params[:allowed_logins].to_s.split(/[\s,]+/).map { |s| s.to_s.downcase.strip }.reject(&:blank?).uniq
+      open_flag = ActiveModel::Type::Boolean.new.cast(params[:open_access])
+
+      AppSetting.set_json(:allowed_logins, allowed)
+      AppSetting.set_bool(:open_access, open_flag)
+
+      redirect_to ops_admin_path, notice: "Access settings updated"
+    rescue StandardError => e
+      redirect_to ops_admin_path, alert: "Failed to update access: #{e.message}"
     end
 
     def send_test_email

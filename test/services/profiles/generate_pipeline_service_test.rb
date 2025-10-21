@@ -7,6 +7,7 @@ class GeneratePipelineServiceTest < ActiveSupport::TestCase
 
     Profiles::SyncFromGithub.stub :call, ServiceResult.success(prof) do
       ENV["REQUIRE_PROFILE_ELIGIBILITY"] = "0"
+      AppSetting.set_bool(:ai_images, true)
       fake_images = { images: { "1x1" => { output_path: "tmp/1.png", mime_type: "image/png" } } }
       dummy_conn = Faraday.new do |f|
         f.request :json
@@ -30,6 +31,7 @@ class GeneratePipelineServiceTest < ActiveSupport::TestCase
                 assert result.value[:screenshots]
               ensure
                 ENV.delete("REQUIRE_PROFILE_ELIGIBILITY")
+                AppSetting.set_bool(:ai_images, false)
               end
             end
           end

@@ -39,11 +39,13 @@
     <% twitter_fallback = content_for(:twitter_image) || content_for(:og_image) || og_fallback %>
     <meta name="twitter:image" content="<%= twitter_fallback %>">
     <meta name="twitter:image:alt" content="<%= (content_for(:title) || 'TecHub preview') %>">
-    <% if ENV['TWITTER_SITE_HANDLE'].present? %>
-      <meta name="twitter:site" content="<%= ENV['TWITTER_SITE_HANDLE'] %>">
+    <% site_handle = (Rails.application.credentials.dig(:twitter, :site_handle) rescue nil) || ENV['TWITTER_SITE_HANDLE'] %>
+    <% creator_handle = (Rails.application.credentials.dig(:twitter, :creator_handle) rescue nil) || ENV['TWITTER_CREATOR_HANDLE'] %>
+    <% if site_handle.present? %>
+      <meta name="twitter:site" content="<%= site_handle %>">
     <% end %>
-    <% if ENV['TWITTER_CREATOR_HANDLE'].present? %>
-      <meta name="twitter:creator" content="<%= ENV['TWITTER_CREATOR_HANDLE'] %>">
+    <% if creator_handle.present? %>
+      <meta name="twitter:creator" content="<%= creator_handle %>">
     <% end %>
 
     <!-- Theme color for modern browsers (light/dark aware) -->

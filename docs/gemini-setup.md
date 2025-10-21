@@ -52,7 +52,7 @@ PROVIDER=ai_studio bundle exec rake "gemini:avatar_prompt[loftwah]"
 > **zsh tip**: wrap the task name in quotes (or escape the brackets) so the shell doesn't treat `[]`
 > specially, e.g. `bundle exec rake "gemini:avatar_prompt[loftwah]"`.
 
-The task composes `Gemini::AvatarDescriptionService` and `Gemini::AvatarPromptService`, printing the
+The task composes `Gemini::ImageDescriptionService` and `Gemini::AvatarPromptService`, printing the
 avatar description and four ratio-ready prompts (1×1, 16×9, 3×1, 9×16). Failures include debug
 metadata so you can inspect Gemini responses quickly. Prompts simply restate the avatar description
 plus structured traits, giving image models a grounded brief without extra UI instructions.

@@ -23,6 +23,13 @@ module Gemini
     end
 
     def call
+      unless FeatureFlags.enabled?(:ai_images)
+        return failure(
+          StandardError.new("ai_images_disabled"),
+          metadata: { reason: "AI image generation is disabled to control costs; using predefined assets." }
+        )
+      end
+
       raise ArgumentError, "Prompt cannot be blank" if prompt.blank?
       raise ArgumentError, "Aspect ratio cannot be blank" if aspect_ratio.blank?
 

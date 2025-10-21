@@ -476,7 +476,7 @@ module Profiles
       # Use existing if available; otherwise try to generate quickly (best effort)
       return record.profile_card.avatar_description if record.profile_card&.avatar_description.present?
       avatar_path = record.avatar_url
-      result = Gemini::AvatarDescriptionService.call(avatar_path: avatar_path) rescue nil
+      result = Gemini::ImageDescriptionService.call(image_path: avatar_path) rescue nil
       result&.success? ? result.value : nil
     end
   end

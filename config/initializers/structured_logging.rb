@@ -67,8 +67,10 @@ module StructuredLogger
     Rails.logger.public_send(level, payload)
 
     # Optional: Axiom sink (no-op unless configured)
-    axiom_token = ENV["AXIOM_TOKEN"]
-    axiom_dataset = ENV["AXIOM_DATASET"]
+    cred_token = (Rails.application.credentials.dig(:axiom, :token) rescue nil)
+    cred_dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil)
+    axiom_token = cred_token.presence || ENV["AXIOM_TOKEN"]
+    axiom_dataset = cred_dataset.presence || ENV["AXIOM_DATASET"]
     env_flag = ActiveModel::Type::Boolean.new.cast(ENV["AXIOM_ENABLED"]) rescue false
     if (Rails.env.production? || env_flag || force_axiom) && axiom_token.present? && axiom_dataset.present?
       # Lazy, best-effort delivery; ignore network errors

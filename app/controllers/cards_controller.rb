@@ -1,6 +1,7 @@
 class CardsController < ApplicationController
   layout "cards"
   before_action :load_profile
+  skip_before_action :load_profile, only: [ :leaderboard_og ]
 
   # 1200x630 — OpenGraph recommended
   def og
