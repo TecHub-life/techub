@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_22_000020) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_22_000100) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -270,6 +270,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_000020) do
     t.index ["provider"], name: "index_profile_social_accounts_on_provider"
   end
 
+  create_table "profile_stats", force: :cascade do |t|
+    t.integer "profile_id", null: false
+    t.date "stat_date", null: false
+    t.integer "followers", default: 0, null: false
+    t.integer "following", default: 0, null: false
+    t.integer "public_repos", default: 0, null: false
+    t.integer "total_stars", default: 0, null: false
+    t.integer "total_forks", default: 0, null: false
+    t.integer "repo_count", default: 0, null: false
+    t.datetime "captured_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["profile_id", "stat_date"], name: "index_profile_stats_on_profile_id_and_stat_date", unique: true
+    t.index ["profile_id"], name: "index_profile_stats_on_profile_id"
+  end
+
   create_table "profiles", force: :cascade do |t|
     t.bigint "github_id", null: false
     t.string "login", null: false
@@ -467,6 +481,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_000020) do
   add_foreign_key "profile_repositories", "profiles"
   add_foreign_key "profile_scrapes", "profiles"
   add_foreign_key "profile_social_accounts", "profiles"
+  add_foreign_key "profile_stats", "profiles"
   add_foreign_key "repository_topics", "profile_repositories"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

@@ -71,10 +71,10 @@ module StructuredLogger
     cred_dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil)
     axiom_token = cred_token.presence || ENV["AXIOM_TOKEN"]
     axiom_dataset = cred_dataset.presence || ENV["AXIOM_DATASET"]
-    env_flag = ActiveModel::Type::Boolean.new.cast(ENV["AXIOM_ENABLED"]) rescue false
-    if (Rails.env.production? || env_flag || force_axiom) && axiom_token.present? && axiom_dataset.present?
-      # Lazy, best-effort delivery; ignore network errors
-      Thread.new do
+    # Forward whenever token+dataset exist unless explicitly disabled
+    forwarding = ENV["AXIOM_DISABLE"] != "1"
+    if forwarding && axiom_token.present? && axiom_dataset.present?
+      deliver = proc do
         begin
           conn = Faraday.new(url: "https://api.axiom.co") do |f|
             f.request :json
@@ -82,11 +82,16 @@ module StructuredLogger
             f.adapter Faraday.default_adapter
           end
           conn.headers["Authorization"] = "Bearer #{axiom_token}"
-          conn.post("/v2/datasets/#{axiom_dataset}/ingest", [ payload ])
-        rescue StandardError
-          # swallow
+          # Use v1 ingest API
+          conn.post("/v1/datasets/#{axiom_dataset}/ingest", [ payload ])
+        rescue StandardError => e
+          warn "Axiom forward failed: #{e.class}: #{e.message}" if ENV["AXIOM_DEBUG"] == "1"
         end
       end
+      # Synchronous when forced to guarantee delivery before process exits
+      force_axiom ? deliver.call : Thread.new { deliver.call }
+    elsif ENV["AXIOM_DEBUG"] == "1"
+      warn "Axiom forward skipped (forwarding=#{forwarding}, token_present=#{axiom_token.present?}, dataset_present=#{axiom_dataset.present?})"
     end
   end
 end

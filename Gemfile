@@ -22,6 +22,11 @@ gem "jwt"
 gem "faraday-retry"
 gem "octokit"
 gem "commonmarker" # GitHub-flavored markdown
+
+# Observability: OpenTelemetry tracing (export to Axiom OTLP)
+gem "opentelemetry-sdk"
+gem "opentelemetry-exporter-otlp"
+gem "opentelemetry-instrumentation-all"
 gem "nokogiri"
 gem "ruby-vips", require: false
 
