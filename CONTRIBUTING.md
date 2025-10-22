@@ -27,6 +27,8 @@ Copy-friendly output (no pager, easy paste)
     `bundle exec brakeman -q --no-pager -w2 -f plain | tee tmp/brakeman.txt`
   - JSON to file: `bundle exec brakeman -q --no-pager -w2 -f json -o tmp/brakeman.json`
   - Markdown to file: `bundle exec brakeman -q --no-pager -w2 -f markdown -o tmp/brakeman.md`
+  - Clean obsolete ignores: `bundle exec brakeman -I --no-pager` and choose to remove obsolete
+    entries; commit `config/brakeman.ignore`.
 - RuboCop simple/JSON:
   - Simple text: `bundle exec rubocop --no-color -f simple | tee tmp/rubocop.txt`
   - JSON to file: `bundle exec rubocop --no-color -f json -o tmp/rubocop.json`

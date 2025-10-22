@@ -1,16 +1,16 @@
-## AI Controls: Generation Policy, Triggers, and Admin/User Access
+## Images vs Text: Generation Policy, Triggers, and Access
 
 ### Overview
 
-- AI costed actions (traits/images) run only when explicitly requested.
-- First-time submission: AI runs once; subsequent runs require user/admin action.
-- Users are throttled (weekly) for AI regeneration; admins are not throttled.
+- Image generation is costed; text AI always runs.
+- First-time submission: images may run once; subsequent image runs require user/admin action.
+- Users are throttled (weekly) for image regeneration; admins are not throttled.
 
 ### User Controls
 
 - Settings page (`MyProfilesController`):
-  - Re-capture (no AI): always allowed, queues pipeline with `ai: false`.
-  - Regenerate AI: allowed when `Time.current >= last_ai_regenerated_at + 7.days`.
+  - Re-capture (no new images): always allowed, queues pipeline with `images: false`.
+  - Regenerate with images: allowed when `Time.current >= last_ai_regenerated_at + 7.days`.
   - UI exposes next allowed time via `@ai_regen_available_at`.
 - Ownership:
   - Users can only manage profiles they own.
@@ -20,22 +20,22 @@
 ### Admin Controls
 
 - Ops panel:
-  - Retry (no AI) and Retry AI actions available per profile; admins bypass throttling.
-- Rake tasks:
-  - `rake ai:traits[login]` regenerate AI traits for a single profile.
-  - `rake ai:traits_bulk[logins]` regenerate AI traits for multiple profiles.
-  - `rake ai:images[login]` regenerate AI images for a single profile.
+  - Retry (no new images) available per profile and in bulk; admins bypass throttling.
+  - Image regeneration is an explicit, user-facing option in Settings; not exposed for bulk Ops.
 
-### When AI Runs
+### When Images Run
 
 - Submission flow (`Profiles::SubmitProfileJob`):
-  - Enqueues pipeline with `ai: true` only if the profile has no `profile_card` and
+  - Enqueues pipeline with `images: true` only if the profile has no `profile_card` and
     `last_ai_regenerated_at` is nil (first creation).
-  - Otherwise enqueues with `ai: false`.
+  - Otherwise enqueues with `images: false`.
 - My profiles settings:
-  - Re-capture: `ai: false`.
-  - Regenerate AI: `ai: true` with weekly backoff.
-- Ops panel/admin rake: admin may run traits/images at any time.
+  - Re-capture: `images: false`.
+  - Regenerate with images: `images: true` with weekly backoff.
+- Recurring freshness:
+  - A scheduled job enqueues the pipeline with `images: false` for stale profiles, keeping text and
+    screenshots fresh without regenerating AI artwork.
+- Admin rakes: no bulk image regeneration; use Ops retry for safe refresh.
 
 ### Sync Robustness
 
@@ -53,8 +53,8 @@
 
 ### Non-AI Triggers
 
-- OG controller queues pipeline with `ai: false` when images are missing, avoiding unintended AI
-  costs.
+- OG controller queues pipeline with `images: false` when images are missing, avoiding unintended
+  image generation costs.
 
 ### Testing Coverage
 

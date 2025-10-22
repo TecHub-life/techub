@@ -12,11 +12,16 @@ module FeatureFlags
         return AppSetting.get_bool(:ai_images, default: false)
       when :ai_image_descriptions
         return AppSetting.get_bool(:ai_image_descriptions, default: false)
+      when :ai_text
+        # Text/traits generation (structured output) — default ON
+        return AppSetting.get_bool(:ai_text, default: true)
+      when :ai_structured_output
+        # Structured JSON formatting — default ON
+        return AppSetting.get_bool(:ai_structured_output, default: true)
       end
     end
 
     env_name = case k
-    when :submission_manual_inputs then "SUBMISSION_MANUAL_INPUTS_ENABLED"
     when :require_profile_eligibility then "REQUIRE_PROFILE_ELIGIBILITY"
     else k.to_s.upcase
     end

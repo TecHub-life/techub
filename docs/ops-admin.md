@@ -40,6 +40,8 @@ This guide explains how to access and administer background jobs and ops tools.
 - Pause/resume queues: use the Queues view in `/ops/jobs`.
 - Retry/discard jobs: open a job in `/ops/jobs` and use the action buttons.
 - Recurring tasks: see Recurring; edit schedules in `config/recurring.yml` and redeploy.
+  - Stale profile refresh enqueues the full pipeline with `images: false` to sync data, update text,
+    and recapture screenshots. AI artwork does not regenerate automatically.
 - Workers/processes: ensure the jobs process is running.
   - Local: `bin/dev` (uses `Procfile.dev` → `jobs: bin/jobs start`)
   - Deploy: jobs run on the same host by default (see `Kamal` config).

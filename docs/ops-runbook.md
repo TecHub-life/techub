@@ -1,3 +1,35 @@
+# Ops Runbook: Pipeline Status and Notifications
+
+## Status semantics
+
+- success: All enabled stages completed. Owners receive a “completed” email (deliver-once per
+  profile).
+- partial_success: Completed with fallbacks (e.g., AI traits fallback). Owners are not emailed; Ops
+  receives an alert.
+- failure: Pipeline failed. Owners receive a “failed” email; Ops receives an alert.
+
+Notes:
+
+- When AI artwork or AI image descriptions are disabled by policy, the pipeline does not mark
+  partial. That configuration is treated as expected, not degraded.
+- Partial is reserved for genuine degradations (e.g., AI traits fell back to heuristics).
+
+## Email + Alerts
+
+- Owners:
+  - success → ProfilePipelineMailer.completed (deliver_later, deduped per profile/event)
+  - failure → ProfilePipelineMailer.failed (deliver_later, deduped per profile/event)
+  - partial → no owner email
+- Ops:
+  - partial → OpsAlertMailer.job_failed with metadata indicating partial
+  - failure → OpsAlertMailer.job_failed with error message and metadata
+
+## Resend setup
+
+- credentials: `resend.api_key`
+- env: delivery_method `:resend` (production/development)
+- smoke test: `bin/rake "email:smoke[to@example.com,Hello]"`
+
 # Ops Runbook
 
 Practical steps to run, monitor, and debug TecHub locally and in prod.

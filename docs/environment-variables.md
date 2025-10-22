@@ -38,9 +38,9 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - Refs: config/storage.yml:12,17,19,21; app/services/backups/\*.
 - Resend: `RESEND_API_KEY`
   - Home: credentials under `:resend`.
-- Axiom: `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_ENABLED`
-  - Home: credentials under `:axiom` (token/dataset). `AXIOM_ENABLED` can remain env for dev
-    forcing.
+- Axiom: `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_METRICS_DATASET`, `AXIOM_ENABLED`
+  - Home: credentials under `:axiom` (token/dataset/metrics_dataset). `AXIOM_ENABLED` can remain env
+    for dev forcing.
   - Refs: config/initializers/structured_logging.rb:18.
 - Twitter meta: `TWITTER_SITE_HANDLE`, `TWITTER_CREATOR_HANDLE`
   - Home: credentials under `:twitter`.
@@ -62,8 +62,6 @@ App/DB‑backed settings (use AppSetting and Ops; do not use env)
   - Key: `AppSetting[:user_uploads_enabled]` (default true).
   - Refs: app/views/my_profiles/settings.html.erb:270.
 - Proposed migration (next PR):
-  - Submission manual inputs: `SUBMISSION_MANUAL_INPUTS_ENABLED` →
-    `AppSetting[:submission_manual_inputs]`.
   - Eligibility gate: `REQUIRE_PROFILE_ELIGIBILITY` → `AppSetting[:require_profile_eligibility]`
     (default true).
 

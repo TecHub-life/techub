@@ -5,20 +5,41 @@
   <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-900/20">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Regenerate All Profiles</h2>
-        <p class="text-sm text-amber-800 dark:text-amber-300">Use when prompts/layouts change and you want everyone re-rendered. Full (AI) uses budget and bypasses per-profile cooldown.</p>
+        <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Apply Latest Version to All Profiles</h2>
+        <p class="text-sm text-amber-800 dark:text-amber-300">Use after deploying new features or layout updates. This re-runs the profile pipeline for everyone so cards and data match the latest version. AI artwork is disabled and will not run.</p>
+        <ul class="mt-2 list-disc pl-5 text-xs text-amber-800 dark:text-amber-300">
+          <li>Refresh GitHub data and sync the profile</li>
+          <li>Rebuild profile info and traits (AI text if enabled; heuristic fallback otherwise)</li>
+          <li>Capture card screenshots (OG, card, simple, banner) and queue social variants</li>
+          <li>Record/optimize assets for use across the site</li>
+        </ul>
       </div>
       <div class="flex flex-wrap gap-2">
-        <form action="<%= ops_bulk_retry_all_path %>" method="post" onsubmit="return confirm('Queue screenshots-only for ALL profiles?');">
+        <form action="<%= ops_bulk_retry_all_path %>" method="post" onsubmit="return confirm('Apply latest version for ALL profiles?');">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Re-capture All (No AI)</button>
+          <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Apply Latest Version to All</button>
         </form>
-        <form action="<%= ops_bulk_retry_ai_all_path %>" method="post" onsubmit="return confirm('Queue FULL AI regeneration for ALL profiles? This consumes AI budget.');">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <button class="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">Regenerate All (AI)</button>
-        </form>
+        <%# Hidden: regenerate all with images %>
       </div>
     </div>
+  </div>
+
+  <!-- Axiom -->
+  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Axiom</h2>
+    <div class="mt-2 flex flex-wrap gap-2">
+      <% if @axiom[:dataset_url].present? %>
+        <a href="<%= @axiom[:dataset_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Logs Dataset</a>
+      <% end %>
+      <% if @axiom[:metrics_dataset_url].present? %>
+        <a href="<%= @axiom[:metrics_dataset_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Metrics Dataset</a>
+      <% end %>
+      <% if @axiom[:traces_url].present? %>
+        <a href="<%= @axiom[:traces_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Traces</a>
+      <% end %>
+      <%= button_to "Axiom Smoke Log", ops_axiom_smoke_path, method: :post, class: "rounded border px-2 py-1 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800" %>
+    </div>
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Use "Axiom Smoke Log" to send a one‑off event. No flags required when token and dataset are configured.</p>
   </div>
 
   <% if @engine_present %>
@@ -55,10 +76,10 @@
         </div>
       <% end %>
     </div>
-    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Image modules default Off to control costs with Gemini 2.5 Flash. Text modules depend on valid Gemini config.</p>
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Image modules default Off to control costs with Gemini 2.5 Flash. Text/structured modules default On when the model is configured.</p>
 
     <div class="mt-4">
-      <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Toggle Image Modules</h3>
+      <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Toggle AI Modules</h3>
       <form action="<%= update_ai_caps_ops_admin_index_path %>" method="post" class="space-y-2">
         <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
         <label class="inline-flex items-center gap-2 text-sm">
@@ -69,6 +90,16 @@
         <label class="inline-flex items-center gap-2 text-sm">
           <input type="checkbox" name="ai_image_descriptions" value="1" <%= 'checked' if @ai_caps[:image_descriptions] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
           <span class="text-slate-700 dark:text-slate-300">Enable AI Image Descriptions</span>
+        </label>
+        <br>
+        <label class="inline-flex items-center gap-2 text-sm">
+          <input type="checkbox" name="ai_text" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_text) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+          <span class="text-slate-700 dark:text-slate-300">Enable AI Text (Traits)</span>
+        </label>
+        <br>
+        <label class="inline-flex items-center gap-2 text-sm">
+          <input type="checkbox" name="ai_structured_output" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_structured_output) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+          <span class="text-slate-700 dark:text-slate-300">Enable AI Structured Output</span>
         </label>
         <div>
           <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save</button>
@@ -157,14 +188,6 @@
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Adapter</div>
       <div class="text-lg font-semibold"><%= @adapter.class.name %></div>
-      <div class="mt-3">
-        <form action="<%= ops_axiom_smoke_path %>" method="post" class="flex items-center gap-2">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <input type="text" name="message" placeholder="hello_world" class="w-40 rounded border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900">
-          <button class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Axiom Smoke Test</button>
-        </form>
-        <p class="mt-1 text-xs text-slate-500">Requires AXIOM_TOKEN and AXIOM_DATASET to be set.</p>
-      </div>
     </div>
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Queued</div>
@@ -283,8 +306,9 @@
                 <td class="py-2 pr-4"><%= p.last_ai_regenerated_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
                 <td class="py-2">
                   <div class="flex flex-wrap gap-2">
-                    <%= button_to "Retry — Screenshots‑Only", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%= button_to "Retry — Full (AI)", ops_retry_profile_ai_path(username: p.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
+                    <%= button_to "Apply Latest Version", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%= button_to "Apply Latest Version", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%# Image regeneration available via explicit routes; hidden to reduce confusion %>
                   </div>
                 </td>
               </tr>
@@ -349,10 +373,10 @@
 
   <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="text-lg font-semibold mb-1">Failed Profiles</h2>
-    <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Run options: <span class="font-medium">Screenshots‑Only</span> runs sync + screenshots (no AI budget). <span class="font-medium">Full (AI)</span> includes AI artwork + traits generation.</p>
-    <div class="mb-3 grid gap-3 sm:grid-cols-2">
+    <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Regeneration recaptures screenshots and updates text. AI artwork is not regenerated automatically.</p>
+      <div class="mb-3 grid gap-3 sm:grid-cols-2">
       <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Bulk Retry — Screenshots‑Only</h3>
+        <h3 class="text-sm font-semibold mb-2">Apply Latest Version (Selected)</h3>
         <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <label class="text-xs text-slate-500">Select profiles</label>
@@ -361,33 +385,18 @@
               <option value="<%= login %>">@<%= login %></option>
             <% end %>
           </select>
-          <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue Screenshots‑Only</button>
+            <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Apply Latest Version</button>
         </form>
       </div>
-      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Bulk Retry — Full (AI)</h3>
-        <form action="<%= ops_bulk_retry_ai_path %>" method="post" class="space-y-2">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <label class="text-xs text-slate-500">Select profiles</label>
-          <select name="logins[]" multiple size="8" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
-            <% Profile.order(:login).limit(500).pluck(:login).each do |login| %>
-              <option value="<%= login %>">@<%= login %></option>
-            <% end %>
-          </select>
-          <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue Full (AI)</button>
-        </form>
-      </div>
+      <%# Bulk retry with images intentionally hidden to encourage default path %>
     </div>
 
     <div class="mb-3 flex items-center gap-2">
       <form action="<%= ops_bulk_retry_all_path %>" method="post">
         <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Queue Screenshots‑Only for ALL Profiles</button>
+        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Apply Latest Version to ALL Profiles</button>
       </form>
-      <form action="<%= ops_bulk_retry_ai_all_path %>" method="post">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Queue Full (AI) for ALL Profiles</button>
-      </form>
+      <%# Hidden: regenerate with images for all profiles %>
     </div>
     <% if @failed_profiles.present? %>
       <div class="overflow-x-auto">
@@ -412,8 +421,8 @@
                 <td class="py-2 pr-4"><%= p.updated_at.strftime('%Y-%m-%d %H:%M') %></td>
                 <td class="py-2">
                   <div class="flex gap-2">
-                    <%= button_to "Retry — Screenshots‑Only", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%= button_to "Retry — Full (AI)", ops_retry_profile_ai_path(username: p.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
+                    <%= button_to "Retry — No Images", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%# Hidden: retry with images for individual failed profile %>
                     <%= button_to "Delete", ops_destroy_profile_path(username: p.login), method: :delete, form: { data: { turbo_confirm: "Delete @#{p.login}? This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
                   </div>
                 </td>
@@ -465,8 +474,8 @@
                 <td class="py-2 pr-4"><%= p.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
                 <td class="py-2">
                   <div class="flex gap-2">
-                    <%= button_to "Retry (no AI)", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%= button_to "Retry AI", ops_retry_profile_ai_path(username: p.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
+                    <%= button_to "Retry (no images)", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%# Removed: retry with images button %>
                   </div>
                 </td>
               </tr>

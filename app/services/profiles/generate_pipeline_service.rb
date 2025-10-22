@@ -2,14 +2,15 @@ module Profiles
   class GeneratePipelineService < ApplicationService
     VARIANTS = %w[og card simple banner].freeze
 
-    def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, ai: true)
+    def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, images: true, ai: nil)
       @login = login.to_s.downcase
       resolved_host = host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil) || "http://127.0.0.1:3000"
       @host = resolved_host
       @provider = provider # nil respects default
       @upload = upload.nil? ? ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase.in?([ "1", "true", "yes" ]) : upload
       @optimize = optimize
-      @ai = ai
+      # Back-compat: accept legacy ai: flag as alias for images
+      @images = images.nil? ? ai : images
     end
 
     def call
@@ -32,57 +33,55 @@ module Profiles
         end
       end
 
-      # 2) Optional: ingest submitted repos when present (flag-gated)
-      if FeatureFlags.enabled?(:submission_manual_inputs)
-        submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
-        if submitted_full_names.any?
-          Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: submitted_full_names)
-        end
+      # 2) Optional: ingest submitted repos when present (always on; noop if none)
+      submitted_full_names = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name).compact
+      if submitted_full_names.any?
+        Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: submitted_full_names)
       end
 
-      # 2b) Optional: scrape submitted URL for extra context (flag-gated)
+      # 2b) Optional: scrape submitted URL for extra context (always on; noop if none)
       scraped = nil
-      if FeatureFlags.enabled?(:submission_manual_inputs)
-        if profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
-          scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
-          StructuredLogger.warn(message: "scrape_failed", login: login, error: scraped_result.error.message) if scraped_result.failure?
-          scraped = scraped_result.value if scraped_result.success?
-        end
+      if profile.respond_to?(:submitted_scrape_url) && profile.submitted_scrape_url.present?
+        scraped_result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: profile.submitted_scrape_url)
+        StructuredLogger.warn(message: "scrape_failed", login: login, error: scraped_result.error.message) if scraped_result.failure?
+        scraped = scraped_result.value if scraped_result.success?
       end
 
-      images = nil
+      image_suite = nil
       ai_partial = false
-      if ai
-        # 3) Generate AI images (prompts + 4 variants)
+      # 3) AI Images: controlled by feature flag and the `images` parameter
+      if images
         t0 = Time.current
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_images") if defined?(StructuredLogger)
         if FeatureFlags.enabled?(:ai_images)
           # Allow images provider override independent from global provider
           images_provider = provider.presence || ENV["GEMINI_IMAGES_PROVIDER"].to_s.presence
-          images = Gemini::AvatarImageSuiteService.call(
+          image_suite = Gemini::AvatarImageSuiteService.call(
             login: login,
             provider: images_provider,
             filename_suffix: images_provider,
             output_dir: Rails.root.join("public", "generated")
           )
-          if images.failure?
-            # Degrade gracefully: record event, mark partial, continue to screenshots + heuristic card
+          if image_suite.failure?
             ai_partial = true
-            StructuredLogger.warn(message: "ai_images_failed", login: login, error: images.error.message) if defined?(StructuredLogger)
-            record_event(profile, stage: "ai_images", status: "failed", duration_ms: ((Time.current - t0) * 1000).to_i, message: images.error.message)
+            StructuredLogger.warn(message: "ai_images_failed", login: login, error: image_suite.error.message) if defined?(StructuredLogger)
+            record_event(profile, stage: "ai_images", status: "failed", duration_ms: ((Time.current - t0) * 1000).to_i, message: image_suite.error.message)
           else
             StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_images", duration_ms: ((Time.current - t0) * 1000).to_i) if defined?(StructuredLogger)
             record_event(profile, stage: "ai_images", status: "completed", duration_ms: ((Time.current - t0) * 1000).to_i)
           end
         else
-          # Skipped entirely (taped off). Do not mark as failed; note partial and continue
-          ai_partial = true
-          StructuredLogger.info(message: "ai_images_skipped", login: login) if defined?(StructuredLogger)
-          # No record_event for a skipped stage to keep history clean
+          # Images disabled by policy — do NOT mark partial; this is expected
+          StructuredLogger.info(message: "ai_images_skipped_policy", login: login) if defined?(StructuredLogger)
         end
+      else
+        # Images explicitly disabled for this run — do NOT mark partial
+        StructuredLogger.info(message: "ai_images_disabled_run", login: login) if defined?(StructuredLogger)
+      end
 
-        # 3b) AI text + traits (structured)
-        t1 = Time.current
+      # 3b) AI text + traits: gated (defaults ON); fallback to heuristic if taped off or failed
+      t1 = Time.current
+      if FeatureFlags.enabled?(:ai_text)
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_traits") if defined?(StructuredLogger)
         # Force AI Studio for text traits (Vertex flaky with prose-only responses)
         ai_traits = Profiles::SynthesizeAiProfileService.call(profile: profile, provider: "ai_studio")
@@ -107,11 +106,13 @@ module Profiles
           record_event(profile, stage: "ai_traits", status: "completed", duration_ms: ((Time.current - t1) * 1000).to_i)
         end
       else
-        # Heuristic-only path
+        # Text AI disabled by policy — use heuristic synthesis; do NOT mark partial
+        StructuredLogger.info(message: "ai_traits_skipped_policy", login: login) if defined?(StructuredLogger)
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
         synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
         return synth if synth.failure?
         StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
+        record_event(profile, stage: "synth_heuristic", status: "completed", duration_ms: 0)
       end
 
       # 5) Capture screenshots (OG/card/simple)
@@ -188,7 +189,7 @@ module Profiles
       success(
         {
           login: login,
-          images: images&.value,
+          images: image_suite&.value,
           screenshots: captures,
           card_id: card_id,
           scraped: scraped
@@ -201,7 +202,7 @@ module Profiles
 
     private
 
-    attr_reader :login, :host, :provider, :upload, :optimize, :ai
+    attr_reader :login, :host, :provider, :upload, :optimize, :images
 
     def record_event(profile, stage:, status:, duration_ms: nil, message: nil)
       ProfilePipelineEvent.create!(profile_id: profile.id, stage: stage, status: status, duration_ms: duration_ms, message: message, created_at: Time.current)

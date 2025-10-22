@@ -43,8 +43,8 @@ class OgController < ApplicationController
       return send_file path, type: mime, disposition: "inline"
     end
 
-    # Not available yet — enqueue pipeline to generate assets without AI cost
-    Profiles::GeneratePipelineJob.perform_later(login, ai: false)
+    # Not available yet — enqueue pipeline to generate assets without generating new images
+    Profiles::GeneratePipelineJob.perform_later(login, images: false)
     render json: { status: "generating", login: login }, status: :accepted
   end
 

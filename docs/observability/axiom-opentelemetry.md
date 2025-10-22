@@ -10,8 +10,25 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
   Faraday.
 - Configure:
   - `AXIOM_TOKEN`: Axiom personal or ingest token
-  - `AXIOM_DATASET`: target dataset name
+  - `AXIOM_DATASET`: target dataset name (logs/events)
+  - `AXIOM_METRICS_DATASET`: optional metrics dataset name
 - In production, deploy with these env vars to enable forwarding.
+
+Quick doctor
+
+- Test direct ingest (prints HTTP status):
+
+```bash
+bin/rails axiom:doctor
+```
+
+- Emit StructuredLogger smoke (uses force_axiom):
+
+```bash
+bin/rails 'axiom:smoke[hello_world]'
+```
+
+- If you set `AXIOM_METRICS_DATASET`, the doctor also sends a metrics probe event.
 
 ### Log fields
 
@@ -37,6 +54,7 @@ Forwarding controls
   swallowed).
 - Forwarding is on in production by default; to enable in other envs set `AXIOM_ENABLED=1`.
 - You can force a one-off send with `StructuredLogger.info(..., force_axiom: true)`.
+- For troubleshooting, set `AXIOM_DEBUG=1` to print skip/exception reasons to STDERR.
 
 ## Traces (OpenTelemetry)
 

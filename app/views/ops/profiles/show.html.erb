@@ -2,13 +2,13 @@
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">@<%= @profile.login %></h1>
     <div class="flex gap-2">
-      <%= button_to "Retry — Screenshots‑Only", ops_retry_profile_path(username: @profile.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-      <%= button_to "Retry — Full (AI)", ops_retry_profile_ai_path(username: @profile.login), method: :post, class: "rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700" %>
+      <%= button_to "Apply Latest Version", ops_retry_profile_path(username: @profile.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+      <%# Image regeneration is available via explicit route; hidden by default %>
       <%= button_to "Delete", ops_destroy_profile_path(username: @profile.login), method: :delete, form: { data: { turbo_confirm: "Delete @#{@profile.login}? This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
     </div>
   </div>
 
-  <p class="text-sm text-slate-600 dark:text-slate-400">Run options: <span class="font-medium">Screenshots‑Only</span> runs sync + screenshots (no AI budget). <span class="font-medium">Full (AI)</span> includes AI artwork + traits generation.</p>
+  <p class="text-sm text-slate-600 dark:text-slate-400">Re-runs this profile to match the latest version. AI artwork is disabled and will not run.</p>
 
   <div class="grid gap-4 sm:grid-cols-3">
     <div class="rounded border p-4 dark:border-slate-700">

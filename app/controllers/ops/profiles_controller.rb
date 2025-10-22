@@ -12,7 +12,7 @@ end
 
 module Ops
   class ProfilesController < BaseController
-    before_action :find_profile, only: [ :show, :retry, :retry_ai, :destroy ]
+    before_action :find_profile, only: [ :show, :retry, :destroy ]
 
     def show
       @top_repositories = @profile.top_repositories
@@ -38,16 +38,12 @@ module Ops
     end
 
     def retry
-      Profiles::GeneratePipelineJob.perform_later(@profile.login, ai: false)
+      Profiles::GeneratePipelineJob.perform_later(@profile.login, images: false)
       @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-      redirect_to ops_admin_path, notice: "Re-run queued for @#{@profile.login} — Screenshots-Only"
+      redirect_to ops_admin_path, notice: "Re-run queued for @#{@profile.login} — No new images (text AI always on)"
     end
 
-    def retry_ai
-      Profiles::GeneratePipelineJob.perform_later(@profile.login, ai: true)
-      @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
-      redirect_to ops_admin_path, notice: "Full (AI) re-run queued for @#{@profile.login}"
-    end
+    # Image regeneration removed from Ops to avoid confusion. Use Settings UI for artwork decisions.
 
     def destroy
       login = @profile.login

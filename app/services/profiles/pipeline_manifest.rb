@@ -24,14 +24,14 @@ module Profiles
         Stage.new(
           id: :ingest_submitted_repositories,
           label: "Ingest Submitted Repositories",
-          gated_by: :submission_manual_inputs,
+          gated_by: nil,
           description: "Include user-submitted repos into signals",
           produces: [ "profile_repositories(submitted)" ]
         ),
         Stage.new(
           id: :scrape_submitted_url,
           label: "Scrape Submitted URL",
-          gated_by: :submission_manual_inputs,
+          gated_by: nil,
           description: "Optional scrape of a provided URL to augment signals",
           produces: [ "profile_scrapes(optional)" ]
         ),
@@ -45,7 +45,7 @@ module Profiles
         Stage.new(
           id: :ai_traits,
           label: "AI Text & Traits",
-          gated_by: nil,
+          gated_by: :ai_text,
           description: "Structured JSON describing bios, stats, vibe, tags, playing card, archetype, spirit animal",
           produces: [ "profile_card" ]
         ),

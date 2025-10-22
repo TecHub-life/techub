@@ -1,6 +1,6 @@
 # Submit Manual Inputs — End-to-End Workflow (Spec)
 
-Status: Spec only (implementation partial; do not assume wired)
+Status: Implemented (manual inputs always on; non-fatal)
 
 ## Goal
 
@@ -62,8 +62,10 @@ We use these inputs to augment the profile and ensure important work is not miss
 Ordering when generating a profile (happy path):
 
 1. Sync from GitHub → ensure `Profile` exists and is current
-2. If present, ingest submitted repos (idempotent; preserve type `submitted`)
-3. If present, scrape `submitted_scrape_url` and persist to `ProfileScrapes`
+2. If present, ingest submitted repos (idempotent; preserve type `submitted`). Invalid repos are
+   skipped.
+3. If present, scrape `submitted_scrape_url` and persist to `ProfileScrapes`. Failures are logged
+   and skipped.
 4. Synthesize card attributes
 5. Generate avatar images
 6. Capture screenshots
@@ -102,15 +104,11 @@ Notes:
 - Schema: `profiles.submitted_scrape_url`, `profile_scrapes` — defined
 - Services: scraper, record, ingest — implemented
 - Sync: preserves `submitted` repos — implemented
-- UI: submit form + controller wire-up — NOT implemented
-- Pipeline: pre-steps present; flag-gated via `SUBMISSION_MANUAL_INPUTS_ENABLED`. When ON, the
-  pipeline will ingest any `submitted` repos (metadata/topics) and record a scrape for
-  `submitted_scrape_url` if provided. Failures are logged but non-fatal.
+- UI: submit form + controller — implemented
+- Pipeline: pre-steps always run when inputs are present (no feature flag). Failures are logged and
+  non-fatal.
 
-## Rollout Plan
+## Rollout Notes
 
-1. Ship docs + ADRs (done) and feature flag (`SUBMISSION_MANUAL_INPUTS_ENABLED`)
-2. Add submit form/controller; validate inputs; store URL and repo list
-3. Gate pipeline steps 2–3 behind the flag
-4. Add UI surface for scraped excerpt and links (optional)
-5. Monitor metrics and logs; tune limits as needed
+- Manual inputs no longer gated by a feature flag. Submitted repos/URL are processed whenever
+  present.

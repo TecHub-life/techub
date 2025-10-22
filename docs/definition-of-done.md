@@ -41,7 +41,7 @@ Example (Eligibility gate)
 
 Example (Manual inputs)
 
-- Env: `SUBMISSION_MANUAL_INPUTS_ENABLED=1`
+- Manual inputs require no env flags; they’re always on and non-fatal.
 - Behavior: pipeline ingests submitted repos and records scrape if present; flag off means no calls
 - Tests: assert no calls with flag off; success with flag on
 
