@@ -5,31 +5,34 @@
       <span>TecHub</span>
     <% end %>
 
-    <nav class="hidden lg:flex items-center gap-4 lg:gap-8 text-sm lg:text-base font-medium text-slate-600 dark:text-slate-300">
+    <nav class="hidden lg:flex items-center gap-4 lg:gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
       <%= link_to directory_path, class: "#{nav_link_class(directory_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(directory_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-folder-open text-[18px] leading-none align-middle"></i>
+        <i class="fa-solid fa-folder-open text-[16px] leading-none align-middle"></i>
         <span class="leading-none">Directory</span>
       <% end %>
       <%= link_to leaderboards_path, class: "#{nav_link_class(leaderboards_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(leaderboards_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-trophy text-[18px] leading-none align-middle"></i>
+        <i class="fa-solid fa-trophy text-[16px] leading-none align-middle"></i>
         <span class="leading-none">Leaderboards</span>
       <% end %>
       <%= link_to analytics_path, class: "#{nav_link_class(analytics_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(analytics_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-chart-line text-[18px] leading-none align-middle"></i>
+        <i class="fa-solid fa-chart-line text-[16px] leading-none align-middle"></i>
         <span class="leading-none">Analytics</span>
       <% end %>
       <%= link_to faq_path, class: "#{nav_link_class(faq_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(faq_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-circle-question text-[18px] leading-none align-middle"></i>
+        <i class="fa-solid fa-circle-question text-[16px] leading-none align-middle"></i>
         <span class="leading-none">FAQ</span>
       <% end %>
-      <%= link_to "Open Source", "https://github.com/loftwah/techub", target: "_blank", rel: "noopener", class: "transition-all hover:scale-105" %>
+      <%= link_to "https://github.com/loftwah/techub", target: "_blank", rel: "noopener", class: "#{nav_link_class(nil).sub('transition-colors', 'transition-all') + ' hover:scale-105'}" do %>
+        <i class="fa-brands fa-github text-[16px] leading-none align-middle"></i>
+        <span class="leading-none">Open Source</span>
+      <% end %>
       <%= link_to submit_path, data: { turbo: false }, class: "#{nav_link_class(submit_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(submit_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-paper-plane text-[18px] leading-none align-middle"></i>
+        <i class="fa-solid fa-paper-plane text-[16px] leading-none align-middle"></i>
         <span class="leading-none">Submit</span>
       <% end %>
       <% if current_user %>
         <%= link_to my_profiles_path, class: "#{nav_link_class(my_profiles_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(my_profiles_path) ? 'page' : nil) } do %>
-          <i class="fa-solid fa-id-badge text-[18px] leading-none align-middle"></i>
+          <i class="fa-solid fa-id-badge text-[16px] leading-none align-middle"></i>
           <span class="leading-none">My Profiles</span>
         <% end %>
       <% end %>
