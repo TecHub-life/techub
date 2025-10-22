@@ -71,14 +71,12 @@ module Profiles
             record_event(profile, stage: "ai_images", status: "completed", duration_ms: ((Time.current - t0) * 1000).to_i)
           end
         else
-          # Images taped off globally — treat as partial and continue
-          ai_partial = true
-          StructuredLogger.info(message: "ai_images_skipped", login: login) if defined?(StructuredLogger)
+          # Images disabled by policy — do NOT mark partial; this is expected
+          StructuredLogger.info(message: "ai_images_skipped_policy", login: login) if defined?(StructuredLogger)
         end
       else
-        # Images explicitly disabled for this run
-        ai_partial = true
-        StructuredLogger.info(message: "ai_images_disabled", login: login) if defined?(StructuredLogger)
+        # Images explicitly disabled for this run — do NOT mark partial
+        StructuredLogger.info(message: "ai_images_disabled_run", login: login) if defined?(StructuredLogger)
       end
 
       # 3b) AI text + traits: gated (defaults ON); fallback to heuristic if taped off or failed
@@ -108,9 +106,8 @@ module Profiles
           record_event(profile, stage: "ai_traits", status: "completed", duration_ms: ((Time.current - t1) * 1000).to_i)
         end
       else
-        # Text AI explicitly taped off — do heuristic synthesis
-        ai_partial = true
-        StructuredLogger.info(message: "ai_traits_skipped", login: login) if defined?(StructuredLogger)
+        # Text AI disabled by policy — use heuristic synthesis; do NOT mark partial
+        StructuredLogger.info(message: "ai_traits_skipped_policy", login: login) if defined?(StructuredLogger)
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
         synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
         return synth if synth.failure?

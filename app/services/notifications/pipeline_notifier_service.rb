@@ -7,17 +7,27 @@ module Notifications
     end
 
     def call
-      owners = profile.owners
-      results = owners.map do |user|
-        Notifications::DeliverOnceService.call(user: user, event: event_name, subject: profile) do
-          if status == "success"
+      case status
+      when "success"
+        owners = profile.owners
+        results = owners.map do |user|
+          Notifications::DeliverOnceService.call(user: user, event: event_name, subject: profile) do
             ProfilePipelineMailer.with(user: user, profile: profile).completed.deliver_later
-          else
+          end
+        end
+        success(results)
+      when "partial"
+        # No user emails for partial; handled upstream by OpsAlertService
+        success(:partial_notified_ops)
+      else
+        owners = profile.owners
+        results = owners.map do |user|
+          Notifications::DeliverOnceService.call(user: user, event: event_name, subject: profile) do
             ProfilePipelineMailer.with(user: user, profile: profile, error_message: error_message || "unknown").failed.deliver_later
           end
         end
+        success(results)
       end
-      success(results)
     rescue StandardError => e
       failure(e)
     end

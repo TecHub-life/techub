@@ -14,8 +14,8 @@ Decision:
   - `GEMINI_AI_IMAGES_ENABLED` (default: off) — gates `Gemini::ImageGenerationService`.
   - `GEMINI_IMAGE_DESCRIPTIONS_ENABLED` (default: off) — gates `Gemini::ImageDescriptionService`.
 - When disabled, the services immediately return a failure result with a descriptive reason in
-  metadata. Upstream callers already degrade gracefully:
-  - `Profiles::GeneratePipelineService` marks the run partial and continues with screenshots.
+  metadata. Upstream callers degrade gracefully without marking the run partial when the module is
+  disabled by policy (expected configuration).
   - `Gemini::AvatarPromptService` synthesizes prompts from profile context when description is
     unavailable.
 - Replace AI artwork in the product with pre-existing assets:
