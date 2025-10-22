@@ -92,9 +92,20 @@ module Ops
 
       # Axiom links (datasets + traces)
       begin
+        # Prefer explicit URLs from credentials/ENV
         dataset_url = (Rails.application.credentials.dig(:axiom, :dataset_url) rescue nil) || ENV["AXIOM_DATASET_URL"]
         metrics_dataset_url = (Rails.application.credentials.dig(:axiom, :metrics_dataset_url) rescue nil) || ENV["AXIOM_METRICS_DATASET_URL"]
-        traces_url = (Rails.application.credentials.dig(:axiom, :traces_url) rescue nil) || ENV["AXIOM_TRACES_URL"] || "https://app.axiom.co/traces"
+        traces_url = (Rails.application.credentials.dig(:axiom, :traces_url) rescue nil) || ENV["AXIOM_TRACES_URL"]
+
+        # If URLs are not provided, construct from org/dataset vars when present
+        org = (Rails.application.credentials.dig(:axiom, :org) rescue nil) || ENV["AXIOM_ORG"]
+        dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
+        metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
+
+        dataset_url ||= (org.present? && dataset.present?) ? "https://app.axiom.co/#{org}/datasets/#{dataset}" : nil
+        metrics_dataset_url ||= (org.present? && metrics_dataset.present?) ? "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}" : nil
+        traces_url ||= org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
+
         @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
       rescue StandardError
         @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
@@ -206,7 +217,7 @@ module Ops
         Profiles::GeneratePipelineJob.perform_later(login, images: false)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued re-run (no new images) for #{count} profile(s) — text AI always on"
+      redirect_to ops_admin_path, notice: "Queued apply-latest-version for #{count} profile(s). AI artwork is disabled."
     end
 
     # bulk_retry with images removed from Ops to avoid confusion and budget risk.
@@ -218,12 +229,20 @@ module Ops
         p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued re-run (no new images) for all (#{count}) profiles — text AI always on"
+      redirect_to ops_admin_path, notice: "Queued apply-latest-version for all (#{count}) profiles. AI artwork is disabled."
     end
 
     # bulk_retry_all with images removed from Ops to avoid confusion and budget risk.
 
     # Removed write action for installation id: installation id must be configured explicitly.
+
+    def axiom_smoke
+      msg = params[:message].presence || "hello_world"
+      if defined?(StructuredLogger)
+        StructuredLogger.info({ message: "ops_axiom_smoke", sample: msg, request_id: request.request_id, env: Rails.env }, force_axiom: true)
+      end
+      redirect_to ops_admin_path, notice: "Emitted Axiom smoke log"
+    end
 
     private
 
@@ -234,14 +253,6 @@ module Ops
       content.lines.last(lines).join
     rescue StandardError
       nil
-    end
-
-    def axiom_smoke
-      msg = params[:message].presence || "hello_world"
-      if defined?(StructuredLogger)
-        StructuredLogger.info({ message: "ops_axiom_smoke", sample: msg, request_id: request.request_id, env: Rails.env }, force_axiom: true)
-      end
-      redirect_to ops_admin_path, notice: "Emitted Axiom smoke log"
     end
   end
 end
