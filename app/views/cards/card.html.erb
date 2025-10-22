@@ -27,58 +27,148 @@
   <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :card) %>
 <% end %>
 <div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-[216px_504px]">
-  
-  <div class="relative row-start-1 row-end-2">
+  <div class="relative row-start-1 h-[216px] overflow-hidden z-10">
     <% if choice == 'color' %>
       <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
     <% elsif bg_url %>
-      <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover opacity-28 pointer-events-none">
+      <% fx = (@profile.profile_card&.bg_fx_card || 0.5) %>
+      <% fy = (@profile.profile_card&.bg_fy_card || 0.5) %>
+      <% zoom = (@profile.profile_card&.bg_zoom_card || 1.0) %>
+      <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 w-full h-full object-cover opacity-100" style="<%= bg_style_from(fx: fx, fy: fy, zoom: zoom) %>">
+    <% end %>
+    <div class="absolute inset-0 bg-gradient-to-b from-black/5 via-black/10 to-black/20"></div>
+    <%# Top-right corner marker should sit inside the banner area %>
+    <% card_tr = @profile.profile_card %>
+    <% if card_tr && card_tr.playing_card.present? %>
+      <div class="absolute top-2 right-4 text-white/85 text-lg font-semibold select-none whitespace-nowrap"><%= card_tr.playing_card %></div>
     <% end %>
   </div>
 
-  <div class="relative row-start-2 row-end-3 grid grid-cols-[360px_1fr]">
-    <div class="flex items-center justify-center">
-      <div class="w-[280px] h-[280px] rounded-2xl p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
-        <div class="w-full h-full rounded-xl overflow-hidden bg-gray-800">
-          <img src="<%= avatar_image_url_for(@profile) %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
-        </div>
+  <div class="absolute left-12 top-[216px] -translate-y-12 transform z-40">
+    <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-[0_10px_40px_rgba(59,130,246,0.45)]">
+      <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
+        <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
+        <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
+        <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
+        <% if avatar_src.present? %>
+          <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
+        <% else %>
+          <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
+        <% end %>
       </div>
     </div>
+  </div>
 
-    <div class="pr-8 py-4">
-      <div class="space-y-2">
+  <div class="relative row-start-2 h-[504px] z-30 px-12 pb-4 pt-6 overflow-hidden border-t border-gray-800 bg-gray-900">
+    <div class="h-full grid grid-cols-[200px_1fr_360px] gap-6">
+      <div class="col-start-2 px-4 max-w-[760px] mx-auto">
         <% name = @profile.display_name %>
         <% handle = @profile.login %>
-        <% name_size = name.to_s.length > 25 ? "text-3xl" : name.to_s.length > 18 ? "text-4xl" : "text-5xl" %>
-        <% handle_size = handle.to_s.length > 20 ? "text-base" : "text-xl" %>
-        <h1 class="<%= name_size %> font-bold text-white tracking-wide drop-shadow-sm leading-tight"><%= name %></h1>
-        <p class="<%= handle_size %> font-medium text-sky-400">@<%= handle %></p>
-      </div>
+        <% name_size = name.to_s.length > 26 ? "text-4xl" : name.to_s.length > 18 ? "text-5xl" : "text-6xl" %>
+        <div class="flex items-center gap-4 leading-none">
+          <h1 class="<%= name_size %> font-bold text-white tracking-wide drop-shadow-sm"><%= name %></h1>
+          <span class="text-2xl font-medium text-sky-400">@<%= handle %></span>
+        </div>
 
-      <% card = @profile.profile_card %>
-      <% if card&.long_bio.present? %>
-        <p class="mt-2 text-gray-300 text-base leading-snug line-clamp-3"><%= card.long_bio %></p>
-      <% end %>
+        <%# Top repo chips removed to reclaim space %>
 
-      <div class="mt-3 flex flex-wrap gap-3">
-        <% if card&.attack.present? %>
-          <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-amber-300 font-semibold">ATK <%= card.attack %></span>
-        <% end %>
-        <% if card&.defense.present? %>
-          <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-blue-300 font-semibold">DEF <%= card.defense %></span>
-        <% end %>
-        <% if card&.speed.present? %>
-          <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-green-300 font-semibold">SPD <%= card.speed %></span>
-        <% end %>
-      </div>
-
-      <% if card && Array(card.tags).any? %>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <% Array(card.tags).first(6).each do |t| %>
-            <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-indigo-300 font-medium">#<%= t.to_s.downcase %></span>
+        <%# Single URL chip: prefer personal URL; else GitHub URL %>
+        <div class="mt-2 flex items-center gap-2 text-gray-200 leading-none flex-wrap">
+          <% if @profile.blog.present? %>
+            <% nice_url = @profile.blog.to_s.gsub(%r{https?://}, '').gsub(/^www\./, '') %>
+            <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md">
+              <span class="font-medium align-middle">🔗 <%= nice_url %></span>
+            </div>
+          <% else %>
+            <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md">
+              <span class="font-medium align-middle">github.com/<%= handle %></span>
+            </div>
+          <% end %>
+          <% if @profile.location.present? %>
+            <div class="px-3 py-1.5 bg-gray-800/70 border border-gray-700 rounded-full shadow-md">
+              <span class="font-medium align-middle"><%= @profile.location %></span>
+            </div>
           <% end %>
         </div>
-      <% end %>
+
+        <% card = @profile.profile_card %>
+        <% ft = card&.flavor_text.presence %>
+        <% if ft.present? %>
+          <p class="mt-3 text-sky-300 text-base leading-relaxed">"<%= ft %>"</p>
+        <% end %>
+        <%# Prefer full short_bio over any truncated tagline %>
+        <% short_bio = card&.short_bio.presence || @profile.bio %>
+        <% if short_bio.present? %>
+          <p class="mt-2 text-gray-200 text-base leading-relaxed"><%= short_bio %></p>
+        <% end %>
+
+        <%# Languages removed here to avoid duplication with tags and free space for descriptions %>
+
+        <%# Left column stays focused on identity + text; chips moved to right %>
+      </div>
+      <div class="pr-2 flex flex-col items-stretch gap-2">
+        <% followers = @profile.followers.to_i %>
+        <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
+        <% repos = @profile.public_repos.to_i %>
+        <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70 text-gray-200 text-sm self-end">⭐ <%= stars %> • 👥 <%= followers %></span>
+        <span class="px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/70 text-gray-200 text-sm self-end">📦 <%= repos %> repos</span>
+
+        <%# Stat + key trait chips relocated here %>
+        <% card ||= @profile.profile_card %>
+        <% if card %>
+          <div class="mt-1 flex flex-wrap items-center justify-end gap-2 text-sm">
+            <% if card.attack.present? %>
+              <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-amber-300 font-semibold">Attack: <%= card.attack %></span>
+            <% end %>
+            <% if card.defense.present? %>
+              <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-blue-300 font-semibold">Defense: <%= card.defense %></span>
+            <% end %>
+            <% if card.speed.present? %>
+              <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700 text-green-300 font-semibold">Speed: <%= card.speed %></span>
+            <% end %>
+            <% if card.spirit_animal.present? %>
+              <span class="px-2.5 py-1 rounded bg-emerald-900/40 border border-emerald-700 text-emerald-200 font-semibold">🐾 <%= card.spirit_animal %></span>
+            <% end %>
+            <% if card.archetype.present? %>
+              <span class="px-2.5 py-1 rounded bg-emerald-900/40 border border-emerald-700 text-emerald-200 font-semibold">⚡ <%= card.archetype %></span>
+            <% end %>
+          </div>
+          <%# Compact trait value chips (no long descriptions) %>
+          <div class="mt-2 flex flex-wrap items-center justify-end gap-1.5 text-xs sm:text-sm">
+            <% if card.vibe.present? %>
+              <span class="px-2.5 py-1 rounded bg-cyan-900/40 border border-cyan-700 text-cyan-200 font-medium">Vibe: <%= card.vibe %></span>
+            <% end %>
+            <% if card.special_move.present? %>
+              <span class="px-2.5 py-1 rounded bg-sky-900/40 border border-sky-700 text-sky-200 font-medium">Move: <%= card.special_move %></span>
+            <% end %>
+            <% if card.buff.present? %>
+              <span class="px-2.5 py-1 rounded bg-emerald-900/30 border border-emerald-700 text-emerald-200 font-medium">Buff: <%= card.buff %></span>
+            <% end %>
+            <% if card.weakness.present? %>
+              <span class="px-2.5 py-1 rounded bg-rose-900/30 border border-rose-700 text-rose-200 font-medium">Weak: <%= card.weakness %></span>
+            <% end %>
+          </div>
+          <%# Tags moved below the grid for centered single-line row %>
+        <% end %>
+      </div>
     </div>
+
+    <%# Tags row: directly under content grid, centered %>
+    <% card = @profile.profile_card %>
+    <% if card && Array(card.tags).any? %>
+      <div class="absolute inset-x-0 bottom-20 px-12">
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <% Array(card.tags).first(6).each do |t| %>
+            <span class="px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700/70 text-cyan-300 font-medium">#<%= t.to_s.downcase %></span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <p class="absolute bottom-3 right-6 text-base font-semibold text-slate-300 tracking-wide">techub.life</p>
+    <%# Corner playing card markers on main card (use full text) %>
+    <% card = @profile.profile_card %>
+    <% if card && card.playing_card.present? %>
+      <div class="absolute bottom-2 left-6 text-white/85 text-lg font-semibold select-none whitespace-nowrap"><%= card.playing_card %></div>
+    <% end %>
   </div>
 </div>
