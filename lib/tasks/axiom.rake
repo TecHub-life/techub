@@ -3,12 +3,14 @@ namespace :axiom do
   task doctor: :environment do
     token = (Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]
     dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
+    metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
     enabled = !!(ENV["AXIOM_ENABLED"] == "1" || Rails.env.production?)
 
     puts "Axiom doctor"
     puts "  env: #{Rails.env}"
     puts "  token_present: #{token.to_s.strip != ''}"
     puts "  dataset: #{dataset || '(nil)'}"
+    puts "  metrics_dataset: #{metrics_dataset || '(nil)'}"
     puts "  forwarding_enabled: #{enabled} (prod or AXIOM_ENABLED=1)"
 
     if token.to_s.strip.empty? || dataset.to_s.strip.empty?
@@ -26,7 +28,7 @@ namespace :axiom do
     payload = [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor", env: Rails.env, app: "techub" } ]
     begin
       resp = conn.post("/v1/datasets/#{dataset}/ingest", payload)
-      puts "POST /v2/datasets/#{dataset}/ingest => #{resp.status}"
+      puts "POST /v1/datasets/#{dataset}/ingest => #{resp.status}"
       puts "OK — event sent"
     rescue Faraday::ResourceNotFound
       puts "Dataset '#{dataset}' not found."
@@ -37,7 +39,7 @@ namespace :axiom do
           puts "POST /v2/datasets => #{create_resp.status}"
           # Retry ingest once
           resp2 = conn.post("/v1/datasets/#{dataset}/ingest", payload)
-          puts "POST /v2/datasets/#{dataset}/ingest => #{resp2.status}"
+          puts "POST /v1/datasets/#{dataset}/ingest => #{resp2.status}"
           puts "OK — event sent after creating dataset"
         rescue Faraday::Error => e
           warn "Create/ingest failed: #{e.class}: #{e.message}"
@@ -53,6 +55,21 @@ namespace :axiom do
     rescue StandardError => e
       warn "Error: #{e.class}: #{e.message}"
       exit(3)
+    end
+
+    # Optionally validate metrics dataset
+    if metrics_dataset.to_s.strip != ""
+      begin
+        resp_m = conn.post("/v1/datasets/#{metrics_dataset}/ingest", [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor_metrics", env: Rails.env, app: "techub" } ])
+        puts "POST /v1/datasets/#{metrics_dataset}/ingest => #{resp_m.status}"
+        puts "OK — metrics event sent"
+      rescue Faraday::ResourceNotFound
+        puts "Metrics dataset '#{metrics_dataset}' not found."
+      rescue Faraday::Error => e
+        warn "HTTP error (metrics): #{e.class}: #{e.message}"
+      rescue StandardError => e
+        warn "Error (metrics): #{e.class}: #{e.message}"
+      end
     end
   end
 
@@ -121,9 +138,10 @@ namespace :axiom do
   desc "Self-test: log smoke (sync), OTEL span, and direct ingest"
   task self_test: :environment do
     dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
+    metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
     abort "Set credentials[:axiom][:dataset] or AXIOM_DATASET" if dataset.to_s.strip.empty?
 
-    puts "Axiom self-test: dataset=#{dataset}"
+    puts "Axiom self-test: dataset=#{dataset} metrics_dataset=#{metrics_dataset || '(nil)'}"
 
     # 1) StructuredLogger (forced, synchronous) — guaranteed delivery
     StructuredLogger.info({ message: "axiom_self_test_log", env: Rails.env, ts: Time.now.utc.iso8601 }, force_axiom: true)
@@ -140,6 +158,16 @@ namespace :axiom do
     else
       warn "  ✗ Direct ingest failed: #{res.error.message}"
       exit 3
+    end
+
+    # 4) Optional: metrics dataset ingest via client
+    if metrics_dataset.to_s.strip != ""
+      resm = Axiom::IngestService.call(dataset: metrics_dataset, events: [ event.merge(kind: "axiom_self_test_metrics") ])
+      if resm.success?
+        puts "  ✓ Metrics direct ingest sent (status #{resm.value})"
+      else
+        warn "  ✗ Metrics direct ingest failed: #{resm.error.message}"
+      end
     end
 
     puts "Done. Check your dataset and traces UI."

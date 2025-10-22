@@ -38,9 +38,9 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - Refs: config/storage.yml:12,17,19,21; app/services/backups/\*.
 - Resend: `RESEND_API_KEY`
   - Home: credentials under `:resend`.
-- Axiom: `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_ENABLED`
-  - Home: credentials under `:axiom` (token/dataset). `AXIOM_ENABLED` can remain env for dev
-    forcing.
+- Axiom: `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_METRICS_DATASET`, `AXIOM_ENABLED`
+  - Home: credentials under `:axiom` (token/dataset/metrics_dataset). `AXIOM_ENABLED` can remain env
+    for dev forcing.
   - Refs: config/initializers/structured_logging.rb:18.
 - Twitter meta: `TWITTER_SITE_HANDLE`, `TWITTER_CREATOR_HANDLE`
   - Home: credentials under `:twitter`.

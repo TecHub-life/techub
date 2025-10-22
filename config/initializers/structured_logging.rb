@@ -62,7 +62,7 @@ module StructuredLogger
     else
       { message: message_or_hash.inspect }
     end
-    payload = entry.merge(base).merge(extras) rescue base.merge(extras)
+    payload = entry(level).merge(base).merge(extras) rescue base.merge(extras)
     # Primary sink: Rails logger (JSON to STDOUT)
     Rails.logger.public_send(level, payload)
 
@@ -71,11 +71,14 @@ module StructuredLogger
     cred_dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil)
     axiom_token = cred_token.presence || ENV["AXIOM_TOKEN"]
     axiom_dataset = cred_dataset.presence || ENV["AXIOM_DATASET"]
-    # Forward whenever token+dataset exist unless explicitly disabled
-    forwarding = ENV["AXIOM_DISABLE"] != "1"
+    # Forward in production by default, or when explicitly enabled via AXIOM_ENABLED=1.
+    # Always allow an explicit disable via AXIOM_DISABLE=1.
+    enabled_env = (Rails.env.production? || ENV["AXIOM_ENABLED"] == "1")
+    forwarding = enabled_env && ENV["AXIOM_DISABLE"] != "1"
     if forwarding && axiom_token.present? && axiom_dataset.present?
       deliver = proc do
         begin
+          require "faraday"
           conn = Faraday.new(url: "https://api.axiom.co") do |f|
             f.request :json
             f.response :raise_error
@@ -93,5 +96,20 @@ module StructuredLogger
     elsif ENV["AXIOM_DEBUG"] == "1"
       warn "Axiom forward skipped (forwarding=#{forwarding}, token_present=#{axiom_token.present?}, dataset_present=#{axiom_dataset.present?})"
     end
+  end
+
+  def entry(level)
+    {
+      ts: Time.now.utc.iso8601(3),
+      level: level.to_s.upcase,
+      request_id: Current.request_id,
+      job_id: Current.job_id,
+      app_version: (ENV["APP_VERSION"].presence || ENV["GIT_SHA"].presence),
+      user_id: Current.user_id,
+      ip: Current.ip,
+      ua: Current.user_agent,
+      path: Current.path,
+      method: Current.method
+    }
   end
 end
