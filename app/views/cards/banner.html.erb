@@ -1,5 +1,5 @@
 <%# 1500x500 banner view used for screenshot capture %>
-<section class="relative h-[500px] w-[1500px] overflow-hidden">
+<section class="relative h-[<%= (@canvas_h || 500).to_i %>px] w-[<%= (@canvas_w || 1500).to_i %>px] overflow-hidden">
   <% card = @profile.profile_card %>
   <%# Prefer library art when AI art is not opted-in %>
   <% if !@profile.ai_art_opt_in %>

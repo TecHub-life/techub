@@ -21,7 +21,7 @@
 <% elsif choice == 'default' %>
   <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :og) %>
 <% end %>
-<div class="w-[1200px] h-[630px] bg-gray-900 overflow-hidden relative flex flex-col">
+<div class="w-[<%= (@canvas_w || 1200).to_i %>px] h-[<%= (@canvas_h || 630).to_i %>px] bg-gray-900 overflow-hidden relative flex flex-col">
   <% if choice == 'color' %>
     <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
   <% elsif bg_url %>
