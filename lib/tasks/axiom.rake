@@ -133,8 +133,8 @@ namespace :axiom do
     Rake::Task["axiom:otel_smoke"].invoke
 
     # 3) Direct ingest via client
-    event = { ts: Time.now.utc.iso8601, level: 'INFO', kind: 'axiom_self_test_direct', env: Rails.env }
-    res = Axiom::IngestService.call(dataset: dataset, events: [event])
+    event = { ts: Time.now.utc.iso8601, level: "INFO", kind: "axiom_self_test_direct", env: Rails.env }
+    res = Axiom::IngestService.call(dataset: dataset, events: [ event ])
     if res.success?
       puts "  ✓ Direct ingest sent (status #{res.value})"
     else
