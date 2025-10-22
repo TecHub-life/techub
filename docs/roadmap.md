@@ -272,7 +272,7 @@ PR 18 — Submit: manual inputs + scraping (DONE)
 - DB (scaffolded): `profiles.submitted_scrape_url`; support `repository_type: "submitted"`; new
   `profile_scrapes` table for storage.
 - Sync (done): Preserve `submitted` repos during GitHub sync.
-- Orchestrator (partial): Services exist; flag-gate pipeline pre-steps; non-fatal failures with
+- Orchestrator: Services exist; pre-steps always on when inputs present; non-fatal failures with
   logging.
 - Tests (done): Scraper + record + preservation; add controller + pipeline integration tests when
   wiring UI.
@@ -280,7 +280,7 @@ PR 18 — Submit: manual inputs + scraping (DONE)
 Definition of Done
 
 - Code: Submit controller/form; stores `submitted_scrape_url` and up to 4 repos; pipeline pre-steps
-  gated by `SUBMISSION_MANUAL_INPUTS_ENABLED`.
+  are always on (no flag).
 - Services: `IngestSubmittedRepositoriesService` hydrates topics/metadata;
   `RecordSubmittedScrapeService` persists content/links with caps.
 - Tests: form validation; services success/failure; pipeline integration with flags on/off.
@@ -302,17 +302,18 @@ Definition of Done
 - Docs: `docs/background-selection.md` updated to include `3x1` support and owner uploads
 - Observability: structured logs on upload success/failure
 
-PR 20 — Regeneration limits & non-AI re-capture
+PR 20 — Regeneration limits & non-image re-capture
 
-- Split regeneration into two flows: non-AI re-capture (unlimited) and AI artwork regeneration
+- Split regeneration into two flows: non-image re-capture (unlimited) and image generation
   (rate-limited)
 - Enforce weekly limit per profile for AI artwork regeneration
-- Pipeline accepts `ai: false` to skip AI generation and only re-capture screenshots/optimize
+- Pipeline accepts `images: false` to skip image generation and only re-capture screenshots/optimize
 - Settings UI shows availability and next allowed time
 
 Definition of Done
 
-- Code: `Profiles::GeneratePipelineService` supports `ai:` flag; job accepts and forwards `ai`
+- Code: `Profiles::GeneratePipelineService` supports `images:` flag; job accepts and forwards
+  `images`
 - Policy: `last_ai_regenerated_at` tracked per profile; allow once per 7 days
 - UX: Two buttons in Settings; AI button disabled with explanation until window opens
 - Docs: `docs/ops-runbook.md` updated with limits; `docs/user-journey.md` clarifies flows

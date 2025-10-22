@@ -62,8 +62,6 @@ App/DB‑backed settings (use AppSetting and Ops; do not use env)
   - Key: `AppSetting[:user_uploads_enabled]` (default true).
   - Refs: app/views/my_profiles/settings.html.erb:270.
 - Proposed migration (next PR):
-  - Submission manual inputs: `SUBMISSION_MANUAL_INPUTS_ENABLED` →
-    `AppSetting[:submission_manual_inputs]`.
   - Eligibility gate: `REQUIRE_PROFILE_ELIGIBILITY` → `AppSetting[:require_profile_eligibility]`
     (default true).
 

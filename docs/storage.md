@@ -78,7 +78,8 @@ kamal app exec -i web -- bin/rails runner 'p Profile.for_login("loftwah").first.
 
 - "avatar_upload_skipped_missing_path"
   - The local file path was empty or missing; check disk space and ImageMagick.
-  - Re‑run image generation only: `bin/rails 'ai:images[login]'`
+  - To regenerate artwork, use the profile Settings UI (image regeneration is not exposed via rake
+    to avoid accidental cost).
 
 - Screenshots fail (connection refused/timeouts)
   - Ensure the URL uses `AppHost.current` and that the host is reachable from the worker.

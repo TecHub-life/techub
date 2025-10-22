@@ -84,8 +84,8 @@ module Ops
       @ai_caps = {
         image_generation: FeatureFlags.enabled?(:ai_images),
         image_descriptions: FeatureFlags.enabled?(:ai_image_descriptions),
-        text_output: model_ok,            # Gemini text endpoint available
-        structured_output: model_ok,      # Structured JSON via response schema
+        text_output: (FeatureFlags.enabled?(:ai_text) && model_ok),
+        structured_output: (FeatureFlags.enabled?(:ai_structured_output) && model_ok),
         provider: (Gemini::Configuration.provider rescue nil),
         model: (Gemini::Configuration.model rescue nil)
       }
@@ -101,6 +101,8 @@ module Ops
     def update_ai_caps
       AppSetting.set_bool(:ai_images, ActiveModel::Type::Boolean.new.cast(params[:ai_images]))
       AppSetting.set_bool(:ai_image_descriptions, ActiveModel::Type::Boolean.new.cast(params[:ai_image_descriptions]))
+      AppSetting.set_bool(:ai_text, ActiveModel::Type::Boolean.new.cast(params[:ai_text]))
+      AppSetting.set_bool(:ai_structured_output, ActiveModel::Type::Boolean.new.cast(params[:ai_structured_output]))
       redirect_to ops_admin_path, notice: "AI capability flags updated"
     rescue StandardError => e
       redirect_to ops_admin_path, alert: "Failed to update AI flags: #{e.message}"
@@ -191,44 +193,25 @@ module Ops
       logins = Array(params[:logins]).map { |s| s.to_s.downcase.strip }.reject(&:blank?)
       count = 0
       logins.each do |login|
-        Profiles::GeneratePipelineJob.perform_later(login, ai: false)
+        Profiles::GeneratePipelineJob.perform_later(login, images: false)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued Screenshots-Only re-run for #{count} profile(s)"
+      redirect_to ops_admin_path, notice: "Queued re-run (no new images) for #{count} profile(s) — text AI always on"
     end
 
-    def bulk_retry_ai
-      logins = Array(params[:logins]).map { |s| s.to_s.downcase.strip }.reject(&:blank?)
-      count = 0
-      now = Time.current
-      Profile.where(login: logins).find_each do |p|
-        Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
-        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
-        count += 1
-      end
-      redirect_to ops_admin_path, notice: "Queued Full (AI) re-run for #{count} profile(s)"
-    end
+    # bulk_retry with images removed from Ops to avoid confusion and budget risk.
 
     def bulk_retry_all
       count = 0
       Profile.find_each do |p|
-        Profiles::GeneratePipelineJob.perform_later(p.login, ai: false)
+        Profiles::GeneratePipelineJob.perform_later(p.login, images: false)
         p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued Screenshots-Only re-run for all (#{count}) profiles"
+      redirect_to ops_admin_path, notice: "Queued re-run (no new images) for all (#{count}) profiles — text AI always on"
     end
 
-    def bulk_retry_ai_all
-      count = 0
-      now = Time.current
-      Profile.find_each do |p|
-        Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
-        p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
-        count += 1
-      end
-      redirect_to ops_admin_path, notice: "Queued Full (AI) re-run for all (#{count}) profiles"
-    end
+    # bulk_retry_all with images removed from Ops to avoid confusion and budget risk.
 
     # Removed write action for installation id: installation id must be configured explicitly.
 

@@ -91,9 +91,7 @@ Rails.application.routes.draw do
     post "/axiom_smoke", to: "admin#axiom_smoke", as: :axiom_smoke
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
-    post "/bulk_retry_ai", to: "admin#bulk_retry_ai", as: :bulk_retry_ai
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
-    post "/bulk_retry_ai_all", to: "admin#bulk_retry_ai_all", as: :bulk_retry_ai_all
     resources :admin, only: [] do
       collection do
         post :rebuild_leaderboards
@@ -110,7 +108,7 @@ Rails.application.routes.draw do
     get "/profiles/search", to: "profiles#search", as: :search_profiles
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
     post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile
-    post "/profiles/:username/retry_ai", to: "profiles#retry_ai", as: :retry_profile_ai
+    # Image regeneration routes removed to reduce confusion; use default retry path for freshness
     delete "/profiles/:username", to: "profiles#destroy", as: :destroy_profile
     # Ownerships admin
     get "/ownerships", to: "ownerships#index", as: :ownerships

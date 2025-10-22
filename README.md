@@ -79,7 +79,7 @@ Copy `.env.example` to `.env` and fill in the values. Key settings:
 - `RESEND_API_KEY` reserved for future email notifications.
 - `REQUIRE_PROFILE_ELIGIBILITY` (default ON): set to `0`/`false`/`no` to disable the eligibility
   gate (e.g., paid mode). Otherwise, gating is enforced.
-- `SUBMISSION_MANUAL_INPUTS_ENABLED` (default OFF): set to `1`/`true`/`yes` to enable manual inputs
+- `SUBMISSION_MANUAL_INPUTS_ENABLED` — deprecated; manual inputs are always enabled and fail-safe.
   (URL + repos) pre-steps.
 - `GENERATED_IMAGE_UPLOAD`: when set to `1`/`true`/`yes`, generated assets are uploaded to Active
   Storage (DigitalOcean Spaces in production) and public URLs recorded alongside local paths.
