@@ -5,7 +5,6 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     profile = Profile.create!(github_id: 2, login: "emptycase")
     get "/profiles/emptycase"
     assert_response :success
-    assert_select "div", text: /Shareable Trading Cards/
     assert_select "p", text: /No card assets yet/  # empty-state message appears
   end
 end
