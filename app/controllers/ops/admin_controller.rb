@@ -101,10 +101,13 @@ module Ops
         org = (Rails.application.credentials.dig(:axiom, :org) rescue nil) || ENV["AXIOM_ORG"]
         dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
         metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
+        service_name = ENV["OTEL_SERVICE_NAME"].presence || (Rails.application.credentials.dig(:otel, :service_name) rescue nil).to_s.presence || "techub"
 
-        dataset_url ||= (org.present? && dataset.present?) ? "https://app.axiom.co/#{org}/datasets/#{dataset}" : nil
-        metrics_dataset_url ||= (org.present? && metrics_dataset.present?) ? "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}" : nil
+        # Prefer Axiom Streams UI paths
+        dataset_url ||= (org.present? && dataset.present?) ? "https://app.axiom.co/#{org}/stream/#{dataset}" : nil
+        metrics_dataset_url ||= (org.present? && metrics_dataset.present?) ? "https://app.axiom.co/#{org}/stream/#{metrics_dataset}" : nil
         traces_url ||= org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
+        traces_url = traces_url && service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
 
         @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
       rescue StandardError
@@ -217,7 +220,7 @@ module Ops
         Profiles::GeneratePipelineJob.perform_later(login, images: false)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued apply-latest-version for #{count} profile(s). AI artwork is disabled."
+      redirect_to ops_admin_path, notice: "Queued re-roll for #{count} profile(s). AI artwork is disabled."
     end
 
     # bulk_retry with images removed from Ops to avoid confusion and budget risk.
@@ -229,7 +232,7 @@ module Ops
         p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
         count += 1
       end
-      redirect_to ops_admin_path, notice: "Queued apply-latest-version for all (#{count}) profiles. AI artwork is disabled."
+      redirect_to ops_admin_path, notice: "Queued re-roll for all (#{count}) profiles. AI artwork is disabled."
     end
 
     # bulk_retry_all with images removed from Ops to avoid confusion and budget risk.
