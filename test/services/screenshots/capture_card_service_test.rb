@@ -94,4 +94,26 @@ class CaptureCardServiceTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "upload always enabled in production regardless of app setting" do
+    AppSetting.set_bool(:generated_image_upload, false)
+
+    Rails.stub :env, ActiveSupport::StringInquirer.new("production") do
+      service = Screenshots::CaptureCardService.new(login: "loftwah")
+      assert service.send(:upload_enabled?)
+    end
+  ensure
+    AppSetting.set_bool(:generated_image_upload, true)
+  end
+
+  test "upload respects app setting outside production" do
+    AppSetting.set_bool(:generated_image_upload, false)
+
+    Rails.stub :env, ActiveSupport::StringInquirer.new("development") do
+      service = Screenshots::CaptureCardService.new(login: "loftwah")
+      refute service.send(:upload_enabled?)
+    end
+  ensure
+    AppSetting.set_bool(:generated_image_upload, true)
+  end
 end

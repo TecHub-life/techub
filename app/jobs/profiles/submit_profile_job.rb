@@ -32,9 +32,7 @@ module Profiles
       # Enqueue pipeline job and mark status
       persisted.update_columns(submitted_at: Time.current, last_pipeline_status: "queued", last_pipeline_error: nil)
 
-      # Only run AI on first creation (no card and never AI-regenerated)
-      images_flag = persisted.profile_card.nil? && persisted.last_ai_regenerated_at.nil?
-      Profiles::GeneratePipelineJob.perform_later(persisted.login, images: images_flag)
+      Profiles::GeneratePipelineJob.perform_later(persisted.login)
     end
   end
 end

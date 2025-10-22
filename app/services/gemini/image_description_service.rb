@@ -38,9 +38,12 @@ module Gemini
 
     def call
       unless FeatureFlags.enabled?(:ai_image_descriptions)
-        return failure(
-          StandardError.new("image_descriptions_disabled"),
-          metadata: { reason: "AI image descriptions are disabled to control costs; prompts will use profile context instead." }
+        return success(
+          nil,
+          metadata: {
+            skipped: true,
+            reason: "AI image descriptions are disabled to control costs; prompts will use profile context instead."
+          }
         )
       end
 

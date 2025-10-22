@@ -154,10 +154,9 @@ class MyProfilesController < ApplicationController
       return redirect_to my_profile_settings_path(username: @profile.login), alert: "Please wait ~#{wait_m}m before re-capturing screenshots again"
     end
 
-    # Re-capture non-AI screenshots and optimize only
-    Profiles::GeneratePipelineJob.perform_later(@profile.login, images: false)
+    Profiles::GeneratePipelineJob.perform_later(@profile.login)
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "Re-capture queued for @#{@profile.login} — No new images (text AI always on)"
+    redirect_to my_profile_settings_path(username: @profile.login), notice: "Pipeline queued for @#{@profile.login}"
   end
 
   def regenerate_ai
@@ -168,9 +167,9 @@ class MyProfilesController < ApplicationController
       return redirect_to my_profile_settings_path(username: @profile.login), alert: "AI regeneration available in ~#{wait_h}h"
     end
 
-    Profiles::GeneratePipelineJob.perform_later(@profile.login, images: true)
+    Profiles::GeneratePipelineJob.perform_later(@profile.login)
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "Regeneration with images queued for @#{@profile.login} (weekly limit)"
+    redirect_to my_profile_settings_path(username: @profile.login), notice: "Full regeneration queued for @#{@profile.login} (weekly limit in effect)"
   end
 
   def upload_asset

@@ -38,9 +38,9 @@ module Ops
     end
 
     def retry
-      Profiles::GeneratePipelineJob.perform_later(@profile.login, images: false)
+      Profiles::GeneratePipelineJob.perform_later(@profile.login)
       @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-      redirect_to ops_admin_path, notice: "Re-run queued for @#{@profile.login} — No new images (text AI always on)"
+      redirect_to ops_admin_path, notice: "Pipeline run queued for @#{@profile.login}"
     end
 
     # Image regeneration removed from Ops to avoid confusion. Use Settings UI for artwork decisions.

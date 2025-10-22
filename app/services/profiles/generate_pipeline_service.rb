@@ -2,14 +2,9 @@ module Profiles
   class GeneratePipelineService < ApplicationService
     VARIANTS = %w[og card simple banner].freeze
 
-    def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, images: true, ai: nil)
+    def initialize(login:, host: nil)
       @login = login.to_s.downcase
       @host = resolve_host(host)
-      @provider = provider # nil respects default
-      @upload = upload.nil? ? ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase.in?([ "1", "true", "yes" ]) : upload
-      @optimize = optimize
-      # Back-compat: accept legacy ai: flag as alias for images
-      @images = images.nil? ? ai : images
     end
 
     def call
@@ -46,39 +41,7 @@ module Profiles
         scraped = scraped_result.value if scraped_result.success?
       end
 
-      image_suite = nil
-      ai_partial = false
-      # 3) AI Images: controlled by feature flag and the `images` parameter
-      if images
-        t0 = Time.current
-        StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_images") if defined?(StructuredLogger)
-        if FeatureFlags.enabled?(:ai_images)
-          # Allow images provider override independent from global provider
-          images_provider = provider.presence || ENV["GEMINI_IMAGES_PROVIDER"].to_s.presence
-          image_suite = Gemini::AvatarImageSuiteService.call(
-            login: login,
-            provider: images_provider,
-            filename_suffix: images_provider,
-            output_dir: Rails.root.join("public", "generated")
-          )
-          if image_suite.failure?
-            ai_partial = true
-            StructuredLogger.warn(message: "ai_images_failed", login: login, error: image_suite.error.message) if defined?(StructuredLogger)
-            record_event(profile, stage: "ai_images", status: "failed", duration_ms: ((Time.current - t0) * 1000).to_i, message: image_suite.error.message)
-          else
-            StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_images", duration_ms: ((Time.current - t0) * 1000).to_i) if defined?(StructuredLogger)
-            record_event(profile, stage: "ai_images", status: "completed", duration_ms: ((Time.current - t0) * 1000).to_i)
-          end
-        else
-          # Images disabled by policy — do NOT mark partial; this is expected
-          StructuredLogger.info(message: "ai_images_skipped_policy", login: login) if defined?(StructuredLogger)
-        end
-      else
-        # Images explicitly disabled for this run — do NOT mark partial
-        StructuredLogger.info(message: "ai_images_disabled_run", login: login) if defined?(StructuredLogger)
-      end
-
-      # 3b) AI text + traits: gated (defaults ON); fallback to heuristic if taped off or failed
+      # 3) AI text + traits: gated (defaults ON); fail when synthesis fails
       t1 = Time.current
       if FeatureFlags.enabled?(:ai_text)
         StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "ai_traits") if defined?(StructuredLogger)
@@ -87,20 +50,8 @@ module Profiles
         if ai_traits.failure?
           StructuredLogger.warn(message: "ai_traits_failed", login: login, error: ai_traits.error.message) if defined?(StructuredLogger)
           record_event(profile, stage: "ai_traits", status: "failed", duration_ms: ((Time.current - t1) * 1000).to_i, message: ai_traits.error.message)
-          ai_partial = true
-          # Fallback to heuristic synthesis
-          StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "synth_heuristic") if defined?(StructuredLogger)
-          synth = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
-          return synth if synth.failure?
-          StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "synth_heuristic", duration_ms: 0) if defined?(StructuredLogger)
-          record_event(profile, stage: "synth_heuristic", status: "completed", duration_ms: 0)
+          return ai_traits
         else
-          # Propagate partial flag when AI succeeded via fallback inside the service
-          begin
-            meta = ai_traits.metadata if ai_traits.respond_to?(:metadata)
-            ai_partial ||= !!(meta && meta[:partial])
-          rescue StandardError
-          end
           StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "ai_traits", duration_ms: ((Time.current - t1) * 1000).to_i) if defined?(StructuredLogger)
           record_event(profile, stage: "ai_traits", status: "completed", duration_ms: ((Time.current - t1) * 1000).to_i)
         end
@@ -142,12 +93,11 @@ module Profiles
       success(
         {
           login: login,
-          images: image_suite&.value,
           screenshots: nil,
           card_id: card_id,
           scraped: scraped
         },
-        metadata: { login: login, provider: provider, upload: upload, optimize: optimize, partial: ai_partial }
+        metadata: { login: login }
       )
     rescue StandardError => e
       failure(e)
@@ -155,7 +105,7 @@ module Profiles
 
     private
 
-    attr_reader :login, :host, :provider, :upload, :optimize, :images
+    attr_reader :login, :host
 
     def resolve_host(custom_host)
       candidate = custom_host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil)

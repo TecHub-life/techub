@@ -36,13 +36,6 @@ module Profiles
           produces: [ "profile_scrapes(optional)" ]
         ),
         Stage.new(
-          id: :ai_images,
-          label: "AI Images (Avatar + BG Variants)",
-          gated_by: :ai_images,
-          description: "Generate avatar/supporting art variants via Gemini (taped off by default)",
-          produces: %w[avatar_1x1 avatar_16x9 avatar_3x1]
-        ),
-        Stage.new(
           id: :ai_traits,
           label: "AI Text & Traits",
           gated_by: :ai_text,
