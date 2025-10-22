@@ -90,13 +90,14 @@ module Ops
         model: (Gemini::Configuration.model rescue nil)
       }
 
-      # Axiom links (dataset + traces)
+      # Axiom links (datasets + traces)
       begin
         dataset_url = (Rails.application.credentials.dig(:axiom, :dataset_url) rescue nil) || ENV["AXIOM_DATASET_URL"]
+        metrics_dataset_url = (Rails.application.credentials.dig(:axiom, :metrics_dataset_url) rescue nil) || ENV["AXIOM_METRICS_DATASET_URL"]
         traces_url = (Rails.application.credentials.dig(:axiom, :traces_url) rescue nil) || ENV["AXIOM_TRACES_URL"] || "https://app.axiom.co/traces"
-        @axiom = { dataset_url: dataset_url, traces_url: traces_url }
+        @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
       rescue StandardError
-        @axiom = { dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
+        @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
       end
 
       # Pipeline visibility (read-only manifest)

@@ -23,7 +23,10 @@
     <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Axiom</h2>
     <div class="mt-2 flex flex-wrap gap-2">
       <% if @axiom[:dataset_url].present? %>
-        <a href="<%= @axiom[:dataset_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Dataset</a>
+        <a href="<%= @axiom[:dataset_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Logs Dataset</a>
+      <% end %>
+      <% if @axiom[:metrics_dataset_url].present? %>
+        <a href="<%= @axiom[:metrics_dataset_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Metrics Dataset</a>
       <% end %>
       <% if @axiom[:traces_url].present? %>
         <a href="<%= @axiom[:traces_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Traces</a>
