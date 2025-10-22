@@ -56,6 +56,13 @@ run!("rubocop") { system("bin/rubocop -A && bin/rubocop") }
 run!("prettier") { system("npm run --silent prettier:check") }
 # Use bundle exec to avoid bin/brakeman's --ensure-latest in CI sandboxes
 run!("brakeman") { system("bundle exec brakeman -q -w2 --no-exit-on-warn --no-pager") }
+puts <<~MSG
+
+  Note: If Brakeman reported "Obsolete Ignore Entries", clean them locally:
+    bundle exec brakeman -I --no-pager
+  Then choose to remove obsolete entries and commit config/brakeman.ignore.
+
+MSG
 run!("test") { system("bin/rails test") }
 
 # Optional Docker build + smoke test
