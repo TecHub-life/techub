@@ -117,6 +117,19 @@ class PagesController < ApplicationController
     @path = params[:path].to_s
     # Build a simple index of markdown files
     @docs_index = Dir[root.join("**", "*.md")].map { |p| p.delete_prefix(root.to_s + "/") }.sort
+
+    # If a non-markdown file under docs/ is requested via wildcard, serve it safely
+    if @path.present? && !@path.end_with?(".md")
+      # Only allow files within docs/ and disallow traversal
+      clean = Pathname.new(@path).cleanpath.to_s
+      return head(:bad_request) if clean.start_with?("..")
+      asset = root.join(clean)
+      if asset.exist? && asset.file?
+        type = Marcel::MimeType.for(asset.to_s)
+        return send_file(asset.to_s, type: type, disposition: "inline")
+      end
+    end
+
     # Resolve the requested doc or default strictly from index (no arbitrary paths)
     rel = @path.presence_in(@docs_index) || "marketing-overview.md"
     target = root.join(rel)
@@ -124,7 +137,8 @@ class PagesController < ApplicationController
       @doc_title = rel
       md = File.read(target)
       begin
-        html = Commonmarker.to_html(md)
+        # Prefer the richer renderer used elsewhere for consistency
+        html = Commonmarker.to_html(md, plugins: { syntax_highlighter: nil }, options: { parse: { smart: true }, render: { unsafe: true } })
       rescue StandardError
         html = md
       end
@@ -134,7 +148,7 @@ class PagesController < ApplicationController
       # Sanitize the HTML to avoid XSS from embedded HTML in markdown
       allowed_tags = %w[p br strong em b i u a img h1 h2 h3 h4 h5 h6 ul ol li blockquote pre code hr table thead tbody tr th td]
       allowed_attrs = %w[href src alt title class]
-      @doc_html = sanitize(rewritten, tags: allowed_tags, attributes: allowed_attrs)
+      @doc_html = helpers.sanitize(rewritten, tags: allowed_tags, attributes: allowed_attrs)
     end
   end
 
