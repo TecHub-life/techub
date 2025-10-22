@@ -76,6 +76,190 @@
     <% end %>
   </div>
 
+  <% if @profile_card %>
+    <div class="rounded border p-4 dark:border-slate-700 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">AI Traits Snapshot</h2>
+        <% if @profile_card.generated_at %>
+          <span class="text-xs text-slate-500 dark:text-slate-400">Generated <%= @profile_card.generated_at.strftime('%Y-%m-%d %H:%M') %></span>
+        <% end %>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-3">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Stats</h3>
+            <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+              <li>⚔️ Attack: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.attack %></span></li>
+              <li>🛡️ Defense: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.defense %></span></li>
+              <li>⚡ Speed: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.speed %></span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Archetype</h3>
+            <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+              <% if @profile_card.playing_card.present? %>
+                <li>🃏 Playing Card: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.playing_card %></span></li>
+              <% end %>
+              <% if @profile_card.spirit_animal.present? %>
+                <li>🦄 Spirit Animal: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.spirit_animal %></span></li>
+              <% end %>
+              <% if @profile_card.archetype.present? %>
+                <li>🌟 Archetype: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.archetype %></span></li>
+              <% end %>
+              <% if @profile_card.vibe.present? %>
+                <li>✨ Vibe: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.vibe %></span></li>
+              <% end %>
+            </ul>
+          </div>
+          <% if @profile_card.special_move.present? || @profile_card.buff.present? || @profile_card.weakness.present? %>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Highlights</h3>
+              <dl class="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                <% if @profile_card.buff.present? %>
+                  <div>
+                    <dt class="font-semibold uppercase text-xs tracking-wide text-emerald-600 dark:text-emerald-400">Buff</dt>
+                    <dd><%= @profile_card.buff %> — <%= @profile_card.buff_description.presence || "n/a" %></dd>
+                  </div>
+                <% end %>
+                <% if @profile_card.weakness.present? %>
+                  <div>
+                    <dt class="font-semibold uppercase text-xs tracking-wide text-amber-600 dark:text-amber-400">Weakness</dt>
+                    <dd><%= @profile_card.weakness %> — <%= @profile_card.weakness_description.presence || "n/a" %></dd>
+                  </div>
+                <% end %>
+                <% if @profile_card.special_move.present? %>
+                  <div>
+                    <dt class="font-semibold uppercase text-xs tracking-wide text-indigo-600 dark:text-indigo-400">Special Move</dt>
+                    <dd><%= @profile_card.special_move %><%= @profile_card.special_move_description.present? ? " — #{@profile_card.special_move_description}" : "" %></dd>
+                  </div>
+                <% end %>
+              </dl>
+            </div>
+          <% end %>
+        </div>
+        <div class="space-y-3">
+          <% if @profile_card.short_bio.present? %>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Short Bio</h3>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-400"><%= @profile_card.short_bio %></p>
+            </div>
+          <% end %>
+          <% if @profile_card.long_bio.present? %>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Long Bio</h3>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap"><%= truncate(@profile_card.long_bio, length: 600) %></p>
+            </div>
+          <% end %>
+          <% if Array(@profile_card.tags).any? %>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Tags</h3>
+              <div class="mt-2 flex flex-wrap gap-1">
+                <% Array(@profile_card.tags).each do |tag| %>
+                  <span class="rounded-full bg-indigo-100 dark:bg-indigo-900/40 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">#<%= tag %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @profile_assets.any? %>
+    <div class="rounded border p-4 dark:border-slate-700 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Generated Assets</h2>
+        <span class="text-xs text-slate-500 dark:text-slate-400"><%= @profile_assets.size %> asset<%= "s" unless @profile_assets.size == 1 %></span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-slate-500 border-b dark:text-slate-400 dark:border-slate-700">
+              <th class="py-2 pr-4">Variant</th>
+              <th class="py-2 pr-4">Dimensions</th>
+              <th class="py-2 pr-4">Generated</th>
+              <th class="py-2 pr-4">Source</th>
+              <th class="py-2 pr-4">Provider</th>
+              <th class="py-2">Local Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @profile_assets.each do |asset| %>
+              <% dims = [asset.width, asset.height].compact %>
+              <% generated_at = asset.generated_at || asset.updated_at %>
+              <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
+                <td class="py-2 pr-4 font-medium text-slate-900 dark:text-slate-100"><%= asset.kind.humanize %></td>
+                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= dims.any? ? "#{dims.first}×#{dims.last}" : "—" %></td>
+                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= generated_at ? generated_at.strftime('%Y-%m-%d %H:%M') : "—" %></td>
+                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400">
+                  <% if asset.public_url.present? %>
+                    <a href="<%= asset.public_url %>" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400">Open</a>
+                  <% else %>
+                    <span class="text-slate-400">n/a</span>
+                  <% end %>
+                </td>
+                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= asset.provider.presence || "—" %></td>
+                <td class="py-2 text-xs text-slate-500 dark:text-slate-400 break-all"><%= asset.local_path.presence || "—" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="rounded border p-4 dark:border-slate-700 space-y-4">
+    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">GitHub Snapshot</h2>
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="space-y-2">
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Profile Stats</h3>
+        <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+          <li>Followers: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.followers %></span></li>
+          <li>Following: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.following %></span></li>
+          <li>Public Repos: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.public_repos %></span></li>
+          <li>Last GitHub Update: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.github_updated_at&.strftime('%Y-%m-%d %H:%M') || "—" %></span></li>
+          <% if @profile.last_active %>
+            <li>Last Activity: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.last_active.strftime('%Y-%m-%d') %></span></li>
+          <% end %>
+        </ul>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Top Languages</h3>
+        <% if @languages.present? %>
+          <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+            <% @languages.first(6).each do |lang| %>
+              <li><span class="font-semibold text-slate-900 dark:text-slate-100"><%= lang.name %></span> — <%= lang.count %></li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-slate-500 dark:text-slate-400">No languages recorded.</p>
+        <% end %>
+      </div>
+    </div>
+    <% if @top_repositories.present? %>
+      <div>
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">Top Repositories</h3>
+        <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-2">
+          <% @top_repositories.first(5).each do |repo| %>
+            <li>
+              <a href="<%= repo.html_url %>" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400"><%= repo.full_name %></a>
+              <span class="ml-2 text-xs text-slate-500 dark:text-slate-400">★ <%= repo.stargazers_count %> · Updated <%= repo.github_updated_at&.strftime('%Y-%m-%d') || "n/a" %></span>
+              <% if repo.description.present? %>
+                <div class="text-xs text-slate-500 dark:text-slate-400"><%= repo.description %></div>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+    <% if @profile_readme&.content.present? %>
+      <div>
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">README Summary</h3>
+        <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap"><%= truncate(@profile_readme.content, length: 600) %></p>
+      </div>
+    <% end %>
+  </div>
+
   <div>
     <a href="<%= profile_path(username: @profile.login) %>" class="text-blue-600 underline dark:text-blue-400">View public profile</a>
     <span class="mx-2 text-slate-500">•</span>

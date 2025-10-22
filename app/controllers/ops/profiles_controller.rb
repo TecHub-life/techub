@@ -23,6 +23,8 @@ module Ops
       @languages = @profile.profile_languages.order(count: :desc)
       @recent_activity = @profile.profile_activity
       @profile_readme = @profile.profile_readme
+      @profile_card = @profile.profile_card
+      @profile_assets = @profile.profile_assets.order(:kind)
 
       @recent_events = ProfilePipelineEvent.where(profile_id: @profile.id).order(created_at: :desc).limit(50)
     end
