@@ -8,7 +8,6 @@
   - Backgrounds can be set to 'ai' explicitly when `ai_art_opt_in` is on.
   - Avatars can be set to 'ai'; we prefer an existing AI asset and fallback to avatars library.
 
-
 OG Images — Generation & Serving
 
 Optimal Sizes & Formats

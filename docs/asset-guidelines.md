@@ -4,8 +4,12 @@
 
 ## Definitions
 
-- Avatar: 1x1 image shown in cards; default is the user's GitHub avatar. When the user selects AI avatar, we use an AI 1x1 if present; otherwise we deterministically select from `app/assets/images/avatars-1x1/*`.
-- Supporting artwork: background art behind the card content. Default is a deterministic pick from `app/assets/images/supporting-art-1x1/*` based on login. When AI art is explicitly chosen and available, we may use generated assets; otherwise we fall back to the library.
+- Avatar: 1x1 image shown in cards; default is the user's GitHub avatar. When the user selects AI
+  avatar, we use an AI 1x1 if present; otherwise we deterministically select from
+  `app/assets/images/avatars-1x1/*`.
+- Supporting artwork: background art behind the card content. Default is a deterministic pick from
+  `app/assets/images/supporting-art-1x1/*` based on login. When AI art is explicitly chosen and
+  available, we may use generated assets; otherwise we fall back to the library.
 
 ## Locations
 
@@ -14,11 +18,13 @@
 
 ## Selection policy
 
-- AI art is off by default (feature taped). Unless `ai_art_opt_in` is true, all backgrounds use the supporting art library and avatars use the real GitHub avatar.
+- AI art is off by default (feature taped). Unless `ai_art_opt_in` is true, all backgrounds use the
+  supporting art library and avatars use the real GitHub avatar.
 - If `avatar_choice == 'ai'` and `ai_art_opt_in == true`:
   - Prefer recorded `avatar_1x1` asset; fallback to the avatars library.
 - Backgrounds (OG/Card/Simple/Banner):
-  - Prefer library art unless the respective `bg_choice_*` is explicitly set to `ai` and `ai_art_opt_in` is true.
+  - Prefer library art unless the respective `bg_choice_*` is explicitly set to `ai` and
+    `ai_art_opt_in` is true.
 
 ## Dimensions and reuse
 
