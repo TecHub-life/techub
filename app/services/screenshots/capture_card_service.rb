@@ -36,7 +36,7 @@ module Screenshots
     def initialize(login:, variant: "og", host: nil, output_path: nil, wait_ms: 500, type: nil, quality: 85)
       @login = login.to_s.downcase
       @variant = variant.to_s
-      resolved_host = host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil) || "http://127.0.0.1:3000"
+      resolved_host = resolve_host(host)
       # Validate host to be an http(s) URL
       begin
         uri = URI.parse(resolved_host.to_s)
@@ -122,6 +122,11 @@ module Screenshots
     private
 
     attr_reader :login, :variant, :host, :output_path, :wait_ms, :type, :quality
+
+    def resolve_host(custom_host)
+      candidate = custom_host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil)
+      candidate.presence || "http://127.0.0.1:3000"
+    end
 
     def default_output_path
       ext = (type == "png") ? "png" : "jpg"

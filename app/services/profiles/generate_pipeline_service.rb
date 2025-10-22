@@ -4,8 +4,7 @@ module Profiles
 
     def initialize(login:, host: nil, provider: nil, upload: nil, optimize: true, images: true, ai: nil)
       @login = login.to_s.downcase
-      resolved_host = host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil) || "http://127.0.0.1:3000"
-      @host = resolved_host
+      @host = resolve_host(host)
       @provider = provider # nil respects default
       @upload = upload.nil? ? ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase.in?([ "1", "true", "yes" ]) : upload
       @optimize = optimize
@@ -157,6 +156,11 @@ module Profiles
     private
 
     attr_reader :login, :host, :provider, :upload, :optimize, :images
+
+    def resolve_host(custom_host)
+      candidate = custom_host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil)
+      candidate.presence || "http://127.0.0.1:3000"
+    end
 
     def record_event(profile, stage:, status:, duration_ms: nil, message: nil)
       ProfilePipelineEvent.create!(profile_id: profile.id, stage: stage, status: status, duration_ms: duration_ms, message: message, created_at: Time.current)
