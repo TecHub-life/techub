@@ -1,218 +1,86 @@
-<%# Cards Tab - Shareable card images (OG, Card, Simple) %>
-<div class="space-y-6">
-  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-    <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-      <svg class="h-6 w-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
-      </svg>
-      Shareable Trading Cards
-    </h3>
-    <p class="text-slate-600 dark:text-slate-400 mb-6">Download and share your AI-generated profile cards on social media.</p>
-    
-    <% base = Rails.root.join("public", "generated", profile.login) %>
-    <% og_asset = profile.profile_assets.find_by(kind: "og") %>
-    <% card_asset = profile.profile_assets.find_by(kind: "card") %>
-    <% simple_asset = profile.profile_assets.find_by(kind: "simple") %>
-    
-    <%# Helper to get image path with cache busting %>
-    <% 
-      og_img = if og_asset&.public_url.present?
-        og_asset.public_url
-      elsif File.exist?(base.join("og.jpg")) && (File.size?(base.join("og.jpg")) || 0) > 1024
-        ts = File.mtime(base.join("og.jpg")).to_i rescue nil
-        "/generated/#{profile.login}/og.jpg#{ts ? "?v=#{ts}" : ""}"
-      elsif File.exist?(base.join("og.png")) && (File.size?(base.join("og.png")) || 0) > 1024
-        ts = File.mtime(base.join("og.png")).to_i rescue nil
-        "/generated/#{profile.login}/og.png#{ts ? "?v=#{ts}" : ""}"
-      else
-        nil
-      end
-      
-      card_img = if card_asset&.public_url.present?
-        card_asset.public_url
-      elsif File.exist?(base.join("card.jpg")) && (File.size?(base.join("card.jpg")) || 0) > 1024
-        ts = File.mtime(base.join("card.jpg")).to_i rescue nil
-        "/generated/#{profile.login}/card.jpg#{ts ? "?v=#{ts}" : ""}"
-      elsif File.exist?(base.join("card.png")) && (File.size?(base.join("card.png")) || 0) > 1024
-        ts = File.mtime(base.join("card.png")).to_i rescue nil
-        "/generated/#{profile.login}/card.png#{ts ? "?v=#{ts}" : ""}"
-      end
-      
-      simple_img = if simple_asset&.public_url.present?
-        simple_asset.public_url
-      elsif File.exist?(base.join("simple.jpg")) && (File.size?(base.join("simple.jpg")) || 0) > 1024
-        ts = File.mtime(base.join("simple.jpg")).to_i rescue nil
-        "/generated/#{profile.login}/simple.jpg#{ts ? "?v=#{ts}" : ""}"
-      elsif File.exist?(base.join("simple.png")) && (File.size?(base.join("simple.png")) || 0) > 1024
-        ts = File.mtime(base.join("simple.png")).to_i rescue nil
-        "/generated/#{profile.login}/simple.png#{ts ? "?v=#{ts}" : ""}"
-      end
-    %>
-
-    <% if [card_img, og_img, simple_img].all?(&:blank?) %>
-      <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-6 text-center">
-        <div class="mx-auto mb-3 h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-800 grid place-items-center text-slate-500">🎴</div>
-        <p class="text-sm text-slate-600 dark:text-slate-300">No card assets yet. Generate your profile to create shareable cards.</p>
-      </div>
-    <% end %>
-
-    <%# Cards Grid Layout (mobile: 1 col, tablet: 2 col, desktop+: 3 col with main spanning) %>
-    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-      <%# Main Trading Card - Spans full width on sm+/xl+ %>
-      <div class="sm:col-span-2 xl:col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
-        <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-          <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
-            </svg>
-            <span>Main Card</span>
-          </div>
-          <% if card_img.present? %>
-            <a href="<%= card_img %>" download target="_blank" rel="noopener" class="text-indigo-700 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 dark:text-indigo-300 dark:hover:text-indigo-200 transition" aria-label="Download Main Card">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
-            </a>
-          <% end %>
-        </div>
-        <% if card_img.present? %>
-          <div class="aspect-[3/2] overflow-hidden">
-            <img src="<%= card_img %>" alt="Main trading card for <%= profile.display_name %>" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900">
-          </div>
-        <% else %>
-          <div class="aspect-[3/2] flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800">
-            <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <p class="text-xs font-medium">Generating...</p>
-          </div>
-        <% end %>
-      </div>
-
-      <%# OpenGraph Image - Takes 1 column %>
-      <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
-        <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-          <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-sky-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-            </svg>
-            <span>OG Image</span>
-          </div>
-          <% if og_img.present? %>
-            <a href="<%= og_img %>" download target="_blank" rel="noopener" class="text-sky-700 hover:text-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-500/60 dark:text-sky-300 dark:hover:text-sky-200 transition" aria-label="Download OG Image">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
-            </a>
-          <% end %>
-        </div>
-        <% if og_img.present? %>
-          <div class="aspect-[9/16] overflow-hidden">
-            <img src="<%= og_img %>" alt="OpenGraph image for <%= profile.display_name %>" class="w-full h-full object-cover bg-slate-100 dark:bg-slate-900" loading="lazy">
-          </div>
-        <% else %>
-          <div class="aspect-[9/16] flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800">
-            <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <p class="text-xs font-medium">Generating...</p>
-          </div>
-        <% end %>
-      </div>
-
-      <%# Simple Card - Takes 1 column %>
-      <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-md hover:shadow-lg transition">
-        <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-          <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
-            </svg>
-            <span>Simple</span>
-          </div>
-          <% if simple_img.present? %>
-            <a href="<%= simple_img %>" download target="_blank" rel="noopener" class="text-emerald-700 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:text-emerald-300 dark:hover:text-emerald-200 transition" aria-label="Download Simple Card">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
-            </a>
-          <% end %>
-        </div>
-        <% if simple_img.present? %>
-          <div class="aspect-[9/16] overflow-hidden">
-            <img src="<%= simple_img %>" alt="Simple card for <%= profile.display_name %>" class="w-full h-full object-cover bg-slate-100 dark:bg-slate-900" loading="lazy">
-          </div>
-        <% else %>
-          <div class="aspect-[9/16] flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800">
-            <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <p class="text-xs font-medium">Generating...</p>
-          </div>
-        <% end %>
-      </div>
-    </div>
-
-    <%# Usage Tips %>
-    <div class="mt-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 p-4">
-      <h4 class="text-sm md:text-base font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
-        <svg class="h-4 w-4 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-        </svg>
-        Card Usage Guide
-      </h4>
-      <div class="grid gap-2 sm:grid-cols-3 text-xs md:text-sm text-blue-800 dark:text-blue-200">
-        <div>
-          <strong class="text-indigo-700 dark:text-indigo-300">Main Card:</strong>
-          <p class="text-blue-700 dark:text-blue-300">Social media posts & showcases</p>
-        </div>
-        <div>
-          <strong class="text-sky-700 dark:text-sky-300">OG Image:</strong>
-          <p class="text-blue-700 dark:text-blue-300">Link previews & embeds</p>
-        </div>
-        <div>
-          <strong class="text-emerald-700 dark:text-emerald-300">Simple:</strong>
-          <p class="text-blue-700 dark:text-blue-300">Professional contexts</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<%# Social assets previews (per-target) %>
-<div class="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+<%# Cards Tab - Unified grid of all variants %>
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
   <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-    <svg class="h-6 w-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+    <svg class="h-6 w-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
     </svg>
-    Social Assets
+    Cards
   </h3>
-  <p class="text-slate-600 dark:text-slate-400 mb-4">Ready-to-share images sized for each network. Click to open full size. Each tile shows where it’s used.</p>
-  <% gen_dir = Rails.root.join('public','generated', profile.login) %>
-  <% social_targets = [
-      { kind: "x_profile_400", label: "X Profile 400×400", aspect: "1/1", where: "X profile avatar" },
-      { kind: "ig_portrait_1080x1350", label: "Instagram 1080×1350", aspect: "4/5", where: "Instagram portrait post" },
-      { kind: "fb_post_1080", label: "Facebook 1080×1080", aspect: "1/1", where: "Facebook post" }
+  <% base = Rails.root.join("public", "generated", profile.login) %>
+  <% find_file = lambda do |name|
+       next nil unless Dir.exist?(base)
+       Dir[base.join("#{name}*.{jpg,jpeg,png}").to_s].first
+     end %>
+  <% # Asset-backed URLs for core variants (prefer recorded asset, else file with cache bust) %>
+  <% og_asset = profile.profile_assets.find_by(kind: "og") %>
+  <% card_asset = profile.profile_assets.find_by(kind: "card") %>
+  <% simple_asset = profile.profile_assets.find_by(kind: "simple") %>
+  <% og_url = if og_asset&.public_url.present?
+      og_asset.public_url
+    elsif (p = [base.join("og.jpg"), base.join("og.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
+      ts = File.mtime(p).to_i rescue nil
+      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
+    end %>
+  <% card_url = if card_asset&.public_url.present?
+      card_asset.public_url
+    elsif (p = [base.join("card.jpg"), base.join("card.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
+      ts = File.mtime(p).to_i rescue nil
+      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
+    end %>
+  <% simple_url = if simple_asset&.public_url.present?
+      simple_asset.public_url
+    elsif (p = [base.join("simple.jpg"), base.join("simple.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
+      ts = File.mtime(p).to_i rescue nil
+      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
+    end %>
+
+  <% variants = [
+      { kind: "card",    label: "Main Card",            dims: "1280×720",    aspect: "16/9", usage: "Social posts",        url: card_url },
+      { kind: "og",      label: "OpenGraph (Link)",     dims: "1200×630",    aspect: "1200/630", usage: "Link previews",   url: og_url },
+      { kind: "simple",  label: "Simple",               dims: "1280×720",    aspect: "16/9",     usage: "Profiles & CVs", url: simple_url },
+      { kind: "banner",  label: "Banner",               dims: "1500×500",    aspect: "3/1",      usage: "Header/banner",  url: (f = find_file.call("banner")) && "/generated/#{profile.login}/#{File.basename(f)}" },
+      { kind: "x_profile_400", label: "X Profile",      dims: "400×400",     aspect: "1/1",      usage: "X avatar",       url: (f = find_file.call("x_profile_400")) && "/generated/#{profile.login}/#{File.basename(f)}" },
+      { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", dims: "1080×1350", aspect: "4/5", usage: "Instagram post", url: (f = find_file.call("ig_portrait_1080x1350")) && "/generated/#{profile.login}/#{File.basename(f)}" },
+      { kind: "fb_post_1080", label: "Facebook Post",   dims: "1080×1080",   aspect: "1/1",      usage: "Facebook post",  url: (f = find_file.call("fb_post_1080")) && "/generated/#{profile.login}/#{File.basename(f)}" }
     ] %>
-  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    <% social_targets.each do |t| %>
-      <% file = Dir.exist?(gen_dir) ? Dir[gen_dir.join("#{t[:kind]}*.{jpg,png}").to_s].first : nil %>
-      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <div class="text-sm font-semibold text-slate-800 dark:text-slate-200"><%= t[:label] %></div>
-        <div class="relative mt-2 overflow-hidden rounded bg-slate-100 dark:bg-slate-900" style="aspect-ratio:<%= t[:aspect] %>">
-          <% if file %>
-            <a href="<%= "/generated/#{profile.login}/#{File.basename(file)}" %>" target="_blank" rel="noopener" class="focus:outline-none focus:ring-2 focus:ring-indigo-500/60">
-              <img src="<%= "/generated/#{profile.login}/#{File.basename(file)}" %>" alt="<%= t[:label] %>" class="h-full w-full object-cover" loading="lazy">
+
+  <% if variants.all? { |v| v[:url].blank? } %>
+    <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-6 text-center">
+      <div class="mx-auto mb-3 h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-800 grid place-items-center text-slate-500">🎴</div>
+      <p class="text-sm text-slate-600 dark:text-slate-300">No card assets yet. Generate your profile to create shareable cards.</p>
+    </div>
+  <% end %>
+
+  <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+    <% variants.each do |v| %>
+      <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-sm">
+        <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+          <div class="flex items-center gap-2">
+            <span><%= v[:label] %></span>
+            <span class="text-slate-500">•</span>
+            <span class="text-slate-500"><%= v[:dims] %> (<%= v[:aspect] %>)</span>
+            <span class="text-slate-500">•</span>
+            <span class="text-slate-500"><%= v[:usage] %></span>
+          </div>
+          <% if v[:url].present? %>
+            <a href="<%= v[:url] %>" download target="_blank" rel="noopener" class="text-indigo-700 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 dark:text-indigo-300 dark:hover:text-indigo-200 transition" aria-label="Download">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
             </a>
-          <% else %>
-            <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
-          <% end %>
-          <% if t[:kind] == 'youtube_cover_2560x1440' %>
-            <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div class="border-2 border-yellow-400/80" style="width:60.39%; height:29.38%"></div>
-            </div>
           <% end %>
         </div>
-        <div class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Where used: <span class="font-medium"><%= t[:where] %></span></div>
+        <div class="overflow-hidden">
+          <div class="relative w-full <%= "aspect-[#{v[:aspect]}]" %> bg-slate-100 dark:bg-slate-900">
+            <% if v[:url].present? %>
+              <img src="<%= v[:url] %>" alt="<%= v[:label] %> for <%= profile.display_name %>" class="absolute inset-0 w-full h-full object-contain" loading="lazy">
+            <% else %>
+              <div class="absolute inset-0 grid place-items-center text-slate-400">
+                <div class="text-xs font-medium">Not generated yet</div>
+              </div>
+            <% end %>
+          </div>
+        </div>
       </div>
     <% end %>
   </div>
