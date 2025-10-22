@@ -117,8 +117,8 @@ module Profiles
 
       # 5) Capture screenshots (enqueue all core variants asynchronously)
       StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
-      if Rails.env.production? && resolved_host.include?("127.0.0.1")
-        StructuredLogger.warn(message: "app_host_fallback_local", service: self.class.name, login: login, host: resolved_host)
+      if Rails.env.production? && host.to_s.include?("127.0.0.1")
+        StructuredLogger.warn(message: "app_host_fallback_local", service: self.class.name, login: login, host: host)
       end
       VARIANTS.each do |variant|
         Screenshots::CaptureCardJob.perform_later(login: login, variant: variant, host: host)
