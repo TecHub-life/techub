@@ -1,3 +1,14 @@
+# OG images
+
+- Defaults: background from supporting art library; avatar from GitHub.
+- Library paths:
+  - Avatars: `app/assets/images/avatars-1x1/`
+  - Supporting art: `app/assets/images/supporting-art-1x1/`
+- Overrides:
+  - Backgrounds can be set to 'ai' explicitly when `ai_art_opt_in` is on.
+  - Avatars can be set to 'ai'; we prefer an existing AI asset and fallback to avatars library.
+
+
 OG Images — Generation & Serving
 
 Optimal Sizes & Formats

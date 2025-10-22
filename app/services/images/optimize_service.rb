@@ -25,13 +25,13 @@ module Images
 
           case effective_format
           when "jpg", "jpeg"
-            dst = ensure_ext(output_path.to_s, ".jpg")
+            dst = output_path.to_s
             processed = processor
               .convert("jpg")
               .saver(quality: quality.clamp(1, 100), interlace: true)
               .call(destination: dst)
           else # png
-            dst = ensure_ext(output_path.to_s, ".png")
+            dst = output_path.to_s
             processed = processor.convert("png").call(destination: dst)
           end
 
@@ -48,7 +48,7 @@ module Images
       cmd = build_magick_command
       ok = system(*cmd)
       return failure(StandardError.new("Image optimization failed"), metadata: { cmd: cmd.join(" ") }) unless ok
-      success({ output_path: output_path.to_s, format: effective_format, quality: quality })
+      success({ output_path: normalized_output_path, format: effective_format, quality: quality })
     rescue StandardError => e
       failure(e)
     end
@@ -69,9 +69,9 @@ module Images
       dst = output_path.to_s
       case effective_format
       when "jpg", "jpeg"
-        [ cli, src, "-strip", "-interlace", "Plane", "-quality", quality.to_s, ensure_ext(dst, ".jpg") ]
+        [ cli, src, "-strip", "-interlace", "Plane", "-quality", quality.to_s, "jpg:#{dst}" ]
       else # png
-        [ cli, src, "-strip", "-define", "png:compression-level=9", ensure_ext(dst, ".png") ]
+        [ cli, src, "-strip", "-define", "png:compression-level=9", "png:#{dst}" ]
       end
     end
 
@@ -97,6 +97,11 @@ module Images
     def magick_available?
       # Quietly check for magick
       system("magick -version > /dev/null 2>&1")
+    end
+
+    def normalized_output_path
+      # Always return the path we were asked to write to; callers may move/rename it.
+      output_path.to_s
     end
   end
 end

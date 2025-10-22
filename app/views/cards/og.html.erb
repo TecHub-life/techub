@@ -121,14 +121,7 @@
       <div class="flex-shrink-0 -ml-8">
         <div class="w-80 h-80 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
           <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-            <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
-            <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
-            <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
-            <% if avatar_src.present? %>
-              <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
-            <% else %>
-              <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
-            <% end %>
+            <img src="<%= avatar_image_url_for(@profile) %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
           </div>
         </div>
       </div>
