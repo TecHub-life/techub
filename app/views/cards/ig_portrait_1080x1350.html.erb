@@ -1,28 +1,61 @@
-<%# 1080x1350 – Instagram portrait. Background = supporting AI art (16x9/9x16/3x1). %>
+<%# 1080x1350 – Instagram portrait. Hard-centered, dense layout; background de-emphasized. %>
 <div class="relative h-[1350px] w-[1080px] overflow-hidden bg-slate-900">
-  <% bg_url = nil %>
-  <% if (asset = @profile.profile_assets.find_by(kind: 'avatar_16x9'))&.public_url.present? %>
-    <% bg_url = asset.public_url %>
-  <% elsif (asset = @profile.profile_assets.find_by(kind: 'avatar_3x1'))&.public_url.present? %>
-    <% bg_url = asset.public_url %>
-  <% elsif (asset = @profile.profile_assets.find_by(kind: 'card'))&.public_url.present? %>
-    <% bg_url = asset.public_url %>
-  <% elsif (asset = @profile.profile_assets.find_by(kind: 'og'))&.public_url.present? %>
-    <% bg_url = asset.public_url %>
-  <% else %>
-    <% base = Rails.root.join('public','generated', @profile.login) %>
-    <% local = Dir[base.join('avatar-16x9*.{jpg,jpeg,png}').to_s].first || Dir[base.join('avatar-3x1*.{jpg,jpeg,png}').to_s].first || Dir[base.join('card*.{jpg,jpeg,png}').to_s].first || Dir[base.join('og*.{jpg,jpeg,png}').to_s].first %>
+  <% bg_url = @profile.ai_art_opt_in ? nil : supporting_art_url_for(login: @profile.login, aspect: :card) %>
+  <% if bg_url.blank? %>
+    <% gen = Rails.root.join('public','generated', @profile.login) %>
+    <% local = Dir[gen.join('avatar-16x9*.{jpg,jpeg,png}').to_s].first || Dir[gen.join('avatar-3x1*.{jpg,jpeg,png}').to_s].first || Dir[gen.join('card*.{jpg,jpeg,png}').to_s].first || Dir[gen.join('og*.{jpg,jpeg,png}').to_s].first %>
     <% bg_url = "/generated/#{@profile.login}/#{File.basename(local)}" if local %>
   <% end %>
   <% if bg_url.present? %>
-    <img src="<%= bg_url %>" alt="background" class="absolute inset-0 h-full w-full object-cover">
+    <img src="<%= bg_url %>" alt="background" class="absolute inset-0 h-full w-full object-cover opacity-20">
   <% else %>
-    <div class="absolute inset-0 bg-gradient-to-b from-indigo-700 via-sky-600 to-cyan-500"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-indigo-700 via-sky-600 to-cyan-500 opacity-25"></div>
   <% end %>
-  <div class="absolute inset-0 bg-black/25"></div>
-  <div class="absolute inset-x-0 bottom-0 p-10">
-    <div class="text-white text-4xl font-bold drop-shadow-sm"><%= @profile.display_name %></div>
-    <div class="text-sky-300 text-2xl">@<%= @profile.login %></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-black/70 to-black/85"></div>
+
+  <div class="absolute inset-0 grid place-items-center p-8">
+    <div class="w-full max-w-[860px]">
+      <div class="flex items-start justify-between gap-8">
+        <div class="min-w-0">
+          <% name = @profile.display_name %>
+          <% handle = @profile.login %>
+          <h1 class="text-6xl font-extrabold text-white tracking-wide leading-tight text-center sm:text-left"><%= name %></h1>
+          <p class="mt-1 text-3xl font-semibold text-sky-300 text-center sm:text-left">@<%= handle %></p>
+          <% card = @profile.profile_card %>
+          <% if (tag = card&.flavor_text.presence || card&.short_bio.presence).present? %>
+            <p class="mt-4 text-2xl text-slate-200 leading-snug text-center sm:text-left">"<%= tag %>"</p>
+          <% end %>
+          <% repos = Array(@profile.top_repositories).first(3).map { |r| [r.name.to_s, r.stargazers_count.to_i] } %>
+          <% if repos.any? %>
+            <div class="mt-5 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+              <% repos.each do |(rn, stars)| %>
+                <span class="px-4 py-2 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 text-lg max-w-[380px] truncate">
+                  <%= rn %>
+                  <% if stars > 0 %><span class="ml-1 text-base text-amber-300">★ <%= stars %></span><% end %>
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        <div class="flex-shrink-0">
+          <div class="w-48 h-48 rounded-full p-2 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
+            <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
+              <img src="<%= avatar_image_url_for(@profile) %>" alt="avatar" class="w-full h-full object-cover object-center">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 flex items-center justify-center gap-4 text-slate-200">
+        <% followers = @profile.followers.to_i %>
+        <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
+        <% top_lang = @profile.profile_languages.order(count: :desc).limit(1).pluck(:name).first %>
+        <% if top_lang.present? %>
+          <span class="px-4 py-2 rounded-md bg-white/10 border border-white/15 text-xl">💻 <%= top_lang %></span>
+        <% end %>
+        <span class="px-4 py-2 rounded-md bg-white/10 border border-white/15 text-xl">⭐ <%= stars %></span>
+        <span class="px-4 py-2 rounded-md bg-white/10 border border-white/15 text-xl">👥 <%= followers %></span>
+      </div>
+    </div>
   </div>
 </div>
 

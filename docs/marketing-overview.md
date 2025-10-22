@@ -1,7 +1,5 @@
 # TecHub
 
-![TecHub](public/techub-hero.jpg)
-
 **AI-powered collectible trading cards for GitHub developer profiles**
 
 Part discovery engine, part vibe board, part trading card game for builders.

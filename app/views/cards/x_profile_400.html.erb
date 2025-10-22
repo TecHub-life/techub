@@ -1,10 +1,18 @@
-<%# 400x400 – X profile image (avatar only). Non-mixing: avatar from GitHub or AI 1x1 only. %>
-<div class="w-[400px] h-[400px] bg-slate-900 overflow-hidden grid place-items-center">
-  <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
-  <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
-  <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
-  <div class="h-72 w-72 rounded-full overflow-hidden border-4 border-white/70 shadow-2xl">
-    <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="h-full w-full object-cover">
+<%# 400x400 – X profile image: centered square avatar with overlay chips. %>
+<div class="relative w-[400px] h-[400px] overflow-hidden bg-slate-900">
+  <img src="<%= avatar_image_url_for(@profile) %>" alt="<%= @profile.display_name %> avatar" class="absolute inset-0 h-full w-full object-cover object-center">
+  <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/0 to-black/45"></div>
+  <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+    <div>
+      <div class="px-2 py-1 rounded-md bg-black/55 text-white/95 text-sm font-semibold tracking-wide max-w-[240px] truncate">@<%= @profile.login %></div>
+    </div>
+    <div class="flex items-center gap-2">
+      <% followers = @profile.followers.to_i %>
+      <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
+      <span class="px-2 py-1 rounded-md bg-black/55 text-white/90 text-xs">⭐ <%= stars %></span>
+      <span class="px-2 py-1 rounded-md bg-black/55 text-white/90 text-xs">👥 <%= followers %></span>
+    </div>
   </div>
 </div>
+
 

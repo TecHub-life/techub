@@ -12,7 +12,7 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "loftwah submits @loftwah: becomes owner, stores manual inputs" do
-    ENV["SUBMISSION_MANUAL_INPUTS_ENABLED"] = "1"
+    # Manual inputs are always on
     Profiles::SyncFromGithub.stub :call, ServiceResult.success(Profile.create!(github_id: 2002, login: "loftwah")) do
       uid = User.find_by(login: "loftwah").id
       open_session do |sess|
@@ -29,8 +29,6 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
 
       # Basic sanity: we got a redirect to profile page
       # State changes are covered by service tests.
-    ensure
-      ENV.delete("SUBMISSION_MANUAL_INPUTS_ENABLED")
     end
   end
 

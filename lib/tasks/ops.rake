@@ -24,68 +24,41 @@ namespace :ops do
     puts "Queued smoke test email to #{to}"
   end
 
-  desc "Re-run pipeline for specific logins without AI (comma-separated LOGINS)"
+  desc "Re-run pipeline for specific logins without generating images (comma-separated LOGINS)"
   task :bulk_retry, [ :logins ] => :environment do |_t, args|
     logins = (args[:logins] || "").split(",").map { |s| s.strip.downcase }.reject(&:empty?)
     abort "Provide LOGINS=login1,login2" if logins.empty?
     logins.each do |login|
-      Profiles::GeneratePipelineJob.perform_later(login, ai: false)
+      Profiles::GeneratePipelineJob.perform_later(login, images: false)
     end
-    puts "Queued Screenshots-Only re-run for #{logins.size} profile(s)"
+    puts "Queued re-run (no new images) for #{logins.size} profile(s)"
   end
 
-  desc "Re-run pipeline for specific logins with AI (comma-separated LOGINS)"
-  task :bulk_retry_ai, [ :logins ] => :environment do |_t, args|
-    logins = (args[:logins] || "").split(",").map { |s| s.strip.downcase }.reject(&:empty?)
-    abort "Provide LOGINS=login1,login2" if logins.empty?
-    now = Time.current
-    Profile.where(login: logins).find_each do |p|
-      Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
-      p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
-    end
-    puts "Queued Full (AI) re-run for #{logins.size} profile(s)"
-  end
+  # With-images bulk retry task removed to avoid confusion and budget risk.
 
-  desc "Re-run pipeline for ALL profiles without AI"
+  desc "Re-run pipeline for ALL profiles without generating images"
   task bulk_retry_all: :environment do
     count = 0
     Profile.find_each do |p|
-      Profiles::GeneratePipelineJob.perform_later(p.login, ai: false)
+      Profiles::GeneratePipelineJob.perform_later(p.login, images: false)
       p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
       count += 1
     end
-    puts "Queued Screenshots-Only re-run for all (#{count}) profiles"
+    puts "Queued re-run (no new images) for all (#{count}) profiles"
   end
 
-  desc "Re-run pipeline for ALL profiles with AI"
-  task bulk_retry_ai_all: :environment do
-    count = 0
-    now = Time.current
-    Profile.find_each do |p|
-      Profiles::GeneratePipelineJob.perform_later(p.login, ai: true)
-      p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: now)
-      count += 1
-    end
-    puts "Queued Full (AI) re-run for all (#{count}) profiles"
-  end
+  # With-images bulk retry-all task removed to avoid confusion and budget risk.
 
-  desc "Retry one profile without AI (LOGIN)"
+  desc "Retry one profile without generating images (LOGIN)"
   task :retry, [ :login ] => :environment do |_t, args|
     login = args[:login].to_s.downcase
     abort "Provide LOGIN=username" if login.empty?
-    Profiles::GeneratePipelineJob.perform_later(login, ai: false)
+    Profiles::GeneratePipelineJob.perform_later(login, images: false)
     Profile.where(login: login).update_all(last_pipeline_status: "queued", last_pipeline_error: nil)
-    puts "Re-run queued for @#{login} — Screenshots-Only"
+    puts "Re-run queued for @#{login} — No new images (text AI always on)"
   end
 
-  desc "Retry one profile with AI (LOGIN)"
-  task :retry_ai, [ :login ] => :environment do |_t, args|
-    login = args[:login].to_s.downcase
-    abort "Provide LOGIN=username" if login.empty?
-    Profiles::GeneratePipelineJob.perform_later(login, ai: true)
-    Profile.where(login: login).update_all(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
-    puts "Full (AI) re-run queued for @#{login}"
-  end
+  # With-images single retry task removed to avoid confusion and budget risk.
 
   desc "Delete a profile (LOGIN)"
   task :delete_profile, [ :login ] => :environment do |_t, args|

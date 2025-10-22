@@ -4,10 +4,13 @@ module Profiles
 
     retry_on StandardError, wait: ->(executions) { (executions**2).seconds }, attempts: 3
 
-    def perform(login, ai: true)
+    # images: controls AI image generation; text AI always runs.
+    # ai: legacy alias for images (deprecated)
+    def perform(login, images: true, ai: nil)
       started = Time.current
       StructuredLogger.info(message: "pipeline_started", service: self.class.name, login: login)
-      result = Profiles::GeneratePipelineService.call(login: login, ai: ai)
+      images_flag = images.nil? ? ai : images
+      result = Profiles::GeneratePipelineService.call(login: login, images: images_flag)
       profile = Profile.for_login(login).first
       return unless profile
 
@@ -15,7 +18,19 @@ module Profiles
         partial = result.respond_to?(:metadata) && (result.metadata || {})[:partial]
         status = partial ? "partial_success" : "success"
         profile.update!(last_pipeline_status: status, last_pipeline_error: nil)
-        Notifications::PipelineNotifierService.call(profile: profile, status: "success")
+        # Always notify success to owners only for full success; ops-only alert for partials
+        if partial
+          Notifications::PipelineNotifierService.call(profile: profile, status: "partial")
+          Notifications::OpsAlertService.call(
+            profile: profile,
+            job: self.class.name,
+            error_message: "pipeline completed with partials",
+            metadata: result.respond_to?(:metadata) ? result.metadata : { partial: true },
+            duration_ms: ((Time.current - started) * 1000).to_i
+          )
+        else
+          Notifications::PipelineNotifierService.call(profile: profile, status: "success")
+        end
         StructuredLogger.info(message: "pipeline_completed", service: self.class.name, login: login, duration_ms: ((Time.current - started) * 1000).to_i, partial: partial)
       else
         profile.update!(last_pipeline_status: "failure", last_pipeline_error: result.error.message)
