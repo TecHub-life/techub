@@ -115,62 +115,16 @@ module Profiles
         record_event(profile, stage: "synth_heuristic", status: "completed", duration_ms: 0)
       end
 
-      # 5) Capture screenshots (OG/card/simple)
+      # 5) Capture screenshots (enqueue all core variants asynchronously)
       StructuredLogger.info(message: "stage_started", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
-      captures = {}
-      VARIANTS.each do |variant|
-        shot = Screenshots::CaptureCardService.call(login: login, variant: variant, host: host)
-        return shot if shot.failure?
-        captures[variant] = shot.value
-
-        # Persist/overwrite canonical asset row for lookups in UI and OG routes
-        begin
-          rec = ProfileAssets::RecordService.call(
-            profile: profile,
-            kind: variant,
-            local_path: shot.value[:output_path],
-            public_url: shot.value[:public_url],
-            mime_type: shot.value[:mime_type],
-            width: shot.value[:width],
-            height: shot.value[:height],
-            provider: "screenshot"
-          )
-          unless rec.success?
-            StructuredLogger.warn(message: "record_asset_failed", login: login, variant: variant, error: rec.error&.message) if defined?(StructuredLogger)
-          end
-        rescue StandardError => e
-          StructuredLogger.warn(message: "record_asset_exception", login: login, variant: variant, error: e.message) if defined?(StructuredLogger)
-        end
-
-        # Optional: move heavy optimization to background for larger assets
-        if optimize
-          begin
-            file_size = File.size(shot.value[:output_path]) rescue 0
-            threshold = (ENV["IMAGE_OPT_BG_THRESHOLD"] || 300_000).to_i
-            fmt = nil # keep current format
-
-            # Enqueue background optimization when file is larger than threshold
-            if file_size >= threshold
-              Images::OptimizeJob.perform_later(
-                path: shot.value[:output_path],
-                login: login,
-                kind: variant,
-                format: fmt,
-                quality: nil,
-                min_bytes_for_bg: threshold,
-                upload: upload
-              )
-            else
-              # For small files, do a quick inline pass (best-effort)
-              Images::OptimizeService.call(path: shot.value[:output_path], output_path: shot.value[:output_path], format: fmt)
-            end
-          rescue StandardError => e
-            StructuredLogger.warn(message: "optimize_enqueue_failed", login: login, variant: variant, error: e.message)
-          end
-        end
+      if Rails.env.production? && resolved_host.include?("127.0.0.1")
+        StructuredLogger.warn(message: "app_host_fallback_local", service: self.class.name, login: login, host: resolved_host)
       end
-      StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "screenshots") if defined?(StructuredLogger)
-      record_event(profile, stage: "screenshots", status: "completed")
+      VARIANTS.each do |variant|
+        Screenshots::CaptureCardJob.perform_later(login: login, variant: variant, host: host)
+      end
+      StructuredLogger.info(message: "stage_enqueued", service: self.class.name, login: login, stage: "screenshots", variants: VARIANTS) if defined?(StructuredLogger)
+      record_event(profile, stage: "screenshots", status: "enqueued")
 
       # 6) Capture social-target screenshots (no resizing path)
       begin
@@ -178,7 +132,7 @@ module Profiles
         Screenshots::CaptureCardService::SOCIAL_VARIANTS.each do |kind|
           Screenshots::CaptureCardJob.perform_later(login: login, variant: kind, host: host)
         end
-        StructuredLogger.info(message: "stage_completed", service: self.class.name, login: login, stage: "social_assets") if defined?(StructuredLogger)
+        StructuredLogger.info(message: "stage_enqueued", service: self.class.name, login: login, stage: "social_assets") if defined?(StructuredLogger)
       rescue StandardError => e
         StructuredLogger.warn(message: "social_assets_exception", login: login, error: e.message) if defined?(StructuredLogger)
       end
@@ -190,7 +144,7 @@ module Profiles
         {
           login: login,
           images: image_suite&.value,
-          screenshots: captures,
+          screenshots: nil,
           card_id: card_id,
           scraped: scraped
         },

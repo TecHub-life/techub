@@ -190,17 +190,8 @@
   <% gen_dir = Rails.root.join('public','generated', profile.login) %>
   <% social_targets = [
       { kind: "x_profile_400", label: "X Profile 400×400", aspect: "1/1", where: "X profile avatar" },
-      { kind: "x_header_1500x500", label: "X Header 1500×500", aspect: "3/1", where: "X header/cover" },
-      { kind: "x_feed_1600x900", label: "X Feed 1600×900", aspect: "16/9", where: "X feed share" },
-      { kind: "ig_square_1080", label: "Instagram 1080×1080", aspect: "1/1", where: "Instagram square post" },
       { kind: "ig_portrait_1080x1350", label: "Instagram 1080×1350", aspect: "4/5", where: "Instagram portrait post" },
-      { kind: "ig_landscape_1080x566", label: "Instagram 1080×566", aspect: "1080/566", where: "Instagram landscape post" },
-      { kind: "fb_post_1080", label: "Facebook 1080×1080", aspect: "1/1", where: "Facebook post" },
-      { kind: "fb_cover_851x315", label: "Facebook Cover 851×315", aspect: "851/315", where: "Facebook cover" },
-      { kind: "linkedin_profile_400", label: "LinkedIn Profile 400×400", aspect: "1/1", where: "LinkedIn profile avatar" },
-      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover 1584×396", aspect: "4/1", where: "LinkedIn cover" },
-      { kind: "youtube_cover_2560x1440", label: "YouTube Cover 2560×1440", aspect: "16/9", where: "YouTube channel art (safe zone outlined)" },
-      { kind: "og_1200x630", label: "OpenGraph 1200×630", aspect: "1200/630", where: "Link previews (OG/Twitter Card)" }
+      { kind: "fb_post_1080", label: "Facebook 1080×1080", aspect: "1/1", where: "Facebook post" }
     ] %>
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
     <% social_targets.each do |t| %>

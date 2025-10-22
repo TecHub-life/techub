@@ -5,7 +5,7 @@
   <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-900/20">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Apply Latest Version to All Profiles</h2>
+        <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Re-roll All Profiles</h2>
         <p class="text-sm text-amber-800 dark:text-amber-300">Use after deploying new features or layout updates. This re-runs the profile pipeline for everyone so cards and data match the latest version. AI artwork is disabled and will not run.</p>
         <ul class="mt-2 list-disc pl-5 text-xs text-amber-800 dark:text-amber-300">
           <li>Refresh GitHub data and sync the profile</li>
@@ -17,7 +17,7 @@
       <div class="flex flex-wrap gap-2">
         <form action="<%= ops_bulk_retry_all_path %>" method="post" onsubmit="return confirm('Apply latest version for ALL profiles?');">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Apply Latest Version to All</button>
+          <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll All</button>
         </form>
         <%# Hidden: regenerate all with images %>
       </div>
@@ -306,8 +306,7 @@
                 <td class="py-2 pr-4"><%= p.last_ai_regenerated_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
                 <td class="py-2">
                   <div class="flex flex-wrap gap-2">
-                    <%= button_to "Apply Latest Version", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%= button_to "Apply Latest Version", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                    <%= button_to "Re-roll Profile", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
                     <%# Image regeneration available via explicit routes; hidden to reduce confusion %>
                   </div>
                 </td>
@@ -376,7 +375,7 @@
     <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Regeneration recaptures screenshots and updates text. AI artwork is not regenerated automatically.</p>
       <div class="mb-3 grid gap-3 sm:grid-cols-2">
       <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Apply Latest Version (Selected)</h3>
+        <h3 class="text-sm font-semibold mb-2">Re-roll (Selected)</h3>
         <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <label class="text-xs text-slate-500">Select profiles</label>
@@ -385,7 +384,7 @@
               <option value="<%= login %>">@<%= login %></option>
             <% end %>
           </select>
-            <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Apply Latest Version</button>
+            <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll</button>
         </form>
       </div>
       <%# Bulk retry with images intentionally hidden to encourage default path %>
@@ -394,7 +393,7 @@
     <div class="mb-3 flex items-center gap-2">
       <form action="<%= ops_bulk_retry_all_path %>" method="post">
         <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Apply Latest Version to ALL Profiles</button>
+        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll ALL Profiles</button>
       </form>
       <%# Hidden: regenerate with images for all profiles %>
     </div>
