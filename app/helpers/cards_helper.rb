@@ -10,12 +10,12 @@ module CardsHelper
     end
     dir = base.join(dir_name)
     files = Dir[dir.join("*.{jpg,jpeg,png}").to_s]
-    return asset_path("default-card.jpg") if files.empty?
+    return asset_path("techub-hero.jpg") if files.empty?
     idx = login.to_s.hash % files.length
     rel = Pathname.new(files[idx]).relative_path_from(base).to_s
     asset_path(rel)
   rescue StandardError
-    asset_path("default-card.jpg")
+    asset_path("techub-hero.jpg")
   end
 
   # Centralized avatar URL selection: defaults to GitHub avatar unless AI is opted-in and present.

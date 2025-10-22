@@ -1,0 +1,274 @@
+<%# Assets Tab %>
+<div class="space-y-6">
+  <%# Card Previews Section - Moved to Top %>
+  <% base = Rails.root.join("public", "generated", @profile.login) %>
+  <% og_asset = @profile.profile_assets.find_by(kind: "og") %>
+  <% card_asset = @profile.profile_assets.find_by(kind: "card") %>
+  <% simple_asset = @profile.profile_assets.find_by(kind: "simple") %>
+  
+  <%# Helper to get image paths with cache busting %>
+  <% 
+    og_img = if og_asset&.public_url.present?
+      og_asset.public_url
+    elsif File.exist?(base.join("og.jpg")) && (File.size?(base.join("og.jpg")) || 0) > 1024
+      ts = File.mtime(base.join("og.jpg")).to_i rescue nil
+      "/generated/#{@profile.login}/og.jpg#{ts ? "?v=#{ts}" : ""}"
+    elsif File.exist?(base.join("og.png")) && (File.size?(base.join("og.png")) || 0) > 1024
+      ts = File.mtime(base.join("og.png")).to_i rescue nil
+      "/generated/#{@profile.login}/og.png#{ts ? "?v=#{ts}" : ""}"
+    else
+      nil
+    end
+    
+    card_img = if card_asset&.public_url.present?
+      card_asset.public_url
+    elsif File.exist?(base.join("card.jpg")) && (File.size?(base.join("card.jpg")) || 0) > 1024
+      ts = File.mtime(base.join("card.jpg")).to_i rescue nil
+      "/generated/#{@profile.login}/card.jpg#{ts ? "?v=#{ts}" : ""}"
+    elsif File.exist?(base.join("card.png")) && (File.size?(base.join("card.png")) || 0) > 1024
+      ts = File.mtime(base.join("card.png")).to_i rescue nil
+      "/generated/#{@profile.login}/card.png#{ts ? "?v=#{ts}" : ""}"
+    end
+    
+    simple_img = if simple_asset&.public_url.present?
+      simple_asset.public_url
+    elsif File.exist?(base.join("simple.jpg")) && (File.size?(base.join("simple.jpg")) || 0) > 1024
+      ts = File.mtime(base.join("simple.jpg")).to_i rescue nil
+      "/generated/#{@profile.login}/simple.jpg#{ts ? "?v=#{ts}" : ""}"
+    elsif File.exist?(base.join("simple.png")) && (File.size?(base.join("simple.png")) || 0) > 1024
+      ts = File.mtime(base.join("simple.png")).to_i rescue nil
+      "/generated/#{@profile.login}/simple.png#{ts ? "?v=#{ts}" : ""}"
+    end
+  %>
+
+  <%# Card Previews Section with Background %>
+  <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-6 shadow-lg dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
+    <div class="mb-4">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Card Previews</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Your generated trading cards and social images</p>
+    </div>
+    
+    <%# Card Previews Grid - Responsive: 1 col mobile, 2 col tablet, 3 col desktop, 4 col xl %>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <%# Main Trading Card %>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition">
+      <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-2">
+          <svg class="h-5 w-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
+          </svg>
+          <span>Main Card</span>
+        </div>
+        <% if card_img.present? %>
+          <a href="<%= card_img %>" download target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+          </a>
+        <% end %>
+      </div>
+      <% if card_img.present? %>
+        <div class="w-full" style="aspect-ratio: 16/9;">
+          <img src="<%= card_img %>" alt="Main trading card" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+        </div>
+      <% else %>
+        <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: 16/9;">
+          <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <p class="text-sm font-medium">Generating...</p>
+        </div>
+      <% end %>
+    </div>
+
+      <%# OG Image %>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition">
+      <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-2">
+          <svg class="h-5 w-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+          </svg>
+          <span>OG Image</span>
+        </div>
+        <% if og_img.present? %>
+          <a href="<%= og_img %>" download target="_blank" rel="noopener" class="text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+          </a>
+        <% end %>
+      </div>
+      <% if og_img.present? %>
+        <div class="w-full" style="aspect-ratio: 1200/630;">
+          <img src="<%= og_img %>" alt="OG Image" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+        </div>
+      <% else %>
+        <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: 1200/630;">
+          <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <p class="text-sm font-medium">Generating...</p>
+        </div>
+      <% end %>
+    </div>
+
+      <%# Simple Card %>
+      <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition">
+      <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-2">
+          <svg class="h-5 w-5 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+          </svg>
+          <span>Simple Card</span>
+        </div>
+        <% if simple_img.present? %>
+          <a href="<%= simple_img %>" download target="_blank" rel="noopener" class="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+          </a>
+        <% end %>
+      </div>
+      <% if simple_img.present? %>
+        <div class="w-full" style="aspect-ratio: 16/9;">
+          <img src="<%= simple_img %>" alt="Simple card" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+        </div>
+      <% else %>
+        <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: 16/9;">
+          <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <p class="text-sm font-medium">Generating...</p>
+        </div>
+      <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Upload Forms for Card Backgrounds Section %>
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <div class="mb-4">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Custom Backgrounds</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Upload custom background images for your cards</p>
+    </div>
+    
+  <%# Upload Forms for Card Backgrounds %>
+  <% uploads_enabled = ActiveModel::Type::Boolean.new.cast(ENV["ENABLE_UPLOADS"] || "true") %>
+  <div class="grid gap-6 md:grid-cols-3">
+    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-6 shadow-lg dark:border-slate-600 dark:bg-slate-800">
+      <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Card Background</h3>
+      <% card_generated_at = card_asset&.generated_at || card_asset&.updated_at %>
+      <% card_settings_updated_at = @profile.profile_card&.updated_at %>
+      <% card_stale = card_generated_at && card_settings_updated_at && card_settings_updated_at > card_generated_at %>
+      <% if card_generated_at %>
+        <p class="text-xs text-slate-500 mb-2">Last captured <%= time_ago_in_words(card_generated_at) %> ago</p>
+      <% end %>
+      <% if card_stale %>
+        <p class="text-xs text-amber-600 dark:text-amber-400 mb-2">Settings changed — re-capture recommended</p>
+      <% end %>
+      <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-3">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <input type="hidden" name="kind" value="card">
+        <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
+        <button class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload Custom Background</button>
+      </form>
+      <p class="mt-2 text-xs text-slate-500">Uploads replace the generated background for Card.</p>
+      <% unless uploads_enabled %>
+        <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
+      <% end %>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-6 shadow-lg dark:border-slate-600 dark:bg-slate-800">
+      <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">OG Background</h3>
+      <% og_generated_at = og_asset&.generated_at || og_asset&.updated_at %>
+      <% og_settings_updated_at = @profile.profile_card&.updated_at %>
+      <% og_stale = og_generated_at && og_settings_updated_at && og_settings_updated_at > og_generated_at %>
+      <% if og_generated_at %>
+        <p class="text-xs text-slate-500 mb-2">Last captured <%= time_ago_in_words(og_generated_at) %> ago</p>
+      <% end %>
+      <% if og_stale %>
+        <p class="text-xs text-amber-600 dark:text-amber-400 mb-2">Settings changed — re-capture recommended</p>
+      <% end %>
+      <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-3">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <input type="hidden" name="kind" value="og">
+        <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
+        <button class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload Custom Background</button>
+      </form>
+      <p class="mt-2 text-xs text-slate-500">Uploads replace the generated background for OG.</p>
+      <% unless uploads_enabled %>
+        <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
+      <% end %>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-6 shadow-lg dark:border-slate-600 dark:bg-slate-800">
+      <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Simple Background</h3>
+      <% simple_generated_at = simple_asset&.generated_at || simple_asset&.updated_at %>
+      <% simple_settings_updated_at = @profile.profile_card&.updated_at %>
+      <% simple_stale = simple_generated_at && simple_settings_updated_at && simple_settings_updated_at > simple_generated_at %>
+      <% if simple_generated_at %>
+        <p class="text-xs text-slate-500 mb-2">Last captured <%= time_ago_in_words(simple_generated_at) %> ago</p>
+      <% end %>
+      <% if simple_stale %>
+        <p class="text-xs text-amber-600 dark:text-amber-400 mb-2">Settings changed — re-capture recommended</p>
+      <% end %>
+      <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-3">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <input type="hidden" name="kind" value="simple">
+        <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
+        <button class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload Custom Background</button>
+      </form>
+      <p class="mt-2 text-xs text-slate-500">Uploads replace the generated background for Simple.</p>
+      <% unless uploads_enabled %>
+        <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
+      <% end %>
+    </div>
+  </div>
+  </div>
+
+  <%# Social Assets Section %>
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <div class="mb-4">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Social Assets</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400">Generated assets sized for major networks. Click to open full size.</p>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
+    <% @social_targets.each do |t| %>
+      <% file = Dir.exist?(gen_dir) ? Dir[gen_dir.join("#{t[:kind]}*.{jpg,png}").to_s].first : nil %>
+      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-sm font-medium text-slate-800 dark:text-slate-200"><%= t[:label] %></div>
+          <% if t[:hint].present? %>
+            <div class="group relative" aria-label="<%= t[:hint] %>">
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px] text-slate-600 dark:border-slate-600 dark:text-slate-300" aria-hidden="true">?</span>
+              <div class="pointer-events-none invisible absolute right-0 z-10 mt-2 w-48 rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700 opacity-0 shadow-md transition group-hover:visible group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <%= t[:hint] %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="relative mt-2 overflow-hidden rounded bg-slate-100 dark:bg-slate-900" style="aspect-ratio:<%= t[:aspect] %>">
+          <% if file %>
+            <a href="<%= "/generated/#{@profile.login}/#{File.basename(file)}" %>" target="_blank" rel="noopener" aria-label="Open <%= t[:label] %> full size" class="focus:outline-none focus:ring-2 focus:ring-indigo-500/60">
+              <img src="<%= "/generated/#{@profile.login}/#{File.basename(file)}" %>" alt="<%= t[:label] %>" class="h-full w-full object-cover" loading="lazy">
+            </a>
+          <% else %>
+            <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
+          <% end %>
+          <% if t[:kind] == 'youtube_cover_2560x1440' %>
+            <%# Safe area 1546x423 overlay as per Sprout guide %>
+            <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div class="border-2 border-yellow-400/80" style="width:60.39%; height:29.38%"></div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    </div>
+    <div class="mt-4">
+      <%= button_to "Generate Social Assets", ops_generate_social_assets_path(username: @profile.login), method: :post, form: { data: { turbo: false } }, class: "inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600", data: { disable_with: "Generating…" } %>
+    </div>
+  </div>
+
+  <%# Upload Forms for Card Backgrounds Section %>
