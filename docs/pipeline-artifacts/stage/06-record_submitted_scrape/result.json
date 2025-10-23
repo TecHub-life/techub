@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "metadata": {
+    "skipped": true,
+    "stage": "record_submitted_scrape"
+  },
+  "error": null,
+  "value": null,
+  "stage": "record_submitted_scrape",
+  "label": "Record submitted scrape"
+}

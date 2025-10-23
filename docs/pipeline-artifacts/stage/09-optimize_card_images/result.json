@@ -1,0 +1,54 @@
+{
+  "status": "success",
+  "metadata": {
+    "optimized": 7,
+    "stage": "optimize_card_images"
+  },
+  "error": null,
+  "value": {
+    "og": {
+      "path": "/rails/public/generated/loftwah/og.jpg",
+      "size_before": 84393,
+      "size_after": 84393,
+      "changed": false
+    },
+    "card": {
+      "path": "/rails/public/generated/loftwah/card.jpg",
+      "size_before": 117637,
+      "size_after": 117637,
+      "changed": false
+    },
+    "simple": {
+      "path": "/rails/public/generated/loftwah/simple.jpg",
+      "size_before": 66044,
+      "size_after": 66044,
+      "changed": false
+    },
+    "banner": {
+      "path": "/rails/public/generated/loftwah/banner.jpg",
+      "size_before": 55349,
+      "size_after": 55349,
+      "changed": false
+    },
+    "x_profile_400": {
+      "path": "/rails/public/generated/loftwah/x_profile_400.jpg",
+      "size_before": 21483,
+      "size_after": 21483,
+      "changed": false
+    },
+    "fb_post_1080": {
+      "path": "/rails/public/generated/loftwah/fb_post_1080.jpg",
+      "size_before": 139442,
+      "size_after": 139442,
+      "changed": false
+    },
+    "ig_portrait_1080x1350": {
+      "path": "/rails/public/generated/loftwah/ig_portrait_1080x1350.jpg",
+      "size_before": 75295,
+      "size_after": 75295,
+      "changed": false
+    }
+  },
+  "stage": "optimize_card_images",
+  "label": "Optimize card images"
+}

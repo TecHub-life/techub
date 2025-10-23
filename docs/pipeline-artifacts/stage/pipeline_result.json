@@ -1,0 +1,622 @@
+{
+  "status": "success",
+  "metadata": {
+    "login": "loftwah",
+    "host": "http://web",
+    "trace": [
+      {
+        "stage": "pipeline",
+        "event": "started",
+        "at": "2025-10-23T05:29:14.583Z",
+        "login": "loftwah",
+        "host": "http://web"
+      },
+      {
+        "stage": "pull_github_data",
+        "event": "started",
+        "at": "2025-10-23T05:29:14.583Z"
+      },
+      {
+        "stage": "pull_github_data",
+        "event": "completed",
+        "at": "2025-10-23T05:29:25.051Z"
+      },
+      {
+        "stage": "pull_github_data",
+        "event": "succeeded",
+        "at": "2025-10-23T05:29:25.051Z",
+        "label": "Pull GitHub data"
+      },
+      {
+        "stage": "download_github_avatar",
+        "event": "started",
+        "at": "2025-10-23T05:29:25.051Z",
+        "avatar_url": "https://avatars.githubusercontent.com/u/19922556?v=4"
+      },
+      {
+        "stage": "download_github_avatar",
+        "event": "completed",
+        "at": "2025-10-23T05:29:25.185Z",
+        "local_path": "/avatars/loftwah.png"
+      },
+      {
+        "stage": "download_github_avatar",
+        "event": "succeeded",
+        "at": "2025-10-23T05:29:25.185Z",
+        "label": "Download GitHub avatar"
+      },
+      {
+        "stage": "store_github_profile",
+        "event": "started",
+        "at": "2025-10-23T05:29:25.185Z"
+      },
+      {
+        "stage": "store_github_profile",
+        "event": "completed",
+        "at": "2025-10-23T05:29:25.370Z",
+        "profile_id": 1
+      },
+      {
+        "stage": "store_github_profile",
+        "event": "succeeded",
+        "at": "2025-10-23T05:29:25.371Z",
+        "label": "Store GitHub data"
+      },
+      {
+        "stage": "evaluate_eligibility",
+        "event": "started",
+        "at": "2025-10-23T05:29:25.371Z"
+      },
+      {
+        "stage": "evaluate_eligibility",
+        "event": "completed",
+        "at": "2025-10-23T05:29:25.376Z",
+        "score": 5,
+        "threshold": 1
+      },
+      {
+        "stage": "evaluate_eligibility",
+        "event": "succeeded",
+        "at": "2025-10-23T05:29:25.376Z",
+        "label": "Evaluate eligibility"
+      },
+      {
+        "stage": "ingest_submitted_repositories",
+        "event": "skipped",
+        "at": "2025-10-23T05:29:25.376Z"
+      },
+      {
+        "stage": "ingest_submitted_repositories",
+        "event": "succeeded",
+        "at": "2025-10-23T05:29:25.377Z",
+        "label": "Ingest submitted repositories"
+      },
+      {
+        "stage": "record_submitted_scrape",
+        "event": "skipped",
+        "at": "2025-10-23T05:29:25.377Z"
+      },
+      {
+        "stage": "record_submitted_scrape",
+        "event": "succeeded",
+        "at": "2025-10-23T05:29:25.377Z",
+        "label": "Record submitted scrape"
+      },
+      {
+        "stage": "generate_ai_profile",
+        "event": "started",
+        "at": "2025-10-23T05:29:25.377Z",
+        "provider": "ai_studio"
+      },
+      {
+        "stage": "generate_ai_profile",
+        "event": "completed",
+        "at": "2025-10-23T05:30:01.564Z",
+        "card_id": 1,
+        "attempts": [
+          {
+            "http_status": 200,
+            "strict": false
+          },
+          {
+            "http_status": 200,
+            "strict": false,
+            "empty": true
+          },
+          {
+            "http_status": 200,
+            "strict": true
+          }
+        ]
+      },
+      {
+        "stage": "generate_ai_profile",
+        "event": "succeeded",
+        "at": "2025-10-23T05:30:01.564Z",
+        "label": "Generate AI profile"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "started",
+        "at": "2025-10-23T05:30:01.564Z",
+        "variants": [
+          "og",
+          "card",
+          "simple",
+          "banner",
+          "x_profile_400",
+          "fb_post_1080",
+          "ig_portrait_1080x1350"
+        ],
+        "host": "http://web"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:01.564Z",
+        "variant": "og"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:06.991Z",
+        "variant": "og",
+        "asset": {
+          "id": 1,
+          "kind": "og",
+          "local_path": "/rails/public/generated/loftwah/og.jpg",
+          "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/b5zgjcc3nrp147jn3utxejtech0o",
+          "width": 1200,
+          "height": 630,
+          "mime_type": "image/jpeg",
+          "created_at": "2025-10-20 07:27:14 UTC",
+          "updated_at": "2025-10-23 05:30:06 UTC"
+        }
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:06.991Z",
+        "variant": "card"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:10.595Z",
+        "variant": "card",
+        "asset": {
+          "id": 2,
+          "kind": "card",
+          "local_path": "/rails/public/generated/loftwah/card.jpg",
+          "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/gcqys9d5j7scouvz57mi0cvwlkdc",
+          "width": 1280,
+          "height": 720,
+          "mime_type": "image/jpeg",
+          "created_at": "2025-10-20 07:27:20 UTC",
+          "updated_at": "2025-10-23 05:30:10 UTC"
+        }
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:10.595Z",
+        "variant": "simple"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:15.181Z",
+        "variant": "simple",
+        "asset": {
+          "id": 3,
+          "kind": "simple",
+          "local_path": "/rails/public/generated/loftwah/simple.jpg",
+          "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/bh6oexjwo5k6pegxops5sbqcl7im",
+          "width": 1280,
+          "height": 720,
+          "mime_type": "image/jpeg",
+          "created_at": "2025-10-20 07:27:27 UTC",
+          "updated_at": "2025-10-23 05:30:15 UTC"
+        }
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:15.181Z",
+        "variant": "banner"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:18.500Z",
+        "variant": "banner",
+        "asset": {
+          "id": 4,
+          "kind": "banner",
+          "local_path": "/rails/public/generated/loftwah/banner.jpg",
+          "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/bpov06b7rj5lsrip2xbb4fpzhwlj",
+          "width": 1500,
+          "height": 500,
+          "mime_type": "image/jpeg",
+          "created_at": "2025-10-23 04:36:32 UTC",
+          "updated_at": "2025-10-23 05:30:18 UTC"
+        }
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:18.500Z",
+        "variant": "x_profile_400"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:21.848Z",
+        "variant": "x_profile_400",
+        "asset": {
+          "id": 5,
+          "kind": "x_profile_400",
+          "local_path": "/rails/public/generated/loftwah/x_profile_400.jpg",
+          "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/e9lnyailaait13639nkctjpawv93",
+          "width": 400,
+          "height": 400,
+          "mime_type": "image/jpeg",
+          "created_at": "2025-10-23 04:36:32 UTC",
+          "updated_at": "2025-10-23 05:30:21 UTC"
+        }
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:21.848Z",
+        "variant": "fb_post_1080"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:25.233Z",
+        "variant": "fb_post_1080",
+        "asset": {
+          "id": 6,
+          "kind": "fb_post_1080",
+          "local_path": "/rails/public/generated/loftwah/fb_post_1080.jpg",
+          "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/o0qzpy9tqphkxa814fqpaq0r4dtl",
+          "width": 1080,
+          "height": 1080,
+          "mime_type": "image/jpeg",
+          "created_at": "2025-10-23 04:36:32 UTC",
+          "updated_at": "2025-10-23 05:30:25 UTC"
+        }
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:25.233Z",
+        "variant": "ig_portrait_1080x1350"
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:28.638Z",
+        "variant": "ig_portrait_1080x1350",
+        "asset": {
+          "id": 7,
+          "kind": "ig_portrait_1080x1350",
+          "local_path": "/rails/public/generated/loftwah/ig_portrait_1080x1350.jpg",
+          "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/npxw8gfrxnpqws278z81pyd19or4",
+          "width": 1080,
+          "height": 1350,
+          "mime_type": "image/jpeg",
+          "created_at": "2025-10-23 04:36:32 UTC",
+          "updated_at": "2025-10-23 05:30:28 UTC"
+        }
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "completed",
+        "at": "2025-10-23T05:30:28.638Z",
+        "count": 7
+      },
+      {
+        "stage": "capture_card_screenshots",
+        "event": "succeeded",
+        "at": "2025-10-23T05:30:28.638Z",
+        "label": "Capture card screenshots"
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "started",
+        "at": "2025-10-23T05:30:28.638Z",
+        "count": 7
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:28.787Z",
+        "variant": "og",
+        "size_before": 80002
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:28.865Z",
+        "variant": "og",
+        "metrics": {
+          "path": "/rails/public/generated/loftwah/og.jpg",
+          "size_before": 80002,
+          "size_after": 80002,
+          "changed": false
+        }
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:28.865Z",
+        "variant": "card",
+        "size_before": 121625
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:28.949Z",
+        "variant": "card",
+        "metrics": {
+          "path": "/rails/public/generated/loftwah/card.jpg",
+          "size_before": 121625,
+          "size_after": 121625,
+          "changed": false
+        }
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:28.950Z",
+        "variant": "simple",
+        "size_before": 66951
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:29.030Z",
+        "variant": "simple",
+        "metrics": {
+          "path": "/rails/public/generated/loftwah/simple.jpg",
+          "size_before": 66951,
+          "size_after": 66951,
+          "changed": false
+        }
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:29.030Z",
+        "variant": "banner",
+        "size_before": 55905
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:29.110Z",
+        "variant": "banner",
+        "metrics": {
+          "path": "/rails/public/generated/loftwah/banner.jpg",
+          "size_before": 55905,
+          "size_after": 55905,
+          "changed": false
+        }
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:29.111Z",
+        "variant": "x_profile_400",
+        "size_before": 21483
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:29.197Z",
+        "variant": "x_profile_400",
+        "metrics": {
+          "path": "/rails/public/generated/loftwah/x_profile_400.jpg",
+          "size_before": 21483,
+          "size_after": 21483,
+          "changed": false
+        }
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:29.198Z",
+        "variant": "fb_post_1080",
+        "size_before": 142255
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:29.289Z",
+        "variant": "fb_post_1080",
+        "metrics": {
+          "path": "/rails/public/generated/loftwah/fb_post_1080.jpg",
+          "size_before": 142255,
+          "size_after": 142255,
+          "changed": false
+        }
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_started",
+        "at": "2025-10-23T05:30:29.308Z",
+        "variant": "ig_portrait_1080x1350",
+        "size_before": 76101
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "variant_completed",
+        "at": "2025-10-23T05:30:29.389Z",
+        "variant": "ig_portrait_1080x1350",
+        "metrics": {
+          "path": "/rails/public/generated/loftwah/ig_portrait_1080x1350.jpg",
+          "size_before": 76101,
+          "size_after": 76101,
+          "changed": false
+        }
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "completed",
+        "at": "2025-10-23T05:30:29.389Z",
+        "optimized": [
+          "og",
+          "card",
+          "simple",
+          "banner",
+          "x_profile_400",
+          "fb_post_1080",
+          "ig_portrait_1080x1350"
+        ]
+      },
+      {
+        "stage": "optimize_card_images",
+        "event": "succeeded",
+        "at": "2025-10-23T05:30:29.390Z",
+        "label": "Optimize card images"
+      },
+      {
+        "stage": "pipeline",
+        "event": "completed",
+        "at": "2025-10-23T05:30:29.390Z",
+        "card_id": 1
+      }
+    ]
+  },
+  "error": null,
+  "value": {
+    "login": "loftwah",
+    "card_id": 1,
+    "screenshots": {
+      "og": {
+        "id": 1,
+        "kind": "og",
+        "local_path": "/rails/public/generated/loftwah/og.jpg",
+        "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/b5zgjcc3nrp147jn3utxejtech0o",
+        "width": 1200,
+        "height": 630,
+        "mime_type": "image/jpeg",
+        "created_at": "2025-10-20 07:27:14 UTC",
+        "updated_at": "2025-10-23 05:30:06 UTC"
+      },
+      "card": {
+        "id": 2,
+        "kind": "card",
+        "local_path": "/rails/public/generated/loftwah/card.jpg",
+        "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/gcqys9d5j7scouvz57mi0cvwlkdc",
+        "width": 1280,
+        "height": 720,
+        "mime_type": "image/jpeg",
+        "created_at": "2025-10-20 07:27:20 UTC",
+        "updated_at": "2025-10-23 05:30:10 UTC"
+      },
+      "simple": {
+        "id": 3,
+        "kind": "simple",
+        "local_path": "/rails/public/generated/loftwah/simple.jpg",
+        "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/bh6oexjwo5k6pegxops5sbqcl7im",
+        "width": 1280,
+        "height": 720,
+        "mime_type": "image/jpeg",
+        "created_at": "2025-10-20 07:27:27 UTC",
+        "updated_at": "2025-10-23 05:30:15 UTC"
+      },
+      "banner": {
+        "id": 4,
+        "kind": "banner",
+        "local_path": "/rails/public/generated/loftwah/banner.jpg",
+        "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/bpov06b7rj5lsrip2xbb4fpzhwlj",
+        "width": 1500,
+        "height": 500,
+        "mime_type": "image/jpeg",
+        "created_at": "2025-10-23 04:36:32 UTC",
+        "updated_at": "2025-10-23 05:30:18 UTC"
+      },
+      "x_profile_400": {
+        "id": 5,
+        "kind": "x_profile_400",
+        "local_path": "/rails/public/generated/loftwah/x_profile_400.jpg",
+        "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/e9lnyailaait13639nkctjpawv93",
+        "width": 400,
+        "height": 400,
+        "mime_type": "image/jpeg",
+        "created_at": "2025-10-23 04:36:32 UTC",
+        "updated_at": "2025-10-23 05:30:21 UTC"
+      },
+      "fb_post_1080": {
+        "id": 6,
+        "kind": "fb_post_1080",
+        "local_path": "/rails/public/generated/loftwah/fb_post_1080.jpg",
+        "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/o0qzpy9tqphkxa814fqpaq0r4dtl",
+        "width": 1080,
+        "height": 1080,
+        "mime_type": "image/jpeg",
+        "created_at": "2025-10-23 04:36:32 UTC",
+        "updated_at": "2025-10-23 05:30:25 UTC"
+      },
+      "ig_portrait_1080x1350": {
+        "id": 7,
+        "kind": "ig_portrait_1080x1350",
+        "local_path": "/rails/public/generated/loftwah/ig_portrait_1080x1350.jpg",
+        "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/npxw8gfrxnpqws278z81pyd19or4",
+        "width": 1080,
+        "height": 1350,
+        "mime_type": "image/jpeg",
+        "created_at": "2025-10-23 04:36:32 UTC",
+        "updated_at": "2025-10-23 05:30:28 UTC"
+      }
+    },
+    "optimizations": {
+      "og": {
+        "path": "/rails/public/generated/loftwah/og.jpg",
+        "size_before": 80002,
+        "size_after": 80002,
+        "changed": false
+      },
+      "card": {
+        "path": "/rails/public/generated/loftwah/card.jpg",
+        "size_before": 121625,
+        "size_after": 121625,
+        "changed": false
+      },
+      "simple": {
+        "path": "/rails/public/generated/loftwah/simple.jpg",
+        "size_before": 66951,
+        "size_after": 66951,
+        "changed": false
+      },
+      "banner": {
+        "path": "/rails/public/generated/loftwah/banner.jpg",
+        "size_before": 55905,
+        "size_after": 55905,
+        "changed": false
+      },
+      "x_profile_400": {
+        "path": "/rails/public/generated/loftwah/x_profile_400.jpg",
+        "size_before": 21483,
+        "size_after": 21483,
+        "changed": false
+      },
+      "fb_post_1080": {
+        "path": "/rails/public/generated/loftwah/fb_post_1080.jpg",
+        "size_before": 142255,
+        "size_after": 142255,
+        "changed": false
+      },
+      "ig_portrait_1080x1350": {
+        "path": "/rails/public/generated/loftwah/ig_portrait_1080x1350.jpg",
+        "size_before": 76101,
+        "size_after": 76101,
+        "changed": false
+      }
+    },
+    "scraped": null
+  }
+}

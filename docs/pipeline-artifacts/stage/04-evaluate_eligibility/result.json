@@ -1,0 +1,36 @@
+{
+  "status": "success",
+  "metadata": {
+    "stage": "evaluate_eligibility"
+  },
+  "error": null,
+  "value": {
+    "score": 5,
+    "threshold": 1,
+    "eligible": true,
+    "signals": {
+      "account_age": {
+        "met": true,
+        "detail": "Account age 3418 days meets minimum of 60 days"
+      },
+      "repository_activity": {
+        "met": true,
+        "detail": "4 public repos with pushes in last 12 months"
+      },
+      "social_proof": {
+        "met": true,
+        "detail": "Followers 1149, following 536 (threshold 3)"
+      },
+      "meaningful_profile": {
+        "met": true,
+        "detail": "Meaningful profile context detected (bio/readme/pinned repos)"
+      },
+      "recent_activity": {
+        "met": true,
+        "detail": "300 public events in the past 90 days"
+      }
+    }
+  },
+  "stage": "evaluate_eligibility",
+  "label": "Evaluate eligibility"
+}

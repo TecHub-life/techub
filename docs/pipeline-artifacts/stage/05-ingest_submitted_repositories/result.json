@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "metadata": {
+    "skipped": true,
+    "stage": "ingest_submitted_repositories"
+  },
+  "error": null,
+  "value": true,
+  "stage": "ingest_submitted_repositories",
+  "label": "Ingest submitted repositories"
+}

@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "metadata": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/19922556?v=4",
+    "stage": "download_github_avatar"
+  },
+  "error": null,
+  "value": "/avatars/loftwah.png",
+  "stage": "download_github_avatar",
+  "label": "Download GitHub avatar"
+}

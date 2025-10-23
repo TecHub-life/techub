@@ -1,0 +1,52 @@
+{
+  "stage": "capture_card_screenshots",
+  "label": "Capture card screenshots",
+  "status": "success",
+  "metadata": {
+    "captures": 7
+  },
+  "before": {
+    "login": "sample-user",
+    "host": "http://127.0.0.1:3000",
+    "profile": {
+      "id": 1,
+      "login": "sample-user",
+      "summary": "Sample summary text"
+    },
+    "captures": {}
+  },
+  "after": {
+    "captures": {
+      "og": {
+        "local_path": "/rails/public/generated/sample-user/og.jpg",
+        "public_url": null,
+        "width": 1200,
+        "height": 630
+      },
+      "card": {
+        "local_path": "/rails/public/generated/sample-user/card.jpg",
+        "public_url": null,
+        "width": 1280,
+        "height": 720
+      }
+    }
+  },
+  "trace": [
+    {
+      "stage": "capture_card_screenshots",
+      "event": "variant_started",
+      "variant": "og",
+      "at": "2025-10-23T05:00:00.000Z"
+    },
+    {
+      "stage": "capture_card_screenshots",
+      "event": "variant_completed",
+      "variant": "og",
+      "asset": {
+        "local_path": "/rails/public/generated/sample-user/og.jpg",
+        "mime_type": "image/jpeg"
+      },
+      "at": "2025-10-23T05:00:01.234Z"
+    }
+  ]
+}
