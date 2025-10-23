@@ -107,6 +107,12 @@ module Profiles
 
     attr_reader :login, :host
 
+    # Backwards compatibility for earlier typo so older workers won't explode.
+    # Accepts an optional custom host to mirror resolve_host semantics.
+    def resolved_host(custom_host = nil)
+      custom_host.nil? ? host : resolve_host(custom_host)
+    end
+
     def resolve_host(custom_host)
       candidate = custom_host.presence || ENV["APP_HOST"].presence || (defined?(AppHost) ? AppHost.current : nil)
       candidate.presence || "http://127.0.0.1:3000"
