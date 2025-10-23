@@ -1,5 +1,8 @@
 # TecHub
 
+[![CI](https://github.com/loftwah/techub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/loftwah/techub/actions/workflows/ci.yml?query=branch%3Amain)
+[![Bump ImageMagick 7](https://github.com/loftwah/techub/actions/workflows/bump-imagemagick.yml/badge.svg)](https://github.com/loftwah/techub/actions/workflows/bump-imagemagick.yml)
+
 ```
    _____                   _  _            _
   |_   _|   ___     __    | || |   _  _   | |__
