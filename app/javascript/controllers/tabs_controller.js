@@ -11,12 +11,12 @@ export default class extends Controller {
     console.log('Tabs controller connected, default tab:', this.defaultValue)
     console.log('Found tab targets:', this.tabTargets.length)
     console.log('Found panel targets:', this.panelTargets.length)
-    
+
     // Check URL for tab parameter
     const urlParams = new URLSearchParams(window.location.search)
     const tabFromUrl = urlParams.get('tab')
     const initialTab = tabFromUrl || this.defaultValue
-    
+
     console.log('Initial tab from URL or default:', initialTab)
     this.showTab(initialTab)
   }
@@ -25,12 +25,12 @@ export default class extends Controller {
     const tabName = event.currentTarget.dataset.tabName
     console.log('Tab clicked:', tabName)
     this.showTab(tabName)
-    
+
     // Update URL with tab parameter
     const url = new URL(window.location)
     url.searchParams.set('tab', tabName)
     window.history.pushState({}, '', url)
-    
+
     // Only scroll to top if scrollToTop is true (default behavior)
     if (this.scrollToTopValue) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
