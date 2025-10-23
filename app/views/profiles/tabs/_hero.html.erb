@@ -5,8 +5,11 @@
     <div class="flex flex-col gap-4">
       <div class="flex items-center gap-4">
         <% avatar_choice = card&.avatar_choice || 'real' %>
-        <% ai_avatar = profile.profile_assets.find_by(kind: 'avatar_1x1') %>
-        <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : profile.avatar_url %>
+        <% avatar_src = if avatar_choice == 'ai'
+          profile_asset_url(profile, 'avatar_1x1') || profile.avatar_url
+        else
+          profile.avatar_url
+        end %>
         <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full ring-4 ring-slate-200 dark:ring-slate-700">
         <div class="min-w-0 flex-1">
           <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400"><%= profile.login %></p>

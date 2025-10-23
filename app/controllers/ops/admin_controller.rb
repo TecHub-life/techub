@@ -43,8 +43,19 @@ module Ops
       # Failed profiles (last pipeline failed). Keep list small for UI.
       begin
         @failed_profiles = Profile.where(last_pipeline_status: "failure").order(updated_at: :desc).limit(50)
+        # Preload recent pipeline events for failed profiles to show failure details (esp. screenshots)
+        if @failed_profiles.any?
+          events = ProfilePipelineEvent
+            .where(profile_id: @failed_profiles.map(&:id))
+            .order(created_at: :desc)
+            .limit(500)
+          @failed_events_by_profile_id = events.group_by(&:profile_id)
+        else
+          @failed_events_by_profile_id = {}
+        end
       rescue StandardError
         @failed_profiles = []
+        @failed_events_by_profile_id = {}
       end
 
       # Recent successful profiles (last pipeline success or partial_success)

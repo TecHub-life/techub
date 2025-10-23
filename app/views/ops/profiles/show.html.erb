@@ -4,8 +4,9 @@
     <div class="flex gap-2">
       <%= button_to "Re-roll Profile", ops_retry_profile_path(username: @profile.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
       <%# Image regeneration is available via explicit route; hidden by default %>
-      <%= button_to "Delete", ops_destroy_profile_path(username: @profile.login), method: :delete, form: { data: { turbo_confirm: "Delete @#{@profile.login}? This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
+      <%= button_to "Delete profile (permanent)", ops_destroy_profile_path(username: @profile.login, back_to: "#failed-profiles"), method: :delete, form: { data: { turbo_confirm: "Delete @#{@profile.login}? This permanently removes the profile and all related data. This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
     </div>
+    <p class="mt-2 text-xs text-red-700 dark:text-red-400">Deletes this profile and all associated data (assets, stats, ownerships). This cannot be undone.</p>
   </div>
 
   <p class="text-sm text-slate-600 dark:text-slate-400">Re-runs this profile to match the latest version. The pipeline syncs GitHub data, updates traits, and recaptures screenshots.</p>

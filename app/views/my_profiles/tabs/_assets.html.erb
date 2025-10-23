@@ -63,7 +63,7 @@
 
   <% variants = [
        { kind: "card", label: "Main Card", dims: "1280×720", aspect: "16/9", usage: "Social posts & profile features" },
-       { kind: "og", label: "OpenGraph (Link)", dims: "1200×630", aspect: "1200/630", usage: "Link previews & embeds" },
+       { kind: "og", label: "Work (Link)", dims: "1200×630", aspect: "1200/630", usage: "Portfolio link previews" },
        { kind: "simple", label: "Simple Card", dims: "1280×720", aspect: "16/9", usage: "One-sheet & CVs" },
        { kind: "banner", label: "Banner", dims: "1500×500", aspect: "3/1", usage: "Headers & cover images" },
        { kind: "x_profile_400", label: "Square Avatar", dims: "400×400", aspect: "1/1", usage: "Avatars & profile photos" },
@@ -109,7 +109,7 @@
               </a>
             <% end %>
           </div>
-          <div class="relative w-full bg-slate-100 dark:bg-slate-900 <%= "aspect-[#{variant[:aspect]}]" %>">
+          <div class="relative w-full bg-slate-100 dark:bg-slate-900 <%= "aspect-[#{variant[:aspect]}]" %>" style="aspect-ratio: <%= variant[:aspect] %>">
             <% if variant[:url].present? %>
               <img src="<%= variant[:url] %>" alt="<%= "#{variant[:label]} for #{profile.display_name}" %>" class="absolute inset-0 h-full w-full object-contain" loading="lazy">
             <% else %>

@@ -8,6 +8,8 @@ class Profile < ApplicationRecord
   has_one :profile_readme, dependent: :destroy
   has_one :profile_card, dependent: :destroy
   has_many :profile_assets, dependent: :destroy
+  has_many :profile_scrapes, dependent: :destroy
+  has_many :profile_stats, dependent: :destroy
   has_many :profile_pipeline_events, dependent: :destroy
   has_many :profile_ownerships, dependent: :destroy
   has_many :owners, through: :profile_ownerships, source: :user

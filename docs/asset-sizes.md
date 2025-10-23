@@ -32,5 +32,6 @@ Workflow
 
 - Generate AI avatar variants (1:1, 3:1, 16:9, 9:16).
 - Capture card views (`og`, `card`, `simple`, `banner`) via Puppeteer.
-- Post-process social sizes (`x_profile_400`, `fb_post_1080`, `ig_portrait_1080x1350`) from AI variants.
+- Post-process social sizes (`x_profile_400`, `fb_post_1080`, `ig_portrait_1080x1350`) from AI
+  variants.
 - Expose assets via `/api/v1/profiles/:username/assets`.
