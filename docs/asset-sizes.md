@@ -1,25 +1,19 @@
-## Supported social asset sizes
+## Supported asset sizes
 
-We produce post‑processed social assets from the AI avatar variants (1:1, 3:1, 16:9, 9:16).
+TecHub currently produces two families of artwork:
 
-- X (Twitter)
-  - x_profile_400 → 400×400 (src: avatar_1x1)
-  - x_header_1500x500 → 1500×500 (src: avatar_3x1)
-  - x_feed_1600x900 → 1600×900 (src: avatar_16x9)
-- Instagram
-  - ig_square_1080 → 1080×1080 (src: avatar_1x1)
-  - ig_portrait_1080x1350 → 1080×1350 (src: avatar_9x16)
-  - ig_landscape_1080x566 → 1080×566 (src: avatar_16x9)
-- Facebook
-  - fb_cover_851x315 → 851×315 (src: avatar_16x9)
-  - fb_post_1080 → 1080×1080 (src: avatar_1x1)
-- LinkedIn
-  - linkedin_cover_1584x396 → 1584×396 (src: avatar_3x1)
-  - linkedin_profile_400 → 400×400 (src: avatar_1x1)
-- YouTube
-  - youtube_cover_2560x1440 → 2560×1440 (src: avatar_16x9)
-- OpenGraph (generic)
-  - og_1200x630 → 1200×630 (src: avatar_16x9)
+**Card captures**
+
+- `og` → 1200×630 (TecHub OG preview)
+- `card` → 1280×720 (main trading card)
+- `simple` → 1280×720 (minimal layout)
+- `banner` → 1500×500 (header / cover art)
+
+**Social-ready crops**
+
+- `x_profile_400` → 400×400 (square avatar)
+- `fb_post_1080` → 1080×1080 (square post)
+- `ig_portrait_1080x1350` → 1080×1350 (portrait post)
 
 Reference: Sprout Social image sizes guide:
 https://sproutsocial.com/insights/social-media-image-sizes-guide/
@@ -37,6 +31,7 @@ https://sproutsocial.com/insights/social-media-image-sizes-guide/
 Workflow
 
 - Generate AI avatar variants (1:1, 3:1, 16:9, 9:16).
-- Capture card views (og, card, simple, banner) via Puppeteer.
-- Post-process social sizes from AI variants.
+- Capture card views (`og`, `card`, `simple`, `banner`) via Puppeteer.
+- Post-process social sizes (`x_profile_400`, `fb_post_1080`, `ig_portrait_1080x1350`) from AI
+  variants.
 - Expose assets via `/api/v1/profiles/:username/assets`.

@@ -187,10 +187,19 @@ class PagesController < ApplicationController
       # Only allow files within docs/ and disallow traversal
       clean = Pathname.new(@path).cleanpath.to_s
       return head(:bad_request) if clean.start_with?("..")
-      asset = root.join(clean)
-      if asset.exist? && asset.file?
-        type = Marcel::MimeType.for(asset.to_s)
-        return send_file(asset.to_s, type: type, disposition: "inline")
+
+      # Precompute a whitelist of allowed asset paths relative to docs/
+      allowed_assets = Dir[root.join("**", "*.{png,jpg,jpeg,webp,gif,svg,css,js}")].map { |p| p.delete_prefix(root.to_s + "/") }
+      return head(:not_found) unless clean.presence_in(allowed_assets)
+
+      candidate = root.join(clean).expand_path
+      # Ensure the resolved path is within the docs root
+      return head(:bad_request) unless candidate.to_s.start_with?(root.expand_path.to_s + File::SEPARATOR)
+
+      if candidate.exist? && candidate.file?
+        type = Marcel::MimeType.for(candidate.to_s)
+        data = File.binread(candidate)
+        return send_data data, filename: candidate.basename.to_s, type: type, disposition: "inline"
       end
     end
 

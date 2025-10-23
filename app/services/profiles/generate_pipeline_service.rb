@@ -78,18 +78,36 @@ module Profiles
       return failure(StandardError.new("login required"), metadata: { stage: :pipeline }) if login.blank?
 
       context = Pipeline::Context.new(login: login, host: resolved_host)
+      @last_known_profile = Profile.for_login(login).first
       context.trace(:pipeline, :started, login: login, host: context.host)
+      @pending_pipeline_events = []
+      pipeline_started_at = Time.current
+      record_pipeline_event(stage: :pipeline, status: "started", started_at: pipeline_started_at)
 
       STAGES.each do |stage|
+        stage_started_at = Time.current
+        record_stage_event(stage, status: "started", started_at: stage_started_at)
+
         result = execute_stage(stage, context)
-        return result if result.failure?
+        if result.failure?
+          record_stage_event(stage, status: "failed", started_at: stage_started_at, message: result.error&.message)
+          record_pipeline_event(stage: :pipeline, status: "failed", started_at: pipeline_started_at, message: result.error&.message)
+          return result
+        end
+
+        refresh_event_profile(context)
+        record_stage_event(stage, status: "completed", started_at: stage_started_at)
       end
 
       context.trace(:pipeline, :completed, card_id: context.result_value[:card_id])
+      record_pipeline_event(stage: :pipeline, status: "completed", started_at: pipeline_started_at)
+      flush_pending_events
       success(context.result_value, metadata: final_metadata(context))
     rescue StandardError => e
       metadata = { login: login, host: resolved_host }
       metadata[:trace] = context&.trace_entries if defined?(context) && context
+      record_pipeline_event(stage: :pipeline, status: "failed", started_at: pipeline_started_at, message: e.message) if defined?(pipeline_started_at)
+      flush_pending_events
       failure(e, metadata: metadata)
     end
 
@@ -125,6 +143,107 @@ module Profiles
         host: context.host,
         trace: context.trace_entries
       }
+    end
+
+    def record_stage_event(stage, status:, started_at:, message: nil)
+      record_pipeline_event(stage: stage.id, status: status, started_at: started_at, message: message)
+    end
+
+    def record_pipeline_event(stage:, status:, started_at:, message: nil)
+      profile = profile_for_events
+      unless profile
+        store_pending_event(stage: stage, status: status, started_at: started_at, message: message)
+        return
+      end
+
+      persist_pipeline_event(profile: profile, stage: stage, status: status, started_at: started_at, message: message)
+    rescue StandardError => e
+      if defined?(StructuredLogger)
+        StructuredLogger.warn(
+          message: "pipeline_event_record_failed",
+          service: self.class.name,
+          login: profile&.login || login,
+          stage: stage,
+          status: status,
+          error: e.message
+        )
+      end
+    end
+
+    def truncate_message(message)
+      return nil if message.blank?
+
+      msg = message.to_s
+      msg.length > 250 ? msg[0, 250] : msg
+    end
+
+    def profile_for_events
+      return @last_known_profile if defined?(@last_known_profile) && @last_known_profile&.persisted?
+
+      @last_known_profile = Profile.for_login(login).first
+    end
+
+    def refresh_event_profile(context)
+      profile = context.profile
+      if profile.present?
+        @last_known_profile = profile
+        flush_pending_events
+      end
+    end
+
+    def store_pending_event(stage:, status:, started_at:, message:)
+      @pending_pipeline_events ||= []
+      @pending_pipeline_events << {
+        stage: stage,
+        status: status,
+        started_at: started_at,
+        message: message
+      }
+    end
+
+    def flush_pending_events
+      return unless @pending_pipeline_events.present?
+
+      profile = profile_for_events
+      return unless profile
+
+      pending = @pending_pipeline_events.dup
+      @pending_pipeline_events.clear
+      pending.each do |event|
+        begin
+          persist_pipeline_event(
+            profile: profile,
+            stage: event[:stage],
+            status: event[:status],
+            started_at: event[:started_at],
+            message: event[:message]
+          )
+        rescue StandardError => e
+          StructuredLogger.warn(
+            message: "pipeline_event_record_failed",
+            service: self.class.name,
+            login: profile.login,
+            stage: event[:stage],
+            status: event[:status],
+            error: e.message
+          ) if defined?(StructuredLogger)
+        end
+      end
+    end
+
+    def persist_pipeline_event(profile:, stage:, status:, started_at:, message:)
+      duration_ms = if started_at && %w[completed failed].include?(status.to_s)
+        ((Time.current - started_at) * 1000).to_i
+      end
+
+      ProfilePipelineEvent.create!(
+        profile_id: profile.id,
+        stage: stage.to_s,
+        status: status.to_s,
+        duration_ms: duration_ms,
+        message: truncate_message(message),
+        created_at: Time.current
+      )
     end
 
     def resolved_host

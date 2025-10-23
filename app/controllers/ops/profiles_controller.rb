@@ -50,9 +50,13 @@ module Ops
     def destroy
       login = @profile.login
       @profile.destroy!
-      redirect_to ops_admin_path, notice: "Deleted profile @#{login}"
+      dest = ops_admin_path
+      dest = "#{dest}#{params[:back_to]}" if params[:back_to].present?
+      redirect_to dest, notice: "Deleted profile @#{login}"
     rescue ActiveRecord::InvalidForeignKey => e
-      redirect_to ops_admin_path, alert: "Could not delete: #{e.message}"
+      dest = ops_admin_path
+      dest = "#{dest}#{params[:back_to]}" if params[:back_to].present?
+      redirect_to dest, alert: "Could not delete: #{e.message}"
     end
 
     private

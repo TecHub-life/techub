@@ -74,9 +74,9 @@ module Gemini
       end
 
       def inferred_provider
-        # Prefer Vertex when both are configured; AI Studio when only API key is present
-        return "vertex" if project_id.present?
+        # Prefer AI Studio (API key) when available; fall back to Vertex when only GCP is available
         return "ai_studio" if api_key.present?
+        return "vertex" if project_id.present?
 
         "vertex"
       end

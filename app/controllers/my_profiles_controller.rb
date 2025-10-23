@@ -69,21 +69,6 @@ class MyProfilesController < ApplicationController
     # For UI: compute AI regen availability
     @ai_regen_available_at = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
 
-    # Social targets for preview (label + aspect ratio class)
-    @social_targets = [
-      { kind: "x_profile_400", label: "X Profile 400×400", aspect: "1/1", hint: "Profile picture • Round crop" },
-      { kind: "x_header_1500x500", label: "X Header 1500×500", aspect: "3/1", hint: "Profile header banner" },
-      { kind: "x_feed_1600x900", label: "X Feed 1600×900", aspect: "16/9", hint: "Landscape post" },
-      { kind: "ig_square_1080", label: "Instagram 1080×1080", aspect: "1/1", hint: "Square post" },
-      { kind: "ig_portrait_1080x1350", label: "Instagram 1080×1350", aspect: "4/5", hint: "Portrait post (tall)" },
-      { kind: "ig_landscape_1080x566", label: "Instagram 1080×566", aspect: "1080/566", hint: "Landscape post" },
-      { kind: "fb_post_1080", label: "Facebook 1080×1080", aspect: "1/1", hint: "Square post" },
-      { kind: "fb_cover_851x315", label: "Facebook Cover 851×315", aspect: "851/315", hint: "Page cover image" },
-      { kind: "linkedin_profile_400", label: "LinkedIn Profile 400×400", aspect: "1/1", hint: "Profile picture • Round crop" },
-      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover 1584×396", aspect: "4/1", hint: "Profile/company cover" },
-      { kind: "youtube_cover_2560x1440", label: "YouTube Cover 2560×1440", aspect: "16/9", hint: "Channel art (mind safe area)" },
-      { kind: "og_1200x630", label: "OpenGraph 1200×630", aspect: "1200/630", hint: "Link preview image" }
-    ]
     puts "✅ Settings action completed successfully"
   end
 

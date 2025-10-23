@@ -24,6 +24,17 @@
     </div>
   </div>
 
+  <!-- Screenshots Health -->
+  <div id="failed-profiles" class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Screenshots Health</h2>
+    <ul class="text-sm text-slate-700 dark:text-slate-300 list-disc pl-5">
+      <li>Node: <code>node</code> must be available</li>
+      <li>Puppeteer: <code>npm i --save-dev puppeteer</code> installed</li>
+      <li>Script: <code>script/screenshot.js</code> executable</li>
+    </ul>
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Failed screenshot jobs will include stderr in logs as <code>screenshot_command_failed</code> or <code>screenshot_empty</code>.</p>
+  </div>
+
   <!-- Axiom -->
   <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Axiom</h2>
@@ -373,6 +384,7 @@
   <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="text-lg font-semibold mb-1">Failed Profiles</h2>
     <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Regeneration recaptures screenshots and updates text. AI artwork is managed outside of the pipeline.</p>
+    <p class="-mt-2 mb-3 text-xs text-red-700 dark:text-red-400">“Delete profile (permanent)” removes the profile and all related data. This cannot be undone.</p>
       <div class="mb-3 grid gap-3 sm:grid-cols-2">
       <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
         <h3 class="text-sm font-semibold mb-2">Re-roll (Selected)</h3>
@@ -416,13 +428,32 @@
                   <span class="text-slate-400">·</span>
                   <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
                 </td>
-                <td class="py-2 pr-4"><pre class="whitespace-pre-wrap text-xs text-red-600 dark:text-red-400"><%= (p.last_pipeline_error || "(none)").to_s.truncate(160) %></pre></td>
+                <td class="py-2 pr-4">
+                  <pre class="whitespace-pre-wrap text-xs text-red-600 dark:text-red-400"><%= (p.last_pipeline_error || "(none)").to_s.truncate(160) %></pre>
+                  <% if @failed_events_by_profile_id[p.id] %>
+                    <% recent = @failed_events_by_profile_id[p.id].select { |e| e.stage.start_with?("screenshot_") }.first(3) %>
+                    <% if recent.any? %>
+                      <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        <% recent.each do |e| %>
+                          <div>
+                            <span class="font-mono"><%= e.stage %></span>
+                            <span>—</span>
+                            <span class="uppercase <%= e.status == 'failed' ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-300' %>"><%= e.status %></span>
+                            <% if e.message.present? %>
+                              <span class="ml-1">(<%= e.message.to_s.truncate(100) %>)</span>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  <% end %>
+                </td>
                 <td class="py-2 pr-4"><%= p.updated_at.strftime('%Y-%m-%d %H:%M') %></td>
                 <td class="py-2">
                   <div class="flex gap-2">
                     <%= button_to "Retry — No Images", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
                     <%# Hidden: retry with images for individual failed profile %>
-                    <%= button_to "Delete", ops_destroy_profile_path(username: p.login), method: :delete, form: { data: { turbo_confirm: "Delete @#{p.login}? This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
+                    <%= button_to "Delete profile (permanent)", ops_destroy_profile_path(username: p.login, back_to: "#failed-profiles"), method: :delete, form: { data: { turbo_confirm: "Delete @#{p.login}? This permanently removes the profile and all related data. This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
                   </div>
                 </td>
               </tr>

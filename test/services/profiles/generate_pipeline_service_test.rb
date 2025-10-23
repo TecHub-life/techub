@@ -60,6 +60,35 @@ class GeneratePipelineServiceTest < ActiveSupport::TestCase
     assert_includes stages_in_trace, failing_stage.id
   end
 
+  test "records pipeline events for each stage" do
+    login = "loftwah-stage"
+    profile = Profile.create!(github_id: 9876, login: login, name: "Lofty Stage")
+
+    stubbed_stages = Profiles::GeneratePipelineService::STAGES.map do |stage|
+      stage_dup(stage, ->(context:, **_) {
+        context.trace(stage.id, :stubbed)
+        ServiceResult.success(true)
+      })
+    end
+    redefine_pipeline_stages(stubbed_stages)
+
+    result = Profiles::GeneratePipelineService.call(login: login)
+    assert result.success?
+
+    events = ProfilePipelineEvent.where(profile_id: profile.id).order(:created_at)
+    expected_sequence = [ [ :pipeline, "started" ] ]
+    stubbed_stages.each do |stage|
+      expected_sequence << [ stage.id, "started" ]
+      expected_sequence << [ stage.id, "completed" ]
+    end
+    expected_sequence << [ :pipeline, "completed" ]
+
+    actual = events.map { |event| [ event.stage.to_sym, event.status ] }
+    assert_equal expected_sequence, actual
+    assert events.where(stage: "pipeline", status: "started").exists?
+    assert events.where(stage: "pipeline", status: "completed").exists?
+  end
+
   private
 
   def stage_dup(stage, proc)

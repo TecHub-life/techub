@@ -1,5 +1,129 @@
 <%# General Settings Tab %>
 <div class="space-y-6">
+  <% card = profile.profile_card %>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <div class="mb-4">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">AI Profile Snapshot</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Everything the AI generated for your trading card and social persona.</p>
+    </div>
+    <% if card.present? %>
+      <div class="space-y-6 md:space-y-0 md:grid md:grid-cols-2 md:gap-6">
+        <div class="space-y-4">
+          <div class="space-y-1 text-sm text-slate-700 dark:text-slate-300">
+            <% if card.title.present? %>
+              <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">Title</p>
+              <p class="text-base font-semibold text-slate-900 dark:text-slate-100"><%= card.title %></p>
+            <% end %>
+            <% if card.tagline.present? %>
+              <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300 mt-3">Tagline</p>
+              <p class="italic text-slate-600 dark:text-slate-400"><%= card.tagline %></p>
+            <% end %>
+            <% if card.flavor_text.present? %>
+              <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300 mt-3">Flavor Text</p>
+              <p class="italic text-slate-500 dark:text-slate-400">"<%= card.flavor_text %>"</p>
+            <% end %>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Stats</h3>
+            <div class="mt-2 flex flex-wrap gap-2">
+              <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">⚔️ Attack <%= card.attack %></span>
+              <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">🛡️ Defense <%= card.defense %></span>
+              <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">⚡ Speed <%= card.speed %></span>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Buff</p>
+              <p class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= card.buff %></p>
+              <% if card.buff_description.present? %>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1"><%= card.buff_description %></p>
+              <% end %>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Weakness</p>
+              <p class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= card.weakness %></p>
+              <% if card.weakness_description.present? %>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1"><%= card.weakness_description %></p>
+              <% end %>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-teal-600 dark:text-teal-400">Vibe</p>
+              <p class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= card.vibe %></p>
+              <% if card.vibe_description.present? %>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1"><%= card.vibe_description %></p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">Special Move</p>
+            <p class="text-sm font-semibold text-indigo-900 dark:text-indigo-100"><%= card.special_move %></p>
+            <% if card.special_move_description.present? %>
+              <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-1"><%= card.special_move_description %></p>
+            <% end %>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Card Attributes</h3>
+            <div class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+              <% if card.playing_card.present? %>
+                <div class="flex items-center justify-between">
+                  <span>Playing Card</span>
+                  <span class="font-semibold text-slate-900 dark:text-slate-100"><%= card.playing_card %></span>
+                </div>
+              <% end %>
+              <% if card.spirit_animal.present? %>
+                <div class="flex items-center justify-between">
+                  <span>Spirit Animal</span>
+                  <span class="font-semibold text-slate-900 dark:text-slate-100"><%= card.spirit_animal %></span>
+                </div>
+              <% end %>
+              <% if card.archetype.present? %>
+                <div class="flex items-center justify-between">
+                  <span>Archetype</span>
+                  <span class="font-semibold text-slate-900 dark:text-slate-100"><%= card.archetype %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <% if Array(card.tags).any? %>
+            <div>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tags</h3>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                <% Array(card.tags).each do |tag| %>
+                  <span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">#<%= tag %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <% if card.short_bio.present? %>
+            <div>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Short Bio</h3>
+              <p class="mt-1 text-sm text-slate-600 dark:text-slate-400"><%= card.short_bio %></p>
+            </div>
+          <% end %>
+
+          <% if card.long_bio.present? %>
+            <div>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Long Bio</h3>
+              <div class="mt-1 max-h-48 overflow-y-auto text-sm text-slate-600 dark:text-slate-400">
+                <%= simple_format(card.long_bio) %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-sm text-slate-600 dark:text-slate-400">No AI card has been generated yet. Run the full pipeline to populate these fields.</p>
+    <% end %>
+  </div>
+
   <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
     <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Privacy & Sharing</h2>
     <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-4">

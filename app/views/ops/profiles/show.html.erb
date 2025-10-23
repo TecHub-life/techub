@@ -4,8 +4,9 @@
     <div class="flex gap-2">
       <%= button_to "Re-roll Profile", ops_retry_profile_path(username: @profile.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
       <%# Image regeneration is available via explicit route; hidden by default %>
-      <%= button_to "Delete", ops_destroy_profile_path(username: @profile.login), method: :delete, form: { data: { turbo_confirm: "Delete @#{@profile.login}? This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
+      <%= button_to "Delete profile (permanent)", ops_destroy_profile_path(username: @profile.login, back_to: "#failed-profiles"), method: :delete, form: { data: { turbo_confirm: "Delete @#{@profile.login}? This permanently removes the profile and all related data. This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
     </div>
+    <p class="mt-2 text-xs text-red-700 dark:text-red-400">Deletes this profile and all associated data (assets, stats, ownerships). This cannot be undone.</p>
   </div>
 
   <p class="text-sm text-slate-600 dark:text-slate-400">Re-runs this profile to match the latest version. The pipeline syncs GitHub data, updates traits, and recaptures screenshots.</p>
@@ -86,6 +87,22 @@
       </div>
       <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-3">
+          <% if @profile_card.title.present? || @profile_card.tagline.present? || @profile_card.flavor_text.present? %>
+            <div>
+              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Identity</h3>
+              <div class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <% if @profile_card.title.present? %>
+                  <p><span class="font-semibold text-slate-900 dark:text-slate-100">Title:</span> <%= @profile_card.title %></p>
+                <% end %>
+                <% if @profile_card.tagline.present? %>
+                  <p><span class="font-semibold text-slate-900 dark:text-slate-100">Tagline:</span> <%= @profile_card.tagline %></p>
+                <% end %>
+                <% if @profile_card.flavor_text.present? %>
+                  <p class="italic text-slate-500 dark:text-slate-400">"<%= @profile_card.flavor_text %>"</p>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
           <div>
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Stats</h3>
             <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
@@ -107,7 +124,12 @@
                 <li>🌟 Archetype: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.archetype %></span></li>
               <% end %>
               <% if @profile_card.vibe.present? %>
-                <li>✨ Vibe: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.vibe %></span></li>
+                <li>
+                  <div>✨ Vibe: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.vibe %></span></div>
+                  <% if @profile_card.vibe_description.present? %>
+                    <div class="mt-1 text-xs text-slate-500 dark:text-slate-400"><%= @profile_card.vibe_description %></div>
+                  <% end %>
+                </li>
               <% end %>
             </ul>
           </div>
@@ -118,19 +140,40 @@
                 <% if @profile_card.buff.present? %>
                   <div>
                     <dt class="font-semibold uppercase text-xs tracking-wide text-emerald-600 dark:text-emerald-400">Buff</dt>
-                    <dd><%= @profile_card.buff %> — <%= @profile_card.buff_description.presence || "n/a" %></dd>
+                    <dd class="space-y-1">
+                      <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.buff %></div>
+                      <% if @profile_card.buff_description.present? %>
+                        <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.buff_description %></div>
+                      <% else %>
+                        <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
+                      <% end %>
+                    </dd>
                   </div>
                 <% end %>
                 <% if @profile_card.weakness.present? %>
                   <div>
                     <dt class="font-semibold uppercase text-xs tracking-wide text-amber-600 dark:text-amber-400">Weakness</dt>
-                    <dd><%= @profile_card.weakness %> — <%= @profile_card.weakness_description.presence || "n/a" %></dd>
+                    <dd class="space-y-1">
+                      <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.weakness %></div>
+                      <% if @profile_card.weakness_description.present? %>
+                        <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.weakness_description %></div>
+                      <% else %>
+                        <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
+                      <% end %>
+                    </dd>
                   </div>
                 <% end %>
                 <% if @profile_card.special_move.present? %>
                   <div>
                     <dt class="font-semibold uppercase text-xs tracking-wide text-indigo-600 dark:text-indigo-400">Special Move</dt>
-                    <dd><%= @profile_card.special_move %><%= @profile_card.special_move_description.present? ? " — #{@profile_card.special_move_description}" : "" %></dd>
+                    <dd class="space-y-1">
+                      <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.special_move %></div>
+                      <% if @profile_card.special_move_description.present? %>
+                        <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.special_move_description %></div>
+                      <% else %>
+                        <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
+                      <% end %>
+                    </dd>
                   </div>
                 <% end %>
               </dl>

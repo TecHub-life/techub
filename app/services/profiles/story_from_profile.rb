@@ -1,6 +1,7 @@
 module Profiles
   class StoryFromProfile < ApplicationService
     include Gemini::ResponseHelpers
+    include Gemini::SchemaHelpers
     TOKEN_STEPS = [ 900, 1300, 1700, 2100, 2500, 2900 ].freeze
     TOKEN_INCREMENT = 400
     MAX_TOKEN_LIMIT = 4_100
@@ -130,50 +131,16 @@ module Profiles
 
     def build_payload(prompt, max_tokens)
       provider = story_provider
-      schema = {
-        type: "object",
-        properties: {
-          story: { type: "string" },
-          tagline: { type: "string" }
-        },
-        required: %w[story tagline]
-      }
-
-      if provider == "vertex"
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt }
-              ]
-            }
-          ],
-          generation_config: {
-            temperature: TEMPERATURE,
-            max_output_tokens: max_tokens,
-            response_mime_type: "application/json",
-            response_schema: schema
-          }
-        }
-      else
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: TEMPERATURE,
-            maxOutputTokens: max_tokens,
-            responseMimeType: "application/json",
-            responseSchema: schema
-          }
-        }
-      end
+      adapter = Gemini::Providers::Adapter.for(provider)
+      contents = adapter.contents_for_text(prompt)
+      schema = { type: "object", properties: { story: { type: "string" }, tagline: { type: "string" } }, required: %w[story tagline] }
+      gen_cfg = adapter.generation_config_hash(
+        temperature: TEMPERATURE,
+        max_tokens: max_tokens,
+        schema: schema,
+        structured_json: true
+      )
+      adapter.envelope(contents: contents, generation_config: gen_cfg)
     end
 
     def request_story(conn, provider, prompt, max_tokens, attempt_index)
@@ -190,7 +157,7 @@ module Profiles
       unless (200..299).include?(response.status)
         return failure(
           StandardError.new("Gemini story generation failed"),
-          metadata: { http_status: response.status, body: response.body, attempt: attempt_index }
+          metadata: { http_status: response.status, provider: provider, body_preview: response.body.to_s[0, 500], attempt: attempt_index }
         )
       end
 

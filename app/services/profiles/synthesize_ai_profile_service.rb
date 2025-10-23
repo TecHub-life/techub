@@ -1,6 +1,7 @@
 module Profiles
   class SynthesizeAiProfileService < ApplicationService
     include Gemini::ResponseHelpers
+    include Gemini::SchemaHelpers
 
     MIN_TAGS = 6
     MAX_TAGS = 6
@@ -37,15 +38,20 @@ module Profiles
         build_payload(ctx)
       )
       unless (200..299).include?(resp.status)
-        return failure(StandardError.new("Gemini AI traits request failed"), metadata: { http_status: resp.status, body: resp.body })
+        return failure(
+          StandardError.new("Gemini AI traits request failed"),
+          metadata: { http_status: resp.status, provider: provider, body_preview: resp.body.to_s[0, 500] }
+        )
       end
       attempts << { http_status: resp.status, strict: false }
+      preview = response_text_preview(resp.body)
       json = extract_json_from_response(resp.body)
       cleaned = nil
 
       if json.blank?
-        attempts << { http_status: resp.status, strict: false, empty: true }
-        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login) if defined?(StructuredLogger)
+        attempts.last[:empty] = true
+        attempts.last[:preview] = preview if preview.present?
+        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login, preview: preview, http_status: resp.status) if defined?(StructuredLogger)
         # Try one strict re-ask before falling back
         resp_strict = conn.post(
           Gemini::Endpoints.text_generate_path(
@@ -62,6 +68,7 @@ module Profiles
           cleaned = validate_and_normalize(json2) if json2.present?
         else
           attempts << { http_status: resp_strict.status, strict: true, error: true }
+          attempts.last[:preview] = response_text_preview(resp_strict.body)
         end
 
         return failure(
@@ -90,6 +97,7 @@ module Profiles
           cleaned = cleaned2 if cleaned2.present? && constraints_ok?(cleaned2)
         else
           attempts << { http_status: resp2.status, strict: true, error: true }
+          attempts.last[:preview] = response_text_preview(resp2.body)
         end
 
         unless cleaned.present? && constraints_ok?(cleaned)
@@ -112,8 +120,8 @@ module Profiles
       # Persist to ProfileCard
       record = profile.profile_card || profile.build_profile_card
       record.assign_attributes(
-        title: profile.display_name,
-        tagline: cleaned["flavor_text"].presence || record.tagline,
+        title: cleaned["title"].presence || profile.display_name,
+        tagline: cleaned["tagline"].presence || cleaned["flavor_text"].presence || record.tagline,
         short_bio: cleaned["short_bio"],
         long_bio: cleaned["long_bio"],
         buff: cleaned["buff"],
@@ -231,37 +239,27 @@ module Profiles
       temp = strict ? 0.25 : TEMPERATURE
       provider = provider_override.presence || Gemini::Configuration.provider
 
-      if provider == "vertex"
-        # Vertex expects snake_case keys
-        {
-          system_instruction: { parts: [ { text: instruction } ] },
-          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
-          generation_config: {
-            temperature: temp,
-            max_output_tokens: 2300,
-            response_mime_type: "application/json",
-            response_schema: response_schema_for("vertex")
-          }
-        }
-      else
-        # AI Studio uses camelCase
-        {
-          systemInstruction: { parts: [ { text: instruction } ] },
-          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
-          generationConfig: {
-            temperature: temp,
-            maxOutputTokens: 2300,
-            responseMimeType: "application/json",
-            responseSchema: response_schema_for("ai_studio")
-          }
-        }
-      end
+      adapter = Gemini::Providers::Adapter.for(provider)
+      sys = adapter.system_instruction_hash(instruction)
+      contents = adapter.contents_for_text(ctx.to_json)
+      schema = response_schema_for(provider == "vertex" ? "vertex" : "ai_studio")
+      gen_cfg = adapter.generation_config_hash(
+        temperature: temp,
+        max_tokens: 2300,
+        schema: schema,
+        structured_json: true
+      )
+      adapter.envelope(contents: contents, generation_config: gen_cfg, system_instruction: sys)
     end
 
     def system_prompt
       <<~PROMPT.squish
         You create engaging, third-person developer profiles grounded in provided public data. Follow the constraints exactly.
         Only include repositories owned by the user or organizations they belong to. Do not claim employment. Apply overrides as given.
+        Provide:
+        - title: 2–5 word heroic codename capturing their archetype.
+        - tagline: 1-sentence hook (max 16 words) distinct from flavor_text.
+        - flavor_text: a punchy quote-style line (max 80 chars).
         Choose attack/defense/speed as integers in 60–99, scaled by signals:
         - Attack: followers, repo stars, active repos.
         - Defense: account age, org count, public repos, testing/tooling cues.
@@ -275,6 +273,8 @@ module Profiles
     def strict_system_prompt
       <<~PROMPT.squish
         STRICT RE-ASK: The previous output violated constraints. Produce valid JSON matching the schema with:
+        - title: 2–5 word codename in Title Case.
+        - tagline: <=16 words, distinct from flavor_text.
         - tags: exactly 6 items, lowercase kebab-case (1–3 words), unique.
         - attack/defense/speed: integers 60–99.
         - playing_card: exactly one of 52 cards, formatted '<Rank> of <SuitSymbol>' using suits ♣ ♦ ♥ ♠.
@@ -287,6 +287,8 @@ module Profiles
       base = {
         type: "object",
         properties: {
+          title: { type: "string" },
+          tagline: { type: "string" },
           short_bio: { type: "string" },
           long_bio: { type: "string" },
           buff: { type: "string" },
@@ -306,13 +308,13 @@ module Profiles
           spirit_animal: { type: "string" },
           archetype: { type: "string" }
         },
-        required: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+        required: %w[title tagline short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
       }
 
       # "propertyOrdering" is a non-standard extension that some providers ignore.
       # Keep it for AI Studio where it's tolerated; omit for Vertex to avoid 400s.
       if provider != "vertex"
-        base[:propertyOrdering] = %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+        base[:propertyOrdering] = %w[title tagline short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
       end
 
       base
@@ -355,8 +357,23 @@ module Profiles
       json
     end
 
+    def response_text_preview(body, limit: 300)
+      raw = normalize_to_hash(body)
+      candidates = Array(dig_value(raw, :candidates))
+      first_candidate = candidates.first || {}
+      content = dig_value(first_candidate, :content) || {}
+      parts = Array(dig_value(content, :parts))
+      text = parts.filter_map { |p| dig_value(p, :text) }.join(" ").to_s.strip
+      return nil if text.blank?
+      text.length > limit ? "#{text[0, limit]}..." : text
+    rescue StandardError
+      nil
+    end
+
     def validate_and_normalize(h)
       out = h.transform_keys(&:to_s)
+      out["title"] = title_cap(out["title"].to_s.strip.first(60))
+      out["tagline"] = out["tagline"].to_s.strip.first(140)
       # Enforce ranges
       %w[attack defense speed].each do |k|
         out[k] = out[k].to_i

@@ -89,6 +89,9 @@ login can be substituted.
 - `captures/` folders duplicate the exact files generated during screenshots.
 - `pipeline_result.json` mirrors the return value and metadata from
   `Profiles::GeneratePipelineService`.
+- Each run also persists `ProfilePipelineEvent` rows (one per stage transition plus pipeline
+  start/completion); the Ops dashboard reads from the same table so traces and timelines stay in
+  sync.
 
 ### Checked-in reference artifacts
 

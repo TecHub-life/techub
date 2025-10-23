@@ -4,29 +4,30 @@
   desc_text = @profile&.bio.presence || "GitHub profile insights and AI trading card"
   content_for :title, "#{title_text} – TecHub"
   content_for :description, desc_text
+  og_url = @profile ? profile_asset_url(@profile, "og", fallback_basename: "og", absolute: true) : nil
+  if og_url.present?
+    content_for :og_image, og_url
+    content_for :twitter_image, og_url
 
-  og_url = nil
-  begin
-    if @profile
-      og_asset = @profile.profile_assets.find_by(kind: "og")
-      if og_asset&.public_url.present?
-        og_url = og_asset.public_url
-      else
-        base = Rails.root.join("public", "generated", @profile.login)
-        rel = nil
-        if File.exist?(base.join("og.jpg"))
-          rel = "/generated/#{@profile.login}/og.jpg"
-        elsif File.exist?(base.join("og.png"))
-          rel = "/generated/#{@profile.login}/og.png"
-        end
-        og_url = rel.present? ? (request.base_url + rel) : nil
+    secure_url = og_url.start_with?("http://") ? og_url.sub(/\Ahttp:/, "https:") : og_url
+    og_mime = begin
+      ext = URI.parse(og_url).path
+      case File.extname(ext).downcase
+      when ".png" then "image/png"
+      when ".webp" then "image/webp"
+      when ".gif" then "image/gif"
+      else "image/jpeg"
       end
+    rescue URI::InvalidURIError
+      nil
     end
-  rescue StandardError
-    og_url = nil
+
+    extra_tags = []
+    extra_tags << tag.meta(property: "og:image:secure_url", content: secure_url) if secure_url.present?
+    extra_tags << tag.meta(property: "og:image:type", content: og_mime) if og_mime.present?
+
+    content_for :head, safe_join(extra_tags) if extra_tags.any?
   end
-  content_for :og_image, og_url if og_url.present?
-  content_for :twitter_image, og_url if og_url.present?
 %>
 
 <%# JSON-LD Structured Data for Profile %>

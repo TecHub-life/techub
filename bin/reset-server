@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+log() {
+  printf '[server-reset] %s\n' "$1"
+}
+
+docker_compose_cmd=()
+if command -v docker >/dev/null 2>&1; then
+  if docker compose version >/dev/null 2>&1; then
+    docker_compose_cmd=(docker compose)
+  elif command -v docker-compose >/dev/null 2>&1; then
+    docker_compose_cmd=(docker-compose)
+  fi
+fi
+
+compose_shutdown() {
+  local services
+services="$("${docker_compose_cmd[@]}" ps --services --filter status=running 2>/dev/null | tr '\n' ' ')"
+services="$(echo "$services" | xargs 2>/dev/null || true)"
+if [[ -n "${services:-}" ]]; then
+  log "Docker Compose services running (${services}). Shutting them down…"
+    "${docker_compose_cmd[@]}" down
+    log "Docker Compose environment stopped."
+    return 0
+  fi
+  return 1
+}
+
+stop_pid() {
+  local pid="$1"
+  if [[ -z "$pid" ]]; then
+    return 1
+  fi
+
+  if ! kill -0 "$pid" 2>/dev/null; then
+    return 1
+  fi
+
+  log "Stopping Rails server process (PID $pid)…"
+  kill "$pid" 2>/dev/null || true
+  for _ in {1..10}; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      break
+    fi
+    sleep 0.3
+  done
+  if kill -0 "$pid" 2>/dev/null; then
+    log "Process $pid did not exit gracefully; sending SIGKILL."
+    kill -9 "$pid" 2>/dev/null || true
+  fi
+  return 0
+}
+
+clear_pid_file() {
+  local pid_file="$1"
+  if [[ -f "$pid_file" ]]; then
+    rm -f "$pid_file"
+    log "Removed stale PID file: $pid_file"
+  fi
+}
+
+PID_FILE="$ROOT_DIR/tmp/pids/server.pid"
+
+if ((${#docker_compose_cmd[@]})); then
+  if compose_shutdown; then
+    clear_pid_file "$PID_FILE"
+    exit 0
+  fi
+else
+  log "Docker Compose not available; skipping container check."
+fi
+
+pid_from_file=""
+if [[ -f "$PID_FILE" ]]; then
+  pid_from_file="$(tr -d '[:space:]' < "$PID_FILE" || true)"
+fi
+
+handled_process="false"
+if [[ -n "$pid_from_file" ]] && stop_pid "$pid_from_file"; then
+  handled_process="true"
+fi
+
+if [[ "$handled_process" != "true" ]]; then
+  if command -v lsof >/dev/null 2>&1; then
+    extra_pid="$(lsof -tiTCP:3000 -sTCP:LISTEN 2>/dev/null | head -n1 || true)"
+    if [[ -n "$extra_pid" ]] && stop_pid "$extra_pid"; then
+      handled_process="true"
+    fi
+  fi
+fi
+
+if [[ "$handled_process" == "true" ]]; then
+  clear_pid_file "$PID_FILE"
+  exit 0
+fi
+
+if [[ -f "$PID_FILE" ]]; then
+  log "No matching process found, removing stale PID file."
+  clear_pid_file "$PID_FILE"
+  exit 0
+fi
+
+log "No TecHub servers detected; nothing to clean up."
+exit 0

@@ -19,20 +19,8 @@
             <% gen_dir = Rails.root.join('public','generated', profile.login) %>
             <% card_img = nil %>
             
-            <% # Check assets first (9x16 → OG → card) %>
-            <% if (asset = profile.profile_assets.find_by(kind: 'avatar_9x16')) && asset.public_url.present? %>
-              <% card_img = asset.public_url %>
-            <% elsif (asset = profile.profile_assets.find_by(kind: 'og')) && asset.public_url.present? %>
-              <% card_img = asset.public_url %>
-            <% elsif (asset = profile.profile_assets.find_by(kind: 'card')) && asset.public_url.present? %>
-              <% card_img = asset.public_url %>
-            <% elsif Dir.exist?(gen_dir) %>
-              <% # Fallback to local generated files %>
-              <% file = Dir[gen_dir.join('avatar-9x16*.jpg').to_s].first || Dir[gen_dir.join('avatar-9x16*.png').to_s].first %>
-              <% file ||= Dir[gen_dir.join('og-*.jpg').to_s].first || Dir[gen_dir.join('og-*.png').to_s].first %>
-              <% file ||= Dir[gen_dir.join('card-*.jpg').to_s].first || Dir[gen_dir.join('card-*.png').to_s].first %>
-              <% card_img = "/generated/#{profile.login}/#{File.basename(file)}" if file %>
-            <% end %>
+            <% # Prefer recorded assets; fall back to local files under public/generated/ %>
+            <% card_img = profile_asset_url(profile, 'avatar_9x16') || profile_asset_url(profile, 'og', fallback_basename: 'og') || profile_asset_url(profile, 'card', fallback_basename: 'card') %>
             
             <% if card_img.present? %>
               <img src="<%= card_img %>" alt="<%= profile.display_name %> card" class="h-full w-full object-cover object-center opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110" loading="lazy" onerror="this.style.display='none'">
