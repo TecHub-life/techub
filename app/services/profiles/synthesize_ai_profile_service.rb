@@ -1,6 +1,7 @@
 module Profiles
   class SynthesizeAiProfileService < ApplicationService
     include Gemini::ResponseHelpers
+    include Gemini::SchemaHelpers
 
     MIN_TAGS = 6
     MAX_TAGS = 6
@@ -37,7 +38,10 @@ module Profiles
         build_payload(ctx)
       )
       unless (200..299).include?(resp.status)
-        return failure(StandardError.new("Gemini AI traits request failed"), metadata: { http_status: resp.status, body: resp.body })
+        return failure(
+          StandardError.new("Gemini AI traits request failed"),
+          metadata: { http_status: resp.status, provider: provider, body_preview: resp.body.to_s[0, 500] }
+        )
       end
       attempts << { http_status: resp.status, strict: false }
       preview = response_text_preview(resp.body)
@@ -235,31 +239,17 @@ module Profiles
       temp = strict ? 0.25 : TEMPERATURE
       provider = provider_override.presence || Gemini::Configuration.provider
 
-      if provider == "vertex"
-        # Vertex expects snake_case keys
-        {
-          system_instruction: { parts: [ { text: instruction } ] },
-          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
-          generation_config: {
-            temperature: temp,
-            max_output_tokens: 2300,
-            response_mime_type: "application/json",
-            response_schema: response_schema_for("vertex")
-          }
-        }
-      else
-        # AI Studio uses camelCase
-        {
-          systemInstruction: { parts: [ { text: instruction } ] },
-          contents: [ { role: "user", parts: [ { text: ctx.to_json } ] } ],
-          generationConfig: {
-            temperature: temp,
-            maxOutputTokens: 2300,
-            responseMimeType: "application/json",
-            responseSchema: response_schema_for("ai_studio")
-          }
-        }
-      end
+      adapter = Gemini::Providers::Adapter.for(provider)
+      sys = adapter.system_instruction_hash(instruction)
+      contents = adapter.contents_for_text(ctx.to_json)
+      schema = response_schema_for(provider == "vertex" ? "vertex" : "ai_studio")
+      gen_cfg = adapter.generation_config_hash(
+        temperature: temp,
+        max_tokens: 2300,
+        schema: schema,
+        structured_json: true
+      )
+      adapter.envelope(contents: contents, generation_config: gen_cfg, system_instruction: sys)
     end
 
     def system_prompt

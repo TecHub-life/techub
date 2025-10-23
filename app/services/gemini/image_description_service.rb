@@ -3,6 +3,7 @@ require "base64"
 module Gemini
   class ImageDescriptionService < ApplicationService
     include Gemini::ResponseHelpers
+    include Gemini::SchemaHelpers
     TOKEN_STEPS = [ 400, 700, 1000, 1300, 1600 ].freeze
     SYSTEM_PROMPT = <<~PROMPT.freeze
       You are a meticulous visual analyst.
@@ -81,7 +82,7 @@ module Gemini
         unless (200..299).include?(response.status)
           return failure(
             StandardError.new("Gemini image description request failed"),
-            metadata: { http_status: response.status, body: response.body }
+            metadata: { http_status: response.status, provider: provider, body_preview: response.body.to_s[0, 500] }
           )
         end
 
@@ -100,7 +101,7 @@ module Gemini
         if !has_text_parts && finish_reason != "MAX_TOKENS"
           return failure(
             StandardError.new("Gemini response did not include a description"),
-            metadata: { http_status: response.status, body: response.body, attempts: attempts }
+            metadata: { http_status: response.status, provider: provider, body_preview: response.body.to_s[0, 500], attempts: attempts }
           )
         end
 
@@ -148,45 +149,16 @@ module Gemini
     # endpoint computed via Gemini::Endpoints
 
     def build_payload(provider, image_payload, mime_type, token_limit)
-      if provider == "vertex"
-        {
-          system_instruction: { parts: [ { text: SYSTEM_PROMPT } ] },
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt },
-                { inline_data: { mime_type: mime_type, data: image_payload } }
-              ]
-            }
-          ],
-          generation_config: {
-            temperature: temperature,
-            max_output_tokens: token_limit,
-            response_mime_type: "application/json",
-            response_schema: response_schema
-          }
-        }
-      else
-        {
-          systemInstruction: { parts: [ { text: SYSTEM_PROMPT } ] },
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: prompt },
-                { inline_data: { mime_type: mime_type, data: image_payload } }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: temperature,
-            maxOutputTokens: token_limit,
-            responseMimeType: "application/json",
-            responseSchema: response_schema
-          }
-        }
-      end
+      adapter = Gemini::Providers::Adapter.for(provider)
+      sys = adapter.system_instruction_hash(SYSTEM_PROMPT)
+      contents = adapter.contents_for_text_with_image(prompt, mime_type, image_payload)
+      gen_cfg = adapter.generation_config_hash(
+        temperature: temperature,
+        max_tokens: token_limit,
+        schema: response_schema,
+        structured_json: true
+      )
+      adapter.envelope(contents: contents, generation_config: gen_cfg, system_instruction: sys)
     end
 
     def response_schema
@@ -331,12 +303,12 @@ module Gemini
         fallback_payload(provider, image_payload, mime_type, token_limit)
       )
 
-      unless (200..299).include?(response.status)
+        unless (200..299).include?(response.status)
         return failure(
           StandardError.new("Gemini fallback description request failed"),
-          metadata: { http_status: response.status, body: response.body }
+          metadata: { http_status: response.status, provider: provider, body_preview: response.body.to_s[0, 500] }
         )
-      end
+        end
 
       text = extract_plain_text(response.body)
       text = sanitize_description(text) || text&.strip
@@ -344,7 +316,7 @@ module Gemini
       if text.blank?
         return failure(
           StandardError.new("Gemini fallback response did not include a description"),
-          metadata: { http_status: response.status, body: response.body }
+          metadata: { http_status: response.status, provider: provider, body_preview: response.body.to_s[0, 500] }
         )
       end
 
@@ -354,39 +326,15 @@ module Gemini
     end
 
     def fallback_payload(provider, image_payload, mime_type, token_limit)
-      if provider == "vertex"
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: FALLBACK_PROMPT },
-                { inline_data: { mime_type: mime_type, data: image_payload } }
-              ]
-            }
-          ],
-          generation_config: {
-            temperature: 0.1,
-            max_output_tokens: token_limit
-          }
-        }
-      else
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: FALLBACK_PROMPT },
-                { inline_data: { mime_type: mime_type, data: image_payload } }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: token_limit
-          }
-        }
-      end
+      adapter = Gemini::Providers::Adapter.for(provider)
+      contents = adapter.contents_for_text_with_image(FALLBACK_PROMPT, mime_type, image_payload)
+      gen_cfg = adapter.generation_config_hash(
+        temperature: 0.1,
+        max_tokens: token_limit,
+        schema: nil,
+        structured_json: false
+      )
+      adapter.envelope(contents: contents, generation_config: gen_cfg)
     end
 
     def extract_plain_text(body)
