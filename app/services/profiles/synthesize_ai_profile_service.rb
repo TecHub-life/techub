@@ -120,8 +120,8 @@ module Profiles
       # Persist to ProfileCard
       record = profile.profile_card || profile.build_profile_card
       record.assign_attributes(
-        title: profile.display_name,
-        tagline: cleaned["flavor_text"].presence || record.tagline,
+        title: cleaned["title"].presence || profile.display_name,
+        tagline: cleaned["tagline"].presence || cleaned["flavor_text"].presence || record.tagline,
         short_bio: cleaned["short_bio"],
         long_bio: cleaned["long_bio"],
         buff: cleaned["buff"],
@@ -256,6 +256,10 @@ module Profiles
       <<~PROMPT.squish
         You create engaging, third-person developer profiles grounded in provided public data. Follow the constraints exactly.
         Only include repositories owned by the user or organizations they belong to. Do not claim employment. Apply overrides as given.
+        Provide:
+        - title: 2–5 word heroic codename capturing their archetype.
+        - tagline: 1-sentence hook (max 16 words) distinct from flavor_text.
+        - flavor_text: a punchy quote-style line (max 80 chars).
         Choose attack/defense/speed as integers in 60–99, scaled by signals:
         - Attack: followers, repo stars, active repos.
         - Defense: account age, org count, public repos, testing/tooling cues.
@@ -269,6 +273,8 @@ module Profiles
     def strict_system_prompt
       <<~PROMPT.squish
         STRICT RE-ASK: The previous output violated constraints. Produce valid JSON matching the schema with:
+        - title: 2–5 word codename in Title Case.
+        - tagline: <=16 words, distinct from flavor_text.
         - tags: exactly 6 items, lowercase kebab-case (1–3 words), unique.
         - attack/defense/speed: integers 60–99.
         - playing_card: exactly one of 52 cards, formatted '<Rank> of <SuitSymbol>' using suits ♣ ♦ ♥ ♠.
@@ -281,6 +287,8 @@ module Profiles
       base = {
         type: "object",
         properties: {
+          title: { type: "string" },
+          tagline: { type: "string" },
           short_bio: { type: "string" },
           long_bio: { type: "string" },
           buff: { type: "string" },
@@ -300,13 +308,13 @@ module Profiles
           spirit_animal: { type: "string" },
           archetype: { type: "string" }
         },
-        required: %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+        required: %w[title tagline short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
       }
 
       # "propertyOrdering" is a non-standard extension that some providers ignore.
       # Keep it for AI Studio where it's tolerated; omit for Vertex to avoid 400s.
       if provider != "vertex"
-        base[:propertyOrdering] = %w[short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
+        base[:propertyOrdering] = %w[title tagline short_bio long_bio buff buff_description weakness weakness_description vibe vibe_description special_move special_move_description flavor_text tags attack defense speed playing_card spirit_animal archetype]
       end
 
       base
@@ -364,6 +372,8 @@ module Profiles
 
     def validate_and_normalize(h)
       out = h.transform_keys(&:to_s)
+      out["title"] = title_cap(out["title"].to_s.strip.first(60))
+      out["tagline"] = out["tagline"].to_s.strip.first(140)
       # Enforce ranges
       %w[attack defense speed].each do |k|
         out[k] = out[k].to_i

@@ -10,15 +10,31 @@
   <% public_root = Rails.root.join("public") %>
   <% assets_by_kind = profile.profile_assets.where(kind: [ "card", "og", "simple", "banner", "x_profile_400", "fb_post_1080", "ig_portrait_1080x1350" ]).load.index_by(&:kind) %>
   <% relative_url = lambda do |path|
+       next nil if path.blank?
+       str_path = path.is_a?(Pathname) ? path.to_s : path.to_s
        begin
-         next nil if path.blank?
-         pn = path.is_a?(Pathname) ? path : Pathname.new(path.to_s)
-         next nil unless pn.exist?
-         rel = pn.relative_path_from(public_root)
-         url = "/#{rel}"
-         ts = File.mtime(pn).to_i rescue nil
+         pn = Pathname.new(str_path)
+         if pn.exist?
+           rel = pn.relative_path_from(public_root)
+           url = "/#{rel}"
+           ts = File.mtime(pn).to_i rescue nil
+           next ts ? "#{url}?v=#{ts}" : url
+         end
+       rescue ArgumentError
+         # fall through to string-based handling
+       end
+
+       if str_path.start_with?("http://", "https://")
+         str_path
+       elsif (public_index = str_path.index("/public/"))
+         rel = str_path[(public_index + 7)..-1]
+         next nil if rel.blank?
+         cleaned = rel.sub(%r{\A/+}, "")
+         full = Rails.root.join("public", cleaned)
+         ts = File.exist?(full) ? (File.mtime(full).to_i rescue nil) : nil
+         url = "/#{cleaned}"
          ts ? "#{url}?v=#{ts}" : url
-       rescue StandardError
+       else
          nil
        end
      end %>

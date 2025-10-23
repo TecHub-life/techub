@@ -8,6 +8,8 @@ module Profiles
 
     test "persists valid AI traits with tags=6 and valid playing_card" do
       payload = {
+        title: "The Code Whisperer",
+        tagline: "Turns complex repos into calming release cycles.",
         short_bio: "Short bio",
         long_bio: "Long bio" * 20,
         buff: "Quick Learner",
@@ -46,6 +48,8 @@ module Profiles
           result = Profiles::SynthesizeAiProfileService.call(profile: @profile)
           assert result.success?, "expected success, got: #{result.error&.message}"
           card = @profile.reload.profile_card
+          assert_equal payload[:title], card.title
+          assert_equal payload[:tagline], card.tagline
           assert_equal 6, Array(card.tags).length
           assert_match(/\A(Ace|[2-9]|10|Jack|Queen|King) of [♣♦♥♠]\z/, card.playing_card)
         end
@@ -56,6 +60,8 @@ module Profiles
 
     test "strict re-ask fixes invalid output (tags count)" do
       bad = {
+        title: "",
+        tagline: "Same as flavor",
         short_bio: "short",
         long_bio: "long" * 200,
         buff: "X",
@@ -77,6 +83,8 @@ module Profiles
       }
 
       good = bad.merge(
+        title: "The Code Whisperer",
+        tagline: "Turns complex repos into calming release cycles.",
         tags: %w[ruby open-source testing ci-cd devops backend],
         attack: 70,
         defense: 75,
@@ -119,6 +127,8 @@ module Profiles
     test "overrides enforce Loftwah choices" do
       prof = Profile.create!(github_id: 10001, login: "loftwah", name: "Lofty")
       payload = {
+        title: "The Trailblazer",
+        tagline: "Guides founders through delivery sprints.",
         short_bio: "Short",
         long_bio: "Long" * 200,
         buff: "X",
@@ -168,6 +178,8 @@ module Profiles
 
     test "empty first attempt records preview metadata" do
       good_payload = {
+        title: "The Code Whisperer",
+        tagline: "Turns complex repos into calming release cycles.",
         short_bio: "Short bio",
         long_bio: "Long bio" * 20,
         buff: "Quick Learner",

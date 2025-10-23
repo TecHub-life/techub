@@ -1,9 +1,10 @@
 <%# Hero Tab - Profile header with avatar, bio, and stats %>
 <div class="space-y-6">
+  <% card = profile.profile_card %>
   <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
     <div class="flex flex-col gap-4">
       <div class="flex items-center gap-4">
-        <% avatar_choice = profile.profile_card&.avatar_choice || 'real' %>
+        <% avatar_choice = card&.avatar_choice || 'real' %>
         <% ai_avatar = profile.profile_assets.find_by(kind: 'avatar_1x1') %>
         <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : profile.avatar_url %>
         <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full ring-4 ring-slate-200 dark:ring-slate-700">
@@ -13,10 +14,20 @@
             <%= profile.display_name %>
           </h1>
           <p class="text-sky-600 dark:text-sky-400 font-medium">@<%= profile.login %></p>
+          <% if card&.title.present? || card&.tagline.present? %>
+            <div class="mt-1.5 space-y-1 text-sm leading-snug">
+              <% if card&.title.present? %>
+                <p class="font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300"><%= card.title %></p>
+              <% end %>
+              <% if card&.tagline.present? %>
+                <p class="italic text-slate-600 dark:text-slate-400"><%= card.tagline %></p>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
 
-      <% about = profile.profile_card&.long_bio.presence || profile.profile_card&.short_bio.presence || profile.bio %>
+      <% about = card&.long_bio.presence || card&.short_bio.presence || profile.bio %>
       <% if about.present? %>
         <% if about.length > 200 %>
           <%# Long bio - expandable on mobile, full on desktop %>
