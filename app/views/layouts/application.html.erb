@@ -76,25 +76,82 @@
 
   <body class="min-h-screen bg-slate-50 text-slate-900 antialiased transition dark:bg-slate-950 dark:text-slate-100">
     <%= render "shared/header" %>
-    <main class="mt-12 pt-4 lg:pt-6">
-      <div id="flash-root" class="relative">
-        <% flash.each do |key, value| %>
-          <div class="mx-auto mb-4 mt-6 max-w-3xl rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
-            <%= value %>
-          </div>
-        <% end %>
-      </div>
+    
+    <!-- Toast notifications container -->
+    <div id="flash-root" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 space-y-2">
+      <% flash.each do |key, value| %>
+        <% 
+          # Determine styling based on flash type
+          case key.to_s
+          when 'notice', 'success'
+            bg_class = "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-200"
+            icon_class = "fa-circle-check text-emerald-600 dark:text-emerald-400"
+          when 'alert', 'error'
+            bg_class = "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200"
+            icon_class = "fa-circle-exclamation text-red-600 dark:text-red-400"
+          when 'warning'
+            bg_class = "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200"
+            icon_class = "fa-triangle-exclamation text-amber-600 dark:text-amber-400"
+          else
+            bg_class = "bg-slate-50 border-slate-200 text-slate-800 dark:bg-slate-900/90 dark:border-slate-700 dark:text-slate-200"
+            icon_class = "fa-circle-info text-slate-600 dark:text-slate-400"
+          end
+        %>
+        <div class="flash-toast <%= bg_class %> rounded-xl border backdrop-blur-sm shadow-lg px-4 py-3 flex items-start gap-3 animate-slide-down" data-flash-item>
+          <i class="fa-solid <%= icon_class %> text-lg mt-0.5 flex-shrink-0"></i>
+          <p class="flex-1 text-sm font-medium leading-relaxed"><%= value %></p>
+          <button type="button" class="flex-shrink-0 text-current opacity-50 hover:opacity-100 transition-opacity" onclick="this.closest('[data-flash-item]').remove()">
+            <i class="fa-solid fa-xmark text-lg"></i>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+      <% end %>
+    </div>
 
-      <script>
-        (function() {
-          var root = document.getElementById('flash-root');
-          if (!root) return;
-          var items = Array.prototype.slice.call(root.children);
-          items.forEach(function(el, idx) {
-            setTimeout(function() { if (el && el.remove) el.remove(); }, 4000 + (idx * 150));
-          });
-        })();
-      </script>
+    <style>
+      @keyframes slide-down {
+        from {
+          opacity: 0;
+          transform: translateY(-1rem);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-slide-down {
+        animation: slide-down 0.3s ease-out forwards;
+      }
+      @keyframes fade-out {
+        to {
+          opacity: 0;
+          transform: translateY(-0.5rem);
+        }
+      }
+      .animate-fade-out {
+        animation: fade-out 0.3s ease-out forwards;
+      }
+    </style>
+
+    <script>
+      (function() {
+        var root = document.getElementById('flash-root');
+        if (!root) return;
+        var items = Array.prototype.slice.call(root.querySelectorAll('[data-flash-item]'));
+        items.forEach(function(el, idx) {
+          setTimeout(function() {
+            if (el && el.parentNode) {
+              el.classList.add('animate-fade-out');
+              setTimeout(function() {
+                if (el && el.remove) el.remove();
+              }, 300);
+            }
+          }, 5000 + (idx * 150));
+        });
+      })();
+    </script>
+
+    <main class="mt-12 pt-4 lg:pt-6">
       <%= yield %>
     </main>
     <%= render "shared/footer" %>
