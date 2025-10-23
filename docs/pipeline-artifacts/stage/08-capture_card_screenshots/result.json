@@ -1,0 +1,89 @@
+{
+  "status": "success",
+  "metadata": {
+    "captures": 7,
+    "stage": "capture_card_screenshots"
+  },
+  "error": null,
+  "value": {
+    "og": {
+      "id": 1,
+      "kind": "og",
+      "local_path": "/rails/public/generated/loftwah/og.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/blb7r71f2ruu2hiyepidrajteto8",
+      "width": 1200,
+      "height": 630,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-20 07:27:14 UTC",
+      "updated_at": "2025-10-23 05:28:52 UTC"
+    },
+    "card": {
+      "id": 2,
+      "kind": "card",
+      "local_path": "/rails/public/generated/loftwah/card.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/1lo6s0hr7q9sqo828lallfxhgmts",
+      "width": 1280,
+      "height": 720,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-20 07:27:20 UTC",
+      "updated_at": "2025-10-23 05:28:55 UTC"
+    },
+    "simple": {
+      "id": 3,
+      "kind": "simple",
+      "local_path": "/rails/public/generated/loftwah/simple.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/gkb061ndagjfbc3nh81ruo8fmugv",
+      "width": 1280,
+      "height": 720,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-20 07:27:27 UTC",
+      "updated_at": "2025-10-23 05:29:00 UTC"
+    },
+    "banner": {
+      "id": 4,
+      "kind": "banner",
+      "local_path": "/rails/public/generated/loftwah/banner.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/wpdq041yzbfsi974pgtkw9hkzmhl",
+      "width": 1500,
+      "height": 500,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:03 UTC"
+    },
+    "x_profile_400": {
+      "id": 5,
+      "kind": "x_profile_400",
+      "local_path": "/rails/public/generated/loftwah/x_profile_400.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/ux32c2rhscom7tgn3pq240xig9uf",
+      "width": 400,
+      "height": 400,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:06 UTC"
+    },
+    "fb_post_1080": {
+      "id": 6,
+      "kind": "fb_post_1080",
+      "local_path": "/rails/public/generated/loftwah/fb_post_1080.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/eppr6mszavm7rtfp7x12bzc42hyz",
+      "width": 1080,
+      "height": 1080,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:10 UTC"
+    },
+    "ig_portrait_1080x1350": {
+      "id": 7,
+      "kind": "ig_portrait_1080x1350",
+      "local_path": "/rails/public/generated/loftwah/ig_portrait_1080x1350.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/v7khuhoblw35tnn9x78mm66wlvyc",
+      "width": 1080,
+      "height": 1350,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:13 UTC"
+    }
+  },
+  "stage": "capture_card_screenshots",
+  "label": "Capture card screenshots"
+}

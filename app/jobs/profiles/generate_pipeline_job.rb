@@ -4,13 +4,10 @@ module Profiles
 
     retry_on StandardError, wait: ->(executions) { (executions**2).seconds }, attempts: 3
 
-    # images: controls AI image generation; text AI always runs.
-    # ai: legacy alias for images (deprecated)
-    def perform(login, images: true, ai: nil)
+    def perform(login)
       started = Time.current
       StructuredLogger.info(message: "pipeline_started", service: self.class.name, login: login)
-      images_flag = images.nil? ? ai : images
-      result = Profiles::GeneratePipelineService.call(login: login, images: images_flag)
+      result = Profiles::GeneratePipelineService.call(login: login)
       profile = Profile.for_login(login).first
       return unless profile
 

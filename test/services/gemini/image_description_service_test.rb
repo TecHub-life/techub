@@ -16,6 +16,15 @@ module Gemini
       FileUtils.rm_f(@avatar_path)
     end
 
+    test "returns success with nil when flag disabled" do
+      AppSetting.set_bool(:ai_image_descriptions, false)
+      result = Gemini::ImageDescriptionService.call(image_path: @avatar_path.to_s)
+
+      assert result.success?, "expected success when feature is disabled"
+      assert_nil result.value
+      assert result.metadata[:skipped], "expected metadata to indicate skip"
+    end
+
     test "returns description when Gemini responds with structured text" do
       stubs = Faraday::Adapter::Test::Stubs.new do |stub|
         stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |env|

@@ -8,18 +8,32 @@ module Profiles
     def self.stages
       [
         Stage.new(
-          id: :sync_from_github,
-          label: "Sync from GitHub",
+          id: :pull_github_data,
+          label: "Pull GitHub data",
           gated_by: nil,
-          description: "Fetch/refresh profile, repos, orgs, activity, readme, and avatar",
+          description: "Fetch GitHub summary payload (with user-token fallback)",
+          produces: %w[github_payload]
+        ),
+        Stage.new(
+          id: :download_github_avatar,
+          label: "Download GitHub avatar",
+          gated_by: nil,
+          description: "Download avatar locally for card usage",
+          produces: %w[avatar_local_path]
+        ),
+        Stage.new(
+          id: :store_github_profile,
+          label: "Store GitHub profile",
+          gated_by: nil,
+          description: "Persist profile, repos, orgs, activity, readme, tags",
           produces: %w[profile profile_repositories profile_organizations profile_activity profile_readme]
         ),
         Stage.new(
-          id: :eligibility_gate,
+          id: :evaluate_eligibility,
           label: "Eligibility Gate",
           gated_by: :require_profile_eligibility,
           description: "Optionally block pipeline for low-signal profiles",
-          produces: []
+          produces: [ "eligibility" ]
         ),
         Stage.new(
           id: :ingest_submitted_repositories,
@@ -29,39 +43,32 @@ module Profiles
           produces: [ "profile_repositories(submitted)" ]
         ),
         Stage.new(
-          id: :scrape_submitted_url,
+          id: :record_submitted_scrape,
           label: "Scrape Submitted URL",
           gated_by: nil,
           description: "Optional scrape of a provided URL to augment signals",
           produces: [ "profile_scrapes(optional)" ]
         ),
         Stage.new(
-          id: :ai_images,
-          label: "AI Images (Avatar + BG Variants)",
-          gated_by: :ai_images,
-          description: "Generate avatar/supporting art variants via Gemini (taped off by default)",
-          produces: %w[avatar_1x1 avatar_16x9 avatar_3x1]
-        ),
-        Stage.new(
-          id: :ai_traits,
-          label: "AI Text & Traits",
+          id: :generate_ai_profile,
+          label: "Generate AI profile",
           gated_by: :ai_text,
           description: "Structured JSON describing bios, stats, vibe, tags, playing card, archetype, spirit animal",
           produces: [ "profile_card" ]
         ),
         Stage.new(
-          id: :base_screenshots,
-          label: "Base Screenshots",
+          id: :capture_card_screenshots,
+          label: "Capture card screenshots",
           gated_by: nil,
-          description: "Capture og, card, simple, banner",
-          produces: %w[og card simple banner]
+          description: "Enqueue card, OG, banner, simple, and social targets",
+          produces: Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS
         ),
         Stage.new(
-          id: :social_screenshots,
-          label: "Social Screenshots",
+          id: :optimize_card_images,
+          label: "Optimize card images",
           gated_by: nil,
-          description: "Enqueue 11 social targets (X/IG/FB/LinkedIn/YouTube/OG alias)",
-          produces: Screenshots::CaptureCardService::SOCIAL_VARIANTS
+          description: "Run post-processing and upload-ready optimizations for generated images",
+          produces: Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS
         )
       ]
     end

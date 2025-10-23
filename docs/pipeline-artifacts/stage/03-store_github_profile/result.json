@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "metadata": {
+    "profile_id": 1,
+    "stage": "store_github_profile"
+  },
+  "error": null,
+  "value": "#<Profile:0x000074af1be1d0b8>",
+  "stage": "store_github_profile",
+  "label": "Store GitHub data"
+}

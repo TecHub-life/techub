@@ -1,105 +1,82 @@
 require "test_helper"
 
 class GeneratePipelineServiceTest < ActiveSupport::TestCase
-  test "orchestrates sync, generate, synthesize, and enqueues captures" do
-    login = "loftwah"
-    prof = Profile.create!(github_id: 42, login: login)
-
-    Profiles::SyncFromGithub.stub :call, ServiceResult.success(prof) do
-      ENV["REQUIRE_PROFILE_ELIGIBILITY"] = "0"
-      AppSetting.set_bool(:ai_images, true)
-      fake_images = { images: { "1x1" => { output_path: "tmp/1.png", mime_type: "image/png" } } }
-      dummy_conn = Faraday.new do |f|
-        f.request :json
-        f.response :json, content_type: /json/
-        stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-          stub.post("/v1beta/models/gemini-2.5-flash:generateContent") { [ 200, { "Content-Type"=>"application/json" }, { candidates: [] }.to_json ] }
-        end
-        f.adapter :test, stubs
-      end
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::AvatarImageSuiteService.stub :call, ServiceResult.success(fake_images) do
-          # Avoid AI traits network path entirely by forcing heuristic fallback success
-          Profiles::SynthesizeAiProfileService.stub :call, ServiceResult.failure(StandardError.new("skip_ai")) do
-          Profiles::SynthesizeCardService.stub :call, ServiceResult.success(ProfileCard.new(id: 1)) do
-            result = Profiles::GeneratePipelineService.call(login: login, host: "http://127.0.0.1:3000")
-            assert result.success?, -> { result.error&.message }
-            assert_equal login, result.value[:login]
-            assert result.value[:images]
-            assert_nil result.value[:screenshots], "screenshots are enqueued, not returned"
-          ensure
-            ENV.delete("REQUIRE_PROFILE_ELIGIBILITY")
-            AppSetting.set_bool(:ai_images, false)
-          end
-          end
-        end
-      end
-    end
+  setup do
+    @original_stages = Profiles::GeneratePipelineService::STAGES
   end
 
-  test "eligibility gate denies when flag enabled and not eligible" do
-    login = "noneligible"
-    prof = Profile.create!(github_id: 43, login: login, followers: 0, following: 0, github_created_at: Time.current)
-
-    Profiles::SyncFromGithub.stub :call, ServiceResult.success(prof) do
-      ENV["REQUIRE_PROFILE_ELIGIBILITY"] = "1"
-      Eligibility::GithubProfileScoreService.stub :call, ServiceResult.success({ eligible: false, score: 0, threshold: 3, signals: {} }) do
-        result = Profiles::GeneratePipelineService.call(login: login)
-        assert result.failure?, "expected failure when not eligible"
-        assert_equal "profile_not_eligible", result.error.message
-      ensure
-        ENV.delete("REQUIRE_PROFILE_ELIGIBILITY")
-      end
-    end
+  teardown do
+    redefine_pipeline_stages(@original_stages)
   end
 
-  test "manual inputs steps run when inputs present and captures are enqueued" do
-    login = "flagtest"
-    prof = Profile.create!(github_id: 44, login: login, submitted_scrape_url: "https://example.com")
-
-    Profiles::SyncFromGithub.stub :call, ServiceResult.success(prof) do
-      # Scraper should be invoked when url present (no flag)
-      ENV["REQUIRE_PROFILE_ELIGIBILITY"] = "0"
-      Profiles::RecordSubmittedScrapeService.stub :call, ServiceResult.success(ProfileScrape.new) do
-        dummy_conn = Faraday.new do |f|
-          f.request :json
-          f.response :json, content_type: /json/
-          f.adapter :test, Faraday::Adapter::Test::Stubs.new
-        end
-        Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-          Gemini::AvatarImageSuiteService.stub :call, ServiceResult.success({ images: {} }) do
-            Profiles::SynthesizeAiProfileService.stub :call, ServiceResult.failure(StandardError.new("skip_ai")) do
-              Profiles::SynthesizeCardService.stub :call, ServiceResult.success(ProfileCard.new(id: 2)) do
-                result = Profiles::GeneratePipelineService.call(login: login)
-                assert result.success?
-                assert_nil result.value[:screenshots]
-              end
-            end
-        end
-      end
-      end
-
-      # Double-check success path still holds
-      ENV["REQUIRE_PROFILE_ELIGIBILITY"] = "0"
-      Profiles::RecordSubmittedScrapeService.stub :call, ServiceResult.success(ProfileScrape.new) do
-        dummy_conn2 = Faraday.new do |f|
-          f.request :json
-          f.response :json, content_type: /json/
-          f.adapter :test, Faraday::Adapter::Test::Stubs.new
-        end
-        Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn2) do
-          Gemini::AvatarImageSuiteService.stub :call, ServiceResult.success({ images: {} }) do
-            Profiles::SynthesizeAiProfileService.stub :call, ServiceResult.failure(StandardError.new("skip_ai")) do
-              Profiles::SynthesizeCardService.stub :call, ServiceResult.success(ProfileCard.new(id: 3)) do
-                result = Profiles::GeneratePipelineService.call(login: login)
-                assert result.success?
-              ensure
-                ENV.delete("REQUIRE_PROFILE_ELIGIBILITY")
-              end
-            end
-        end
-      end
+  test "runs stages in order and returns combined trace" do
+    calls = []
+    stubbed_stages = Profiles::GeneratePipelineService::STAGES.map do |stage|
+      stage_dup(stage, ->(context:, **_) {
+        calls << stage.id
+        context.trace(stage.id, :stubbed)
+        ServiceResult.success(true)
+      })
     end
+    redefine_pipeline_stages(stubbed_stages)
+
+    result = Profiles::GeneratePipelineService.call(login: "loftwah", host: "http://example.com")
+
+    assert result.success?, -> { result.error&.message }
+    assert_equal stubbed_stages.map(&:id), calls
+    assert_equal "loftwah", result.value[:login]
+    assert_equal "http://example.com", result.metadata[:host]
+    trace_stages = result.metadata[:trace].map { |entry| entry[:stage].to_sym }.uniq
+    assert_includes trace_stages, :pipeline
+    stubbed_stages.each { |stage| assert_includes trace_stages, stage.id }
+  end
+
+  test "halts and returns failure metadata when a stage fails" do
+    failing_stage = Profiles::GeneratePipelineService::STAGES.second
+
+    stubbed_stages = Profiles::GeneratePipelineService::STAGES.map do |stage|
+      behaviour = if stage == failing_stage
+        ->(context:, **_) do
+          context.trace(stage.id, :failed, reason: "boom")
+          ServiceResult.failure(StandardError.new("boom"), metadata: { reason: "boom" })
+        end
+      else
+        ->(context:, **_) do
+          context.trace(stage.id, :stubbed)
+          ServiceResult.success(true)
+        end
+      end
+
+      stage_dup(stage, behaviour)
     end
+
+    redefine_pipeline_stages(stubbed_stages)
+    result = Profiles::GeneratePipelineService.call(login: "loftwah")
+
+    assert result.failure?
+    assert_equal failing_stage.id, result.metadata[:stage]
+    assert_equal "boom", result.metadata[:upstream][:reason]
+    stages_in_trace = result.metadata[:trace].map { |entry| entry[:stage].to_sym }
+    assert_includes stages_in_trace, failing_stage.id
+  end
+
+  private
+
+  def stage_dup(stage, proc)
+    Profiles::GeneratePipelineService::Stage.new(
+      id: stage.id,
+      label: stage.label,
+      service: Class.new do
+        define_singleton_method(:call) do |context:, **options|
+          proc.call(context: context, **options)
+        end
+      end,
+      options: stage.options
+    )
+  end
+
+  def redefine_pipeline_stages(stages)
+    Profiles::GeneratePipelineService.send(:remove_const, :STAGES)
+    Profiles::GeneratePipelineService.const_set(:STAGES, stages.freeze)
   end
 end

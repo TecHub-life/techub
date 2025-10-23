@@ -14,8 +14,8 @@ module Profiles
 
       count = 0
       stale.pluck(:login).each do |login|
-        # Run full pipeline without regenerating AI artwork. This syncs data, updates text, and recaptures screenshots.
-        Profiles::GeneratePipelineJob.perform_later(login, images: false)
+        # Run the pipeline to sync data, refresh text, and recapture screenshots.
+        Profiles::GeneratePipelineJob.perform_later(login)
         count += 1
       end
 

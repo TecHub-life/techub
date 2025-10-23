@@ -1,0 +1,427 @@
+{
+  "login": "loftwah",
+  "host": "http://web",
+  "github_payload": {
+    "profile": {
+      "id": 19922556,
+      "login": "loftwah",
+      "name": "Dean Lofts",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19922556?v=4",
+      "bio": "DevOps Engineer, Music Producer, and big fan of Open Source.",
+      "company": null,
+      "location": "Melbourne, Australia",
+      "blog": "https://linkarooie.com/loftwah",
+      "email": "dean@deanlofts.xyz",
+      "twitter_username": "loftwah",
+      "hireable": true,
+      "html_url": "https://github.com/loftwah",
+      "followers": 1149,
+      "following": 536,
+      "public_repos": 357,
+      "public_gists": 633,
+      "created_at": "2016-06-14 05:36:22 UTC",
+      "updated_at": "2025-10-07 07:24:53 UTC"
+    },
+    "summary": "Dean Lofts ships in public with 357 repositories and 1149 followers. Top project linux-for-pirates has 142 stars and focuses on Astro. Frequent languages: Ruby, Shell, Python. Bio: DevOps Engineer, Music Producer, and big fan of Open Source.",
+    "top_repositories": [
+      {
+        "name": "linux-for-pirates",
+        "description": "A book we're writing about Linux, in the theme of Pirates!",
+        "html_url": "https://github.com/loftwah/linux-for-pirates",
+        "stargazers_count": 142,
+        "forks_count": 18,
+        "language": "Astro",
+        "topics": [
+          "book",
+          "cloud",
+          "cloudcomputing",
+          "devops",
+          "education",
+          "freecodecamp",
+          "hacktoberfest",
+          "linux",
+          "network",
+          "networking",
+          "odin-project"
+        ]
+      },
+      {
+        "name": "loftwahs-cheatsheet",
+        "description": "My own personal tech cheatsheet. This covers the stuff I use quite regularly.",
+        "html_url": "https://github.com/loftwah/loftwahs-cheatsheet",
+        "stargazers_count": 42,
+        "forks_count": 4,
+        "language": null,
+        "topics": [
+          "bash",
+          "devops",
+          "hacktoberfest",
+          "linux",
+          "nodejs",
+          "python",
+          "sre",
+          "typescript"
+        ]
+      },
+      {
+        "name": "linkarooie",
+        "description": "Simplify your online presence with a single link.",
+        "html_url": "https://github.com/loftwah/linkarooie",
+        "stargazers_count": 33,
+        "forks_count": 5,
+        "language": "Ruby",
+        "topics": [
+          "biodrop",
+          "hacktoberfest",
+          "link-in-bio",
+          "link-management",
+          "linkfree",
+          "linktree",
+          "linktree-alternative",
+          "online-presence",
+          "personal-profile",
+          "ruby",
+          "ruby-on-rails"
+        ]
+      },
+      {
+        "name": "complisight",
+        "description": "Designed for developers and compliance teams, the soc2 CLI tool utilizes the Go programming language and Cobra framework to offer an automated solution for evaluating SOC2 compliance. By assessing key areas such as Security, Availability, Processing Integrity, Confidentiality, and Privacy.",
+        "html_url": "https://github.com/loftwah/complisight",
+        "stargazers_count": 26,
+        "forks_count": 0,
+        "language": "Shell",
+        "topics": ["compliance", "cybersecurity", "soc2"]
+      },
+      {
+        "name": "tech-101",
+        "description": "This GitHub repository is designed to provide resources and training materials for our development team's tech bootcamp.",
+        "html_url": "https://github.com/loftwah/tech-101",
+        "stargazers_count": 21,
+        "forks_count": 2,
+        "language": "Ruby",
+        "topics": [
+          "aws",
+          "bootcamp",
+          "docker",
+          "git",
+          "github",
+          "linux",
+          "rails",
+          "ruby",
+          "ruby-on-rails",
+          "terraform"
+        ]
+      }
+    ],
+    "pinned_repositories": [
+      {
+        "name": "techub",
+        "description": "TecHub is TechDeck, but for GitHub instead of Twitter/X.",
+        "html_url": "https://github.com/TecHub-life/techub",
+        "stargazers_count": 13,
+        "forks_count": 0,
+        "language": "Ruby",
+        "topics": ["ai", "ai-generated", "card", "card-game", "fun", "game", "profiles"],
+        "owner_login": "TecHub-life",
+        "updated_at": "2025-10-22T21:03:18Z",
+        "created_at": "2025-10-03T04:10:53Z"
+      },
+      {
+        "name": "linux-for-pirates",
+        "description": "A book we're writing about Linux, in the theme of Pirates!",
+        "html_url": "https://github.com/loftwah/linux-for-pirates",
+        "stargazers_count": 142,
+        "forks_count": 18,
+        "language": "Astro",
+        "topics": [
+          "book",
+          "cloud",
+          "cloudcomputing",
+          "devops",
+          "education",
+          "linux",
+          "network",
+          "networking",
+          "freecodecamp",
+          "hacktoberfest"
+        ],
+        "owner_login": "loftwah",
+        "updated_at": "2025-10-21T03:51:41Z",
+        "created_at": "2022-12-21T10:51:25Z"
+      },
+      {
+        "name": "linkarooie-3",
+        "description": "Well I stuffed the last one.",
+        "html_url": "https://github.com/loftwah/linkarooie-3",
+        "stargazers_count": 8,
+        "forks_count": 3,
+        "language": "Astro",
+        "topics": ["link-in-bio", "linktree", "linkarooie"],
+        "owner_login": "loftwah",
+        "updated_at": "2025-10-08T10:28:21Z",
+        "created_at": "2025-03-13T12:39:03Z"
+      },
+      {
+        "name": "devops-refresher",
+        "description": "Just running a refresher on all things DevOps.",
+        "html_url": "https://github.com/loftwah/devops-refresher",
+        "stargazers_count": 12,
+        "forks_count": 1,
+        "language": "HCL",
+        "topics": ["devops", "practice", "refresher-course", "study", "training"],
+        "owner_login": "loftwah",
+        "updated_at": "2025-10-02T14:49:40Z",
+        "created_at": "2025-09-05T01:49:04Z"
+      }
+    ],
+    "active_repositories": [
+      {
+        "name": "techub",
+        "full_name": "TecHub-life/techub",
+        "description": "TecHub is TechDeck, but for GitHub instead of Twitter/X.",
+        "html_url": "https://github.com/TecHub-life/techub",
+        "stargazers_count": 13,
+        "forks_count": 0,
+        "language": "Ruby",
+        "topics": ["ai", "ai-generated", "card", "card-game", "fun", "game", "profiles"],
+        "owner_login": "TecHub-life"
+      },
+      {
+        "name": "Loftwah-Skills",
+        "full_name": "loftwah/Loftwah-Skills",
+        "description": "Copilot Skills is a system for organizing domain knowledge into reusable, discoverable skills that keep AI agents focused and efficient.",
+        "html_url": "https://github.com/loftwah/Loftwah-Skills",
+        "stargazers_count": 0,
+        "forks_count": 0,
+        "language": null,
+        "topics": [],
+        "owner_login": "loftwah"
+      },
+      {
+        "name": "Copilot-Skills",
+        "full_name": "TheSethRose/Copilot-Skills",
+        "description": "Copilot Skills is a system for organizing domain knowledge into reusable, discoverable skills that keep AI agents focused and efficient.",
+        "html_url": "https://github.com/TheSethRose/Copilot-Skills",
+        "stargazers_count": 1,
+        "forks_count": 2,
+        "language": null,
+        "topics": ["claude-skills", "copilot", "github", "skills"],
+        "owner_login": "TheSethRose"
+      },
+      {
+        "name": "awesome-pipeline",
+        "full_name": "pditommaso/awesome-pipeline",
+        "description": "A curated list of awesome pipeline toolkits inspired by Awesome Sysadmin",
+        "html_url": "https://github.com/pditommaso/awesome-pipeline",
+        "stargazers_count": 6463,
+        "forks_count": 642,
+        "language": null,
+        "topics": ["awesome-list", "workflow"],
+        "owner_login": "pditommaso"
+      }
+    ],
+    "organizations": [
+      {
+        "login": "TecHub-life",
+        "name": null,
+        "avatar_url": "https://avatars.githubusercontent.com/u/235830293?v=4",
+        "description": "TecHub is an AI powered profile generator and card game with leaderboards.",
+        "html_url": "https://github.com/TecHub-life"
+      }
+    ],
+    "social_accounts": [
+      {
+        "provider": "TWITTER",
+        "url": "https://x.com/loftwah",
+        "display_name": "@loftwah"
+      },
+      {
+        "provider": "BLUESKY",
+        "url": "https://bsky.app/profile/loftwah.com",
+        "display_name": "@loftwah.com"
+      }
+    ],
+    "languages": {
+      "Ruby": 21,
+      "Shell": 18,
+      "Python": 17,
+      "TypeScript": 15,
+      "JavaScript": 14,
+      "Go": 11,
+      "HTML": 10,
+      "Astro": 7,
+      "Rust": 7,
+      "PHP": 5,
+      "HCL": 4,
+      "Vue": 2,
+      "Groovy": 1,
+      "Dockerfile": 1,
+      "C#": 1,
+      "Markdown": 1,
+      "PowerShell": 1,
+      "CSS": 1
+    },
+    "profile_readme": "# Dean Lofts\n\n**Senior DevOps Engineer / Cloud Architect**  \nMelbourne, Australia  \n\n[techdeck.life](https://techdeck.life)  [techub.life (coming soon)](https://github.com/TecHub-life/techub)  [fm.loftwah.com](https://fm.loftwah.com)  [blog.deanlofts.xyz](https://blog.deanlofts.xyz)  [LinkedIn](https://linkedin.com/in/deanlofts)\n\n---\n\n## About\n\nSenior DevOps Engineer and Cloud Architect specialising in **AWS, Ruby on Rails, and infrastructure automation**. Expert in designing resilient cloud environments and building developer-centric platforms that merge **DevOps, AI, and creative automation**.  \n\nKnown for delivering clean, observable systems with **structured logging, telemetry, and composable CI/CD pipelines**. Creator of **TechDeck**, **TecHub**, and **LoftwahFM**  projects showcasing innovation in social analytics, open-source collaboration, and AI-generated media.  \n\nWrites at **[blog.deanlofts.xyz](https://blog.deanlofts.xyz)** about DevOps, AI, and the intersection of creativity and infrastructure.\n\n---\n\n## Highlights\n\n- **[TechDeck](https://techdeck.life):** Rails-based platform gamifying developer profiles with social leaderboards and analytics.  \n- **[TecHub](https://github.com/TecHub-life/techub):** Modern Rails 8 app using service-oriented architecture, structured logging, and Axiom integration.  \n- **[LoftwahFM](https://fm.loftwah.com):** AI-powered streaming radio and generative music platform blending beats, voice, and automation.  \n- **[NASA Open MCT PR #5520](https://github.com/nasa/openmct/pull/5520):** Contributed Playwright test automation improving end-to-end reliability.  \n- **AWS Infrastructure Delivery:** Architected a redundant multi-region streaming solution (EC2 + ECS) in under 72 hours to meet a CEO directive.  \n\n---\n\n## Technical Stack\n\n- **Cloud / Infra:**  \n  AWS (ECS, Fargate, S3, RDS, CloudWatch), Terraform, Docker, GitHub Actions  \n\n- **Languages:**  \n  Ruby, TypeScript, Shell  \n\n- **Frameworks:**  \n  Ruby on Rails, Kamal  \n\n- **Observability:**  \n  Structured Logging (Axiom), CloudWatch, Grafana, Prometheus  \n\n- **Databases:**  \n  PostgreSQL, Redis  \n\n- **Security:**  \n  Tailscale, IAM, CompTIA Security+  \n\n---\n\n## Certifications\n\n- [AWS Certified Solutions Architect  Professional](https://www.credly.com/badges/c97a35fc-ba6b-427a-b521-19b9ab28cfdb/linked_in_profile)  \n- [HashiCorp Certified: Terraform Associate (003)](https://www.credly.com/badges/0e437888-1deb-4a2d-8b82-cefb6b87b35d/public_url)  \n- CompTIA Security+  \n\n---\n\n## Projects\n\n-  [TechDeck](https://techdeck.life)  \n-  [TecHub GitHub Repo](https://github.com/TecHub-life/techub)  \n-  [LoftwahFM](https://fm.loftwah.com)  \n-  [Blog](https://blog.deanlofts.xyz)  \n-  [LinkedIn](https://linkedin.com/in/deanlofts)\n",
+    "recent_activity": {
+      "total_events": 300,
+      "event_breakdown": {
+        "PushEvent": 133,
+        "CreateEvent": 22,
+        "DeleteEvent": 30,
+        "PullRequestEvent": 20,
+        "IssuesEvent": 74,
+        "IssueCommentEvent": 18,
+        "ForkEvent": 1,
+        "WatchEvent": 2
+      },
+      "recent_repos": [
+        "TecHub-life/techub",
+        "loftwah/Loftwah-Skills",
+        "TheSethRose/Copilot-Skills",
+        "pditommaso/awesome-pipeline"
+      ],
+      "last_active": "2025-10-23 04:12:45 UTC"
+    }
+  },
+  "profile": {
+    "id": 1,
+    "github_id": 19922556,
+    "login": "loftwah",
+    "name": "Dean Lofts",
+    "summary": "Dean Lofts ships in public with 357 repositories and 1149 followers. Top project linux-for-pirates has 142 stars and focuses on Astro. Frequent languages: Ruby, Shell, Python. Bio: DevOps Engineer, Music Producer, and big fan of Open Source.",
+    "followers": 1149,
+    "following": 536,
+    "public_repos": 357,
+    "public_gists": 633,
+    "avatar_url": "/avatars/loftwah.png",
+    "last_synced_at": "2025-10-23 05:28:14 UTC",
+    "last_pipeline_status": "failure",
+    "last_pipeline_error": "undefined local variable or method `resolved_host' for an instance of Profiles::GeneratePipelineService",
+    "created_at": "2025-10-18 05:57:04 UTC",
+    "updated_at": "2025-10-23 05:28:14 UTC"
+  },
+  "avatar_local_path": "/avatars/loftwah.png",
+  "scrape": null,
+  "card": {
+    "id": 1,
+    "title": "Dean Lofts",
+    "tagline": "Building the future, one resilient, AI-powered system at a time.",
+    "attack": 92,
+    "defense": 90,
+    "speed": 95,
+    "vibe": "The Creative Architect",
+    "archetype": "The Hero",
+    "special_move": "AI-Powered Media Orchestration",
+    "generated_at": "2025-10-23 05:28:46 UTC",
+    "ai_model": "gemini-2.5-flash",
+    "prompt_version": "v1"
+  },
+  "captures": {
+    "og": {
+      "id": 1,
+      "kind": "og",
+      "local_path": "/rails/public/generated/loftwah/og.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/blb7r71f2ruu2hiyepidrajteto8",
+      "width": 1200,
+      "height": 630,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-20 07:27:14 UTC",
+      "updated_at": "2025-10-23 05:28:52 UTC"
+    },
+    "card": {
+      "id": 2,
+      "kind": "card",
+      "local_path": "/rails/public/generated/loftwah/card.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/1lo6s0hr7q9sqo828lallfxhgmts",
+      "width": 1280,
+      "height": 720,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-20 07:27:20 UTC",
+      "updated_at": "2025-10-23 05:28:55 UTC"
+    },
+    "simple": {
+      "id": 3,
+      "kind": "simple",
+      "local_path": "/rails/public/generated/loftwah/simple.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/gkb061ndagjfbc3nh81ruo8fmugv",
+      "width": 1280,
+      "height": 720,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-20 07:27:27 UTC",
+      "updated_at": "2025-10-23 05:29:00 UTC"
+    },
+    "banner": {
+      "id": 4,
+      "kind": "banner",
+      "local_path": "/rails/public/generated/loftwah/banner.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/wpdq041yzbfsi974pgtkw9hkzmhl",
+      "width": 1500,
+      "height": 500,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:03 UTC"
+    },
+    "x_profile_400": {
+      "id": 5,
+      "kind": "x_profile_400",
+      "local_path": "/rails/public/generated/loftwah/x_profile_400.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/ux32c2rhscom7tgn3pq240xig9uf",
+      "width": 400,
+      "height": 400,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:06 UTC"
+    },
+    "fb_post_1080": {
+      "id": 6,
+      "kind": "fb_post_1080",
+      "local_path": "/rails/public/generated/loftwah/fb_post_1080.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/eppr6mszavm7rtfp7x12bzc42hyz",
+      "width": 1080,
+      "height": 1080,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:10 UTC"
+    },
+    "ig_portrait_1080x1350": {
+      "id": 7,
+      "kind": "ig_portrait_1080x1350",
+      "local_path": "/rails/public/generated/loftwah/ig_portrait_1080x1350.jpg",
+      "public_url": "https://techub-life.nyc3.digitaloceanspaces.com/techub-life/v7khuhoblw35tnn9x78mm66wlvyc",
+      "width": 1080,
+      "height": 1350,
+      "mime_type": "image/jpeg",
+      "created_at": "2025-10-23 04:36:32 UTC",
+      "updated_at": "2025-10-23 05:29:13 UTC"
+    }
+  },
+  "optimizations": {},
+  "eligibility": {
+    "score": 5,
+    "threshold": 1,
+    "eligible": true,
+    "signals": {
+      "account_age": {
+        "met": true,
+        "detail": "Account age 3418 days meets minimum of 60 days"
+      },
+      "repository_activity": {
+        "met": true,
+        "detail": "4 public repos with pushes in last 12 months"
+      },
+      "social_proof": {
+        "met": true,
+        "detail": "Followers 1149, following 536 (threshold 3)"
+      },
+      "meaningful_profile": {
+        "met": true,
+        "detail": "Meaningful profile context detected (bio/readme/pinned repos)"
+      },
+      "recent_activity": {
+        "met": true,
+        "detail": "300 public events in the past 90 days"
+      }
+    }
+  }
+}

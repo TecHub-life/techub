@@ -1,0 +1,25 @@
+{
+  "status": "success",
+  "metadata": {
+    "attempts": [
+      {
+        "http_status": 200,
+        "strict": false
+      },
+      {
+        "http_status": 200,
+        "strict": false,
+        "empty": true
+      },
+      {
+        "http_status": 200,
+        "strict": true
+      }
+    ],
+    "stage": "generate_ai_profile"
+  },
+  "error": null,
+  "value": "#<ProfileCard:0x000074af1f837488>",
+  "stage": "generate_ai_profile",
+  "label": "Generate AI profile"
+}
