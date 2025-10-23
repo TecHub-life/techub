@@ -17,6 +17,8 @@ Rails.application.routes.draw do
   get "/api-docs", to: "api_docs#show"
   get "/api-docs/spec.yaml", to: "api_docs#spec", as: :api_docs_spec
   get "/motifs", to: "pages#motifs"
+  get "/archetypes", to: "pages#archetypes"
+  get "/spirit-animals", to: "pages#spirit_animals"
   # Account settings
   get "/settings/account", to: "accounts#edit", as: :edit_account
   patch "/settings/account", to: "accounts#update", as: :account

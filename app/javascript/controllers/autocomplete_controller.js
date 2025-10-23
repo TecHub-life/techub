@@ -2,7 +2,10 @@ import { Controller } from '@hotwired/stimulus'
 
 export default class extends Controller {
   static targets = ['input', 'results']
-  static values = { field: String }
+  static values = {
+    field: String,
+    endpoint: { type: String, default: '/directory/autocomplete' },
+  }
 
   connect() {
     this.timeout = null
@@ -22,7 +25,7 @@ export default class extends Controller {
 
   async fetch(query) {
     const response = await fetch(
-      `/directory/autocomplete?field=${this.fieldValue}&q=${encodeURIComponent(query)}`
+      `${this.endpointValue}?field=${this.fieldValue}&q=${encodeURIComponent(query)}`
     )
     const data = await response.json()
     this.show(data.results)
