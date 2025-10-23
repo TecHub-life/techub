@@ -1,0 +1,138 @@
+<% if @profiles.any? %>
+  <!-- Cards Grid -->
+  <% grid_classes = case @layout
+     when 'single' then 'grid-cols-1'
+     when 'comfortable' then 'sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2'
+     else 'sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
+     end %>
+  <div class="grid gap-6 <%= grid_classes %> items-stretch">
+    <% @profiles.each do |profile| %>
+      <% card = profile.profile_card %>
+      <% atk = card&.attack || 70 %>
+      <% defn = card&.defense || 60 %>
+      <% spd = card&.speed || 80 %>
+      
+      <a href="<%= profile_path(username: profile.login) %>" class="group block h-full">
+        <div class="relative h-full flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-md transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:border-indigo-300 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900 dark:hover:border-indigo-500">
+          <!-- Card Preview Image -->
+          <div class="relative h-48 overflow-hidden bg-gradient-to-br from-sky-600/10 via-indigo-600/10 to-cyan-600/10">
+            <% gen_dir = Rails.root.join('public','generated', profile.login) %>
+            <% card_img = nil %>
+            
+            <% # Check assets first (9x16 → OG → card) %>
+            <% if (asset = profile.profile_assets.find_by(kind: 'avatar_9x16')) && asset.public_url.present? %>
+              <% card_img = asset.public_url %>
+            <% elsif (asset = profile.profile_assets.find_by(kind: 'og')) && asset.public_url.present? %>
+              <% card_img = asset.public_url %>
+            <% elsif (asset = profile.profile_assets.find_by(kind: 'card')) && asset.public_url.present? %>
+              <% card_img = asset.public_url %>
+            <% elsif Dir.exist?(gen_dir) %>
+              <% # Fallback to local generated files %>
+              <% file = Dir[gen_dir.join('avatar-9x16*.jpg').to_s].first || Dir[gen_dir.join('avatar-9x16*.png').to_s].first %>
+              <% file ||= Dir[gen_dir.join('og-*.jpg').to_s].first || Dir[gen_dir.join('og-*.png').to_s].first %>
+              <% file ||= Dir[gen_dir.join('card-*.jpg').to_s].first || Dir[gen_dir.join('card-*.png').to_s].first %>
+              <% card_img = "/generated/#{profile.login}/#{File.basename(file)}" if file %>
+            <% end %>
+            
+            <% if card_img.present? %>
+              <img src="<%= card_img %>" alt="<%= profile.display_name %> card" class="h-full w-full object-cover object-center opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110" loading="lazy" onerror="this.style.display='none'">
+            <% end %>
+            
+            <!-- Fallback gradient background when no image -->
+            <div class="absolute inset-0 bg-gradient-to-br from-sky-600/20 via-indigo-600/20 to-cyan-600/20"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            
+            <!-- Avatar Badge -->
+            <div class="absolute bottom-3 left-3">
+              <div class="h-16 w-16 rounded-full border-2 border-white/90 bg-slate-800 p-0.5 shadow-lg">
+                <% avatar_src = profile.avatar_url %>
+                <% if (card&.avatar_choice == 'ai') && (asset = profile.profile_assets.find_by(kind: 'avatar_1x1')) %>
+                  <% avatar_src = asset.public_url if asset&.public_url.present? %>
+                <% end %>
+                <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="h-full w-full rounded-full object-cover">
+              </div>
+            </div>
+
+            <!-- Stats Badge -->
+            <div class="absolute top-3 right-3 rounded-lg bg-black/60 backdrop-blur-sm px-2.5 py-1.5 text-xs font-bold text-white shadow-lg">
+              <div class="flex items-center gap-2">
+                <span class="text-yellow-300"><%= atk %></span>
+                <span class="text-blue-300"><%= defn %></span>
+                <span class="text-green-300"><%= spd %></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Info -->
+          <div class="p-4 space-y-3 flex-1 flex flex-col min-h-[190px]">
+            <div>
+              <h3 class="truncate text-lg font-bold text-slate-900 group-hover:text-indigo-600 dark:text-slate-100 dark:group-hover:text-indigo-400">
+                <%= profile.display_name %>
+              </h3>
+              <p class="truncate text-sm text-slate-600 dark:text-slate-400">@<%= profile.login %></p>
+            </div>
+
+            <!-- Stats Bars -->
+            <div class="space-y-1.5">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 w-8">ATK</span>
+                <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+                  <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all duration-500" style="width: <%= atk %>%"></div>
+                </div>
+                <span class="text-xs font-bold text-yellow-600 dark:text-yellow-400 w-6 text-right"><%= atk %></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 w-8">DEF</span>
+                <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+                  <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500" style="width: <%= defn %>%"></div>
+                </div>
+                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 w-6 text-right"><%= defn %></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 w-8">SPD</span>
+                <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+                  <div class="h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-500" style="width: <%= spd %>%"></div>
+                </div>
+                <span class="text-xs font-bold text-green-600 dark:text-green-400 w-6 text-right"><%= spd %></span>
+              </div>
+            </div>
+
+            <% if card&.flavor_text.present? %>
+              <p class="text-xs text-slate-700 dark:text-slate-300" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"><%= card.flavor_text %></p>
+            <% end %>
+
+            <!-- Meta Info -->
+            <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-700">
+              <span class="flex items-center gap-1">
+                <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                </svg>
+                <%= profile.followers.to_i %>
+              </span>
+              <% if card&.archetype.present? %>
+                <span class="truncate max-w-[120px]"><%= card.archetype %></span>
+              <% end %>
+            </div>
+
+            <!-- Tags -->
+            <% if card && Array(card.tags).any? %>
+              <div class="mt-auto flex flex-wrap gap-1.5">
+                <% Array(card.tags).first(6).each do |t| %>
+                  <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">#<%= t.to_s.downcase %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </a>
+    <% end %>
+  </div>
+<% else %>
+  <div class="rounded-xl border border-slate-200 bg-white p-12 text-center dark:border-slate-700 dark:bg-slate-800">
+    <div class="mx-auto max-w-md space-y-4">
+      <div class="text-6xl">🎴</div>
+      <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">No cards found</h3>
+      <p class="text-slate-600 dark:text-slate-400">Try adjusting your filters or submit a profile to get started.</p>
+    </div>
+  </div>
+<% end %>
