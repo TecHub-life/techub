@@ -78,7 +78,7 @@
     <%= render "shared/header" %>
     
     <!-- Toast notifications container -->
-    <div id="flash-root" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 space-y-2">
+    <div id="flash-root" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md space-y-2 flex flex-col items-center">
       <% flash.each do |key, value| %>
         <% 
           # Determine styling based on flash type
