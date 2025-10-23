@@ -1,25 +1,84 @@
 <%# Cards Tab - Unified grid of all variants %>
-<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
-  <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-    <svg class="h-6 w-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
-    </svg>
-    Cards
-  </h3>
-  <% variants = profile_card_variants(profile) %>
+<div class="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-6 shadow-lg dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
+  <div class="mb-4">
+    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Card Previews</h2>
+    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Your generated trading cards and social images</p>
+  </div>
+  <% base = Rails.root.join("public", "generated", profile.login) %>
+  <% find_file = lambda do |name|
+       next nil unless Dir.exist?(base)
+       Dir[base.join("#{name}*.{jpg,jpeg,png}").to_s].first
+     end %>
+  <% assets_by_kind = profile.profile_assets.where(kind: [ "card", "og", "simple", "banner", "x_profile_400", "fb_post_1080", "ig_portrait_1080x1350" ]).index_by(&:kind) %>
+  <% og_asset = assets_by_kind["og"] %>
+  <% card_asset = assets_by_kind["card"] %>
+  <% simple_asset = assets_by_kind["simple"] %>
+  <% banner_asset = assets_by_kind["banner"] %>
+  <% x_asset = assets_by_kind["x_profile_400"] %>
+  <% fb_asset = assets_by_kind["fb_post_1080"] %>
+  <% ig_asset = assets_by_kind["ig_portrait_1080x1350"] %>
+
+  <% og_url = if og_asset&.public_url.present?
+      og_asset.public_url
+    elsif (p = [base.join("og.jpg"), base.join("og.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
+      ts = File.mtime(p).to_i rescue nil
+      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
+    end %>
+  <% card_url = if card_asset&.public_url.present?
+      card_asset.public_url
+    elsif (p = [base.join("card.jpg"), base.join("card.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
+      ts = File.mtime(p).to_i rescue nil
+      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
+    end %>
+  <% simple_url = if simple_asset&.public_url.present?
+      simple_asset.public_url
+    elsif (p = [base.join("simple.jpg"), base.join("simple.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
+      ts = File.mtime(p).to_i rescue nil
+      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
+    end %>
+
+  <% banner_url = if banner_asset&.public_url.present?
+      banner_asset.public_url
+    else
+      (f = find_file.call("banner")) && "/generated/#{profile.login}/#{File.basename(f)}"
+    end %>
+  <% x_profile_url = if x_asset&.public_url.present?
+      x_asset.public_url
+    else
+      (f = find_file.call("x_profile_400")) && "/generated/#{profile.login}/#{File.basename(f)}"
+    end %>
+  <% fb_post_url = if fb_asset&.public_url.present?
+      fb_asset.public_url
+    else
+      (f = find_file.call("fb_post_1080")) && "/generated/#{profile.login}/#{File.basename(f)}"
+    end %>
+  <% ig_portrait_url = if ig_asset&.public_url.present?
+      ig_asset.public_url
+    else
+      (f = find_file.call("ig_portrait_1080x1350")) && "/generated/#{profile.login}/#{File.basename(f)}"
+    end %>
+
+  <% variants = [
+      { kind: "card",    label: "Main Card",            dims: "1280×720",    aspect: "16/9", usage: "Social posts",        url: card_url },
+      { kind: "og",      label: "OpenGraph (Link)",     dims: "1200×630",    aspect: "1200/630", usage: "Link previews",   url: og_url },
+      { kind: "simple",  label: "Simple",               dims: "1280×720",    aspect: "16/9",     usage: "Profiles & CVs", url: simple_url },
+      { kind: "banner",  label: "Banner",               dims: "1500×500",    aspect: "3/1",      usage: "Header/banner",  url: banner_url },
+      { kind: "x_profile_400", label: "X Profile",      dims: "400×400",     aspect: "1/1",      usage: "X avatar",       url: x_profile_url },
+      { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", dims: "1080×1350", aspect: "4/5", usage: "Instagram post", url: ig_portrait_url },
+      { kind: "fb_post_1080", label: "Facebook Post",   dims: "1080×1080",   aspect: "1/1",      usage: "Facebook post",  url: fb_post_url }
+    ] %>
 
   <% if variants.all? { |v| v[:url].blank? } %>
-    <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-6 text-center">
-      <div class="mx-auto mb-3 h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-800 grid place-items-center text-slate-500">🎴</div>
+    <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 text-center mb-4">
+      <div class="mx-auto mb-2 h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 grid place-items-center text-slate-500 text-xl">🎴</div>
       <p class="text-sm text-slate-600 dark:text-slate-300">No card assets yet. Generate your profile to create shareable cards.</p>
     </div>
   <% end %>
 
-  <div class="space-y-6">
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
     <% variants.each do |v| %>
-      <% url = v[:url] %>
-      <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-900 shadow-sm">
-        <div class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition">
+        <div class="flex items-center justify-between px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <div class="flex items-center gap-2">
             <span><%= v[:label] %></span>
             <span class="text-slate-500">•</span>
@@ -27,25 +86,26 @@
             <span class="text-slate-500">•</span>
             <span class="text-slate-500"><%= v[:usage] %></span>
           </div>
-          <% if url.present? %>
-            <a href="<%= url %>" download target="_blank" rel="noopener" class="text-indigo-700 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 dark:text-indigo-300 dark:hover:text-indigo-200 transition" aria-label="Download">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <% if v[:url].present? %>
+            <a href="<%= v[:url] %>" download target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
               </svg>
             </a>
           <% end %>
         </div>
-        <div class="overflow-hidden">
-          <div class="relative w-full <%= "aspect-[#{v[:aspect]}]" %> bg-slate-100 dark:bg-slate-900" style="aspect-ratio: <%= v[:aspect] %>">
-            <% if url.present? %>
-              <img src="<%= url %>" alt="<%= v[:label] %> for <%= profile.display_name %>" class="absolute inset-0 w-full h-full object-contain" loading="lazy">
-            <% else %>
-              <div class="absolute inset-0 grid place-items-center text-slate-400">
-                <div class="text-xs font-medium">Not generated yet</div>
-              </div>
-            <% end %>
+        <% if v[:url].present? %>
+          <div class="w-full" style="aspect-ratio: <%= v[:aspect] %>;">
+            <img src="<%= v[:url] %>" alt="<%= v[:label] %>" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
           </div>
-        </div>
+        <% else %>
+          <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: <%= v[:aspect] %>;">
+            <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <p class="text-sm font-medium">Generating...</p>
+          </div>
+        <% end %>
       </div>
     <% end %>
   </div>

@@ -1,22 +1,5 @@
 <% if @profile.present? %>
   <section class="mx-auto max-w-6xl px-4 py-8">
-    <!-- Pipeline Status -->
-    <% if @profile.last_pipeline_status.present? || @profile.last_pipeline_error.present? %>
-      <div class="flex flex-row gap-2 w-full justify-center sm:justify-start mb-2 sm:mb-4 items-center">
-        <% if @profile.last_pipeline_status.present? %>
-          <span class="flex justify-start text-xs px-2 py-1 rounded border w-auto
-            <%= case @profile.last_pipeline_status
-                 when 'queued' then 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200'
-                 when 'success' then 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
-                 when 'failure' then 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
-                 else 'bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' end %>
-            "><%= @profile.last_pipeline_status.capitalize %></span>
-        <% end %>
-        <% if @profile.last_pipeline_error.present? %>
-          <p class="text-sm text-red-600 dark:text-red-400"><%= @profile.last_pipeline_error %></p>
-        <% end %>
-      </div>
-    <% end %>
     <!-- Header Section with Title, Dropdown and Actions -->
     <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900" data-controller="tabs" data-tabs-default-value="general">
       <div class="flex flex-col gap-4">
@@ -40,7 +23,7 @@
 
           <!-- Right: Action Buttons -->
           <div class="flex flex-row gap-2 w-full justify-end">
-            <%= link_to my_profiles_path, class: "flex w-full  sm:w-1/2 items-center justify-center sm:justify-end gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600" do %>
+            <%= link_to my_profiles_path, class: "flex w-full sm:w-1/2 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600" do %>
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
               </svg>
@@ -56,21 +39,21 @@
         </div>
         <!-- Tab Navigation -->
         <div class="sticky top-[60px] z-40 -mx-4 md:-mx-6 sm:mt-4 mb-2 border-b border-slate-200 dark:border-slate-700 bg-white/95 backdrop-blur-sm dark:bg-slate-900/95 w-full">
-          <nav class="grid grid-cols-2 mx-auto w-full content-center md:flex md:justify-around lg:justify-around gap-1 pb-4" aria-label="Settings Tabs">
-            <button data-tabs-target="tab" data-tab-name="general" data-action="click->tabs#change" class="inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
+          <nav class="flex flex-wrap justify-center sm:justify-around gap-2 pb-4 px-2 w-full" aria-label="Settings Tabs">
+            <button data-tabs-target="tab" data-tab-name="general" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
               <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
               <span>General</span>
             </button>
-            <button data-tabs-target="tab" data-tab-name="backgrounds" data-action="click->tabs#change" class="inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
+            <button data-tabs-target="tab" data-tab-name="backgrounds" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
               <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
               <span>Backgrounds</span>
             </button>
-            <button data-tabs-target="tab" data-tab-name="assets" data-action="click->tabs#change" class="col-span-2 md:col-span-1 inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
+            <button data-tabs-target="tab" data-tab-name="assets" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
               <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
               </svg>
