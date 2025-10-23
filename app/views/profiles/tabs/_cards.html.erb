@@ -7,11 +7,37 @@
     Cards
   </h3>
   <% base = Rails.root.join("public", "generated", profile.login) %>
-  <% find_file = lambda do |name|
-       next nil unless Dir.exist?(base)
-       Dir[base.join("#{name}*.{jpg,jpeg,png}").to_s].first
+  <% public_root = Rails.root.join("public") %>
+  <% assets_by_kind = profile.profile_assets.where(kind: [ "card", "og", "simple", "banner", "x_profile_400", "fb_post_1080", "ig_portrait_1080x1350" ]).load.index_by(&:kind) %>
+  <% relative_url = lambda do |path|
+       begin
+         next nil if path.blank?
+         pn = path.is_a?(Pathname) ? path : Pathname.new(path.to_s)
+         next nil unless pn.exist?
+         rel = pn.relative_path_from(public_root)
+         url = "/#{rel}"
+         ts = File.mtime(pn).to_i rescue nil
+         ts ? "#{url}?v=#{ts}" : url
+       rescue StandardError
+         nil
+       end
      end %>
-  <% assets_by_kind = profile.profile_assets.where(kind: [ "card", "og", "simple", "banner", "x_profile_400", "fb_post_1080", "ig_portrait_1080x1350" ]).index_by(&:kind) %>
+  <% find_existing_for = lambda do |name|
+       next nil unless Dir.exist?(base)
+       Dir[base.join("#{name}*.{jpg,jpeg,png}").to_s].find do |candidate|
+         (File.size?(candidate) || 0) > 1024
+       end
+     end %>
+  <% asset_url = lambda do |asset, fallback_name|
+       if asset&.public_url.present?
+         asset.public_url
+       elsif asset&.local_path.present?
+         relative_url.call(asset.local_path)
+       elsif fallback_name
+         candidate = find_existing_for.call(fallback_name)
+         relative_url.call(candidate)
+       end
+     end %>
   <% og_asset = assets_by_kind["og"] %>
   <% card_asset = assets_by_kind["card"] %>
   <% simple_asset = assets_by_kind["simple"] %>
@@ -20,45 +46,13 @@
   <% fb_asset = assets_by_kind["fb_post_1080"] %>
   <% ig_asset = assets_by_kind["ig_portrait_1080x1350"] %>
 
-  <% og_url = if og_asset&.public_url.present?
-      og_asset.public_url
-    elsif (p = [base.join("og.jpg"), base.join("og.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
-      ts = File.mtime(p).to_i rescue nil
-      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
-    end %>
-  <% card_url = if card_asset&.public_url.present?
-      card_asset.public_url
-    elsif (p = [base.join("card.jpg"), base.join("card.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
-      ts = File.mtime(p).to_i rescue nil
-      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
-    end %>
-  <% simple_url = if simple_asset&.public_url.present?
-      simple_asset.public_url
-    elsif (p = [base.join("simple.jpg"), base.join("simple.png")].find { |x| File.exist?(x) && (File.size?(x) || 0) > 1024 })
-      ts = File.mtime(p).to_i rescue nil
-      "/generated/#{profile.login}/#{p.basename}#{ts ? "?v=#{ts}" : ""}"
-    end %>
-
-  <% banner_url = if banner_asset&.public_url.present?
-      banner_asset.public_url
-    else
-      (f = find_file.call("banner")) && "/generated/#{profile.login}/#{File.basename(f)}"
-    end %>
-  <% x_profile_url = if x_asset&.public_url.present?
-      x_asset.public_url
-    else
-      (f = find_file.call("x_profile_400")) && "/generated/#{profile.login}/#{File.basename(f)}"
-    end %>
-  <% fb_post_url = if fb_asset&.public_url.present?
-      fb_asset.public_url
-    else
-      (f = find_file.call("fb_post_1080")) && "/generated/#{profile.login}/#{File.basename(f)}"
-    end %>
-  <% ig_portrait_url = if ig_asset&.public_url.present?
-      ig_asset.public_url
-    else
-      (f = find_file.call("ig_portrait_1080x1350")) && "/generated/#{profile.login}/#{File.basename(f)}"
-    end %>
+  <% og_url = asset_url.call(og_asset, "og") %>
+  <% card_url = asset_url.call(card_asset, "card") %>
+  <% simple_url = asset_url.call(simple_asset, "simple") %>
+  <% banner_url = asset_url.call(banner_asset, "banner") %>
+  <% x_profile_url = asset_url.call(x_asset, "x_profile_400") %>
+  <% fb_post_url = asset_url.call(fb_asset, "fb_post_1080") %>
+  <% ig_portrait_url = asset_url.call(ig_asset, "ig_portrait_1080x1350") %>
 
   <% variants = [
       { kind: "card",    label: "Main Card",            dims: "1280×720",    aspect: "16/9", usage: "Social posts",        url: card_url },

@@ -40,12 +40,14 @@ module Profiles
         return failure(StandardError.new("Gemini AI traits request failed"), metadata: { http_status: resp.status, body: resp.body })
       end
       attempts << { http_status: resp.status, strict: false }
+      preview = response_text_preview(resp.body)
       json = extract_json_from_response(resp.body)
       cleaned = nil
 
       if json.blank?
-        attempts << { http_status: resp.status, strict: false, empty: true }
-        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login) if defined?(StructuredLogger)
+        attempts.last[:empty] = true
+        attempts.last[:preview] = preview if preview.present?
+        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login, preview: preview, http_status: resp.status) if defined?(StructuredLogger)
         # Try one strict re-ask before falling back
         resp_strict = conn.post(
           Gemini::Endpoints.text_generate_path(
@@ -62,6 +64,7 @@ module Profiles
           cleaned = validate_and_normalize(json2) if json2.present?
         else
           attempts << { http_status: resp_strict.status, strict: true, error: true }
+          attempts.last[:preview] = response_text_preview(resp_strict.body)
         end
 
         return failure(
@@ -90,6 +93,7 @@ module Profiles
           cleaned = cleaned2 if cleaned2.present? && constraints_ok?(cleaned2)
         else
           attempts << { http_status: resp2.status, strict: true, error: true }
+          attempts.last[:preview] = response_text_preview(resp2.body)
         end
 
         unless cleaned.present? && constraints_ok?(cleaned)
@@ -353,6 +357,19 @@ module Profiles
       texts = Array(parts).filter_map { |p| dig_value(p, :text) }.join(" ")
       json ||= parse_relaxed_json(texts)
       json
+    end
+
+    def response_text_preview(body, limit: 300)
+      raw = normalize_to_hash(body)
+      candidates = Array(dig_value(raw, :candidates))
+      first_candidate = candidates.first || {}
+      content = dig_value(first_candidate, :content) || {}
+      parts = Array(dig_value(content, :parts))
+      text = parts.filter_map { |p| dig_value(p, :text) }.join(" ").to_s.strip
+      return nil if text.blank?
+      text.length > limit ? "#{text[0, limit]}..." : text
+    rescue StandardError
+      nil
     end
 
     def validate_and_normalize(h)

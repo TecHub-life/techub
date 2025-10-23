@@ -165,5 +165,57 @@ module Profiles
 
       stubs.verify_stubbed_calls
     end
+
+    test "empty first attempt records preview metadata" do
+      good_payload = {
+        short_bio: "Short bio",
+        long_bio: "Long bio" * 20,
+        buff: "Quick Learner",
+        buff_description: "Great at absorbing new concepts and practices.",
+        weakness: "Overcommits",
+        weakness_description: "Sometimes takes on too much at once.",
+        vibe: "The Creator",
+        vibe_description: "Creative energy that turns ideas into systems.",
+        special_move: "Refactor Surge",
+        special_move_description: "Delivers large refactors safely and quickly.",
+        flavor_text: "Ships with care.",
+        tags: %w[ruby open-source testing ci-cd devops backend],
+        attack: 80,
+        defense: 85,
+        speed: 78,
+        playing_card: "King of ♣",
+        spirit_animal: Motifs::Catalog.spirit_animal_names.first,
+        archetype: Motifs::Catalog.archetype_names.first
+      }
+
+      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
+          empty_body = { candidates: [ { content: { parts: [ { text: "Content filtered by safety." } ] }, finishReason: "SAFETY" } ] }
+          [ 200, { "Content-Type" => "application/json" }, empty_body.to_json ]
+        end
+        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
+          body = { candidates: [ { content: { parts: [ { text: good_payload.to_json } ] }, finishReason: "STOP" } ] }
+          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
+        end
+      end
+
+      dummy_conn = Faraday.new do |f|
+        f.request :json
+        f.response :json, content_type: /json/
+        f.adapter :test, stubs
+      end
+
+      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
+        Gemini::Configuration.stub :provider, "ai_studio" do
+          result = Profiles::SynthesizeAiProfileService.call(profile: @profile)
+          assert result.success?
+          attempts = result.metadata[:attempts]
+          assert_equal true, attempts.first[:empty]
+          assert_equal "Content filtered by safety.", attempts.first[:preview]
+        end
+      end
+
+      stubs.verify_stubbed_calls
+    end
   end
 end

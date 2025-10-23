@@ -49,7 +49,10 @@
 - Pipeline job updates `profiles.last_pipeline_status` and `last_pipeline_error`; notifies user and
   ops on failure.
 - Sync errors recorded in `profiles.last_sync_error` and `last_sync_error_at`.
-- Per-stage events recorder: `ProfilePipelineEvent`.
+- `Profiles::GeneratePipelineService` emits `ProfilePipelineEvent` rows for every stage
+  (started/completed/failed), powering the Ops timeline.
+- `Profiles::SynthesizeAiProfileService` warns with `ai_traits_empty_response` when Gemini returns
+  an empty body; the log now includes an excerpt from the model output to speed up triage.
 
 ### Non-AI Triggers
 
