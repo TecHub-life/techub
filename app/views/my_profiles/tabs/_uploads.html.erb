@@ -7,7 +7,14 @@
     <% if @profile.present? %>
       <% safe_login = @profile.login.to_s.downcase.gsub(/[^a-z0-9\-]/, "") %>
       <% base = Rails.root.join('public','generated', safe_login) %>
-      <% gallery = Dir.exist?(base) ? Dir[base.join('*.{jpg,jpeg,png}').to_s] : [] %>
+      <% gallery = [] %>
+      <% if Dir.exist?(base) %>
+        <% exts = %w[.jpg .jpeg .png] %>
+        <% Dir.children(base).each do |fn| %>
+          <% next unless exts.include?(File.extname(fn).downcase) %>
+          <% gallery << base.join(fn).to_s %>
+        <% end %>
+      <% end %>
 
       <% if gallery.any? %>
         <div class="grid gap-3 sm:grid-cols-3">
