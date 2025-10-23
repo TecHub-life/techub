@@ -99,7 +99,7 @@
             <span>My Profiles</span>
           <% end %>
           <%= link_to current_user.login, current_user.github_profile_url, target: "_blank", rel: "noopener", class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
-          <%= link_to "Sign Out", session_path, method: :delete, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700" %>
+          <%= button_to "Sign Out", session_path, method: :delete, form: { class: "w-full" }, class: "mt-2 w-full inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700" %>
         <% else %>
           <%= link_to "Login", auth_github_path, data: { turbo: false }, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
         <% end %>
