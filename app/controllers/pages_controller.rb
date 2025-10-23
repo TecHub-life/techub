@@ -95,16 +95,16 @@ class PagesController < ApplicationController
     @page = params[:page].to_i
     @page = 1 if @page < 1
     @per_page = (params[:per_page] || 12).to_i.clamp(6, 48)
-    
+
     # Get profile counts per archetype
     rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.archetype")
     counts = Hash.new(0)
     rows.each { |arch| counts[arch] += 1 if arch.present? }
-    
+
     # Build catalog from Motifs::Catalog with counts and DB records
     all_archetypes = Motifs::Catalog.archetypes.map do |name, desc|
       slug = Motifs::Catalog.to_slug(name)
-      rec = Motif.find_by(kind: 'archetype', theme: 'core', slug: slug)
+      rec = Motif.find_by(kind: "archetype", theme: "core", slug: slug)
       {
         name: name,
         description: desc,
@@ -115,12 +115,12 @@ class PagesController < ApplicationController
         image_url: rec&.image_1x1_url
       }
     end
-    
+
     # Filter by search query
     if @q.present?
       all_archetypes = all_archetypes.select { |a| a[:name].downcase.include?(@q) || a[:description].downcase.include?(@q) || a[:short_lore].to_s.downcase.include?(@q) }
     end
-    
+
     # Pagination
     @total = all_archetypes.length
     offset = (@page - 1) * @per_page
@@ -134,16 +134,16 @@ class PagesController < ApplicationController
     @page = params[:page].to_i
     @page = 1 if @page < 1
     @per_page = (params[:per_page] || 12).to_i.clamp(6, 48)
-    
+
     # Get profile counts per spirit animal
     rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.spirit_animal")
     counts = Hash.new(0)
     rows.each { |spirit| counts[spirit] += 1 if spirit.present? }
-    
+
     # Build catalog from Motifs::Catalog with counts and DB records
     all_spirit_animals = Motifs::Catalog.spirit_animals.map do |name, desc|
       slug = Motifs::Catalog.to_slug(name)
-      rec = Motif.find_by(kind: 'spirit_animal', theme: 'core', slug: slug)
+      rec = Motif.find_by(kind: "spirit_animal", theme: "core", slug: slug)
       {
         name: name,
         description: desc,
@@ -154,12 +154,12 @@ class PagesController < ApplicationController
         image_url: rec&.image_1x1_url
       }
     end
-    
+
     # Filter by search query
     if @q.present?
       all_spirit_animals = all_spirit_animals.select { |s| s[:name].downcase.include?(@q) || s[:description].downcase.include?(@q) || s[:short_lore].to_s.downcase.include?(@q) }
     end
-    
+
     # Pagination
     @total = all_spirit_animals.length
     offset = (@page - 1) * @per_page
@@ -246,5 +246,4 @@ class PagesController < ApplicationController
 
     render json: { results: results }
   end
-
 end

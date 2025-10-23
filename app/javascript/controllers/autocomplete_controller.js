@@ -2,9 +2,9 @@ import { Controller } from '@hotwired/stimulus'
 
 export default class extends Controller {
   static targets = ['input', 'results']
-  static values = { 
+  static values = {
     field: String,
-    endpoint: { type: String, default: '/directory/autocomplete' }
+    endpoint: { type: String, default: '/directory/autocomplete' },
   }
 
   connect() {
