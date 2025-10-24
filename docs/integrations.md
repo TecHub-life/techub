@@ -302,27 +302,27 @@ Behavior if Missing:
 Purpose: Use Font Awesome icons without third‑party CDNs. Assets are bundled and served locally via
 Propshaft.
 
-### How it works
+### How it works (implemented)
 
-- We install `@fortawesome/fontawesome-free` from npm and serve CSS/webfonts from `node_modules`
-  through Propshaft.
-- The layout references the local CSS path; no `<link>` to cdnjs/jsdelivr.
+- We install `@fortawesome/fontawesome-free` from npm.
+- `npm postinstall` copies webfonts into `app/assets/webfonts` and concatenates `all.min.css` into
+  `app/assets/stylesheets/application.css`.
+- The layout does NOT include a separate FA `<link>`; it only links `tailwind` and `application`.
 
 ### Implementation
 
 - Gemfile: no Font Awesome gem required (Rails 8 + Propshaft).
 - package.json:
   - `dependencies` includes `"@fortawesome/fontawesome-free"`.
-- Assets initializer:
-  - Adds `node_modules` to asset paths.
+  - `scripts.postinstall` copies webfonts and appends FA CSS to `application.css`.
+- Assets paths: default Propshaft paths are sufficient; webfonts live under `app/assets/webfonts`.
 - Layout (`app/views/layouts/application.html.erb`):
-  - `<%= stylesheet_link_tag "@fortawesome/fontawesome-free/css/all.min", "data-turbo-track": "reload" %>`
+  - Only: `<%= stylesheet_link_tag "tailwind" %>` and `<%= stylesheet_link_tag "application" %>`.
 
 ### Dockerfile considerations
 
 - The base image installs `nodejs` and `npm`.
-- Build stage runs `npm install` and `./bin/rails assets:precompile` so Font Awesome CSS + webfonts
-  are compiled into the image.
+- Build stage runs `npm install` (triggering `postinstall`) and `./bin/rails assets:precompile`.
 - No network calls to third‑party CDNs at runtime for icons.
 
 ### Rationale
@@ -332,5 +332,6 @@ Propshaft.
 ### Verification
 
 - Grep for CDN links:
-  - No remaining `cdnjs`, `jsdelivr`, `unpkg`, `fontawesome` external links.
+  - No `cdnjs`, `jsdelivr`, `unpkg`, or `fontawesome` external links.
+- Test/CI: controller view tests pass without asset load errors.
 - UI smoke: icons render with classes like `fa-solid`/`fa-brands`.
