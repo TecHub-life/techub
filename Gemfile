@@ -19,7 +19,8 @@ gem "tailwindcss-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 gem "jwt"
-gem "faraday-retry"
+gem "faraday", "~> 2.0"
+gem "faraday-retry", "~> 2.0"
 gem "octokit"
 gem "commonmarker" # GitHub-flavored markdown
 
@@ -89,3 +90,5 @@ group :test do
   gem "selenium-webdriver"
   gem "webmock"
 end
+
+ruby "3.4.1"

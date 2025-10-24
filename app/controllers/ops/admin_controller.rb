@@ -114,11 +114,17 @@ module Ops
         metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
         service_name = ENV["OTEL_SERVICE_NAME"].presence || (Rails.application.credentials.dig(:otel, :service_name) rescue nil).to_s.presence || "techub"
 
-        # Prefer Axiom Streams UI paths
-        dataset_url ||= (org.present? && dataset.present?) ? "https://app.axiom.co/#{org}/stream/#{dataset}" : nil
-        metrics_dataset_url ||= (org.present? && metrics_dataset.present?) ? "https://app.axiom.co/#{org}/stream/#{metrics_dataset}" : nil
-        traces_url ||= org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
-        traces_url = traces_url && service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
+        # Prefer canonical dataset UI paths (stable)
+        if org.present? && dataset.present?
+          dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{dataset}"
+        end
+        if org.present() && metrics_dataset.present?
+          metrics_dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}"
+        end
+        # Traces root (service filter applied via query param)
+        base_traces = org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
+        traces_url ||= base_traces
+        traces_url = service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
 
         @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
       rescue StandardError

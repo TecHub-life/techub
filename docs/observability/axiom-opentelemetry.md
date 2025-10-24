@@ -8,11 +8,18 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
 - Current logging is JSON to STDOUT via `config/initializers/structured_logging.rb`.
 - If `AXIOM_TOKEN` and `AXIOM_DATASET` are set, logs are also sent to Axiom (best-effort) via
   Faraday.
-- Configure:
-  - `AXIOM_TOKEN`: Axiom personal or ingest token
-  - `AXIOM_DATASET`: target dataset name (logs/events)
-  - `AXIOM_METRICS_DATASET`: optional metrics dataset name
-- In production, deploy with these env vars to enable forwarding.
+- Configure (env or Rails credentials):
+  - `AXIOM_TOKEN`: Axiom personal or ingest token (sensitive)
+  - `AXIOM_ORG`: your org slug (e.g., `echosight-7xtu`) — non‑sensitive
+  - `AXIOM_DATASET`: logs/events dataset (e.g., `techub`) — non‑sensitive
+  - `AXIOM_METRICS_DATASET`: metrics dataset (e.g., `techub-metrics`) — non‑sensitive
+  - `OTEL_EXPORTER_OTLP_ENDPOINT`: traces endpoint (defaults to `https://api.axiom.co/v1/traces`;
+    use EU endpoint if applicable)
+  - `OTEL_SERVICE_NAME`: service name for traces (defaults to `techub`)
+  - Optional UI links (override): `AXIOM_DATASET_URL`, `AXIOM_METRICS_DATASET_URL`,
+    `AXIOM_TRACES_URL`
+
+  In production, deploy with these variables to enable forwarding.
 
 Quick doctor
 
@@ -33,7 +40,7 @@ bin/rails 'axiom:smoke[hello_world]'
 ### Log fields
 
 - Base fields: `ts`, `level`, `request_id`, `job_id`, `app_version`, `user_id`, `ip`, `ua`, `path`,
-  `method`
+  `method`, `trace_id`, `span_id`, `_time`
 - Payload: arbitrary keys depending on call site
 - Emit programmatically via `StructuredLogger.info/warn/error/debug(hash_or_message, extra: ...)`.
 
@@ -133,7 +140,10 @@ end
 ## Dashboards & queries
 
 - In Axiom, create views for error rates, request latency, queue times, and generation failures.
-- Add a link from `/ops` to Axiom dataset and traces view.
+- Ops panel links (auto-constructed when `AXIOM_ORG` and datasets are set):
+  - Logs dataset: `https://app.axiom.co/${AXIOM_ORG}/datasets/${AXIOM_DATASET}`
+  - Metrics dataset: `https://app.axiom.co/${AXIOM_ORG}/datasets/${AXIOM_METRICS_DATASET}`
+  - Traces: `https://app.axiom.co/${AXIOM_ORG}/traces?service=${OTEL_SERVICE_NAME}`
 
 ## Local dev
 

@@ -20,14 +20,17 @@ namespace :axiom do
 
     require "faraday"
     conn = Faraday.new(url: "https://api.axiom.co") do |f|
-      f.request :json
+      f.request :retry
       f.response :raise_error
       f.adapter Faraday.default_adapter
     end
     conn.headers["Authorization"] = "Bearer #{token}"
     payload = [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor", env: Rails.env, app: "techub" } ]
     begin
-      resp = conn.post("/v1/datasets/#{dataset}/ingest", payload)
+      resp = conn.post("/v1/datasets/#{dataset}/ingest") do |req|
+        req.headers["Content-Type"] = "application/json"
+        req.body = payload.to_json
+      end
       puts "POST /v1/datasets/#{dataset}/ingest => #{resp.status}"
       puts "OK — event sent"
     rescue Faraday::ResourceNotFound
