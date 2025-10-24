@@ -1,8 +1,20 @@
-<section class="mx-auto max-w-4xl space-y-6 px-4 py-12">
+<section class="mx-auto max-w-4xl space-y-6 px-4 py-12" data-controller="tabs" data-tabs-default-value="overview">
   <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Ops Admin</h1>
 
-  <!-- Regenerate All Callout -->
-  <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-900/20">
+  <nav class="sticky top-[60px] z-40 -mb-px flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-100/95 px-2 py-2 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95" aria-label="Tabs">
+    <button data-tabs-target="tab" data-tab-name="overview" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Overview</button>
+    <button data-tabs-target="tab" data-tab-name="screenshots" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Screenshots</button>
+    <button data-tabs-target="tab" data-tab-name="ai" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">AI</button>
+    <button data-tabs-target="tab" data-tab-name="pipeline" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Pipeline</button>
+    <button data-tabs-target="tab" data-tab-name="access" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Access</button>
+    <button data-tabs-target="tab" data-tab-name="leaderboards" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Leaderboards</button>
+    <button data-tabs-target="tab" data-tab-name="backups" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Backups</button>
+    <button data-tabs-target="tab" data-tab-name="jobs" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Jobs</button>
+  </nav>
+
+  <div data-tabs-target="panel" data-tab-panel="overview" class="space-y-6">
+    <!-- Regenerate All Callout -->
+    <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-900/20">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Re-roll All Profiles</h2>
@@ -22,10 +34,11 @@
         <%# Hidden: regenerate all with images %>
       </div>
     </div>
+    </div>
   </div>
 
   <!-- Screenshots Health -->
-  <div id="failed-profiles" class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+  <div data-tabs-target="panel" data-tab-panel="screenshots" id="failed-profiles" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Screenshots Health</h2>
     <ul class="text-sm text-slate-700 dark:text-slate-300 list-disc pl-5">
       <li>Node: <code>node</code> must be available</li>
@@ -35,8 +48,8 @@
     <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Failed screenshot jobs will include stderr in logs as <code>screenshot_command_failed</code> or <code>screenshot_empty</code>.</p>
   </div>
 
-  <!-- Axiom -->
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+  <!-- Axiom / AI -->
+  <div data-tabs-target="panel" data-tab-panel="ai" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Axiom</h2>
     <div class="mt-2 flex flex-wrap gap-2">
       <% if @axiom[:dataset_url].present? %>
@@ -120,7 +133,7 @@
   </div>
 
   <!-- Pipeline Manifest -->
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+  <div data-tabs-target="panel" data-tab-panel="pipeline" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Pipeline</h2>
     <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Visibility of stages, gates, and outputs. Edit code in <code>Profiles::GeneratePipelineService</code>; this list helps you see everything in one place.</p>
     <div class="grid gap-2 sm:grid-cols-2">
@@ -145,7 +158,7 @@
   </div>
 
   <!-- Access Control -->
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+  <div data-tabs-target="panel" data-tab-panel="access" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Access Control</h2>
     <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">Gate sign-in to approved GitHub accounts until launch. Toggle open access to let anyone sign in. Settings persist in the database.</p>
     <form action="<%= update_access_ops_admin_index_path %>" method="post" class="space-y-3">
@@ -162,7 +175,8 @@
     </form>
   </div>
 
-  <div class="grid gap-4 sm:grid-cols-2">
+  <div data-tabs-target="panel" data-tab-panel="backups" class="hidden">
+    <div class="grid gap-4 sm:grid-cols-2">
     <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div class="text-sm text-slate-500 dark:text-slate-400">Database Backups</div>
       <div class="mt-1 text-slate-700 dark:text-slate-300">Upload SQLite files in <code>storage/</code> to object storage and prune old backups. Configure <code>BACKUP_BUCKET</code> (or <code>DO_SPACES_BUCKET</code>) and optional <code>BACKUP_PREFIX</code>.</div>
@@ -221,9 +235,10 @@
       <div class="text-sm text-slate-500 dark:text-slate-400">Finished (1h)</div>
       <div class="text-lg font-semibold"><%= @stats[:finished_last_hour] || '—' %></div>
     </div>
+    </div>
   </div>
 
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+  <div data-tabs-target="panel" data-tab-panel="leaderboards" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="text-lg font-semibold mb-2">Leaderboards</h2>
     <div class="flex flex-wrap gap-2">
       <form action="<%= rebuild_leaderboards_ops_admin_index_path %>" method="post">
@@ -237,7 +252,7 @@
     </div>
   </div>
 
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+  <div data-tabs-target="panel" data-tab-panel="jobs" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="text-lg font-semibold mb-3">Quick Ownership</h2>
     <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Transfer ownership by GitHub login. Profiles have exactly one owner. Set Owner is mainly for legacy orphaned profiles.</p>
     <div class="grid gap-4 sm:grid-cols-2">

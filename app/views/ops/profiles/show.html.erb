@@ -3,309 +3,331 @@
     <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">@<%= @profile.login %></h1>
     <div class="flex gap-2">
       <%= button_to "Re-roll Profile", ops_retry_profile_path(username: @profile.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-      <%# Image regeneration is available via explicit route; hidden by default %>
       <%= button_to "Delete profile (permanent)", ops_destroy_profile_path(username: @profile.login, back_to: "#failed-profiles"), method: :delete, form: { data: { turbo_confirm: "Delete @#{@profile.login}? This permanently removes the profile and all related data. This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
     </div>
-    <p class="mt-2 text-xs text-red-700 dark:text-red-400">Deletes this profile and all associated data (assets, stats, ownerships). This cannot be undone.</p>
   </div>
-
   <p class="text-sm text-slate-600 dark:text-slate-400">Re-runs this profile to match the latest version. The pipeline syncs GitHub data, updates traits, and recaptures screenshots.</p>
 
-  <div class="grid gap-4 sm:grid-cols-3">
-    <div class="rounded border p-4 dark:border-slate-700">
-      <div class="text-sm text-slate-500">Pipeline Status</div>
-      <div class="text-lg font-semibold"><%= @profile.last_pipeline_status || '—' %></div>
-      <% if @profile.last_pipeline_error.present? %>
-        <pre class="mt-2 whitespace-pre-wrap text-xs text-red-600 dark:text-red-400"><%= @profile.last_pipeline_error %></pre>
-      <% end %>
-    </div>
-    <div class="rounded border p-4 dark:border-slate-700">
-      <div class="text-sm text-slate-500">Last Synced</div>
-      <div class="text-lg font-semibold"><%= @profile.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></div>
-      <% if @profile.last_sync_error.present? %>
-        <div class="mt-2 text-xs text-amber-700 dark:text-amber-300">
-          <div class="font-semibold">Last Sync Error</div>
-          <pre class="whitespace-pre-wrap"><%= @profile.last_sync_error %></pre>
-          <div><%= @profile.last_sync_error_at&.strftime('%Y-%m-%d %H:%M') %></div>
-        </div>
-      <% end %>
-    </div>
-    <div class="rounded border p-4 dark:border-slate-700">
-      <div class="text-sm text-slate-500">Data Completeness</div>
-      <% comp = @profile.data_completeness %>
-      <div class="text-sm">
-        <div>Required: <%= comp[:required_completeness] %>%</div>
-        <div>Optional: <%= comp[:optional_completeness] %>%</div>
-        <div>Repos: <%= comp[:has_repositories] ? 'yes' : 'no' %></div>
-        <div>Languages: <%= @languages.any? %></div>
-        <div>Card: <%= @profile.profile_card.present? %></div>
-        <div>Orgs: <%= @organizations.any? %></div>
-        <div>Social: <%= @social_accounts.any? %></div>
-      </div>
-    </div>
-  </div>
+  <div class="mb-2" data-controller="tabs" data-tabs-default-value="overview">
+    <nav class="sticky top-[60px] z-40 -mb-px flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-100/95 px-2 py-2 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95" aria-label="Tabs">
+      <button data-tabs-target="tab" data-tab-name="overview" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Overview</button>
+      <button data-tabs-target="tab" data-tab-name="events" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Events</button>
+      <button data-tabs-target="tab" data-tab-name="traits" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Traits</button>
+      <button data-tabs-target="tab" data-tab-name="assets" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Assets</button>
+      <button data-tabs-target="tab" data-tab-name="github" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">GitHub</button>
+    </nav>
 
-  <div class="rounded border p-4 dark:border-slate-700">
-    <h2 class="text-lg font-semibold mb-3">Recent Pipeline Stages</h2>
-    <% if @recent_events.present? %>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr class="text-left text-slate-500 border-b dark:text-slate-400 dark:border-slate-700">
-              <th class="py-2 pr-4">Time</th>
-              <th class="py-2 pr-4">Stage</th>
-              <th class="py-2 pr-4">Status</th>
-              <th class="py-2 pr-4">Duration</th>
-              <th class="py-2">Message</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @recent_events.each do |e| %>
-              <tr class="border-b border-slate-100 dark:border-slate-800">
-                <td class="py-2 pr-4"><%= e.created_at.strftime('%Y-%m-%d %H:%M:%S') %></td>
-                <td class="py-2 pr-4"><%= e.stage %></td>
-                <td class="py-2 pr-4"><%= e.status %></td>
-                <td class="py-2 pr-4"><%= e.duration_ms ? "#{e.duration_ms} ms" : '—' %></td>
-                <td class="py-2"><%= e.message.to_s.truncate(120) %></td>
-              </tr>
+    <div class="mt-4 space-y-6">
+      <div data-tabs-target="panel" data-tab-panel="overview">
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="rounded border p-4 dark:border-slate-700">
+            <div class="text-sm text-slate-500">Pipeline Status</div>
+            <div class="text-lg font-semibold"><%= @profile.last_pipeline_status || '—' %></div>
+            <% if @profile.last_pipeline_error.present? %>
+              <pre class="mt-2 whitespace-pre-wrap text-xs text-red-600 dark:text-red-400"><%= @profile.last_pipeline_error %></pre>
             <% end %>
-          </tbody>
-        </table>
+          </div>
+          <div class="rounded border p-4 dark:border-slate-700">
+            <div class="text-sm text-slate-500">Last Synced</div>
+            <div class="text-lg font-semibold"><%= @profile.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></div>
+            <% if @profile.last_sync_error.present? %>
+              <div class="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                <div class="font-semibold">Last Sync Error</div>
+                <pre class="whitespace-pre-wrap"><%= @profile.last_sync_error %></pre>
+                <div><%= @profile.last_sync_error_at&.strftime('%Y-%m-%d %H:%M') %></div>
+              </div>
+            <% end %>
+          </div>
+          <div class="rounded border p-4 dark:border-slate-700">
+            <div class="text-sm text-slate-500">Data Completeness</div>
+            <% comp = @profile.data_completeness %>
+            <div class="text-sm">
+              <div>Required: <%= comp[:required_completeness] %>%</div>
+              <div>Optional: <%= comp[:optional_completeness] %>%</div>
+              <div>Repos: <%= comp[:has_repositories] ? 'yes' : 'no' %></div>
+              <div>Languages: <%= @languages.any? %></div>
+              <div>Card: <%= @profile.profile_card.present? %></div>
+              <div>Orgs: <%= @organizations.any? %></div>
+              <div>Social: <%= @social_accounts.any? %></div>
+            </div>
+          </div>
+        </div>
       </div>
-    <% else %>
-      <p class="text-slate-600 dark:text-slate-300">No recent events for this profile.</p>
-    <% end %>
-  </div>
 
-  <% if @profile_card %>
-    <div class="rounded border p-4 dark:border-slate-700 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">AI Traits Snapshot</h2>
-        <% if @profile_card.generated_at %>
-          <span class="text-xs text-slate-500 dark:text-slate-400">Generated <%= @profile_card.generated_at.strftime('%Y-%m-%d %H:%M') %></span>
-        <% end %>
+      <div data-tabs-target="panel" data-tab-panel="events" class="hidden">
+        <div class="rounded border p-4 dark:border-slate-700">
+          <h2 class="mb-3 text-lg font-semibold">Recent Pipeline Stages</h2>
+          <% if @recent_events.present? %>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead>
+                  <tr class="text-left text-slate-500 border-b dark:text-slate-400 dark:border-slate-700">
+                    <th class="py-2 pr-4">Time</th>
+                    <th class="py-2 pr-4">Stage</th>
+                    <th class="py-2 pr-4">Status</th>
+                    <th class="py-2 pr-4">Duration</th>
+                    <th class="py-2">Message</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @recent_events.each do |e| %>
+                    <tr class="border-b border-slate-100 dark:border-slate-800">
+                      <td class="py-2 pr-4"><%= e.created_at.strftime('%Y-%m-%d %H:%M:%S') %></td>
+                      <td class="py-2 pr-4"><%= e.stage %></td>
+                      <td class="py-2 pr-4"><%= e.status %></td>
+                      <td class="py-2 pr-4"><%= e.duration_ms ? "#{e.duration_ms} ms" : '—' %></td>
+                      <td class="py-2"><%= e.message.to_s.truncate(120) %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-slate-600 dark:text-slate-300">No recent events for this profile.</p>
+          <% end %>
+        </div>
       </div>
-      <div class="grid gap-4 md:grid-cols-2">
-        <div class="space-y-3">
-          <% if @profile_card.title.present? || @profile_card.tagline.present? || @profile_card.flavor_text.present? %>
-            <div>
-              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Identity</h3>
-              <div class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
-                <% if @profile_card.title.present? %>
-                  <p><span class="font-semibold text-slate-900 dark:text-slate-100">Title:</span> <%= @profile_card.title %></p>
+
+      <div data-tabs-target="panel" data-tab-panel="traits" class="hidden">
+        <% if @profile_card %>
+          <div class="rounded border p-4 dark:border-slate-700 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">AI Traits Snapshot</h2>
+              <% if @profile_card.generated_at %>
+                <span class="text-xs text-slate-500 dark:text-slate-400">Generated <%= @profile_card.generated_at.strftime('%Y-%m-%d %H:%M') %></span>
+              <% end %>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="space-y-3">
+                <% if @profile_card.title.present? || @profile_card.tagline.present? || @profile_card.flavor_text.present? %>
+                  <div>
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Identity</h3>
+                    <div class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                      <% if @profile_card.title.present? %>
+                        <p><span class="font-semibold text-slate-900 dark:text-slate-100">Title:</span> <%= @profile_card.title %></p>
+                      <% end %>
+                      <% if @profile_card.tagline.present? %>
+                        <p><span class="font-semibold text-slate-900 dark:text-slate-100">Tagline:</span> <%= @profile_card.tagline %></p>
+                      <% end %>
+                      <% if @profile_card.flavor_text.present? %>
+                        <p class="italic text-slate-500 dark:text-slate-400">"<%= @profile_card.flavor_text %>"</p>
+                      <% end %>
+                    </div>
+                  </div>
                 <% end %>
-                <% if @profile_card.tagline.present? %>
-                  <p><span class="font-semibold text-slate-900 dark:text-slate-100">Tagline:</span> <%= @profile_card.tagline %></p>
+                <div>
+                  <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Stats</h3>
+                  <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                    <li>⚔️ Attack: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.attack %></span></li>
+                    <li>🛡️ Defense: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.defense %></span></li>
+                    <li>⚡ Speed: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.speed %></span></li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Archetype</h3>
+                  <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                    <% if @profile_card.playing_card.present? %>
+                      <li>🃏 Playing Card: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.playing_card %></span></li>
+                    <% end %>
+                    <% if @profile_card.spirit_animal.present? %>
+                      <li>🦄 Spirit Animal: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.spirit_animal %></span></li>
+                    <% end %>
+                    <% if @profile_card.archetype.present? %>
+                      <li>🌟 Archetype: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.archetype %></span></li>
+                    <% end %>
+                    <% if @profile_card.vibe.present? %>
+                      <li>
+                        <div>✨ Vibe: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.vibe %></span></div>
+                        <% if @profile_card.vibe_description.present? %>
+                          <div class="mt-1 text-xs text-slate-500 dark:text-slate-400"><%= @profile_card.vibe_description %></div>
+                        <% end %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+                <% if @profile_card.special_move.present? || @profile_card.buff.present? || @profile_card.weakness.present? %>
+                  <div>
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Highlights</h3>
+                    <dl class="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                      <% if @profile_card.buff.present? %>
+                        <div>
+                          <dt class="font-semibold uppercase text-xs tracking-wide text-emerald-600 dark:text-emerald-400">Buff</dt>
+                          <dd class="space-y-1">
+                            <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.buff %></div>
+                            <% if @profile_card.buff_description.present? %>
+                              <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.buff_description %></div>
+                            <% else %>
+                              <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
+                            <% end %>
+                          </dd>
+                        </div>
+                      <% end %>
+                      <% if @profile_card.weakness.present? %>
+                        <div>
+                          <dt class="font-semibold uppercase text-xs tracking-wide text-amber-600 dark:text-amber-400">Weakness</dt>
+                          <dd class="space-y-1">
+                            <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.weakness %></div>
+                            <% if @profile_card.weakness_description.present? %>
+                              <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.weakness_description %></div>
+                            <% else %>
+                              <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
+                            <% end %>
+                          </dd>
+                        </div>
+                      <% end %>
+                      <% if @profile_card.special_move.present? %>
+                        <div>
+                          <dt class="font-semibold uppercase text-xs tracking-wide text-indigo-600 dark:text-indigo-400">Special Move</dt>
+                          <dd class="space-y-1">
+                            <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.special_move %></div>
+                            <% if @profile_card.special_move_description.present? %>
+                              <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.special_move_description %></div>
+                            <% else %>
+                              <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
+                            <% end %>
+                          </dd>
+                        </div>
+                      <% end %>
+                    </dl>
+                  </div>
                 <% end %>
-                <% if @profile_card.flavor_text.present? %>
-                  <p class="italic text-slate-500 dark:text-slate-400">"<%= @profile_card.flavor_text %>"</p>
+              </div>
+              <div class="space-y-3">
+                <% if @profile_card.short_bio.present? %>
+                  <div>
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Short Bio</h3>
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400"><%= @profile_card.short_bio %></p>
+                  </div>
+                <% end %>
+                <% if @profile_card.long_bio.present? %>
+                  <div>
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Long Bio</h3>
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap"><%= truncate(@profile_card.long_bio, length: 600) %></p>
+                  </div>
+                <% end %>
+                <% if Array(@profile_card.tags).any? %>
+                  <div>
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Tags</h3>
+                    <div class="mt-2 flex flex-wrap gap-1">
+                      <% Array(@profile_card.tags).each do |tag| %>
+                        <span class="rounded-full bg-indigo-100 dark:bg-indigo-900/40 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">#<%= tag %></span>
+                      <% end %>
+                    </div>
+                  </div>
                 <% end %>
               </div>
             </div>
-          <% end %>
-          <div>
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Stats</h3>
-            <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
-              <li>⚔️ Attack: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.attack %></span></li>
-              <li>🛡️ Defense: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.defense %></span></li>
-              <li>⚡ Speed: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.speed %></span></li>
-            </ul>
           </div>
-          <div>
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Archetype</h3>
-            <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
-              <% if @profile_card.playing_card.present? %>
-                <li>🃏 Playing Card: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.playing_card %></span></li>
-              <% end %>
-              <% if @profile_card.spirit_animal.present? %>
-                <li>🦄 Spirit Animal: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.spirit_animal %></span></li>
-              <% end %>
-              <% if @profile_card.archetype.present? %>
-                <li>🌟 Archetype: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.archetype %></span></li>
-              <% end %>
-              <% if @profile_card.vibe.present? %>
-                <li>
-                  <div>✨ Vibe: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.vibe %></span></div>
-                  <% if @profile_card.vibe_description.present? %>
-                    <div class="mt-1 text-xs text-slate-500 dark:text-slate-400"><%= @profile_card.vibe_description %></div>
-                  <% end %>
-                </li>
-              <% end %>
-            </ul>
-          </div>
-          <% if @profile_card.special_move.present? || @profile_card.buff.present? || @profile_card.weakness.present? %>
-            <div>
-              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Highlights</h3>
-              <dl class="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                <% if @profile_card.buff.present? %>
-                  <div>
-                    <dt class="font-semibold uppercase text-xs tracking-wide text-emerald-600 dark:text-emerald-400">Buff</dt>
-                    <dd class="space-y-1">
-                      <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.buff %></div>
-                      <% if @profile_card.buff_description.present? %>
-                        <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.buff_description %></div>
-                      <% else %>
-                        <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
-                      <% end %>
-                    </dd>
-                  </div>
-                <% end %>
-                <% if @profile_card.weakness.present? %>
-                  <div>
-                    <dt class="font-semibold uppercase text-xs tracking-wide text-amber-600 dark:text-amber-400">Weakness</dt>
-                    <dd class="space-y-1">
-                      <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.weakness %></div>
-                      <% if @profile_card.weakness_description.present? %>
-                        <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.weakness_description %></div>
-                      <% else %>
-                        <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
-                      <% end %>
-                    </dd>
-                  </div>
-                <% end %>
-                <% if @profile_card.special_move.present? %>
-                  <div>
-                    <dt class="font-semibold uppercase text-xs tracking-wide text-indigo-600 dark:text-indigo-400">Special Move</dt>
-                    <dd class="space-y-1">
-                      <div class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile_card.special_move %></div>
-                      <% if @profile_card.special_move_description.present? %>
-                        <div class="text-xs text-slate-600 dark:text-slate-400"><%= @profile_card.special_move_description %></div>
-                      <% else %>
-                        <div class="text-xs text-slate-400 dark:text-slate-500">n/a</div>
-                      <% end %>
-                    </dd>
-                  </div>
-                <% end %>
-              </dl>
-            </div>
-          <% end %>
-        </div>
-        <div class="space-y-3">
-          <% if @profile_card.short_bio.present? %>
-            <div>
-              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Short Bio</h3>
-              <p class="mt-2 text-sm text-slate-600 dark:text-slate-400"><%= @profile_card.short_bio %></p>
-            </div>
-          <% end %>
-          <% if @profile_card.long_bio.present? %>
-            <div>
-              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Long Bio</h3>
-              <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap"><%= truncate(@profile_card.long_bio, length: 600) %></p>
-            </div>
-          <% end %>
-          <% if Array(@profile_card.tags).any? %>
-            <div>
-              <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Tags</h3>
-              <div class="mt-2 flex flex-wrap gap-1">
-                <% Array(@profile_card.tags).each do |tag| %>
-                  <span class="rounded-full bg-indigo-100 dark:bg-indigo-900/40 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">#<%= tag %></span>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    </div>
-  <% end %>
-
-  <% if @profile_assets.any? %>
-    <div class="rounded border p-4 dark:border-slate-700 space-y-3">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Generated Assets</h2>
-        <span class="text-xs text-slate-500 dark:text-slate-400"><%= @profile_assets.size %> asset<%= "s" unless @profile_assets.size == 1 %></span>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr class="text-left text-slate-500 border-b dark:text-slate-400 dark:border-slate-700">
-              <th class="py-2 pr-4">Variant</th>
-              <th class="py-2 pr-4">Dimensions</th>
-              <th class="py-2 pr-4">Generated</th>
-              <th class="py-2 pr-4">Source</th>
-              <th class="py-2 pr-4">Provider</th>
-              <th class="py-2">Local Path</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @profile_assets.each do |asset| %>
-              <% dims = [asset.width, asset.height].compact %>
-              <% generated_at = asset.generated_at || asset.updated_at %>
-              <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
-                <td class="py-2 pr-4 font-medium text-slate-900 dark:text-slate-100"><%= asset.kind.humanize %></td>
-                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= dims.any? ? "#{dims.first}×#{dims.last}" : "—" %></td>
-                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= generated_at ? generated_at.strftime('%Y-%m-%d %H:%M') : "—" %></td>
-                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400">
-                  <% if asset.public_url.present? %>
-                    <a href="<%= asset.public_url %>" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400">Open</a>
-                  <% else %>
-                    <span class="text-slate-400">n/a</span>
-                  <% end %>
-                </td>
-                <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= asset.provider.presence || "—" %></td>
-                <td class="py-2 text-xs text-slate-500 dark:text-slate-400 break-all"><%= asset.local_path.presence || "—" %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  <% end %>
-
-  <div class="rounded border p-4 dark:border-slate-700 space-y-4">
-    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">GitHub Snapshot</h2>
-    <div class="grid gap-4 md:grid-cols-2">
-      <div class="space-y-2">
-        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Profile Stats</h3>
-        <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-          <li>Followers: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.followers %></span></li>
-          <li>Following: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.following %></span></li>
-          <li>Public Repos: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.public_repos %></span></li>
-          <li>Last GitHub Update: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.github_updated_at&.strftime('%Y-%m-%d %H:%M') || "—" %></span></li>
-          <% if @profile.last_active %>
-            <li>Last Activity: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.last_active.strftime('%Y-%m-%d') %></span></li>
-          <% end %>
-        </ul>
-      </div>
-      <div class="space-y-2">
-        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Top Languages</h3>
-        <% if @languages.present? %>
-          <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-            <% @languages.first(6).each do |lang| %>
-              <li><span class="font-semibold text-slate-900 dark:text-slate-100"><%= lang.name %></span> — <%= lang.count %></li>
-            <% end %>
-          </ul>
         <% else %>
-          <p class="text-sm text-slate-500 dark:text-slate-400">No languages recorded.</p>
+          <div class="rounded border p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No AI traits recorded.</div>
         <% end %>
       </div>
-    </div>
-    <% if @top_repositories.present? %>
-      <div>
-        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">Top Repositories</h3>
-        <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-2">
-          <% @top_repositories.first(5).each do |repo| %>
-            <li>
-              <a href="<%= repo.html_url %>" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400"><%= repo.full_name %></a>
-              <span class="ml-2 text-xs text-slate-500 dark:text-slate-400">★ <%= repo.stargazers_count %> · Updated <%= repo.github_updated_at&.strftime('%Y-%m-%d') || "n/a" %></span>
-              <% if repo.description.present? %>
-                <div class="text-xs text-slate-500 dark:text-slate-400"><%= repo.description %></div>
-              <% end %>
-            </li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
-    <% if @profile_readme&.content.present? %>
-      <div>
-        <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">README Summary</h3>
-        <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap"><%= truncate(@profile_readme.content, length: 600) %></p>
-      </div>
-    <% end %>
-  </div>
 
-  <div>
-    <a href="<%= profile_path(username: @profile.login) %>" class="text-blue-600 underline dark:text-blue-400">View public profile</a>
-    <span class="mx-2 text-slate-500">•</span>
-    <a href="/ops/jobs" class="text-blue-600 underline dark:text-blue-400">Open Jobs UI</a>
+      <div data-tabs-target="panel" data-tab-panel="assets" class="hidden">
+        <% if @profile_assets.any? %>
+          <div class="rounded border p-4 dark:border-slate-700 space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Generated Assets</h2>
+              <span class="text-xs text-slate-500 dark:text-slate-400"><%= @profile_assets.size %> asset<%= "s" unless @profile_assets.size == 1 %></span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead>
+                  <tr class="text-left text-slate-500 border-b dark:text-slate-400 dark:border-slate-700">
+                    <th class="py-2 pr-4">Variant</th>
+                    <th class="py-2 pr-4">Dimensions</th>
+                    <th class="py-2 pr-4">Generated</th>
+                    <th class="py-2 pr-4">Source</th>
+                    <th class="py-2 pr-4">Provider</th>
+                    <th class="py-2">Local Path</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @profile_assets.each do |asset| %>
+                    <% dims = [asset.width, asset.height].compact %>
+                    <% generated_at = asset.generated_at || asset.updated_at %>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
+                      <td class="py-2 pr-4 font-medium text-slate-900 dark:text-slate-100"><%= asset.kind.humanize %></td>
+                      <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= dims.any? ? "#{dims.first}×#{dims.last}" : "—" %></td>
+                      <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= generated_at ? generated_at.strftime('%Y-%m-%d %H:%M') : "—" %></td>
+                      <td class="py-2 pr-4 text-slate-600 dark:text-slate-400">
+                        <% if asset.public_url.present? %>
+                          <a href="<%= asset.public_url %>" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400">Open</a>
+                        <% else %>
+                          <span class="text-slate-400">n/a</span>
+                        <% end %>
+                      </td>
+                      <td class="py-2 pr-4 text-slate-600 dark:text-slate-400"><%= asset.provider.presence || "—" %></td>
+                      <td class="py-2 text-xs text-slate-500 dark:text-slate-400 break-all"><%= asset.local_path.presence || "—" %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        <% else %>
+          <div class="rounded border p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No assets recorded.</div>
+        <% end %>
+      </div>
+
+      <div data-tabs-target="panel" data-tab-panel="github" class="hidden">
+        <div class="rounded border p-4 dark:border-slate-700 space-y-4">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">GitHub Snapshot</h2>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="space-y-2">
+              <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Profile Stats</h3>
+              <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                <li>Followers: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.followers %></span></li>
+                <li>Following: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.following %></span></li>
+                <li>Public Repos: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.public_repos %></span></li>
+                <li>Last GitHub Update: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.github_updated_at&.strftime('%Y-%m-%d %H:%M') || "—" %></span></li>
+                <% if @profile.last_active %>
+                  <li>Last Activity: <span class="font-semibold text-slate-900 dark:text-slate-100"><%= @profile.last_active.strftime('%Y-%m-%d') %></span></li>
+                <% end %>
+              </ul>
+            </div>
+            <div class="space-y-2">
+              <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300">Top Languages</h3>
+              <% if @languages.present? %>
+                <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                  <% @languages.first(6).each do |lang| %>
+                    <li><span class="font-semibold text-slate-900 dark:text-slate-100"><%= lang.name %></span> — <%= lang.count %></li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="text-sm text-slate-500 dark:text-slate-400">No languages recorded.</p>
+              <% end %>
+            </div>
+          </div>
+          <% if @top_repositories.present? %>
+            <div>
+              <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">Top Repositories</h3>
+              <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                <% @top_repositories.first(5).each do |repo| %>
+                  <li>
+                    <a href="<%= repo.html_url %>" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400"><%= repo.full_name %></a>
+                    <span class="ml-2 text-xs text-slate-500 dark:text-slate-400">★ <%= repo.stargazers_count %> · Updated <%= repo.github_updated_at&.strftime('%Y-%m-%d') || "n/a" %></span>
+                    <% if repo.description.present? %>
+                      <div class="text-xs text-slate-500 dark:text-slate-400"><%= repo.description %></div>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+          <% if @profile_readme&.content.present? %>
+            <div>
+              <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-2">README Summary</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap"><%= truncate(@profile_readme.content, length: 600) %></p>
+            </div>
+          <% end %>
+          <div>
+            <a href="<%= profile_path(username: @profile.login) %>" class="text-blue-600 underline dark:text-blue-400">View public profile</a>
+            <span class="mx-2 text-slate-500">•</span>
+            <a href="/ops/jobs" class="text-blue-600 underline dark:text-blue-400">Open Jobs UI</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>

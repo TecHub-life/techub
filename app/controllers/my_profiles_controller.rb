@@ -67,16 +67,15 @@ class MyProfilesController < ApplicationController
     @asset_simple = assets["simple"]
 
     # Targets for social previews (used in assets tab)
+    # Canonical, deduped social targets (avoid duplicates for same dimensions)
     @social_targets = [
-      { kind: "x_profile_400", label: "X Profile 400×400", aspect: "1/1" },
+      { kind: "x_profile_400", label: "Profile Avatar 400×400", aspect: "1/1" },
       { kind: "x_header_1500x500", label: "X Header 1500×500", aspect: "3/1" },
       { kind: "x_feed_1600x900", label: "X Feed 1600×900", aspect: "16/9" },
-      { kind: "ig_square_1080", label: "Instagram Square 1080", aspect: "1/1" },
       { kind: "ig_portrait_1080x1350", label: "Instagram Portrait 1080×1350", aspect: "4/5" },
       { kind: "ig_landscape_1080x566", label: "Instagram Landscape 1080×566", aspect: "540/283" },
-      { kind: "fb_post_1080", label: "Facebook Post 1080", aspect: "1/1" },
+      { kind: "fb_post_1080", label: "Square Post 1080×1080", aspect: "1/1" },
       { kind: "fb_cover_851x315", label: "Facebook Cover 851×315", aspect: "851/315" },
-      { kind: "linkedin_profile_400", label: "LinkedIn Profile 400", aspect: "1/1" },
       { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover 1584×396", aspect: "4/1" },
       { kind: "youtube_cover_2560x1440", label: "YouTube Cover 2560×1440", aspect: "16/9" }
     ]

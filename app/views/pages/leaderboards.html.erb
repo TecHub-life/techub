@@ -1,8 +1,8 @@
 <section class="mx-auto max-w-6xl space-y-8 px-4 py-12">
-  <div class="flex items-center justify-between gap-4">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Leaderboards</h1>
-    <form class="flex items-center gap-2" method="get" action="/leaderboards">
-      <select name="kind" class="rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+    <form class="flex flex-wrap items-center gap-2" method="get" action="/leaderboards">
+      <select name="kind" class="w-full sm:w-auto rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
         <option value="followers_total">Most Followers</option>
         <option value="followers_gain_7d">Biggest Follower Gains (7d)</option>
         <option value="followers_gain_30d" selected>Biggest Follower Gains (30d)</option>
@@ -11,7 +11,7 @@
         <option value="stars_gain_30d">Biggest Star Gains (30d)</option>
         <option value="repos_most_starred">Top Star Repos</option>
       </select>
-      <select name="window" class="rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+      <select name="window" class="w-full sm:w-auto rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
         <option value="7d">7 days</option>
         <option value="30d" selected>30 days</option>
         <option value="90d">90 days</option>
@@ -55,25 +55,41 @@
       <% end %>
     </div>
 
-    <div class="mt-8 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-      <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-        <thead class="bg-slate-50 dark:bg-slate-900">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Rank</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">User</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Score</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-950">
-          <% rest.each_with_index do |e, i| %>
+    <div class="mt-8">
+      <div class="hidden overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 md:block">
+        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+          <thead class="bg-slate-50 dark:bg-slate-900">
             <tr>
-              <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><%= i+4 %></td>
-              <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">@<%= e["login"] || e[:login] %></td>
-              <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100"><%= e["value"] || e[:value] %></td>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Rank</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">User</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Score</th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-950">
+            <% rest.each_with_index do |e, i| %>
+              <tr>
+                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300"><%= i+4 %></td>
+                <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">@<%= e["login"] || e[:login] %></td>
+                <td class="px-4 py-3 text-sm text-slate-900 dark:text-slate-100"><%= e["value"] || e[:value] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid gap-3 md:hidden">
+        <% rest.each_with_index do |e, i| %>
+          <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex items-center gap-3">
+              <div class="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-sm font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200"><%= i+4 %></div>
+              <div class="min-w-0">
+                <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">@<%= e["login"] || e[:login] %></div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">Score</div>
+              </div>
+            </div>
+            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= e["value"] || e[:value] %></div>
+          </div>
+        <% end %>
+      </div>
     </div>
   <% else %>
     <div class="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-6">
