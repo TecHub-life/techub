@@ -54,6 +54,25 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
    bin/ci
    ```
 
+### Ruby Version Management (mise recommended)
+
+- We recommend using `mise` to manage tool versions across languages. This repo includes `.ruby-version` and works seamlessly with `mise`.
+- If you prefer `rbenv`, that also works fine. Ensure your Ruby matches `.ruby-version`.
+
+Setup examples:
+
+```bash
+# Using mise (recommended)
+curl https://mise.jdx.dev/install.sh | sh
+mise use -g ruby@$(cat .ruby-version)
+mise install
+
+# Using rbenv
+rbenv install -s $(cat .ruby-version)
+rbenv local $(cat .ruby-version)
+bundle install
+```
+
 ## Docs Map
 
 - Backups (Ops): docs/ops-backups.md

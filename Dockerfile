@@ -8,7 +8,7 @@
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
-ARG RUBY_VERSION=3.3.0
+ARG RUBY_VERSION=3.4.1
 # Base image repo and tag are configurable; default to official Ruby slim
 ARG RUBY_BASE=docker.io/library/ruby
 ARG RUBY_TAG=${RUBY_VERSION}-slim
@@ -46,7 +46,7 @@ RUN apt-get update -qq && \
     make -j"$(nproc)"; \
     make install; \
     ldconfig; \
-    # Smoke test: perform a tiny convert to ensure runtime works
+    # Smoke test: ensure ImageMagick works at runtime
     magick -version >/dev/null 2>&1; \
     magick -size 1x1 xc:white /tmp/im7-ok.png; \
     test -s /tmp/im7-ok.png; \
@@ -88,7 +88,7 @@ COPY . .
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+# Precompile assets for production without requiring secret RAILS_MASTER_KEY
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 
