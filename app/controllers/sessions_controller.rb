@@ -4,7 +4,9 @@ class SessionsController < ApplicationController
     session[:github_oauth_state] = state
     # Preserve invite code sent via querystring or prior form
     if params[:invite_code].present?
-      session[:invite_code] = params[:invite_code].to_s.strip
+      # Preserve exact input (including case/whitespace) for UX/debug parity;
+      # validation handles normalization/case-insensitivity downstream
+      session[:invite_code] = params[:invite_code].to_s
     end
 
     redirect_to oauth_authorize_url(state), allow_other_host: true
