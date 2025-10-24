@@ -12,6 +12,12 @@ approach.
     hotfix immediately for critical advisories.
   - CodeQL: GitHub code scanning for Ruby/JS queries on PR and default branch; treat new alerts as
     blocking for security-sensitive areas.
+  - CodeQL (Advanced setup):
+    - Languages: Ruby and JavaScript
+    - Workflow: `.github/workflows/codeql.yml`
+    - Triggers: pull requests and pushes to `main`/`master`, plus weekly cron
+    - Review alerts: GitHub → Security → Code scanning alerts
+    - Status: badge in `README.md`
   - CI gates: `bundle audit` and `npm audit --audit-level=high` can be added as non-blocking
     reports; promote to blocking if signal/noise is acceptable.
 
