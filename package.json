@@ -2,7 +2,8 @@
   "name": "techub",
   "private": true,
   "dependencies": {
-    "puppeteer": "^24.15.0"
+    "puppeteer": "^24.15.0",
+    "@fortawesome/fontawesome-free": "^7.1.0"
   },
   "devDependencies": {
     "@prettier/plugin-xml": "^3.3.2",

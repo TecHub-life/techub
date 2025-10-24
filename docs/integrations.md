@@ -294,3 +294,43 @@ Requirements:
 Behavior if Missing:
 
 - Local logs only; core features continue to work.
+
+---
+
+## Frontend Assets: Font Awesome (No CDN)
+
+Purpose: Use Font Awesome icons without third‑party CDNs. Assets are bundled and served locally via
+Propshaft.
+
+### How it works
+
+- We install `@fortawesome/fontawesome-free` from npm and serve CSS/webfonts from `node_modules`
+  through Propshaft.
+- The layout references the local CSS path; no `<link>` to cdnjs/jsdelivr.
+
+### Implementation
+
+- Gemfile: no Font Awesome gem required (Rails 8 + Propshaft).
+- package.json:
+  - `dependencies` includes `"@fortawesome/fontawesome-free"`.
+- Assets initializer:
+  - Adds `node_modules` to asset paths.
+- Layout (`app/views/layouts/application.html.erb`):
+  - `<%= stylesheet_link_tag "@fortawesome/fontawesome-free/css/all.min", "data-turbo-track": "reload" %>`
+
+### Dockerfile considerations
+
+- The base image installs `nodejs` and `npm`.
+- Build stage runs `npm install` and `./bin/rails assets:precompile` so Font Awesome CSS + webfonts
+  are compiled into the image.
+- No network calls to third‑party CDNs at runtime for icons.
+
+### Rationale
+
+- Deterministic builds, no external outages, CSP‑friendly, version‑controlled updates.
+
+### Verification
+
+- Grep for CDN links:
+  - No remaining `cdnjs`, `jsdelivr`, `unpkg`, `fontawesome` external links.
+- UI smoke: icons render with classes like `fa-solid`/`fa-brands`.
