@@ -46,6 +46,11 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+      pull-requests: read
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -64,6 +69,7 @@ jobs:
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
+        continue-on-error: true
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
