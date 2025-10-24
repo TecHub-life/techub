@@ -1,42 +1,9 @@
-name: CodeQL
+name: CodeQL (disabled; using Default setup)
 
 on:
-  push:
-    branches:
-      - main
-      - master
-    paths:
-      - '**/*.rb'
-      - '**/*.js'
-      - '**/*.ts'
-      - 'app/**'
-      - 'lib/**'
-      - 'config/**/*.rb'
-      - 'Gemfile'
-      - 'Gemfile.lock'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'yarn.lock'
-      - 'pnpm-lock.yaml'
-  pull_request:
-    branches:
-      - main
-      - master
-    paths:
-      - '**/*.rb'
-      - '**/*.js'
-      - '**/*.ts'
-      - 'app/**'
-      - 'lib/**'
-      - 'config/**/*.rb'
-      - 'Gemfile'
-      - 'Gemfile.lock'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'yarn.lock'
-      - 'pnpm-lock.yaml'
-  schedule:
-    - cron: '0 6 * * 1' # Mondays at 06:00 UTC
+  # Keep only manual trigger to avoid conflicts with GitHub Default setup.
+  # Jobs are additionally guarded with `if: false` below.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -45,6 +12,7 @@ permissions:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
+    if: ${{ false }} # disabled to allow Default setup to process SARIF
     runs-on: ubuntu-latest
     permissions:
       contents: read
