@@ -33,8 +33,20 @@ approach.
 - **Build and supply chain (software)**
   - Reproducible builds: pin base images and OS packages in `Dockerfile`; avoid `latest` tags.
     Prefer distroless/minimal images for runtime.
-  - SBOM: generate CycloneDX (`cyclonedx-gem` and `cyclonedx-npm`) during CI; archive artifacts with
-    releases.
+  - SBOM: generate a CycloneDX SBOM for the built Docker image in CI using `anchore/sbom-action@v0`.
+    The workflow archives the SBOM as an artifact, attests it via `actions/attest-sbom@v1`, and
+    performs a sanity check. Optional: also generate source-level SBOMs for Ruby and Node in
+    separate steps.
+    - Location: `.github/workflows/ci.yml` → Docker job → "Generate SBOM (CycloneDX) for image" and
+      "Attest SBOM (GitHub attestations)"
+    - Verify locally:
+      ```bash
+      docker build -t techub:ci .
+      docker run --rm --entrypoint ./bin/rails techub:ci --version
+      # In CI, artifact name: sbom-techub-image.cdx.json
+      # Sanity check structure
+      jq -e '.bomFormat=="CycloneDX" and (.components|length)>=1' sbom-techub-image.cdx.json
+      ```
   - Image scanning: run Trivy/Grype on built images in CI; fail on criticals with allowlist for
     known non-exploitable CVEs.
 
@@ -87,7 +99,7 @@ approach.
 ### Shift Left and Shift Everywhere
 
 - Pre-commit: RuboCop/Prettier; optional Brakeman and `erb-lint` locally.
-- PR level: CodeQL, tests, linters, Trivy/Grype image scan, SBOM generation.
+- PR level: CodeQL, tests, linters, Trivy/Grype image scan, SBOM generation + attestation.
 - Deploy level: Smoke tests, database migrations with safety checks, feature flags for risky
   changes.
 - Runtime: Axiom logs/metrics/traces; SLOs and alerting; continuous vulnerability scanning of images
@@ -110,6 +122,8 @@ Responsibilities
 - Traces: enable OpenTelemetry SDK and exporter (see doc); sample rates configurable via env.
 - Metrics: derive from logs and traces; consider rack/request latency, job queue latency, generation
   failures, cache hit rate.
+- CI & Deploy telemetry: GitHub Actions emits `ci_*` and `deploy_*` events with repo/ref/sha/actor
+  and run URL; see `.github/workflows/ci.yml` and `.github/workflows/kamal-deploy.yml`.
 - Interesting profile/GitHub data to collect for Axiom (privacy-scrubbed and aggregated):
   - Profile tenure, followers band, activity level buckets, languages top-N, repository topics
     frequency.

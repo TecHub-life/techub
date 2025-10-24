@@ -56,6 +56,30 @@ Forwarding controls
 - You can force a one-off send with `StructuredLogger.info(..., force_axiom: true)`.
 - For troubleshooting, set `AXIOM_DEBUG=1` to print skip/exception reasons to STDERR.
 
+### CI and Deploy Telemetry
+
+- GitHub Actions emits deployment and CI events to Axiom when `AXIOM_TOKEN` and `AXIOM_DATASET` are
+  present as repository secrets.
+- CI emits:
+  - `ci_start`, `ci_success`, `ci_failed` for the test job
+  - `ci_image_built` with image `name` and `digest`
+  - `ci_sbom_attested` after SBOM attestation succeeds
+- Deploy emits:
+  - `deploy_start`, `deploy_success`, `deploy_failed` around Kamal deploys
+- All events include: `repo`, `ref`, `sha`, `actor`, `run_url` for correlation.
+- Locations:
+  - CI workflow: `.github/workflows/ci.yml`
+  - Deploy workflow: `.github/workflows/kamal-deploy.yml`
+- Secrets required: `AXIOM_TOKEN`, `AXIOM_DATASET`
+- Optional:
+  - Email on deploy failure via Resend (`RESEND_API_KEY`, `TO_EMAIL`)
+
+#### Queries / Dashboards
+
+- CI reliability: group by `message` and `repo`, chart success/error counts over time.
+- Release quality: filter `deploy_*` events and correlate durations.
+- Supply-chain visibility: join `ci_image_built` and `ci_sbom_attested` by `image.digest`.
+
 ## Traces (OpenTelemetry)
 
 We recommend enabling OTEL for Rails, ActiveRecord, and HTTP clients, exporting to Axiom’s OTEL

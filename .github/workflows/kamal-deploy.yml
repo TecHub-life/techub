@@ -1,0 +1,155 @@
+name: Kamal Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy (tag/sha/branch)
+        required: false
+        default: main
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: write
+    env:
+      WEB_HOSTS: ${{ secrets.HOST_IP }}
+      APP_HOST: ${{ secrets.HOST_IP }}
+      REGISTRY_USERNAME: ${{ github.actor }}
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
+      AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Emit Axiom deploy_start
+        if: ${{ secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        env:
+          AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
+          AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -n \
+            --arg repo "$REPO" \
+            --arg ref "$REF" \
+            --arg actor "$ACTOR" \
+            --arg url "$RUN_URL" \
+            '{ts: (now|toiso8601), level:"INFO", message:"deploy_start", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
+          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+            -H "Authorization: Bearer $AXIOM_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "[$payload]"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Write SSH key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_ed25519
+          printf "%s" "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf "Host *\n  StrictHostKeyChecking no\n" >> ~/.ssh/config
+
+      - name: Build & Push Image via Kamal
+        env:
+          GIT_REF: ${{ inputs.ref || github.ref_name }}
+        run: |
+          git fetch --all --tags --prune
+          if [ -n "$GIT_REF" ]; then git checkout "$GIT_REF"; fi
+          bin/kamal build
+          bin/kamal push
+
+      - name: Deploy via Kamal
+        run: |
+          bin/kamal deploy --skip-push
+
+      - name: Post-deploy smoke check
+        id: smoke
+        run: |
+          # In-container health probe
+          bin/kamal app exec -i web -- bash -lc "curl -fsS http://localhost/up >/dev/null"
+
+      - name: Rollback on smoke failure
+        if: ${{ steps.smoke.outcome == 'failure' }}
+        run: |
+          bin/kamal rollback
+
+      - name: Emit Axiom deploy_success
+        if: ${{ success() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        env:
+          AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
+          AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -n \
+            --arg repo "$REPO" \
+            --arg ref "$REF" \
+            --arg actor "$ACTOR" \
+            --arg url "$RUN_URL" \
+            '{ts: (now|toiso8601), level:"INFO", message:"deploy_success", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
+          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+            -H "Authorization: Bearer $AXIOM_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "[$payload]"
+
+      - name: Emit Axiom deploy_failed
+        if: ${{ failure() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        env:
+          AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
+          AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -n \
+            --arg repo "$REPO" \
+            --arg ref "$REF" \
+            --arg actor "$ACTOR" \
+            --arg url "$RUN_URL" \
+            '{ts: (now|toiso8601), level:"ERROR", message:"deploy_failed", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
+          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+            -H "Authorization: Bearer $AXIOM_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "[$payload]"
+
+      - name: Email on deploy failure (Resend)
+        if: ${{ failure() && secrets.RESEND_API_KEY != '' && secrets.TO_EMAIL != '' }}
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          TO_EMAIL: ${{ secrets.TO_EMAIL }}
+          REPO: ${{ github.repository }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -n --arg to "$TO_EMAIL" \
+                        --arg subject "[Deploy Failure] $REPO" \
+                        --arg text "Deployment failed. Details: $RUN_URL" \
+                        '{from:"onboarding@resend.dev", to:[$to], subject:$subject, text:$text}')
+          curl -sfS https://api.resend.com/emails \
+            -H "Authorization: Bearer $RESEND_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
