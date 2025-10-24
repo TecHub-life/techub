@@ -8,6 +8,9 @@ on:
     branches:
       - main
       - master
+    paths:
+      - 'test/integration/github_permissions_test.rb'
+      - '.github/workflows/integration-github-permissions.yml'
 
 jobs:
   github-permissions:
@@ -15,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    if: ${{ secrets.GITHUB_TEST_TOKEN != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5

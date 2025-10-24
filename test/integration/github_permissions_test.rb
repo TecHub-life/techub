@@ -4,6 +4,21 @@ class GithubPermissionsTest < ActiveSupport::TestCase
   # This test validates that our GitHub App permissions are sufficient
   # to access the data we need. Run with: rails test test/integration/github_permissions_test.rb
 
+  setup do
+    # Allow real HTTP calls for these integration tests when a token is provided
+    if ENV["GITHUB_TEST_TOKEN"]
+      @previous_net_connect_allowed = WebMock.net_connect_allowed?
+      WebMock.allow_net_connect!
+    end
+  end
+
+  teardown do
+    # Restore WebMock default policy after each test
+    if ENV["GITHUB_TEST_TOKEN"] && !@previous_net_connect_allowed
+      WebMock.disable_net_connect!(allow_localhost: true)
+    end
+  end
+
   test "can access user profile data with current permissions" do
     skip "Set GITHUB_TEST_TOKEN to run integration tests" unless ENV["GITHUB_TEST_TOKEN"]
 

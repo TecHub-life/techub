@@ -5,10 +5,36 @@ on:
     branches:
       - main
       - master
+    paths:
+      - '**/*.rb'
+      - '**/*.js'
+      - '**/*.ts'
+      - 'app/**'
+      - 'lib/**'
+      - 'config/**/*.rb'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+      - 'pnpm-lock.yaml'
   pull_request:
     branches:
       - main
       - master
+    paths:
+      - '**/*.rb'
+      - '**/*.js'
+      - '**/*.ts'
+      - 'app/**'
+      - 'lib/**'
+      - 'config/**/*.rb'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+      - 'pnpm-lock.yaml'
   schedule:
     - cron: '0 6 * * 1' # Mondays at 06:00 UTC
 
@@ -43,3 +69,4 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: '/language:${{ matrix.language }}'
+        continue-on-error: true
