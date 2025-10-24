@@ -56,7 +56,8 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
 
 ### Ruby Version Management (mise recommended)
 
-- We recommend using `mise` to manage tool versions across languages. This repo includes `.ruby-version` and works seamlessly with `mise`.
+- We recommend using `mise` to manage tool versions across languages. This repo includes
+  `.ruby-version` and works seamlessly with `mise`.
 - If you prefer `rbenv`, that also works fine. Ensure your Ruby matches `.ruby-version`.
 
 Setup examples:
