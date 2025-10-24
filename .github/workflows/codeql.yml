@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['ruby', 'javascript']
+        language: ['ruby', 'javascript-typescript']
 
     steps:
       - name: Checkout repository
@@ -66,13 +66,11 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: +security-and-quality
+          build-mode: none
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
-        continue-on-error: true
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'
-        continue-on-error: true
+
