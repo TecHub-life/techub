@@ -42,8 +42,6 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
-    - AXIOM_TOKEN
-    - AXIOM_DATASET
     - RESEND_API_KEY
   clear:
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
