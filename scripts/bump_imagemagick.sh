@@ -12,7 +12,11 @@ DRY_RUN="${DRY_RUN:-}"
 if [[ -z "$IM_VERSION" ]]; then
   # Use GitHub API to fetch latest IM7 tag
   # Note: Requires no auth for public repos; rate-limited anonymously
-  TAGS_JSON=$(curl -fsSL "https://api.github.com/repos/ImageMagick/ImageMagick/tags?per_page=50")
+  AUTH_HEADER=()
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    AUTH_HEADER=( -H "Authorization: Bearer ${GITHUB_TOKEN}" )
+  fi
+  TAGS_JSON=$(curl -fsSL "https://api.github.com/repos/ImageMagick/ImageMagick/tags?per_page=50" "${AUTH_HEADER[@]}")
   IM_VERSION=$(echo "$TAGS_JSON" | grep -Eo '"name"\s*:\s*"7\.[^"]+"' | head -n1 | sed -E 's/.*"(7\.[^"]+)".*/\1/')
   if [[ -z "$IM_VERSION" ]]; then
     echo "Could not determine latest ImageMagick 7 tag from GitHub" >&2
@@ -28,7 +32,11 @@ if [[ -z "${IM_SHA256}" ]]; then
     IM_SHA256="DRYRUN"
   else
     TMP_TARBALL="$(mktemp)"
-    curl -fsSL "$TARBALL_URL" -o "$TMP_TARBALL"
+    AUTH_HEADER=()
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+      AUTH_HEADER=( -H "Authorization: Bearer ${GITHUB_TOKEN}" )
+    fi
+    curl -fsSL "$TARBALL_URL" -o "$TMP_TARBALL" "${AUTH_HEADER[@]}"
     IM_SHA256=$(sha256sum "$TMP_TARBALL" | awk '{print $1}')
   fi
 fi
