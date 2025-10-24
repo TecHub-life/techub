@@ -1,6 +1,7 @@
 # TecHub
 
 [![CI](https://github.com/loftwah/techub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/loftwah/techub/actions/workflows/ci.yml?query=branch%3Amain)
+[![CodeQL](https://github.com/loftwah/techub/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/loftwah/techub/actions/workflows/codeql.yml?query=branch%3Amain)
 
 ```
    _____                   _  _            _
