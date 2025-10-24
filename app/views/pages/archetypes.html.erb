@@ -26,7 +26,7 @@
       <div class="p-3 sm:p-6 space-y-4 sm:space-y-6">
         <!-- Quick Links -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-          <%= link_to archetypes_path, class: "inline-flex items-center gap-1.5 rounded-lg border border-indigo-200/50 bg-indigo-50/50 px-3 py-1.5 text-xs font-medium text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-300" do %>
+          <%= link_to archetypes_path, class: "inline-flex items-center gap-1.5 rounded-lg border border-indigo-200/50 bg-indigo-50/50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-300 dark:hover:bg-slate-800 dark:hover:text-indigo-200" do %>
             <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
             </svg>
@@ -86,17 +86,9 @@
         <div class="relative h-full flex flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-md transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] hover:border-indigo-400 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900 dark:hover:border-indigo-500">
           <!-- Image Header -->
           <div class="relative h-48 overflow-hidden bg-gradient-to-br from-indigo-600/10 via-sky-600/10 to-cyan-600/10">
-            <% if archetype[:image_url].present? %>
-              <img src="<%= archetype[:image_url] %>" alt="<%= archetype[:name] %>" class="h-full w-full object-cover opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-            <% else %>
-              <div class="absolute inset-0 flex items-center justify-center">
-                <svg class="h-20 w-20 text-slate-300 dark:text-slate-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                </svg>
-              </div>
-              <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-sky-600/20 to-cyan-600/20"></div>
-            <% end %>
+            <% img = motif_image_url(:archetype, archetype[:slug], archetype[:image_url]) %>
+            <img src="<%= img %>" alt="<%= archetype[:name] %>" class="h-full w-full object-cover opacity-90 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
             
             <!-- Count Badge -->
             <% if archetype[:count] > 0 %>

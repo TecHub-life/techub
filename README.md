@@ -59,11 +59,14 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
 - Backups (Ops): docs/ops-backups.md
 - Ops Runbook: docs/ops-runbook.md
 - Storage: docs/storage.md
+- Third‑Party Integrations: docs/integrations.md
+- CI / CD: docs/ci-cd.md
 - Ops Admin: docs/ops-admin.md
 - AppSec Overview: docs/appsec-ops-overview.md
 - Observability (Axiom/OTEL): docs/observability/axiom-opentelemetry.md
 - Image Optimization: docs/image-optimization.md
 - OG Images: docs/og-images.md
+- Smoke Checklist: docs/smoke-checklist.md
 - ADR Index: docs/adr-index.md
 - Contributing: CONTRIBUTING.md
 

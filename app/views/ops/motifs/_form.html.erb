@@ -1,0 +1,59 @@
+<%= form_with model: [:ops, @motif], local: true, html: { multipart: true }, class: "space-y-4" do |f| %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :kind, class: "block text-sm font-medium text-slate-700 dark:text-slate-300" %>
+      <%= f.select :kind, Motif::KINDS, {}, class: "mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+    </div>
+    <div>
+      <%= f.label :theme, class: "block text-sm font-medium text-slate-700 dark:text-slate-300" %>
+      <%= f.text_field :theme, class: "mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :name, class: "block text-sm font-medium text-slate-700 dark:text-slate-300" %>
+      <%= f.text_field :name, class: "mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+    </div>
+    <div>
+      <%= f.label :slug, class: "block text-sm font-medium text-slate-700 dark:text-slate-300" %>
+      <%= f.text_field :slug, placeholder: "auto from name if blank", class: "mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :short_lore, class: "block text-sm font-medium text-slate-700 dark:text-slate-300" %>
+    <%= f.text_area :short_lore, rows: 3, class: "mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+  </div>
+
+  <div>
+    <%= f.label :long_lore, class: "block text-sm font-medium text-slate-700 dark:text-slate-300" %>
+    <%= f.text_area :long_lore, rows: 6, class: "mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Image (1x1)</label>
+      <% preview_1x1 = motif_image_url(@motif.kind, (@motif.slug.presence || Motifs::Catalog.to_slug(@motif.name)), @motif.image_1x1_url) %>
+      <img src="<%= preview_1x1 %>" alt="<%= @motif.name %>" class="mt-2 h-20 w-20 rounded object-cover" />
+      <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Auto asset: <code><%= (@motif.kind == 'spirit_animal' ? 'spirit-animals' : 'archetypes') %>/<%= (@motif.slug.presence || Motifs::Catalog.to_slug(@motif.name)) %>.{png|jpg|jpeg|webp}</code></div>
+      <input type="file" name="motif[image_1x1_file]" accept="image/*" class="mt-2 block w-full text-sm text-slate-700 dark:text-slate-300" />
+      <%= f.text_field :image_1x1_url, placeholder: "Or paste a URL…", class: "mt-2 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Image (16x9)</label>
+      <% if @motif.image_16x9_url.present? %>
+        <img src="<%= @motif.image_16x9_url %>" alt="<%= @motif.name %>" class="mt-2 h-20 w-36 rounded object-cover" />
+      <% end %>
+      <input type="file" name="motif[image_16x9_file]" accept="image/*" class="mt-2 block w-full text-sm text-slate-700 dark:text-slate-300" />
+      <%= f.text_field :image_16x9_url, placeholder: "Or paste a URL…", class: "mt-2 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <%= f.submit class: "rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-slate-100 dark:text-slate-900" %>
+    <a href="<%= ops_motifs_path %>" class="rounded border px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Cancel</a>
+  </div>
+<% end %>
+
+

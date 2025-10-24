@@ -77,6 +77,9 @@
        variant.merge(asset: asset, url: url, generated_at: generated_at)
      end %>
 
+  <%# URL for the Main Card preview/download %>
+  <% card_img = asset_url.call(asset_card, "card") %>
+
   <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
     <div class="mb-4">
       <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Card Previews</h2>

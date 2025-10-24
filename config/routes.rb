@@ -28,6 +28,8 @@ Rails.application.routes.draw do
   get "/up/gemini/image", to: "gemini#image"
 
   get "/auth/github", to: "sessions#start", as: :auth_github
+  # Optional explicit POST to stash invite code then redirect to OAuth
+  post "/auth/github", to: "sessions#start"
   get "/auth/github/callback", to: "sessions#callback", as: :auth_github_callback
   resource :session, only: :destroy
 
@@ -122,6 +124,14 @@ Rails.application.routes.draw do
     delete "/ownerships/:id", to: "ownerships#destroy", as: :destroy_ownership
     get "/users/search", to: "users#search", as: :search_users
     post "/profiles/:username/generate_social_assets", to: "profiles#generate_social_assets", as: :generate_social_assets
+
+    # Motifs management (archetypes & spirit animals)
+    resources :motifs, only: [ :index, :new, :create, :edit, :update, :destroy ] do
+      collection do
+        post :seed_from_catalog
+        post :generate_missing_lore
+      end
+    end
   end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)

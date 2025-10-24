@@ -27,6 +27,9 @@ smoke‑test and troubleshoot quickly.
 - Production ActiveStorage URLs are pinned via:
   - `ActiveStorage::Current.url_options = { host: AppHost.current }`
 
+See also: `docs/integrations.md` for DigitalOcean Spaces setup, CDN and CORS configuration, and
+fallbacks if storage is not configured.
+
 Recommended credentials:
 
 ```yaml

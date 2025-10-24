@@ -29,7 +29,26 @@ module ProfilesHelper
     return if source.blank?
 
     str = source.to_s
-    return str if str.start_with?("http://", "https://")
+    if str.start_with?("http://", "https://")
+      # Rewrite third‑party storage hosts (e.g., DigitalOcean Spaces) to our CDN/custom domain
+      begin
+        cdn_endpoint = (Rails.application.credentials.dig(:do_spaces, :cdn_endpoint) rescue nil).presence || ENV["DO_SPACES_CDN_ENDPOINT"].to_s.presence
+        if cdn_endpoint
+          src = URI.parse(str)
+          cdn = URI.parse(cdn_endpoint)
+          # Only replace host/scheme if CDN host is different
+          if cdn.host.present?
+            src.scheme = cdn.scheme.presence || src.scheme
+            src.host = cdn.host
+            src.port = cdn.port if cdn.port && cdn.port != (cdn.scheme == "https" ? 443 : 80)
+            return src.to_s
+          end
+        end
+      rescue StandardError
+        # If URI parsing fails, fall back to original string
+      end
+      return str
+    end
 
     public_root = Rails.root.join("public")
     url_path = nil
