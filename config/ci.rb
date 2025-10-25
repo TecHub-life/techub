@@ -57,6 +57,10 @@ run!("npm install") do
   system(cmd)
 end
 
+run!("fontawesome assets present") do
+  system("./bin/check-fontawesome")
+end
+
 run!("db:prepare") { system("bin/rails db:prepare") }
 run!("db:setup:queue") { system("bin/rails db:setup:queue") }
 run!("rubocop") { system("bin/rubocop -A && bin/rubocop") }

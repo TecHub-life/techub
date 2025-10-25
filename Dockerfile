@@ -88,6 +88,9 @@ COPY . .
 # Ensure Font Awesome assets are copied into app assets before precompile
 RUN npm run postinstall
 
+# Assert Font Awesome assets exist and provide guidance if not
+RUN ./bin/check-fontawesome
+
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
