@@ -18,7 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: ${{ secrets.GITHUB_TEST_TOKEN != '' }}
+    if: ${{ env.GITHUB_TEST_TOKEN != '' }}
+    env:
+      GITHUB_TEST_TOKEN: ${{ secrets.GITHUB_TEST_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5

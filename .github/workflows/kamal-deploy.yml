@@ -7,9 +7,6 @@ on:
         description: Git ref to deploy (tag/sha/branch)
         required: false
         default: main
-  push:
-    tags:
-      - 'v*.*.*'
 
 jobs:
   deploy:
@@ -35,7 +32,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Emit Axiom deploy_start
-        if: ${{ secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -50,7 +47,7 @@ jobs:
             --arg ref "$REF" \
             --arg actor "$ACTOR" \
             --arg url "$RUN_URL" \
-            '{ts: (now|toiso8601), level:"INFO", message:"deploy_start", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
+            '{ts: (now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"deploy_start", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" \
             -H "Content-Type: application/json" \
@@ -93,7 +90,7 @@ jobs:
           bin/kamal rollback
 
       - name: Emit Axiom deploy_success
-        if: ${{ success() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ success() && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -108,14 +105,14 @@ jobs:
             --arg ref "$REF" \
             --arg actor "$ACTOR" \
             --arg url "$RUN_URL" \
-            '{ts: (now|toiso8601), level:"INFO", message:"deploy_success", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
+            '{ts: (now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"deploy_success", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" \
             -H "Content-Type: application/json" \
             -d "[$payload]"
 
       - name: Emit Axiom deploy_failed
-        if: ${{ failure() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ failure() && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -130,14 +127,14 @@ jobs:
             --arg ref "$REF" \
             --arg actor "$ACTOR" \
             --arg url "$RUN_URL" \
-            '{ts: (now|toiso8601), level:"ERROR", message:"deploy_failed", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
+            '{ts: (now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"ERROR", message:"deploy_failed", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" \
             -H "Content-Type: application/json" \
             -d "[$payload]"
 
       - name: Email on deploy failure (Resend)
-        if: ${{ failure() && secrets.RESEND_API_KEY != '' && secrets.TO_EMAIL != '' }}
+        if: ${{ failure() && env.RESEND_API_KEY != '' && env.TO_EMAIL != '' }}
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           TO_EMAIL: ${{ secrets.TO_EMAIL }}

@@ -8,12 +8,13 @@ on:
 
 jobs:
   notify:
-    if: |
-      github.event.workflow_run.conclusion == 'failure' &&
-      (secrets.RESEND_API_KEY != '' && secrets.TO_EMAIL != '')
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && env.RESEND_API_KEY != '' && env.TO_EMAIL != '' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      TO_EMAIL: ${{ secrets.TO_EMAIL }}
     steps:
       - name: Send Resend email
         env:

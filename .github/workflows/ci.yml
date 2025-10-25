@@ -37,7 +37,7 @@ jobs:
           payload=$(jq -n \
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" \
             --arg actor "$ACTOR" --arg url "$RUN_URL" --arg job "$JOB_NAME" --arg wf "$WORKFLOW" \
-            '{ts:(now|toiso8601), level:"INFO", message:"ci_start", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
+            '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_start", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
@@ -87,7 +87,7 @@ jobs:
           payload=$(jq -n \
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" \
             --arg actor "$ACTOR" --arg url "$RUN_URL" --arg job "$JOB_NAME" --arg wf "$WORKFLOW" \
-            '{ts:(now|toiso8601), level:"INFO", message:"ci_success", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
+            '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_success", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
@@ -108,7 +108,7 @@ jobs:
           payload=$(jq -n \
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" \
             --arg actor "$ACTOR" --arg url "$RUN_URL" --arg job "$JOB_NAME" --arg wf "$WORKFLOW" \
-            '{ts:(now|toiso8601), level:"ERROR", message:"ci_failed", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
+            '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"ERROR", message:"ci_failed", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
@@ -193,7 +193,7 @@ jobs:
           payload=$(jq -n \
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" --arg actor "$ACTOR" --arg url "$RUN_URL" \
             --arg img "$IMAGE_NAME" --arg dig "$IMAGE_DIGEST" \
-            '{ts:(now|toiso8601), level:"INFO", message:"ci_image_built", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url, image:{name:$img,digest:$dig}}')
+            '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_image_built", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url, image:{name:$img,digest:$dig}}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
@@ -221,7 +221,7 @@ jobs:
           payload=$(jq -n \
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" --arg actor "$ACTOR" --arg url "$RUN_URL" \
             --arg img "$IMAGE_NAME" --arg dig "$IMAGE_DIGEST" \
-            '{ts:(now|toiso8601), level:"INFO", message:"ci_sbom_attested", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url, image:{name:$img,digest:$dig}}')
+            '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_sbom_attested", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url, image:{name:$img,digest:$dig}}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
@@ -239,7 +239,7 @@ jobs:
         run: |
           payload=$(jq -n \
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" --arg actor "$ACTOR" --arg url "$RUN_URL" \
-            '{ts:(now|toiso8601), level:"ERROR", message:"ci_docker_failed", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
+            '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"ERROR", message:"ci_docker_failed", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
           curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
