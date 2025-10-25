@@ -8,9 +8,7 @@ on:
 
 jobs:
   notify:
-    if:
-      ${{ github.event.workflow_run.conclusion == 'failure' && env.RESEND_API_KEY != '' &&
-      env.TO_EMAIL != '' }}
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,6 +16,12 @@ jobs:
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       TO_EMAIL: ${{ secrets.TO_EMAIL }}
     steps:
+      - name: Skip if email secrets missing
+        if: ${{ env.RESEND_API_KEY == '' || env.TO_EMAIL == '' }}
+        run: |
+          echo "Resend disabled: secrets missing"
+          exit 0
+
       - name: Send Resend email
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

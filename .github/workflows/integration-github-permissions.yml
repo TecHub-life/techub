@@ -18,26 +18,38 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    if: ${{ env.GITHUB_TEST_TOKEN != '' }}
     env:
       GITHUB_TEST_TOKEN: ${{ secrets.GITHUB_TEST_TOKEN }}
     steps:
+      - name: Check for PAT secret
+        id: gate
+        run: |
+          if [ -z "${GITHUB_TEST_TOKEN}" ]; then
+            echo "missing=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "missing=0" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout
+        if: ${{ steps.gate.outputs.missing == '0' }}
         uses: actions/checkout@v5
 
       - name: Setup Ruby
+        if: ${{ steps.gate.outputs.missing == '0' }}
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: .ruby-version
           bundler-cache: true
 
       - name: Setup Node.js
+        if: ${{ steps.gate.outputs.missing == '0' }}
         uses: actions/setup-node@v6
         with:
           node-version: 'lts/*'
           cache: 'npm'
 
       - name: Install Node dependencies (cached)
+        if: ${{ steps.gate.outputs.missing == '0' }}
         run: |
           if [ -f package-lock.json ]; then
             npm ci --no-fund --no-audit --loglevel=error
@@ -46,10 +58,12 @@ jobs:
           fi
 
       - name: Prepare database
+        if: ${{ steps.gate.outputs.missing == '0' }}
         run: |
           bin/rails db:prepare
 
       - name: Prepare token environment
+        if: ${{ steps.gate.outputs.missing == '0' }}
         env:
           SECRET_PAT: ${{ secrets.GITHUB_TEST_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
@@ -65,7 +79,12 @@ jobs:
           fi
 
       - name: Run GitHub permissions tests
+        if: ${{ steps.gate.outputs.missing == '0' }}
         env:
           DISABLE_PARALLEL_TESTS: '1'
         run: |
           bin/rails test --verbose test/integration/github_permissions_test.rb
+
+      - name: Skip - GITHUB_TEST_TOKEN not set
+        if: ${{ steps.gate.outputs.missing == '1' }}
+        run: echo "GITHUB_TEST_TOKEN not set; skipping integration tests"
