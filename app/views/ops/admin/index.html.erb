@@ -180,7 +180,7 @@
             </div>
             <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
               <h3 class="text-sm font-semibold mb-2">Advanced Re-roll (Single Profile)</h3>
-              <form action="<%= ops_retry_profile_path(username: '') %>" method="post" onsubmit="this.action=this.action.replace(/\/$/, '') + '/' + this.querySelector('[name=login]').value + '/retry';">
+              <form action="<%= ops_retry_profile_path(username: '') %>" method="post" onsubmit="this.action=this.action.replace(/\/$/, '') + '/' + encodeURIComponent(this.querySelector('[name=login]').value) + '/retry';">
                 <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
                 <div class="mb-2">
                   <label class="text-xs text-slate-500">GitHub username</label>
