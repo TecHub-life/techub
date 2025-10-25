@@ -91,7 +91,7 @@ module Github
       end
 
       # Skip SVGs and common badge hosts (non-binary and not useful inline)
-      if uri.path.to_s.downcase.end_with?(".svg") || uri.host.to_s.include?("shields.io")
+      if uri.path.to_s.downcase.end_with?(".svg") || (uri.host == "shields.io" || uri.host&.end_with?(".shields.io"))
         StructuredLogger.warn(message: "Skipping SVG/badge image", url: url)
         return nil
       end
