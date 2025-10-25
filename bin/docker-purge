@@ -11,6 +11,10 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 0
 fi
 
+# Show disk usage before
+echo "\nBefore purge:"
+docker system df || true
+
 # Stop and remove dangling containers (if any) without erroring out
 docker ps -aq >/dev/null 2>&1 && docker ps -aq | xargs -r docker rm -f || true
 
@@ -23,5 +27,9 @@ if docker buildx version >/dev/null 2>&1; then
 fi
 
 echo "Docker purge completed."
+
+# Show disk usage after
+echo "\nAfter purge:"
+docker system df || true
 
 

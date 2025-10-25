@@ -66,8 +66,21 @@ puts <<~MSG
     ./bin/docker-purge
   This removes unused images/containers/volumes and build cache.
 
+  To run production-like tests locally with Docker Compose:
+    RAILS_MASTER_KEY=$(cat config/master.key) docker compose up --build -d
+    docker compose exec -T web bin/rails test
+
+  To inspect Docker disk usage locally:
+    docker system df
+
 MSG
 run!("test") { system("bin/rails test") }
+
+# Optional: display Docker disk usage in CI environments that have Docker
+if system("command -v docker >/dev/null")
+  puts "\nDocker disk usage (for awareness):"
+  system("docker system df || true")
+end
 
 # Optional Docker build + smoke test
 if ENV["CI_BUILD_DOCKER"] == "1"
