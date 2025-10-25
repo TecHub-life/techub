@@ -165,10 +165,19 @@ module ProfilesHelper
     return if fallback_basename.blank?
 
     base = Rails.root.join("public", "generated", profile.login)
-    return unless Dir.exist?(base)
-
-    Dir[base.join("#{fallback_basename}*.{jpg,jpeg,png}").to_s].find do |candidate|
-      (File.size?(candidate) || 0) > 1024
+    if Dir.exist?(base)
+      found = Dir[base.join("#{fallback_basename}*.{jpg,jpeg,png}").to_s].find do |candidate|
+        (File.size?(candidate) || 0) > 1024
+      end
+      return found if found
     end
+
+    # As a last resort for directory previews, use the OG endpoint which
+    # will serve or trigger generation server-side if missing.
+    if fallback_basename.to_s == "og"
+      return "/og/#{profile.login}.jpg"
+    end
+
+    nil
   end
 end
