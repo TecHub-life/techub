@@ -16,7 +16,7 @@ begin
   if endpoint.present? && token.present?
     headers = { "Authorization" => "Bearer #{token}" }
     OpenTelemetry::SDK.configure do |c|
-      c.service_name = (ENV["OTEL_SERVICE_NAME"].presence || "techub").to_s
+      c.service_name = "techub"
       c.service_version = (ENV["APP_VERSION"].presence || ENV["GIT_SHA"].presence || "").to_s
       c.use_all
       c.add_span_processor(

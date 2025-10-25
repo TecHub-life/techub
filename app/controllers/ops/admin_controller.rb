@@ -118,7 +118,7 @@ module Ops
         org = (Rails.application.credentials.dig(:axiom, :org) rescue nil) || ENV["AXIOM_ORG"]
         dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
         metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
-        service_name = ENV["OTEL_SERVICE_NAME"].presence || (Rails.application.credentials.dig(:otel, :service_name) rescue nil).to_s.presence || "techub"
+        service_name = "techub"
 
         # Prefer canonical dataset UI paths (stable)
         if org.present? && dataset.present?

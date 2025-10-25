@@ -126,7 +126,7 @@ namespace :axiom do
     begin
       require "opentelemetry/sdk"
       tracer = OpenTelemetry.tracer_provider.tracer("techub.smoke", "1.0")
-      tracer.in_span("otel_smoke", attributes: { "smoke" => true, "env" => Rails.env, "service.name" => (ENV["OTEL_SERVICE_NAME"] || "techub") }) do
+      tracer.in_span("otel_smoke", attributes: { "smoke" => true, "env" => Rails.env, "service.name" => "techub" }) do
         sleep 0.01
       end
       puts "OTEL smoke span emitted — check your Axiom traces UI."
