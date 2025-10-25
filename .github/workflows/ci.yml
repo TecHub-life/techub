@@ -16,9 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
+      AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
     steps:
       - name: Emit Axiom ci_start
-        if: ${{ secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -68,7 +71,7 @@ jobs:
           CI_SILENT=1 bin/ci
 
       - name: Emit Axiom ci_success
-        if: ${{ success() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ success() && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -89,7 +92,7 @@ jobs:
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Emit Axiom ci_failed
-        if: ${{ failure() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ failure() && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -110,9 +113,7 @@ jobs:
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Axiom doctor (main only, if secrets)
-        if:
-          github.ref == 'refs/heads/main' && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET !=
-          ''
+        if: ${{ github.ref == 'refs/heads/main' && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -129,6 +130,9 @@ jobs:
       contents: write
       attestations: write
       id-token: write
+    env:
+      AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
+      AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -172,7 +176,7 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Emit Axiom ci_image_built
-        if: ${{ secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -200,7 +204,7 @@ jobs:
           subject-digest: ${{ steps.digest.outputs.digest }}
 
       - name: Emit Axiom ci_sbom_attested
-        if: ${{ success() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ success() && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
@@ -221,7 +225,7 @@ jobs:
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Emit Axiom ci_docker_failed
-        if: ${{ failure() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
+        if: ${{ failure() && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
