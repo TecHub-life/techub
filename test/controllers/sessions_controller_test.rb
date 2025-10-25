@@ -62,7 +62,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     # Force access gate closed and invite code valid; capture add_allowed_login
     added = false
     Access::Policy.stub :allowed?, false do
-      Access::InviteCodes.stub :valid?, true do
+      Access::InviteCodes.stub :consume!, :ok do
         Access::Policy.stub :add_allowed_login, ->(login) { added = (login == "newuser") } do
           Github::Configuration.stub :callback_url, auth_github_callback_url do
             Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
@@ -89,7 +89,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     user = User.create!(github_id: 3, login: "blocked", access_token: "tok")
 
     Access::Policy.stub :allowed?, false do
-      Access::InviteCodes.stub :valid?, false do
+      Access::InviteCodes.stub :consume!, :invalid do
         Github::Configuration.stub :callback_url, auth_github_callback_url do
           Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
             Github::FetchAuthenticatedUser.stub :call, ServiceResult.success({ user: { id: 3, login: "blocked", name: "B", avatar_url: "https://example.com/b.png" }, emails: [] }) do
@@ -99,6 +99,31 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
                 assert_redirected_to root_path
                 assert_nil session[:current_user_id]
                 assert_nil session[:invite_code], "invite_code should be cleared"
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  test "callback blocks with friendly message when invite cap exhausted" do
+    get auth_github_path(invite_code: "aa")
+    state = session[:github_oauth_state]
+
+    user = User.create!(github_id: 4, login: "exhausted", access_token: "tok")
+
+    Access::Policy.stub :allowed?, false do
+      Access::InviteCodes.stub :consume!, :exhausted do
+        Github::Configuration.stub :callback_url, auth_github_callback_url do
+          Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
+            Github::FetchAuthenticatedUser.stub :call, ServiceResult.success({ user: { id: 4, login: "exhausted", name: "E", avatar_url: "https://example.com/e.png" }, emails: [] }) do
+              Users::UpsertFromGithub.stub :call, ServiceResult.success(user) do
+                get auth_github_callback_path(code: "xyz", state: state)
+
+                assert_redirected_to root_path
+                assert_nil session[:current_user_id]
+                assert_match /didn't expect this many users/i, flash[:alert]
               end
             end
           end

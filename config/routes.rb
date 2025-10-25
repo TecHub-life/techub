@@ -109,6 +109,7 @@ Rails.application.routes.draw do
         post :backups_doctor_write
         post :update_ai_caps
         post :update_access
+        post :update_invites
       end
     end
     # Profiles admin actions

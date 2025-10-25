@@ -90,6 +90,9 @@ module Ops
       # Access settings
       @open_access = AppSetting.get_bool(:open_access, default: false)
       @allowed_logins = Array(AppSetting.get_json(:allowed_logins, default: Access::Policy::DEFAULT_ALLOWED)).map { |l| l.to_s.downcase }.uniq.join(", ")
+      @invite_cap_limit = Access::InviteCodes.limit
+      @invite_cap_used  = Access::InviteCodes.used_count
+      @invite_codes_override = Array(AppSetting.get_json(:sign_up_codes_override, default: [])).join(", ")
 
       # AI capabilities state (for visibility)
       begin
@@ -223,6 +226,37 @@ module Ops
       redirect_to ops_admin_path, notice: "Access settings updated"
     rescue StandardError => e
       redirect_to ops_admin_path, alert: "Failed to update access: #{e.message}"
+    end
+
+    # Invite settings: cap and optional codes override
+    def update_invites
+      limit = params[:invite_cap_limit].to_s.strip
+      used  = params[:invite_cap_used].to_s.strip
+      codes = params[:invite_codes_override].to_s
+
+      if limit.present?
+        Integer(limit)
+        AppSetting.set(:invite_cap_limit, limit)
+      end
+
+      if used.present?
+        Integer(used)
+        AppSetting.set(:invite_cap_used, used)
+      end
+
+      arr = codes.split(/[,\s]+/).map { |s| s.to_s.strip.downcase }.reject(&:blank?).uniq
+      if arr.any?
+        AppSetting.set_json(:sign_up_codes_override, arr)
+      else
+        # Clear override by setting to empty array
+        AppSetting.set_json(:sign_up_codes_override, [])
+      end
+
+      redirect_to ops_admin_path, notice: "Invite settings updated"
+    rescue ArgumentError
+      redirect_to ops_admin_path, alert: "Invite settings invalid — limit/used must be integers"
+    rescue StandardError => e
+      redirect_to ops_admin_path, alert: "Failed to update invites: #{e.message}"
     end
 
     def send_test_email

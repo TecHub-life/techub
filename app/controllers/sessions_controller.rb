@@ -59,10 +59,15 @@ class SessionsController < ApplicationController
       # best-effort; ignore seeding errors
     end
     unless Access::Policy.allowed?(user.login)
-      # If user supplied a valid invite code earlier, auto-allow them once
+      # If user supplied a valid invite code earlier, try to consume under global cap
       code = session.delete(:invite_code)
-      if Access::InviteCodes.valid?(code)
+      case Access::InviteCodes.consume!(code)
+      when :ok
         Access::Policy.add_allowed_login(user.login)
+      when :exhausted
+        reset_session
+        msg = "Sorry — we didn't expect this many users so quickly. We've hit our current onboarding capacity and need to do a bit more work before letting more people in. Please check back soon."
+        return redirect_to root_path, alert: msg
       else
         reset_session
         msg = "We're not open yet. Only approved accounts can sign in (ask in Ops)."

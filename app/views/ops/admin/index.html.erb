@@ -493,6 +493,33 @@
             <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Access Settings</button>
           </form>
         </div>
+
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Invite Settings</h2>
+          <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">Control invite usage cap and optionally override the invite codes list (stored in credentials by default). Overrides persist in <code>AppSetting</code>.</p>
+          <form action="<%= update_invites_ops_admin_index_path %>" method="post" class="space-y-3">
+            <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Invite Cap Limit</label>
+                <input type="number" min="0" step="1" name="invite_cap_limit" value="<%= @invite_cap_limit %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Total successful invite sign-ins allowed before invites close.</p>
+              </div>
+              <div>
+                <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Invite Cap Used</label>
+                <input type="number" min="0" step="1" name="invite_cap_used" value="<%= @invite_cap_used %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Adjust for manual corrections; incremented automatically when an invite grants access.</p>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Invite Codes Override (comma/space separated)</label>
+              <input type="text" name="invite_codes_override" value="<%= h @invite_codes_override %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="code1, code2, code3">
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Leave blank to clear the override and fall back to encrypted credentials.</p>
+            </div>
+            <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Invite Settings</button>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Current: used <%= @invite_cap_used %> of <%= @invite_cap_limit %>. <%= Access::InviteCodes.exhausted? ? 'Exhausted' : 'Open' %>.</div>
+          </form>
+        </div>
       </div>
 
       <!-- System Tab -->
