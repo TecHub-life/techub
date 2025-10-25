@@ -14,7 +14,7 @@ module Ops
       if basic.present?
         authenticate_or_request_with_http_basic("Mission Control") do |u, p|
           user, pass = (basic.to_s.split(":", 2))
-          ActiveSupport::SecurityUtils.secure_compare(u.to_s, user.to_s) &
+          ActiveSupport::SecurityUtils.secure_compare(u.to_s, user.to_s) &&
             ActiveSupport::SecurityUtils.secure_compare(p.to_s, pass.to_s)
         end
       end

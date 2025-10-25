@@ -1,7 +1,13 @@
 module Ops
   class AdminController < BaseController
     def index
-      @engine_present = defined?(MissionControl::Jobs::Engine)
+      # Reflect whether /ops/jobs is actually mounted in this env
+      @engine_present = begin
+        defined?(MissionControl::Jobs::Engine) &&
+          Rails.application.routes.routes.any? { |r| r.path.spec.to_s.start_with?("/ops/jobs") }
+      rescue StandardError
+        false
+      end
       @adapter = ActiveJob::Base.queue_adapter
 
       @stats = {

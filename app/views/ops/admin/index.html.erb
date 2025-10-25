@@ -1,556 +1,619 @@
-<section class="mx-auto max-w-4xl space-y-6 px-4 py-12" data-controller="tabs" data-tabs-default-value="overview">
-  <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Ops Admin</h1>
-
-  <nav class="sticky top-[60px] z-40 -mb-px flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-100/95 px-2 py-2 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95" aria-label="Tabs">
-    <button data-tabs-target="tab" data-tab-name="overview" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Overview</button>
-    <button data-tabs-target="tab" data-tab-name="screenshots" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Screenshots</button>
-    <button data-tabs-target="tab" data-tab-name="ai" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">AI</button>
-    <button data-tabs-target="tab" data-tab-name="pipeline" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Pipeline</button>
-    <button data-tabs-target="tab" data-tab-name="access" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Access</button>
-    <button data-tabs-target="tab" data-tab-name="leaderboards" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Leaderboards</button>
-    <button data-tabs-target="tab" data-tab-name="backups" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Backups</button>
-    <button data-tabs-target="tab" data-tab-name="jobs" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">Jobs</button>
-  </nav>
-
-  <div data-tabs-target="panel" data-tab-panel="overview" class="space-y-6">
-    <!-- Regenerate All Callout -->
-    <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-900/20">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Re-roll All Profiles</h2>
-        <p class="text-sm text-amber-800 dark:text-amber-300">Use after deploying new features or layout updates. This re-runs the profile pipeline for everyone so cards and data match the latest version. The pipeline syncs GitHub data, refreshes traits, and captures screenshots; AI artwork is handled separately.</p>
-        <ul class="mt-2 list-disc pl-5 text-xs text-amber-800 dark:text-amber-300">
-          <li>Refresh GitHub data and sync the profile</li>
-          <li>Rebuild profile info and traits (AI text if enabled; heuristic fallback otherwise)</li>
-          <li>Capture card screenshots (OG, card, simple, banner) and queue social variants</li>
-          <li>Record/optimize assets for use across the site</li>
-        </ul>
+<section class="mx-auto max-w-6xl px-4 py-8">
+  <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900" data-controller="tabs" data-tabs-default-value="overview">
+    <div class="flex flex-col gap-4">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent dark:from-sky-400 dark:via-indigo-400 dark:to-cyan-400 animate-gradient">Ops Admin</h1>
+        
+        <!-- Quick Links -->
+        <div class="flex flex-wrap gap-2">
+          <a href="<%= ops_ownerships_path %>" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Users & Ownership</a>
+          <a href="/ops/profiles/<%= Profile.order(:login).limit(1).pluck(:login).first %>" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Example Profile</a>
+          <a href="<%= ops_motifs_path %>" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Motifs</a>
+        </div>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <form action="<%= ops_bulk_retry_all_path %>" method="post" onsubmit="return confirm('Apply latest version for ALL profiles?');">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll All</button>
-        </form>
-        <%# Hidden: regenerate all with images %>
+
+      <!-- Tab Navigation -->
+      <div class="sticky top-[60px] z-40 -mx-4 md:-mx-6 border-b border-slate-200 dark:border-slate-700 bg-white/95 backdrop-blur-sm dark:bg-slate-900/95">
+        <nav class="flex flex-wrap justify-start gap-2 pb-4 px-2 overflow-x-auto" aria-label="Ops Admin Tabs">
+          <button data-tabs-target="tab" data-tab-name="overview" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white">
+            <span>Overview</span>
+          </button>
+          <button data-tabs-target="tab" data-tab-name="profiles" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white">
+            <span>Profiles</span>
+          </button>
+          <button data-tabs-target="tab" data-tab-name="ai" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white">
+            <span>AI</span>
+          </button>
+          <button data-tabs-target="tab" data-tab-name="pipeline" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white">
+            <span>Pipeline</span>
+          </button>
+          <button data-tabs-target="tab" data-tab-name="access" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white">
+            <span>Access</span>
+          </button>
+          <button data-tabs-target="tab" data-tab-name="system" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white">
+            <span>System</span>
+          </button>
+          <button data-tabs-target="tab" data-tab-name="jobs" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white">
+            <span>Jobs</span>
+          </button>
+        </nav>
       </div>
     </div>
-    </div>
-  </div>
 
-  <!-- Screenshots Health -->
-  <div data-tabs-target="panel" data-tab-panel="screenshots" id="failed-profiles" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Screenshots Health</h2>
-    <ul class="text-sm text-slate-700 dark:text-slate-300 list-disc pl-5">
-      <li>Node: <code>node</code> must be available</li>
-      <li>Puppeteer: <code>npm i --save-dev puppeteer</code> installed</li>
-      <li>Script: <code>script/screenshot.js</code> executable</li>
-    </ul>
-    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Failed screenshot jobs will include stderr in logs as <code>screenshot_command_failed</code> or <code>screenshot_empty</code>.</p>
-  </div>
-
-  <!-- Axiom / AI -->
-  <div data-tabs-target="panel" data-tab-panel="ai" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Axiom</h2>
-    <div class="mt-2 flex flex-wrap gap-2">
-      <% if @axiom[:dataset_url].present? %>
-        <a href="<%= @axiom[:dataset_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Logs Dataset</a>
-      <% end %>
-      <% if @axiom[:metrics_dataset_url].present? %>
-        <a href="<%= @axiom[:metrics_dataset_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Metrics Dataset</a>
-      <% end %>
-      <% if @axiom[:traces_url].present? %>
-        <a href="<%= @axiom[:traces_url] %>" target="_blank" rel="noopener" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Open Traces</a>
-      <% end %>
-      <%= button_to "Axiom Smoke Log", ops_axiom_smoke_path, method: :post, class: "rounded border px-2 py-1 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800" %>
-    </div>
-    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Use "Axiom Smoke Log" to send a one‑off event. No flags required when token and dataset are configured.</p>
-  </div>
-
-  <% if @engine_present %>
-    <div class="rounded border border-slate-200 bg-white p-4 text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-      Mission Control is installed. Open <a href="/ops/jobs" class="text-blue-600 dark:text-blue-400">/ops/jobs</a> for full jobs UI.
-    </div>
-  <% end %>
-
-  <!-- AI Capabilities -->
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">AI Capabilities</h2>
-    <div class="text-sm text-slate-600 dark:text-slate-300 mb-3">
-      Provider: <code><%= @ai_caps[:provider] || 'n/a' %></code>
-      <span class="mx-2">·</span>
-      Model: <code><%= @ai_caps[:model] || 'n/a' %></code>
-    </div>
-    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-      <% [
-        ['Image Generation', :image_generation],
-        ['Image Descriptions', :image_descriptions],
-        ['Text Output', :text_output],
-        ['Structured Output', :structured_output]
-      ].each do |label, key| %>
-        <% on = @ai_caps[key] %>
-        <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-          <div class="flex items-center justify-between">
-            <div class="text-slate-800 dark:text-slate-200 text-sm font-medium"><%= label %></div>
-            <% if on %>
-              <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">On</span>
-            <% else %>
-              <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Off</span>
-            <% end %>
+    <!-- Tab Panels -->
+    <div class="mt-6 space-y-6">
+      <!-- Overview Tab -->
+      <div data-tabs-target="panel" data-tab-panel="overview">
+        <!-- Regenerate All Callout -->
+        <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-900/20">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Re-roll All Profiles</h2>
+              <p class="text-sm text-amber-800 dark:text-amber-300">Use after deploying new features or layout updates. This re-runs the profile pipeline for everyone so cards and data match the latest version. The pipeline syncs GitHub data, refreshes traits, and captures screenshots; AI artwork is handled separately.</p>
+              <ul class="mt-2 list-disc pl-5 text-xs text-amber-800 dark:text-amber-300">
+                <li>Refresh GitHub data and sync the profile</li>
+                <li>Rebuild profile info and traits (AI text if enabled; heuristic fallback otherwise)</li>
+                <li>Capture card screenshots (OG, card, simple, banner) and queue social variants</li>
+                <li>Record/optimize assets for use across the site</li>
+              </ul>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <form action="<%= ops_bulk_retry_all_path %>" method="post" onsubmit="return confirm('Apply latest version for ALL profiles?');">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll All</button>
+              </form>
+            </div>
           </div>
         </div>
-      <% end %>
-    </div>
-    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Image modules default Off to control costs with Gemini 2.5 Flash. Text/structured modules default On when the model is configured.</p>
 
-    <div class="mt-4">
-      <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Toggle AI Modules</h3>
-      <form action="<%= update_ai_caps_ops_admin_index_path %>" method="post" class="space-y-2">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <label class="inline-flex items-center gap-2 text-sm">
-          <input type="checkbox" name="ai_images" value="1" <%= 'checked' if @ai_caps[:image_generation] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-          <span class="text-slate-700 dark:text-slate-300">Enable AI Image Generation</span>
-        </label>
-        <br>
-        <label class="inline-flex items-center gap-2 text-sm">
-          <input type="checkbox" name="ai_image_descriptions" value="1" <%= 'checked' if @ai_caps[:image_descriptions] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-          <span class="text-slate-700 dark:text-slate-300">Enable AI Image Descriptions</span>
-        </label>
-        <br>
-        <label class="inline-flex items-center gap-2 text-sm">
-          <input type="checkbox" name="ai_text" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_text) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-          <span class="text-slate-700 dark:text-slate-300">Enable AI Text (Traits)</span>
-        </label>
-        <br>
-        <label class="inline-flex items-center gap-2 text-sm">
-          <input type="checkbox" name="ai_structured_output" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_structured_output) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-          <span class="text-slate-700 dark:text-slate-300">Enable AI Structured Output</span>
-        </label>
-        <div>
-          <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Pipeline Manifest -->
-  <div data-tabs-target="panel" data-tab-panel="pipeline" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Pipeline</h2>
-    <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Visibility of stages, gates, and outputs. Edit code in <code>Profiles::GeneratePipelineService</code>; this list helps you see everything in one place.</p>
-    <div class="grid gap-2 sm:grid-cols-2">
-      <% @pipeline_manifest.each do |st| %>
-        <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-          <div class="flex items-center justify-between">
-            <div class="text-slate-800 dark:text-slate-200 text-sm font-medium"><%= st[:label] %></div>
-            <% if st[:enabled] %>
-              <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">On</span>
-            <% else %>
-              <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Off</span>
-            <% end %>
+        <!-- Profile Status Summary -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
+            Profile Status
+            <span class="inline-flex items-center" title="Partial = succeeded via fallback (e.g., AI traits or images fell back to heuristics/screenshots). Failure = last pipeline run failed at some stage. Queued = run enqueued.">
+              <svg class="h-4 w-4 text-slate-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M18 10A8 8 0 112 10a8 8 0 0116 0zM9 8a1 1 0 112 0v5a1 1 0 11-2 0V8zm1-4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
+              </svg>
+            </span>
+          </h2>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+              <div class="text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Success</div>
+              <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:success] %></div>
+            </div>
+            <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+              <div class="text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">Partial</div>
+              <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:partial_success] %></div>
+            </div>
+            <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+              <div class="text-xs uppercase tracking-wide text-red-600 dark:text-red-400">Failure</div>
+              <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:failure] %></div>
+            </div>
+            <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+              <div class="text-xs uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Queued</div>
+              <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:queued] %></div>
+            </div>
+            <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
+              <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Unknown</div>
+              <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:unknown] %></div>
+            </div>
           </div>
-          <div class="mt-1 text-xs text-slate-600 dark:text-slate-400"><%= st[:description] %></div>
-          <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Produces: <%= Array(st[:produces]).join(', ') %></div>
-          <% if st[:gated_by].present? %>
-            <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Gated by: <code><%= st[:gated_by] %></code></div>
+          <p class="mt-3 text-xs text-slate-600 dark:text-slate-400">Status reflects the last pipeline run per profile.</p>
+        </div>
+      </div>
+
+      <!-- Profiles Tab -->
+      <div data-tabs-target="panel" data-tab-panel="profiles" class="hidden space-y-6">
+        <!-- Recent Successful Profiles -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-3">Recent Successful Profiles</h2>
+          <% if @recent_success_profiles.present? %>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead>
+                  <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <th class="py-2 pr-4">Profile</th>
+                    <th class="py-2 pr-4">Status</th>
+                    <th class="py-2 pr-4">Last Synced</th>
+                    <th class="py-2 pr-4">Last AI Regen</th>
+                    <th class="py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @recent_success_profiles.each do |p| %>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
+                      <td class="py-2 pr-4">
+                        <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
+                        <span class="text-slate-400">·</span>
+                        <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
+                      </td>
+                      <td class="py-2 pr-4">
+                        <% status = p.last_pipeline_status %>
+                        <% cls = case status
+                                 when 'success' then 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                 when 'partial_success' then 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                                 else 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                               end %>
+                        <% tip = case status
+                                 when 'success' then 'Full success'
+                                 when 'partial_success' then 'Partial: succeeded via fallback (e.g., heuristics/screenshots)'
+                                 else nil
+                               end %>
+                        <span class="rounded px-2 py-0.5 text-xs font-semibold <%= cls %>" <%= "title=\"#{h tip}\"" if tip.present? %>><%= status %></span>
+                      </td>
+                      <td class="py-2 pr-4"><%= p.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
+                      <td class="py-2 pr-4"><%= p.last_ai_regenerated_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
+                      <td class="py-2">
+                        <div class="flex flex-wrap gap-2">
+                          <%= button_to "Re-roll Profile", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-slate-600 dark:text-slate-300">No successful runs recorded yet.</p>
           <% end %>
         </div>
-      <% end %>
-    </div>
-  </div>
 
-  <!-- Access Control -->
-  <div data-tabs-target="panel" data-tab-panel="access" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Access Control</h2>
-    <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">Gate sign-in to approved GitHub accounts until launch. Toggle open access to let anyone sign in. Settings persist in the database.</p>
-    <form action="<%= update_access_ops_admin_index_path %>" method="post" class="space-y-3">
-      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-      <div class="flex items-center gap-2">
-        <input type="checkbox" id="open_access" name="open_access" value="1" <%= 'checked' if @open_access %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-        <label for="open_access" class="text-slate-800 dark:text-slate-200">Open access (allow all accounts)</label>
-      </div>
-      <div>
-        <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Allowed GitHub logins (comma or space separated)</label>
-        <input type="text" name="allowed_logins" value="<%= h @allowed_logins %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="loftwah, jrh89">
-      </div>
-      <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Access Settings</button>
-    </form>
-  </div>
-
-  <div data-tabs-target="panel" data-tab-panel="backups" class="hidden">
-    <div class="grid gap-4 sm:grid-cols-2">
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Database Backups</div>
-      <div class="mt-1 text-slate-700 dark:text-slate-300">Upload SQLite files in <code>storage/</code> to object storage and prune old backups. Configure <code>BACKUP_BUCKET</code> (or <code>DO_SPACES_BUCKET</code>) and optional <code>BACKUP_PREFIX</code>.</div>
-      <div class="mt-3 flex flex-wrap gap-2">
-        <form action="<%= backups_create_ops_admin_index_path %>" method="post" onsubmit="return confirm('Create a new backup now?');">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Create Backup</button>
-        </form>
-        <form action="<%= backups_prune_ops_admin_index_path %>" method="post" onsubmit="return confirm('Prune old backups now?');">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <button class="rounded bg-amber-600 px-3 py-1 text-white hover:bg-amber-700">Prune Old</button>
-        </form>
-        <form action="<%= backups_doctor_ops_admin_index_path %>" method="post">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <button class="rounded bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700">Check Status</button>
-        </form>
-        <form action="<%= backups_doctor_write_ops_admin_index_path %>" method="post" onsubmit="return confirm('Perform write+delete probe?');">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <input type="hidden" name="confirm" value="YES" />
-          <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Write Probe</button>
-        </form>
-      </div>
-      <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">Retention via env: <code>BACKUP_RETENTION_DAYS</code> (default 14), <code>BACKUP_KEEP_MIN</code> (default 7). Scheduled daily via recurring.yml.</div>
-    </div>
-    <%# Removed transient debug warning block for ENV override to simplify UI %>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Users</div>
-      <div class="mt-1 text-slate-700 dark:text-slate-300">Owners link profiles to user accounts for submissions, settings, and AI usage.</div>
-      <div class="mt-2 flex flex-wrap gap-2">
-        <a href="<%= ops_ownerships_path %>" class="rounded border px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Users & Ownership</a>
-        <a href="/ops/profiles/<%= Profile.order(:login).limit(1).pluck(:login).first %>" class="rounded border px-2 py-1 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Example Profile Admin</a>
-        <a href="<%= ops_motifs_path %>" class="rounded border px-2 py-1 text-sm text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:border-slate-700 dark:hover:bg-slate-800">Motifs (Archetypes & Spirits)</a>
-      </div>
-    </div>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Adapter</div>
-      <div class="text-lg font-semibold"><%= @adapter.class.name %></div>
-    </div>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Queued</div>
-      <div class="text-lg font-semibold"><%= @stats[:queued] || '—' %></div>
-    </div>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Ready</div>
-      <div class="text-lg font-semibold"><%= @stats[:ready] || '—' %></div>
-    </div>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Running</div>
-      <div class="text-lg font-semibold"><%= @stats[:running] || '—' %></div>
-    </div>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Failed</div>
-      <div class="text-lg font-semibold"><%= @stats[:failed] || '—' %></div>
-    </div>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="text-sm text-slate-500 dark:text-slate-400">Finished (1h)</div>
-      <div class="text-lg font-semibold"><%= @stats[:finished_last_hour] || '—' %></div>
-    </div>
-    </div>
-  </div>
-
-  <div data-tabs-target="panel" data-tab-panel="leaderboards" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-2">Leaderboards</h2>
-    <div class="flex flex-wrap gap-2">
-      <form action="<%= rebuild_leaderboards_ops_admin_index_path %>" method="post">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Rebuild All</button>
-      </form>
-      <form action="<%= capture_leaderboard_og_ops_admin_index_path %>" method="post">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-slate-700 px-3 py-1 text-white hover:bg-slate-800">Capture OG</button>
-      </form>
-    </div>
-  </div>
-
-  <div data-tabs-target="panel" data-tab-panel="jobs" class="hidden rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-3">Quick Ownership</h2>
-    <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Transfer ownership by GitHub login. Profiles have exactly one owner. Set Owner is mainly for legacy orphaned profiles.</p>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Set Owner (orphaned only)</h3>
-        <form action="<%= ops_set_owner_ownership_path %>" method="post" class="space-y-2">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-            <label class="block text-xs text-slate-500">Profile login</label>
-            <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
-            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
-          </div>
-          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-            <label class="block text-xs text-slate-500">Target user login</label>
-            <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
-            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
-          </div>
-          <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Set Owner</button>
-        </form>
-      </div>
-      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Transfer Owner</h3>
-        <form action="<%= ops_transfer_by_profile_ownership_path %>" method="post" class="space-y-2">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-            <label class="block text-xs text-slate-500">Profile login</label>
-            <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
-            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
-          </div>
-          <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-            <label class="block text-xs text-slate-500">New owner (user login)</label>
-            <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
-            <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
-          </div>
-          <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Transfer</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-3">Recent Successful Profiles</h2>
-    <% if @recent_success_profiles.present? %>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-              <th class="py-2 pr-4">Profile</th>
-              <th class="py-2 pr-4">Status</th>
-              <th class="py-2 pr-4">Last Synced</th>
-              <th class="py-2 pr-4">Last AI Regen</th>
-              <th class="py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @recent_success_profiles.each do |p| %>
-              <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
-                <td class="py-2 pr-4">
-                  <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
-                  <span class="text-slate-400">·</span>
-                  <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
-                </td>
-                <td class="py-2 pr-4">
-                  <% status = p.last_pipeline_status %>
-                  <% cls = case status
-                           when 'success' then 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
-                           when 'partial_success' then 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-                           else 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                         end %>
-                  <% tip = case status
-                           when 'success' then 'Full success'
-                           when 'partial_success' then 'Partial: succeeded via fallback (e.g., heuristics/screenshots)'
-                           else nil
-                         end %>
-                  <span class="rounded px-2 py-0.5 text-xs font-semibold <%= cls %>" <%= "title=\"#{h tip}\"" if tip.present? %>><%= status %></span>
-                </td>
-                <td class="py-2 pr-4"><%= p.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
-                <td class="py-2 pr-4"><%= p.last_ai_regenerated_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
-                <td class="py-2">
-                  <div class="flex flex-wrap gap-2">
-                    <%= button_to "Re-roll Profile", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%# Image regeneration available via explicit routes; hidden to reduce confusion %>
-                  </div>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <p class="text-slate-600 dark:text-slate-300">No successful runs recorded yet.</p>
-    <% end %>
-  </div>
-
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Email Smoke Test</h2>
-    <%= form_with url: ops_send_test_email_path, method: :post, local: true, class: "space-y-3" do |f| %>
-      <div>
-        <label class="block text-sm text-slate-600 dark:text-slate-300">To (email)</label>
-        <%= text_field_tag :to, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
-      </div>
-      <div>
-        <label class="block text-sm text-slate-600 dark:text-slate-300">Message (optional)</label>
-        <%= text_field_tag :message, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
-      </div>
-      <%= submit_tag "Send test email", class: "rounded bg-blue-600 px-4 py-2 text-white" %>
-    <% end %>
-  </div>
-
-  <!-- Profile Status Summary -->
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
-      Profile Status
-      <span class="inline-flex items-center" title="Partial = succeeded via fallback (e.g., AI traits or images fell back to heuristics/screenshots). Failure = last pipeline run failed at some stage. Queued = run enqueued.">
-        <svg class="h-4 w-4 text-slate-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M18 10A8 8 0 112 10a8 8 0 0116 0zM9 8a1 1 0 112 0v5a1 1 0 11-2 0V8zm1-4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
-        </svg>
-      </span>
-    </h2>
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
-      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
-        <div class="text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Success</div>
-        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:success] %></div>
-      </div>
-      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
-        <div class="text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">Partial</div>
-        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:partial_success] %></div>
-      </div>
-      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
-        <div class="text-xs uppercase tracking-wide text-red-600 dark:text-red-400">Failure</div>
-        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:failure] %></div>
-      </div>
-      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
-        <div class="text-xs uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Queued</div>
-        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:queued] %></div>
-      </div>
-      <div class="rounded border border-slate-200 p-3 text-center dark:border-slate-700">
-        <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Unknown</div>
-        <div class="text-xl font-bold text-slate-900 dark:text-slate-100"><%= @status_counts[:unknown] %></div>
-      </div>
-    </div>
-    <p class="mt-3 text-xs text-slate-600 dark:text-slate-400">Status reflects the last pipeline run per profile.</p>
-  </div>
-
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-1">Failed Profiles</h2>
-    <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Regeneration recaptures screenshots and updates text. AI artwork is managed outside of the pipeline.</p>
-    <p class="-mt-2 mb-3 text-xs text-red-700 dark:text-red-400">“Delete profile (permanent)” removes the profile and all related data. This cannot be undone.</p>
-      <div class="mb-3 grid gap-3 sm:grid-cols-2">
-      <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
-        <h3 class="text-sm font-semibold mb-2">Re-roll (Selected)</h3>
-        <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-          <label class="text-xs text-slate-500">Select profiles</label>
-          <select name="logins[]" multiple size="8" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
-            <% Profile.order(:login).limit(500).pluck(:login).each do |login| %>
-              <option value="<%= login %>">@<%= login %></option>
-            <% end %>
-          </select>
-            <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll</button>
-        </form>
-      </div>
-      <%# Bulk retry with images intentionally hidden to encourage default path %>
-    </div>
-
-    <div class="mb-3 flex items-center gap-2">
-      <form action="<%= ops_bulk_retry_all_path %>" method="post">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll ALL Profiles</button>
-      </form>
-      <%# Hidden: regenerate with images for all profiles %>
-    </div>
-    <% if @failed_profiles.present? %>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-              <th class="py-2 pr-4">Profile</th>
-              <th class="py-2 pr-4">Last Error</th>
-              <th class="py-2 pr-4">Updated</th>
-              <th class="py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @failed_profiles.each do |p| %>
-              <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
-                <td class="py-2 pr-4">
-                  <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
-                  <span class="text-slate-400">·</span>
-                  <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
-                </td>
-                <td class="py-2 pr-4">
-                  <pre class="whitespace-pre-wrap text-xs text-red-600 dark:text-red-400"><%= (p.last_pipeline_error || "(none)").to_s.truncate(160) %></pre>
-                  <% if @failed_events_by_profile_id[p.id] %>
-                    <% recent = @failed_events_by_profile_id[p.id].select { |e| e.stage.start_with?("screenshot_") }.first(3) %>
-                    <% if recent.any? %>
-                      <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                        <% recent.each do |e| %>
-                          <div>
-                            <span class="font-mono"><%= e.stage %></span>
-                            <span>—</span>
-                            <span class="uppercase <%= e.status == 'failed' ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-300' %>"><%= e.status %></span>
-                            <% if e.message.present? %>
-                              <span class="ml-1">(<%= e.message.to_s.truncate(100) %>)</span>
-                            <% end %>
-                          </div>
-                        <% end %>
-                      </div>
-                    <% end %>
+        <!-- Failed Profiles -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-1">Failed Profiles</h2>
+          <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Regeneration recaptures screenshots and updates text. AI artwork is managed outside of the pipeline.</p>
+          <p class="-mt-2 mb-3 text-xs text-red-700 dark:text-red-400">"Delete profile (permanent)" removes the profile and all related data. This cannot be undone.</p>
+          <div class="mb-3 grid gap-3 sm:grid-cols-2">
+            <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+              <h3 class="text-sm font-semibold mb-2">Re-roll (Selected)</h3>
+              <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <label class="text-xs text-slate-500">Select profiles</label>
+                <select name="logins[]" multiple size="8" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                  <% Profile.order(:login).limit(500).pluck(:login).each do |login| %>
+                    <option value="<%= login %>">@<%= login %></option>
                   <% end %>
-                </td>
-                <td class="py-2 pr-4"><%= p.updated_at.strftime('%Y-%m-%d %H:%M') %></td>
-                <td class="py-2">
-                  <div class="flex gap-2">
-                    <%= button_to "Retry — No Images", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%# Hidden: retry with images for individual failed profile %>
-                    <%= button_to "Delete profile (permanent)", ops_destroy_profile_path(username: p.login, back_to: "#failed-profiles"), method: :delete, form: { data: { turbo_confirm: "Delete @#{p.login}? This permanently removes the profile and all related data. This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
-                  </div>
-                </td>
-              </tr>
+                </select>
+                <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="mb-3 flex items-center gap-2">
+            <form action="<%= ops_bulk_retry_all_path %>" method="post">
+              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+              <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll ALL Profiles</button>
+            </form>
+          </div>
+          <% if @failed_profiles.present? %>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead>
+                  <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <th class="py-2 pr-4">Profile</th>
+                    <th class="py-2 pr-4">Last Error</th>
+                    <th class="py-2 pr-4">Updated</th>
+                    <th class="py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @failed_profiles.each do |p| %>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
+                      <td class="py-2 pr-4">
+                        <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
+                        <span class="text-slate-400">·</span>
+                        <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
+                      </td>
+                      <td class="py-2 pr-4">
+                        <pre class="whitespace-pre-wrap text-xs text-red-600 dark:text-red-400"><%= (p.last_pipeline_error || "(none)").to_s.truncate(160) %></pre>
+                        <% if @failed_events_by_profile_id[p.id] %>
+                          <% recent = @failed_events_by_profile_id[p.id].select { |e| e.stage.start_with?("screenshot_") }.first(3) %>
+                          <% if recent.any? %>
+                            <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                              <% recent.each do |e| %>
+                                <div>
+                                  <span class="font-mono"><%= e.stage %></span>
+                                  <span>—</span>
+                                  <span class="uppercase <%= e.status == 'failed' ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-300' %>"><%= e.status %></span>
+                                  <% if e.message.present? %>
+                                    <span class="ml-1">(<%= e.message.to_s.truncate(100) %>)</span>
+                                  <% end %>
+                                </div>
+                              <% end %>
+                            </div>
+                          <% end %>
+                        <% end %>
+                      </td>
+                      <td class="py-2 pr-4"><%= p.updated_at.strftime('%Y-%m-%d %H:%M') %></td>
+                      <td class="py-2">
+                        <div class="flex gap-2">
+                          <%= button_to "Retry — No Images", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                          <%= button_to "Delete profile (permanent)", ops_destroy_profile_path(username: p.login, back_to: "#failed-profiles"), method: :delete, form: { data: { turbo_confirm: "Delete @#{p.login}? This permanently removes the profile and all related data. This cannot be undone." } }, class: "rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700" %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-slate-600 dark:text-slate-300">No failed profiles found.</p>
+          <% end %>
+        </div>
+
+        <!-- Data Issues -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-3">Data Issues (Successful but incomplete)</h2>
+          <% if @data_issues_profiles.present? %>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead>
+                  <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <th class="py-2 pr-4">Profile</th>
+                    <th class="py-2 pr-4">Missing</th>
+                    <th class="py-2 pr-4">Last Synced</th>
+                    <th class="py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @data_issues_profiles.each do |p| %>
+                    <% missing = [] %>
+                    <% missing << 'card' unless p.profile_card.present? %>
+                    <% missing << 'languages' unless p.profile_languages.exists? %>
+                    <% missing << 'repositories' unless p.profile_repositories.exists? %>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
+                      <td class="py-2 pr-4">
+                        <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
+                        <span class="text-slate-400">·</span>
+                        <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
+                      </td>
+                      <td class="py-2 pr-4">
+                        <span class="rounded bg-amber-100 px-2 py-0.5 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"><%= missing.join(', ') %></span>
+                      </td>
+                      <td class="py-2 pr-4"><%= p.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
+                      <td class="py-2">
+                        <div class="flex gap-2">
+                          <%= button_to "Retry (no images)", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-slate-600 dark:text-slate-300">No data issues detected.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- AI Tab -->
+      <div data-tabs-target="panel" data-tab-panel="ai" class="hidden space-y-6">
+        <!-- AI Capabilities -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">AI Capabilities</h2>
+          <div class="text-sm text-slate-600 dark:text-slate-300 mb-3">
+            Provider: <code><%= @ai_caps[:provider] || 'n/a' %></code>
+            <span class="mx-2">·</span>
+            Model: <code><%= @ai_caps[:model] || 'n/a' %></code>
+          </div>
+          <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <% [
+              ['Image Generation', :image_generation],
+              ['Image Descriptions', :image_descriptions],
+              ['Text Output', :text_output],
+              ['Structured Output', :structured_output]
+            ].each do |label, key| %>
+              <% on = @ai_caps[key] %>
+              <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                <div class="flex items-center justify-between">
+                  <div class="text-slate-800 dark:text-slate-200 text-sm font-medium"><%= label %></div>
+                  <% if on %>
+                    <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">On</span>
+                  <% else %>
+                    <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Off</span>
+                  <% end %>
+                </div>
+              </div>
             <% end %>
-          </tbody>
-        </table>
+          </div>
+          <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Image modules default Off to control costs with Gemini 2.5 Flash. Text/structured modules default On when the model is configured.</p>
+
+          <div class="mt-4">
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Toggle AI Modules</h3>
+            <form action="<%= update_ai_caps_ops_admin_index_path %>" method="post" class="space-y-2">
+              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="ai_images" value="1" <%= 'checked' if @ai_caps[:image_generation] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <span class="text-slate-700 dark:text-slate-300">Enable AI Image Generation</span>
+              </label>
+              <br>
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="ai_image_descriptions" value="1" <%= 'checked' if @ai_caps[:image_descriptions] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <span class="text-slate-700 dark:text-slate-300">Enable AI Image Descriptions</span>
+              </label>
+              <br>
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="ai_text" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_text) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <span class="text-slate-700 dark:text-slate-300">Enable AI Text (Traits)</span>
+              </label>
+              <br>
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" name="ai_structured_output" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_structured_output) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <span class="text-slate-700 dark:text-slate-300">Enable AI Structured Output</span>
+              </label>
+              <div>
+                <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Axiom Observability -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Axiom Observability</h2>
+          
+          <div class="mb-3">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Streaming Datasets</h3>
+            <div class="flex flex-wrap gap-2">
+              <a href="https://app.axiom.co/echosight-7xtu/stream/techub" target="_blank" rel="noopener" class="rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30">
+                Logs Stream (techub)
+              </a>
+              <a href="https://app.axiom.co/echosight-7xtu/stream/techub-metrics" target="_blank" rel="noopener" class="rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
+                Metrics Stream (techub-metrics)
+              </a>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">OpenTelemetry Traces</h3>
+            <div class="flex flex-wrap gap-2">
+              <a href="https://app.axiom.co/echosight-7xtu/traces" target="_blank" rel="noopener" class="rounded border border-purple-200 bg-purple-50 px-3 py-1.5 text-sm text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-900/30">
+                OTEL Traces
+              </a>
+            </div>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">OTEL traces are automatically collected and viewable in Axiom's traces view when configured.</p>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Test & Debug</h3>
+            <div class="flex flex-wrap gap-2">
+              <%= button_to "Send Smoke Log", ops_axiom_smoke_path, method: :post, class: "rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" %>
+            </div>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Use "Send Smoke Log" to send a test event to verify Axiom integration is working.</p>
+          </div>
+        </div>
       </div>
-    <% else %>
-      <p class="text-slate-600 dark:text-slate-300">No failed profiles found.</p>
-    <% end %>
-  </div>
 
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-3">GitHub App Installation</h2>
-    <div class="text-sm text-slate-600 dark:text-slate-300">
-      <div>Configured installation_id: <span class="font-mono"><%= @configured_installation_id || 'nil' %></span></div>
-    </div>
-  </div>
-
-  <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <h2 class="text-lg font-semibold mb-3">Data Issues (Successful but incomplete)</h2>
-    <% if @data_issues_profiles.present? %>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-              <th class="py-2 pr-4">Profile</th>
-              <th class="py-2 pr-4">Missing</th>
-              <th class="py-2 pr-4">Last Synced</th>
-              <th class="py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @data_issues_profiles.each do |p| %>
-              <% missing = [] %>
-              <% missing << 'card' unless p.profile_card.present? %>
-              <% missing << 'languages' unless p.profile_languages.exists? %>
-              <% missing << 'repositories' unless p.profile_repositories.exists? %>
-              <tr class="border-b border-slate-100 dark:border-slate-800 align-top">
-                <td class="py-2 pr-4">
-                  <a href="<%= profile_path(username: p.login) %>" class="text-blue-600 dark:text-blue-400">@<%= p.login %></a>
-                  <span class="text-slate-400">·</span>
-                  <a href="<%= ops_profile_admin_path(username: p.login) %>" class="text-slate-600 underline dark:text-slate-300">Ops</a>
-                </td>
-                <td class="py-2 pr-4">
-                  <span class="rounded bg-amber-100 px-2 py-0.5 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"><%= missing.join(', ') %></span>
-                </td>
-                <td class="py-2 pr-4"><%= p.last_synced_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
-                <td class="py-2">
-                  <div class="flex gap-2">
-                    <%= button_to "Retry (no images)", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
-                    <%# Removed: retry with images button %>
-                  </div>
-                </td>
-              </tr>
+      <!-- Pipeline Tab -->
+      <div data-tabs-target="panel" data-tab-panel="pipeline" class="hidden space-y-6">
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Pipeline Stages</h2>
+          <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Visibility of stages, gates, and outputs. Edit code in <code>Profiles::GeneratePipelineService</code>; this list helps you see everything in one place.</p>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <% @pipeline_manifest.each do |st| %>
+              <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                <div class="flex items-center justify-between">
+                  <div class="text-slate-800 dark:text-slate-200 text-sm font-medium"><%= st[:label] %></div>
+                  <% if st[:enabled] %>
+                    <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">On</span>
+                  <% else %>
+                    <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Off</span>
+                  <% end %>
+                </div>
+                <div class="mt-1 text-xs text-slate-600 dark:text-slate-400"><%= st[:description] %></div>
+                <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Produces: <%= Array(st[:produces]).join(', ') %></div>
+                <% if st[:gated_by].present? %>
+                  <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Gated by: <code><%= st[:gated_by] %></code></div>
+                <% end %>
+              </div>
             <% end %>
-          </tbody>
-        </table>
+          </div>
+        </div>
+
+        <!-- Screenshots Health -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Screenshots Health</h2>
+          <ul class="text-sm text-slate-700 dark:text-slate-300 list-disc pl-5">
+            <li>Node: <code>node</code> must be available</li>
+            <li>Puppeteer: <code>npm i --save-dev puppeteer</code> installed</li>
+            <li>Script: <code>script/screenshot.js</code> executable</li>
+          </ul>
+          <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Failed screenshot jobs will include stderr in logs as <code>screenshot_command_failed</code> or <code>screenshot_empty</code>.</p>
+        </div>
       </div>
-    <% else %>
-      <p class="text-slate-600 dark:text-slate-300">No data issues detected.</p>
-    <% end %>
+
+      <!-- Access Tab -->
+      <div data-tabs-target="panel" data-tab-panel="access" class="hidden space-y-6">
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Access Control</h2>
+          <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">Gate sign-in to approved GitHub accounts until launch. Toggle open access to let anyone sign in. Settings persist in the database.</p>
+          <form action="<%= update_access_ops_admin_index_path %>" method="post" class="space-y-3">
+            <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="open_access" name="open_access" value="1" <%= 'checked' if @open_access %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+              <label for="open_access" class="text-slate-800 dark:text-slate-200">Open access (allow all accounts)</label>
+            </div>
+            <div>
+              <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Allowed GitHub logins (comma or space separated)</label>
+              <input type="text" name="allowed_logins" value="<%= h @allowed_logins %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="loftwah, jrh89">
+            </div>
+            <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Access Settings</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- System Tab -->
+      <div data-tabs-target="panel" data-tab-panel="system" class="hidden space-y-6">
+        <!-- Database Backups & System Stats Grid -->
+        <div class="grid gap-4 sm:grid-cols-2">
+          <!-- Database Backups -->
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Database Backups</div>
+            <div class="mt-1 text-slate-700 dark:text-slate-300 text-sm">Upload SQLite files in <code>storage/</code> to object storage and prune old backups. Configure <code>BACKUP_BUCKET</code> (or <code>DO_SPACES_BUCKET</code>) and optional <code>BACKUP_PREFIX</code>.</div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <form action="<%= backups_create_ops_admin_index_path %>" method="post" onsubmit="return confirm('Create a new backup now?');">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Create Backup</button>
+              </form>
+              <form action="<%= backups_prune_ops_admin_index_path %>" method="post" onsubmit="return confirm('Prune old backups now?');">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <button class="rounded bg-amber-600 px-3 py-1 text-white hover:bg-amber-700">Prune Old</button>
+              </form>
+              <form action="<%= backups_doctor_ops_admin_index_path %>" method="post">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <button class="rounded bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700">Check Status</button>
+              </form>
+              <form action="<%= backups_doctor_write_ops_admin_index_path %>" method="post" onsubmit="return confirm('Perform write+delete probe?');">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <input type="hidden" name="confirm" value="YES" />
+                <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Write Probe</button>
+              </form>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">Retention via env: <code>BACKUP_RETENTION_DAYS</code> (default 14), <code>BACKUP_KEEP_MIN</code> (default 7). Scheduled daily via recurring.yml.</div>
+          </div>
+
+          <!-- Job Adapter -->
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Adapter</div>
+            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100"><%= @adapter.class.name %></div>
+          </div>
+
+          <!-- Job Stats -->
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Queued</div>
+            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100"><%= @stats[:queued] || '—' %></div>
+          </div>
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Ready</div>
+            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100"><%= @stats[:ready] || '—' %></div>
+          </div>
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Running</div>
+            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100"><%= @stats[:running] || '—' %></div>
+          </div>
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Failed</div>
+            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100"><%= @stats[:failed] || '—' %></div>
+          </div>
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Finished (1h)</div>
+            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100"><%= @stats[:finished_last_hour] || '—' %></div>
+          </div>
+        </div>
+
+        <!-- Leaderboards -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-2">Leaderboards</h2>
+          <div class="flex flex-wrap gap-2">
+            <form action="<%= rebuild_leaderboards_ops_admin_index_path %>" method="post">
+              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+              <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Rebuild All</button>
+            </form>
+            <form action="<%= capture_leaderboard_og_ops_admin_index_path %>" method="post">
+              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+              <button class="rounded bg-slate-700 px-3 py-1 text-white hover:bg-slate-800">Capture OG</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- GitHub App -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-3">GitHub App Installation</h2>
+          <div class="text-sm text-slate-600 dark:text-slate-300">
+            <div>Configured installation_id: <span class="font-mono"><%= @configured_installation_id || 'nil' %></span></div>
+          </div>
+        </div>
+
+        <!-- Email Smoke Test -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Email Smoke Test</h2>
+          <%= form_with url: ops_send_test_email_path, method: :post, local: true, class: "space-y-3" do |f| %>
+            <div>
+              <label class="block text-sm text-slate-600 dark:text-slate-300">To (email)</label>
+              <%= text_field_tag :to, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+            </div>
+            <div>
+              <label class="block text-sm text-slate-600 dark:text-slate-300">Message (optional)</label>
+              <%= text_field_tag :message, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+            </div>
+            <%= submit_tag "Send test email", class: "rounded bg-blue-600 px-4 py-2 text-white" %>
+          <% end %>
+        </div>
+
+        <% if @dev_log_tail.present? %>
+          <!-- Development Log -->
+          <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <h2 class="text-lg font-semibold mb-3">Development Log (tail)</h2>
+            <pre class="max-h-96 overflow-auto whitespace-pre-wrap text-xs"><%= @dev_log_tail %></pre>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Jobs Tab -->
+      <div data-tabs-target="panel" data-tab-panel="jobs" class="hidden space-y-6">
+        <!-- Quick Ownership -->
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-3">Quick Ownership</h2>
+          <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Transfer ownership by GitHub login. Profiles have exactly one owner. Set Owner is mainly for legacy orphaned profiles.</p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+              <h3 class="text-sm font-semibold mb-2">Set Owner (orphaned only)</h3>
+              <form action="<%= ops_set_owner_ownership_path %>" method="post" class="space-y-2">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+                  <label class="block text-xs text-slate-500">Profile login</label>
+                  <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+                  <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+                </div>
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+                  <label class="block text-xs text-slate-500">Target user login</label>
+                  <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+                  <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+                </div>
+                <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Set Owner</button>
+              </form>
+            </div>
+            <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+              <h3 class="text-sm font-semibold mb-2">Transfer Owner</h3>
+              <form action="<%= ops_transfer_by_profile_ownership_path %>" method="post" class="space-y-2">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+                  <label class="block text-xs text-slate-500">Profile login</label>
+                  <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+                  <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+                </div>
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
+                  <label class="block text-xs text-slate-500">New owner (user login)</label>
+                  <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+                  <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
+                </div>
+                <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Transfer</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <% if @engine_present %>
+          <!-- Mission Control Info -->
+          <div class="rounded border border-slate-200 bg-white p-4 text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            Mission Control is installed. Open <a href="/ops/jobs" class="text-blue-600 dark:text-blue-400">/ops/jobs</a> for full jobs UI.
+          </div>
+
+          <!-- Jobs UI Iframe -->
+          <div class="rounded border border-slate-200 bg-white p-0 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 text-slate-700 dark:border-slate-700 dark:text-slate-200">
+              <h2 class="text-lg font-semibold">Jobs UI</h2>
+              <a href="/ops/jobs" class="rounded px-2 py-1 text-blue-600 underline dark:text-blue-400" target="_blank" rel="noopener">Open full screen</a>
+            </div>
+            <div class="h-[75vh] w-full" style="height: 75vh;">
+              <iframe id="ops-jobs-frame" src="/ops/jobs" title="Mission Control Jobs"
+                      style="border:0; width:100%; height:100%; background:transparent"></iframe>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
   </div>
-
-  <% if @dev_log_tail.present? %>
-    <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <h2 class="text-lg font-semibold mb-3">Development Log (tail)</h2>
-      <pre class="max-h-96 overflow-auto whitespace-pre-wrap text-xs"><%= @dev_log_tail %></pre>
-    </div>
-  <% end %>
-
-  <% if @engine_present %>
-    <div class="rounded border border-slate-200 bg-white p-0 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 text-slate-700 dark:border-slate-700 dark:text-slate-200">
-        <h2 class="text-lg font-semibold">Jobs UI</h2>
-        <a href="/ops/jobs" class="rounded px-2 py-1 text-blue-600 underline dark:text-blue-400" target="_blank" rel="noopener">Open full screen</a>
-      </div>
-      <div class="h-[75vh] w-full" style="height: 75vh;">
-        <iframe id="ops-jobs-frame" src="/ops/jobs" title="Mission Control Jobs"
-                style="border:0; width:100%; height:100%; background:transparent"></iframe>
-      </div>
-    </div>
-  <% end %>
 </section>

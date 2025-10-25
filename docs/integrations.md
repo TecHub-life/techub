@@ -335,3 +335,26 @@ Propshaft.
   - No `cdnjs`, `jsdelivr`, `unpkg`, or `fontawesome` external links.
 - Test/CI: controller view tests pass without asset load errors.
 - UI smoke: icons render with classes like `fa-solid`/`fa-brands`.
+
+### Troubleshooting: Stale or Wrong Styles in Development
+
+If the UI looks different between development and production after running a local precompile, you
+likely have stale, fingerprinted assets in `public/` shadowing fresh Tailwind output.
+
+Fix:
+
+```bash
+# stop the dev server first
+rm -rf public/assets public/build tmp/cache
+bin/rails assets:clobber
+
+# then either let dev serve sources (recommended) or re-precompile
+bin/rails tailwindcss:watch   # for live dev
+# or
+bin/rails assets:precompile   # when testing production build locally
+```
+
+Notes:
+
+- `assets:clobber` removes precompiled outputs (e.g., `public/assets/*`), not your source files.
+- After cleaning, hard‑refresh with cache disabled to purge stale browser CSS.
