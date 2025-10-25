@@ -30,14 +30,29 @@ module ProfilesHelper
 
     str = source.to_s
     if str.start_with?("http://", "https://")
-      # Rewrite third‑party storage hosts (e.g., DigitalOcean Spaces) to our CDN/custom domain
+      # Rewrite third‑party storage hosts (e.g., DigitalOcean Spaces) to our CDN/custom domain.
+      # When using region endpoints with path-style addressing, strip the bucket prefix from the path
+      # because the CDN hostname already implies the bucket.
       begin
         cdn_endpoint = (Rails.application.credentials.dig(:do_spaces, :cdn_endpoint) rescue nil).presence || ENV["DO_SPACES_CDN_ENDPOINT"].to_s.presence
         if cdn_endpoint
           src = URI.parse(str)
           cdn = URI.parse(cdn_endpoint)
-          # Only replace host/scheme if CDN host is different
           if cdn.host.present?
+            # Optionally remove bucket segment from the path when the source is a Spaces endpoint
+            bucket = (ENV["DO_SPACES_BUCKET"].presence || (Rails.application.credentials.dig(:do_spaces, :bucket_name) rescue nil)).to_s
+            if bucket.present?
+              host = src.host.to_s
+              # Match both origin and CDN Spaces hosts
+              if host.end_with?(".digitaloceanspaces.com") || host.end_with?(".cdn.digitaloceanspaces.com")
+                # If the path starts with /<bucket>/, drop that segment (virtual-host style under CDN)
+                if src.path.to_s.start_with?("/#{bucket}/")
+                  src.path = src.path.sub(%r{^/#{Regexp.escape(bucket)}/}, "/")
+                end
+              end
+            end
+
+            # Replace scheme/host/port
             src.scheme = cdn.scheme.presence || src.scheme
             src.host = cdn.host
             src.port = cdn.port if cdn.port && cdn.port != (cdn.scheme == "https" ? 443 : 80)

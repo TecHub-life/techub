@@ -44,8 +44,10 @@ app:
   host: https://techub.life
 
 do_spaces:
-  endpoint: https://techub-life.nyc3.digitaloceanspaces.com
-  cdn_endpoint: https://cdn.techub.life
+  # Use the REGION endpoint with path-style (see config/storage.yml)
+  endpoint: https://nyc3.digitaloceanspaces.com
+  # Custom CDN domain (CNAME to Spaces CDN hostname)
+  cdn_endpoint: https://assets.cdn.techub.life
   bucket_name: techub-life
   region: nyc3
   access_key_id: <key>
@@ -77,13 +79,22 @@ Environment variable overrides (optional):
 2. Enable CDN and custom domain
 
 - Enable CDN on the Space.
-- Add a CNAME `cdn.techub.life` → the Space’s CDN endpoint (e.g.,
-  `techub-life.nyc3.cdn.digitaloceanspaces.com`).
-- Attach/issue a TLS certificate for `cdn.techub.life` in the DO UI.
+- Add a CNAME (e.g., `assets.cdn.techub.life`) pointing to the Space’s CDN hostname, e.g.,
+  `techub-life.nyc3.cdn.digitaloceanspaces.com`.
+- Attach/issue a TLS certificate for your custom CDN domain in the DigitalOcean UI (or keep DNS-only
+  at Cloudflare and let Cloudflare manage TLS if you don’t proxy through DO).
+
+DNS notes:
+
+- Prefer a simple CNAME in your primary DNS (Cloudflare: set to DNS-only/grey cloud during cert
+  issuance; you can keep it DNS-only to avoid double-CDN).
+- If you delegate a subdomain via NS records (e.g., `cdn.techub.life` →
+  ns1/ns2/ns3.digitalocean.com), then the CNAME for `assets.cdn.techub.life` must live inside the
+  delegated zone at DigitalOcean DNS. Otherwise, keep everything in primary DNS and do not delegate.
 
 3. Configure CORS
 
-- Origins: add `https://techub.life` and `https://cdn.techub.life`.
+- Origins: add `https://techub.life` and `https://assets.cdn.techub.life`.
 - Methods: GET, HEAD.
 - Headers: empty.
 - Max Age: 86400.
@@ -95,12 +106,19 @@ Environment variable overrides (optional):
 
 5. Verify
 
+- DNS:
+
+```bash
+dig +short CNAME assets.cdn.techub.life  # should be techub-life.nyc3.cdn.digitaloceanspaces.com.
+```
+
 - In production, visit a profile cards tab and click the download icon. Links should resolve to
-  `https://cdn.techub.life/...`.
-- Optionally, exec on the server:
+  `https://assets.cdn.techub.life/...`.
+- Optional CLI probes:
 
 ```bash
 kamal app exec -i web -- bin/rails runner 'b=ActiveStorage::Blob.create_and_upload!(io: StringIO.new("hi"), filename:"probe.txt"); puts b.url'
+kamal app exec -i web -- bash -lc 'curl -IfsS $(bin/rails runner "print ActiveStorage::Blob.last.url") | head -n1'
 ```
 
 ### Behavior if Missing

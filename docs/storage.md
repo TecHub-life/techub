@@ -36,11 +36,14 @@ Recommended credentials:
 app:
   host: https://techub.life
 do_spaces:
-  endpoint: https://<bucket>.<region>.digitaloceanspaces.com
+  # Use the REGION endpoint with path-style addressing (see config/storage.yml)
+  endpoint: https://nyc3.digitaloceanspaces.com
   bucket_name: <bucket>
   region: <region>
   access_key_id: <key>
   secret_access_key: <secret>
+  # Optional: custom CDN domain for canonical public URLs
+  cdn_endpoint: https://assets.cdn.techub.life
 ```
 
 ## Quick Smokes (Production)
@@ -56,16 +59,24 @@ kamal app exec -i web -- bin/rails runner 'puts ActiveStorage::Blob.services.fet
 
 - Upload probe (prints a public URL) and HEAD it:
 
-```bash
+````bash
 kamal app exec -i web -- bin/rails runner 'b=ActiveStorage::Blob.create_and_upload!(io: StringIO.new("hi"), filename:"probe.txt"); puts b.url'
 kamal app exec -i web -- bash -lc 'curl -IfsS $(bin/rails runner "print ActiveStorage::Blob.last.url") | head -n1'
-```
+
+DNS quick check:
+
+```bash
+dig +short CNAME assets.cdn.techub.life
+# expect: techub-life.nyc3.cdn.digitaloceanspaces.com.
+````
+
+````
 
 - Run end‑to‑end pipeline for a user (screenshots use the credentials host):
 
 ```bash
 kamal app exec -i worker -- bin/rails "profiles:pipeline[loftwah,$(bin/rails runner 'print AppHost.current')]"
-```
+````
 
 - Check asset records:
 
