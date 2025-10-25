@@ -51,7 +51,24 @@ module Profiles
       if json.blank?
         attempts.last[:empty] = true
         attempts.last[:preview] = preview if preview.present?
-        StructuredLogger.warn(message: "ai_traits_empty_response", login: profile.login, preview: preview, http_status: resp.status) if defined?(StructuredLogger)
+        if defined?(StructuredLogger)
+          # Enhanced logging to debug extraction failure
+          raw = normalize_to_hash(resp.body)
+          candidates = Array(dig_value(raw, :candidates))
+          first_candidate = candidates.first || {}
+          content = dig_value(first_candidate, :content) || {}
+          parts = Array(dig_value(content, :parts))
+          texts = parts.filter_map { |p| dig_value(p, :text) }.join(" ").strip
+          StructuredLogger.warn(
+            message: "ai_traits_empty_response",
+            login: profile.login,
+            preview: preview,
+            http_status: resp.status,
+            parts_count: parts.length,
+            text_length: texts.length,
+            text_sample: texts[0, 100]
+          )
+        end
         # Try one strict re-ask before falling back
         resp_strict = conn.post(
           Gemini::Endpoints.text_generate_path(
@@ -65,7 +82,15 @@ module Profiles
         if (200..299).include?(resp_strict.status)
           attempts << { http_status: resp_strict.status, strict: true }
           json2 = extract_json_from_response(resp_strict.body)
-          cleaned = validate_and_normalize(json2) if json2.present?
+          if json2.present?
+            cleaned = validate_and_normalize(json2)
+            if cleaned.blank? && defined?(StructuredLogger)
+              StructuredLogger.warn(message: "validate_normalize_failed", login: profile.login, json2_keys: json2.keys.sort)
+            end
+          else
+            attempts.last[:empty] = true
+            attempts.last[:preview] = response_text_preview(resp_strict.body) if defined?(StructuredLogger)
+          end
         else
           attempts << { http_status: resp_strict.status, strict: true, error: true }
           attempts.last[:preview] = response_text_preview(resp_strict.body)
@@ -338,6 +363,10 @@ module Profiles
       content = dig_value(first_candidate, :content) || {}
       parts = dig_value(content, :parts)
 
+      # Handle case where parts is not an array
+      parts = [ parts ] if parts.is_a?(Hash)
+      parts = [] if parts.nil?
+
       # First, prefer function-call structured output when present
       Array(parts).each do |part|
         fc = dig_value(part, :functionCall) || dig_value(part, :function_call)
@@ -352,8 +381,17 @@ module Profiles
       end
 
       json = extract_structured_json(parts)
-      texts = Array(parts).filter_map { |p| dig_value(p, :text) }.join(" ")
-      json ||= parse_relaxed_json(texts)
+      texts = Array(parts).filter_map { |p| dig_value(p, :text) }.join(" ").strip
+
+      # Try parsing the text as JSON if no structured response found
+      if json.blank? && texts.present?
+        json = parse_relaxed_json(texts)
+        # If still blank, log for debugging
+        if json.blank? && defined?(StructuredLogger)
+          StructuredLogger.debug(message: "json_extraction_failed", text_preview: texts[0, 200], parts_count: Array(parts).length)
+        end
+      end
+
       json
     end
 
@@ -371,6 +409,8 @@ module Profiles
     end
 
     def validate_and_normalize(h)
+      return nil unless h.is_a?(Hash)
+
       out = h.transform_keys(&:to_s)
       out["title"] = title_cap(out["title"].to_s.strip.first(60))
       out["tagline"] = out["tagline"].to_s.strip.first(140)

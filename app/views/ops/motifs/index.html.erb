@@ -1,26 +1,38 @@
 <section class="mx-auto max-w-5xl space-y-6 px-4 py-8">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Motifs</h1>
-    <div class="flex gap-2">
-      <a href="<%= new_ops_motif_path(kind: 'archetype') %>" class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">New Archetype</a>
-      <a href="<%= new_ops_motif_path(kind: 'spirit_animal') %>" class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">New Spirit Animal</a>
-      <form action="<%= seed_from_catalog_ops_motifs_path %>" method="post" onsubmit="return confirm('Seed motifs from catalog? This may overwrite lore when checked.');" class="flex items-center gap-2">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <label class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
-          <input type="checkbox" name="overwrite" value="1" class="h-3 w-3">
-          <span>Overwrite lore</span>
-        </label>
-        <button class="rounded border px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:border-slate-700 dark:hover:bg-slate-800">Seed from Catalog</button>
-      </form>
-
-      <form action="<%= generate_missing_lore_ops_motifs_path %>" method="post" onsubmit="return confirm('Generate lore for missing entries? This may overwrite lore when checked.');" class="flex items-center gap-2">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <label class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
-          <input type="checkbox" name="overwrite" value="1" class="h-3 w-3">
-          <span>Overwrite lore</span>
-        </label>
-        <button class="rounded border px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:border-slate-700 dark:hover:bg-slate-800">Generate Missing Lore (Gemini)</button>
-      </form>
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Motifs</h1>
+      <div class="flex gap-2">
+        <a href="<%= new_ops_motif_path(kind: 'archetype') %>" class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">New Archetype</a>
+        <a href="<%= new_ops_motif_path(kind: 'spirit_animal') %>" class="rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">New Spirit Animal</a>
+      </div>
+    </div>
+    
+    <!-- Bulk Actions -->
+    <div class="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50 sm:grid-cols-2">
+      <div class="flex flex-col gap-2">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Seed from Catalog</h3>
+        <form action="<%= seed_from_catalog_ops_motifs_path %>" method="post" onsubmit="return confirm('Seed motifs from catalog? This may overwrite lore when checked.');" class="flex flex-col gap-2">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <label class="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+            <input type="checkbox" name="overwrite" value="1" class="h-4 w-4 rounded">
+            <span>Overwrite existing lore</span>
+          </label>
+          <button class="rounded border border-emerald-300 bg-white px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-slate-800">Seed from Catalog</button>
+        </form>
+      </div>
+      
+      <div class="flex flex-col gap-2">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Generate Lore (AI)</h3>
+        <form action="<%= generate_missing_lore_ops_motifs_path %>" method="post" onsubmit="return confirm('Generate lore for missing entries? This may overwrite lore when checked.');" class="flex flex-col gap-2">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <label class="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+            <input type="checkbox" name="overwrite" value="1" class="h-4 w-4 rounded">
+            <span>Overwrite existing lore</span>
+          </label>
+          <button class="rounded border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800">Generate Missing Lore (Gemini)</button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -28,6 +40,20 @@
     <input type="text" name="q" value="<%= @q %>" placeholder="Search motifs…" class="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
     <button class="rounded border px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Search</button>
   <% end %>
+
+  <!-- Image Verification Info -->
+  <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+    <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-100">Image Verification</h3>
+    <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+      To verify and fix broken image URLs in the database, run:
+    </p>
+    <code class="mt-2 block rounded bg-blue-100 px-3 py-2 text-xs text-blue-900 dark:bg-blue-950 dark:text-blue-100">
+      bin/rails motifs:verify_images
+    </code>
+    <p class="mt-2 text-xs text-blue-600 dark:text-blue-400">
+      Add <code class="rounded bg-blue-100 px-1 dark:bg-blue-950">FIX=1</code> to automatically clear broken URLs. To list all image sources, run: <code class="rounded bg-blue-100 px-1 dark:bg-blue-950">bin/rails motifs:list_images</code>
+    </p>
+  </div>
 
   <div class="overflow-hidden rounded border border-slate-200 dark:border-slate-700">
     <table class="min-w-full text-sm">

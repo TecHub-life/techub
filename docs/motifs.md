@@ -66,9 +66,46 @@ Requirements:
 
 ## Troubleshooting
 
-- Thumbnail not showing in Ops/Public pages:
-  - Ensure `image_1x1_url` is set, or place an asset at the expected slug path
-  - Check the slug matches the filename (lowercase, `-` separator)
-- Lore not generating:
-  - Verify Gemini credentials and provider
+### Images not showing or showing as broken
+
+Run the verification task to check all motif image URLs:
+
+```bash
+bin/rails motifs:verify_images
+```
+
+This will:
+
+- Check all database URLs for validity
+- Verify asset files exist
+- Report which motifs will use placeholder images
+
+To automatically fix broken URLs:
+
+```bash
+bin/rails motifs:verify_images FIX=1
+```
+
+To see a complete list of all motif image sources:
+
+```bash
+bin/rails motifs:list_images
+```
+
+### Common causes of broken images
+
+1. **Invalid database URLs**: Run `motifs:verify_images FIX=1` to clear them
+2. **Missing asset files**: Images should be in:
+   - `app/assets/images/archetypes/{slug}.{png|jpg|jpeg|webp}`
+   - `app/assets/images/spirit-animals/{slug}.{png|jpg|jpeg|webp}`
+3. **Asset precompilation issues**: In production, run:
+   ```bash
+   bin/kamal app exec "SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile"
+   ```
+4. **Browser caching**: Clear browser cache or test in incognito mode
+
+### Lore not generating
+
+- Verify Gemini credentials and provider in `config/credentials.yml.enc`
+- Check logs for API errors: `bin/kamal app logs | grep -i gemini`
   - Review logs for `generate_missing_lore` Ops action
