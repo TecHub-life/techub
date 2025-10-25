@@ -15,12 +15,12 @@ module Screenshots
       youtube_cover_2560x1440
     ].freeze
     DEFAULT_WIDTHS = {
-      # Existing
+      # Card and simple variants
       "og" => 1200,
       "card" => 1280,
       "simple" => 1280,
       "banner" => 1500,
-      # Social targets (only those with templates/views or reuse existing layouts)
+      # Social targets
       "x_profile_400" => 400,
       "x_header_1500x500" => 1500,
       "x_feed_1600x900" => 1600,
@@ -34,12 +34,12 @@ module Screenshots
       "og_1200x630" => 1200
     }.freeze
     DEFAULT_HEIGHTS = {
-      # Existing
+      # Card and simple variants
       "og" => 630,
       "card" => 720,
       "simple" => 720,
       "banner" => 500,
-      # Social targets (only those with templates/views or reuse existing layouts)
+      # Social targets
       "x_profile_400" => 400,
       "x_header_1500x500" => 500,
       "x_feed_1600x900" => 900,
