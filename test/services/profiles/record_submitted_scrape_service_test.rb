@@ -41,9 +41,20 @@ module Profiles
       assert_equal "text/html; charset=utf-8", rec.content_type
     end
 
-    test "fails when url is invalid" do
-      result = Profiles::RecordSubmittedScrapeService.call(profile: @profile, url: "bad url")
-      assert result.failure?
+    test "stores normalized url from metadata when scraping" do
+      html = "<html><head><title>PBS Dev</title></head><body><main>ok</main></body></html>"
+      stub_request(:get, "https://pbsdev.com/").to_return(
+        status: 200,
+        headers: { "Content-Type" => "text/html; charset=utf-8" },
+        body: html
+      )
+
+      result = Profiles::RecordSubmittedScrapeService.call(profile: @profile, url: "pbsdev.com")
+      assert result.success?, "expected success, got failure: #{result.error&.message}"
+
+      rec = ProfileScrape.find_by(profile_id: @profile.id, url: "https://pbsdev.com/")
+      assert rec, "expected normalized ProfileScrape record"
+      assert_equal "PBS Dev", rec.title
     end
   end
 end

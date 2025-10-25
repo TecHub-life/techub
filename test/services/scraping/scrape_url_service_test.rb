@@ -82,5 +82,23 @@ module Scraping
       assert result.success?
       assert_equal "Home", result.value[:title]
     end
+
+    test "normalizes bare domain by adding https scheme" do
+      html = <<~HTML
+        <!doctype html>
+        <html><head><title>PBS Dev</title></head><body><main>ok</main></body></html>
+      HTML
+
+      stub_request(:get, "https://pbsdev.com/").to_return(
+        status: 200,
+        headers: { "Content-Type" => "text/html; charset=utf-8" },
+        body: html
+      )
+
+      result = Scraping::ScrapeUrlService.call(url: "pbsdev.com")
+      assert result.success?, "expected success, got failure: #{result.error&.message}"
+      assert_equal "https://pbsdev.com/", result.metadata[:url]
+      assert_equal "PBS Dev", result.value[:title]
+    end
   end
 end

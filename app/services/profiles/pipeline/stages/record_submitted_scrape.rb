@@ -17,11 +17,18 @@ module Profiles
           trace(:started, url: url)
           result = Profiles::RecordSubmittedScrapeService.call(profile: profile, url: url)
           if result.failure?
-            trace(:failed, error: result.error&.message)
+            error_message = result.error&.message.to_s
+            non_fatal_errors = %w[invalid_url url_blank host_not_allowed private_address_blocked http_error unsupported_content_type empty_body]
+            if non_fatal_errors.include?(error_message)
+              trace(:skipped, reason: error_message)
+              return success_with_context(nil, metadata: { skipped: true, reason: error_message })
+            end
+
+            trace(:failed, error: error_message)
             StructuredLogger.warn(
               message: "submitted_scrape_failed",
               login: login,
-              error: result.error&.message
+              error: error_message
             ) if defined?(StructuredLogger)
             return failure_with_context(result.error || StandardError.new("submitted_scrape_failed"), metadata: { url: url })
           end

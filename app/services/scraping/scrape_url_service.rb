@@ -45,12 +45,24 @@ module Scraping
     attr_reader :url, :allowed_hosts, :max_bytes, :timeout, :max_text_chars, :max_links
 
     def parse_and_validate_url(raw)
-      uri = URI.parse(raw)
+      candidate = normalize_url(raw)
+      uri = URI.parse(candidate)
+      # Ensure a trailing slash for bare host URLs to produce stable keys
+      if (uri.path.nil? || uri.path.empty?) && uri.query.nil? && uri.fragment.nil?
+        uri.path = "/"
+      end
       return nil unless uri.is_a?(URI::HTTP)
       return nil if uri.host.blank?
       uri
     rescue URI::InvalidURIError
       nil
+    end
+
+    def normalize_url(raw)
+      s = raw.to_s.strip
+      return s if s =~ /\A[a-z][a-z0-9+\-.]*:\/\//i
+      return "" if s.empty?
+      "https://#{s}"
     end
 
     def host_allowed?(uri)
