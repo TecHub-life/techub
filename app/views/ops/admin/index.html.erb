@@ -50,7 +50,7 @@
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Re-roll All Profiles</h2>
-              <p class="text-sm text-amber-800 dark:text-amber-300">Use after deploying new features or layout updates. This re-runs the profile pipeline for everyone so cards and data match the latest version. The pipeline syncs GitHub data, refreshes traits, and captures screenshots; AI artwork is handled separately.</p>
+              <p class="text-sm text-amber-800 dark:text-amber-300">Use after deploying new features or layout updates. This re-runs the profile pipeline for everyone so cards and data match the latest version. The pipeline syncs GitHub data, refreshes traits, and captures screenshots; AI artwork is handled separately. The main Re-roll behaves like a fresh submission.</p>
               <ul class="mt-2 list-disc pl-5 text-xs text-amber-800 dark:text-amber-300">
                 <li>Refresh GitHub data and sync the profile</li>
                 <li>Rebuild profile info and traits (AI text if enabled; heuristic fallback otherwise)</li>
@@ -176,6 +176,18 @@
                   <% end %>
                 </select>
                 <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll</button>
+              </form>
+            </div>
+            <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+              <h3 class="text-sm font-semibold mb-2">Advanced Re-roll (Single Profile)</h3>
+              <form action="<%= ops_retry_profile_path(username: '') %>" method="post" onsubmit="this.action=this.action.replace(/\/$/, '') + '/' + this.querySelector('[name=login]').value + '/retry';">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <div class="mb-2">
+                  <label class="text-xs text-slate-500">GitHub username</label>
+                  <input type="text" name="login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" placeholder="loftwah" required>
+                </div>
+                <p class="text-xs text-slate-500 mb-2">Runs the full pipeline as if freshly submitted. More granular controls coming soon.</p>
+                <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll Full</button>
               </form>
             </div>
           </div>

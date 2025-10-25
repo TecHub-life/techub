@@ -281,15 +281,9 @@ module Ops
         return
       end
 
-      result = Profiles::PipelineDoctorService.call(login: login, host: host, email: email, variants: variants)
-      if result.success?
-        flash[:notice] = "Pipeline doctor OK for @#{login}"
-        flash[:doctor_json] = result.value.to_json
-      else
-        flash[:alert] = "Pipeline doctor failed for @#{login}: #{result.error.message}"
-        flash[:doctor_json] = (result.respond_to?(:metadata) ? result.metadata.to_json : nil)
-      end
-      redirect_to ops_admin_path(anchor: "pipeline")
+      # Enqueue doctor job asynchronously so the request is fast and resilient
+      Profiles::PipelineDoctorJob.perform_later(login: login, host: host, email: email, variants: variants)
+      redirect_to ops_admin_path(anchor: "pipeline"), notice: "Pipeline doctor enqueued for @#{login}. Results will be emailed to ops."
     end
 
     private

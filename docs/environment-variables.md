@@ -46,8 +46,7 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTEL base endpoint (default US traces endpoint)
     - US: `https://api.axiom.co/v1/traces`
     - EU: `https://api.eu.axiom.co/v1/traces`
-  - `OTEL_METRICS_EXPORT_INTERVAL_MS` — metrics export interval (default 60000)
-    for dev forcing.
+  - `OTEL_METRICS_EXPORT_INTERVAL_MS` — metrics export interval (default 60000) for dev forcing.
   - Refs: config/initializers/structured_logging.rb:18.
 - Twitter meta: `TWITTER_SITE_HANDLE`, `TWITTER_CREATOR_HANDLE`
   - Home: credentials under `:twitter`.

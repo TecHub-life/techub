@@ -42,7 +42,23 @@ module Ops
     def retry
       Profiles::GeneratePipelineJob.perform_later(@profile.login)
       @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-      redirect_to ops_admin_path, notice: "Pipeline run queued for @#{@profile.login}"
+      redirect_to ops_admin_path, notice: "Re-roll queued for @#{@profile.login} (full pipeline as fresh submission)"
+    end
+
+    def reroll_github
+      Profiles::RerollGithubJob.perform_later(login: params[:username].to_s.downcase)
+      redirect_to ops_admin_path, notice: "GitHub sync queued for @#{params[:username]}"
+    end
+
+    def reroll_ai
+      Profiles::RerollAiJob.perform_later(login: params[:username].to_s.downcase)
+      redirect_to ops_admin_path, notice: "AI traits regeneration queued for @#{params[:username]}"
+    end
+
+    def recapture_screenshots
+      variants = (params[:variants].presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS).map(&:to_s)
+      Profiles::RecaptureScreenshotsJob.perform_later(login: params[:username].to_s.downcase, variants: variants)
+      redirect_to ops_admin_path, notice: "Screenshot recapture queued for @#{params[:username]} (#{variants.join(', ')})"
     end
 
     # Image regeneration removed from Ops to avoid confusion. Use Settings UI for artwork decisions.

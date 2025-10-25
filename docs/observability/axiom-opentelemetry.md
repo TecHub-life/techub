@@ -141,7 +141,8 @@ end
 3. Env vars:
 
 - `AXIOM_TOKEN`: token with tracing ingest permissions
-- `OTEL_EXPORTER_OTLP_ENDPOINT`: optional; default above (US). EU: `https://api.eu.axiom.co/v1/traces`
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: optional; default above (US). EU:
+  `https://api.eu.axiom.co/v1/traces`
 - `OTEL_METRICS_EXPORT_INTERVAL_MS`: optional; metrics export interval (default 60000)
 
 ### Verify
@@ -172,7 +173,8 @@ end
 ### Built-in application metrics
 
 - HTTP
-  - http_server_requests_total — count by http.method, http.status_code, controller, action, route, env
+  - http_server_requests_total — count by http.method, http.status_code, controller, action, route,
+    env
   - http_server_request_errors_total — count of 5xx/exceptions by same attrs
   - http_server_request_duration_ms — histogram of request duration
 - Database

@@ -115,6 +115,9 @@ Rails.application.routes.draw do
     get "/profiles/search", to: "profiles#search", as: :search_profiles
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
     post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile
+    post "/profiles/:username/reroll_github", to: "profiles#reroll_github", as: :reroll_github_profile
+    post "/profiles/:username/reroll_ai", to: "profiles#reroll_ai", as: :reroll_ai_profile
+    post "/profiles/:username/recapture_screenshots", to: "profiles#recapture_screenshots", as: :recapture_screenshots_profile
     # Image regeneration routes removed to reduce confusion; use default retry path for freshness
     delete "/profiles/:username", to: "profiles#destroy", as: :destroy_profile
     # Ownerships admin
