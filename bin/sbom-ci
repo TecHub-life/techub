@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SBOM="/home/loftwah/gits/techub/tmp/sbom-techub-image.cdx.json/sbom-techub-image.cdx.json"
+
+if [[ ! -f "$SBOM" ]]; then
+  echo "SBOM missing at $SBOM" >&2
+  exit 1
+fi
+
+cd "$(dirname "$0")/.."
+
+function section() {
+  echo ""
+  echo "=== $1 ==="
+}
+
+section "Top-level keys"
+# Non-interactive: print inline
+jq 'keys' "$SBOM" || true
+
+section "Component count"
+./bin/sbom count || true
+
+section "First 10 components (name, version, purl)"
+./bin/sbom list 10 || true
+
+section "Common queries (limited to 10 each)"
+for q in rails ruby node express react; do
+  echo "-- Query: $q --"
+  ./bin/sbom find "$q" 10 || true
+  echo ""
+done
+
+section "Gzip and count from gzip"
+./bin/sbom compress || true
+./bin/sbom count_gz || true
+
+section "Export NDJSON and show 5 lines"
+./bin/sbom ndjson || true
+head -n 5 /home/loftwah/gits/techub/tmp/components.ndjson || true
+
+section "NDJSON split (no-op if already exists)"
+./bin/sbom split 5000 || true
+
+echo ""
+echo "SBOM CI report completed."

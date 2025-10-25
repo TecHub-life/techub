@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: bin/sbom [command]
+# Commands:
+#   keys                    Show top-level keys
+#   count                   Count components
+#   list [N]                List first N components (default 100)
+#   find REGEX [LIMIT]      Find components by name (case-insensitive)
+#   compress                Create gzipped SBOM alongside original
+#   count_gz                Count components from gzipped SBOM
+#   ndjson                  Export components as NDJSON (tmp/components.ndjson)
+#   split [LINES]           Split NDJSON into chunks (default 5000 lines)
+
+cd "$(dirname "$0")/.."
+
+cmd=${1:-}
+case "$cmd" in
+  keys)        exec bundle exec rake sbom:keys ;;
+  count)       exec bundle exec rake sbom:count_components ;;
+  list)        exec bundle exec rake sbom:list["${2:-100}"] ;;
+  find)
+    test -n "${2:-}" || { echo "Usage: bin/sbom find REGEX [LIMIT]"; exit 1; }
+    regex="$2"
+    limit="${3:-}"
+    if [[ -n "$limit" ]]; then
+      exec bundle exec rake sbom:find["$regex","$limit"]
+    else
+      exec bundle exec rake sbom:find["$regex"]
+    fi
+    ;;
+  compress)    exec bundle exec rake sbom:compress ;;
+  count_gz)    exec bundle exec rake sbom:count_gz ;;
+  ndjson)      exec bundle exec rake sbom:ndjson ;;
+  split)       exec bundle exec rake sbom:split["${2:-5000}"] ;;
+  *)
+    cat <<'USAGE'
+Usage: bin/sbom <command>
+
+Commands:
+  keys                    Show top-level keys
+  count                   Count components
+  list [N]                List first N components (default 100)
+  find REGEX [LIMIT]      Find components by name (case-insensitive)
+  compress                Create gzipped SBOM alongside original
+  count_gz                Count components from gzipped SBOM
+  ndjson                  Export components as NDJSON (tmp/components.ndjson)
+  split [LINES]           Split NDJSON into chunks (default 5000 lines)
+USAGE
+    exit 2
+    ;;
+ esac

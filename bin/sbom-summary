@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SBOM="/home/loftwah/gits/techub/tmp/sbom-techub-image.cdx.json/sbom-techub-image.cdx.json"
+OUT="/home/loftwah/gits/techub/docs/pipeline-artifacts/sbom-summary.md"
+DISALLOW=""
+UNKNOWN_LIMIT=50
+TOP_LICENSES=15
+TOP_ECOSYSTEMS=15
+
+usage() {
+  cat <<USAGE
+Usage: bin/sbom-summary [--out PATH] [--disallow CSV] [--unknown-limit N] [--top-licenses N] [--top-ecosystems N]
+
+Options:
+  --out PATH           Output Markdown file (default: $OUT)
+  --disallow CSV       Comma-separated license IDs to disallow (e.g. GPL-3.0-only,GPL-2.0-only)
+  --unknown-limit N    How many unknown-version components to list (default: $UNKNOWN_LIMIT)
+  --top-licenses N     How many top licenses to show (default: $TOP_LICENSES)
+  --top-ecosystems N   How many ecosystems to show (default: $TOP_ECOSYSTEMS)
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --out) OUT="$2"; shift 2 ;;
+    --disallow) DISALLOW="$2"; shift 2 ;;
+    --unknown-limit) UNKNOWN_LIMIT="$2"; shift 2 ;;
+    --top-licenses) TOP_LICENSES="$2"; shift 2 ;;
+    --top-ecosystems) TOP_ECOSYSTEMS="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage; exit 2 ;;
+  esac
+done
+
+if [[ ! -f "$SBOM" ]]; then
+  echo "SBOM missing at $SBOM" >&2
+  exit 1
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq not found. Install with: sudo apt-get update && sudo apt-get install -y jq" >&2
+  exit 1
+fi
+
+mkdir -p "$(dirname "$OUT")"
+
+IMAGE_LINE=$(jq -r '.metadata.component | "Image: \(.name)  Version: \(.version)  PURL: \(.purl // "")"' "$SBOM")
+TOTAL=$(jq '.components | length' "$SBOM")
+
+# Component types (pure jq)
+TYPE_TABLE=$(jq -r '
+  [.components[] | .type]
+  | group_by(.)
+  | map({key: .[0], count: length})
+  | sort_by(-.count)
+  | map("- **\(.key)**: \(.count)")
+  | .[]
+' "$SBOM")
+
+# Ecosystems from purl (pure jq)
+ECOSYSTEMS=$(jq -r --argjson top "$TOP_ECOSYSTEMS" '
+  [.components[] | (.purl // "")
+    | if . == "" then "unknown" else (split(":")[1] // "unknown" | split("/")[0]) end]
+  | group_by(.)
+  | map({key: .[0], count: length})
+  | sort_by(-.count)
+  | .[0:$top]
+  | map("- **\(.key)**: \(.count)")
+  | .[]
+' "$SBOM")
+
+# Top licenses (pure jq)
+LICENSE_COUNTS=$(jq -r --argjson top "$TOP_LICENSES" '
+  [.components[] | (.licenses // [])[]? | (.license.id // .license.name // .name // "UNKNOWN")]
+  | group_by(.)
+  | map({key: .[0], count: length})
+  | sort_by(-.count)
+  | .[0:$top]
+  | map("- **\(.key)**: \(.count)")
+  | .[]
+' "$SBOM")
+
+# Unknown versions
+UNKNOWN_COUNT=$(jq '[.components[] | select((.version == null) or (.version == "") or (.version == "UNKNOWN"))] | length' "$SBOM")
+UNKNOWN_SAMPLE=$(jq -r --argjson n "$UNKNOWN_LIMIT" '
+  limit($n; .components[] | select((.version == null) or (.version == "") or (.version == "UNKNOWN")) | [ .name, (.purl // "") ] | @tsv)
+' "$SBOM")
+
+# Begin writing Markdown
+{
+  echo "### SBOM summary"
+  echo ""
+  echo "$IMAGE_LINE"
+  echo ""
+  echo "**Total components**: $TOTAL"
+  echo ""
+  echo "**Component types**"
+  echo "$TYPE_TABLE"
+  echo ""
+  echo "**Ecosystems (by purl)**"
+  echo "$ECOSYSTEMS"
+  echo ""
+  echo "**Top licenses**"
+  echo "$LICENSE_COUNTS"
+  echo ""
+  echo "**Unknown versions**: $UNKNOWN_COUNT (showing first $UNKNOWN_LIMIT)"
+  if [[ -n "$UNKNOWN_SAMPLE" ]]; then
+    echo ""
+    echo '```'
+    echo "$UNKNOWN_SAMPLE"
+    echo '```'
+  fi
+} > "$OUT"
+
+# License policy gate (optional)
+FAIL=0
+if [[ -n "$DISALLOW" ]]; then
+  echo "" >> "$OUT"
+  echo "**Policy gate: disallowed licenses** ($DISALLOW)" >> "$OUT"
+  IFS=',' read -r -a BAD <<< "$DISALLOW"
+  for lic in "${BAD[@]}"; do
+    lic_trimmed=$(echo "$lic" | sed 's/^\s*//;s/\s*$//')
+    [[ -z "$lic_trimmed" ]] && continue
+    COUNT=$(jq -r --arg L "$lic_trimmed" '
+      [.components[] | (.licenses // [])[]? | (.license.id // .license.name // .name // "UNKNOWN")]
+      | map(select(. == $L)) | length
+    ' "$SBOM")
+    echo "- $lic_trimmed: $COUNT" >> "$OUT"
+    if [[ "$COUNT" -gt 0 ]]; then
+      echo "" >> "$OUT"
+      echo "Violations for $lic_trimmed (up to 20):" >> "$OUT"
+      jq -r --arg L "$lic_trimmed" '
+        limit(20; .components[] | select(((.licenses // [])[]? | (.license.id // .license.name // .name // "UNKNOWN")) == $L) | [ .name, .version, (.purl // "") ] | @tsv)
+      ' "$SBOM" >> "$OUT"
+      FAIL=1
+    fi
+  done
+fi
+
+if [[ "$FAIL" -eq 1 ]]; then
+  echo "Policy violations found. See $OUT" >&2
+  exit 3
+fi
+
+echo "Wrote $OUT"
