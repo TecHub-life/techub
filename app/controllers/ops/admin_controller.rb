@@ -270,6 +270,28 @@ module Ops
       redirect_to ops_admin_path, notice: "Emitted Axiom smoke log"
     end
 
+    def pipeline_doctor
+      login = params[:login].to_s.downcase.presence
+      host = params[:host].presence
+      email = params[:email].presence
+      variants = (params[:variants].presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS.join(",")).to_s.split(/[,\s]+/).map(&:strip).reject(&:blank?)
+
+      if login.blank?
+        redirect_to ops_admin_path, alert: "Login is required"
+        return
+      end
+
+      result = Profiles::PipelineDoctorService.call(login: login, host: host, email: email, variants: variants)
+      if result.success?
+        flash[:notice] = "Pipeline doctor OK for @#{login}"
+        flash[:doctor_json] = result.value.to_json
+      else
+        flash[:alert] = "Pipeline doctor failed for @#{login}: #{result.error.message}"
+        flash[:doctor_json] = (result.respond_to?(:metadata) ? result.metadata.to_json : nil)
+      end
+      redirect_to ops_admin_path(anchor: "pipeline")
+    end
+
     private
 
     def tail_log(path, lines)

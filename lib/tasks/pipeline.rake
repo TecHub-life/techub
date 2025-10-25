@@ -118,6 +118,25 @@ namespace :profiles do
   end
 end
 
+namespace :profiles do
+  desc "Doctor: run readiness checks for a login. Usage: rake 'profiles:doctor[login,host,email,variants]'"
+  task :doctor, [ :login, :host, :email, :variants ] => :environment do |_, args|
+    login = (args[:login] || ENV["LOGIN"] || "loftwah").to_s.downcase
+    host = args[:host].presence || ENV["APP_HOST"].presence
+    email = args[:email].presence || ENV["EMAIL"].presence
+    variants = (args[:variants].presence || ENV["VARIANTS"].presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS.join(",")).to_s.split(",").map(&:strip)
+
+    result = Profiles::PipelineDoctorService.call(login: login, host: host, email: email, variants: variants)
+    if result.success?
+      puts JSON.pretty_generate(result.value)
+    else
+      warn "Doctor failed for @#{login}: #{result.error.message}"
+      warn JSON.pretty_generate(result.metadata) if result.respond_to?(:metadata) && result.metadata
+      exit 1
+    end
+  end
+end
+
 def default_pipeline_host
   Profiles::GeneratePipelineService::FALLBACK_HOSTS.fetch(Rails.env, "http://127.0.0.1:3000")
 end
