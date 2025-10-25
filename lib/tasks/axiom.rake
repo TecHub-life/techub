@@ -141,6 +141,24 @@ namespace :axiom do
 end
 
 namespace :axiom do
+  desc "Emit a simple OpenTelemetry metrics data point to verify OTLP metrics export"
+  task otel_metrics_smoke: :environment do
+    begin
+      require "opentelemetry/sdk"
+      meter = OpenTelemetry.meter_provider.meter("techub.metrics", "1.0")
+      counter = meter.create_counter("otel_smoke_metric_total", unit: "1", description: "OTEL metrics smoke counter")
+      counter.add(1, attributes: { env: Rails.env })
+      # Give the PeriodicExportingMetricReader a moment to export on its interval (if short)
+      sleep 2
+      puts "OTEL metrics smoke emitted — check your Axiom metrics UI for otel_smoke_metric_total."
+    rescue LoadError
+      warn "OpenTelemetry gems not installed. Run bundle install."
+      exit 2
+    rescue StandardError => e
+      warn "OTEL metrics smoke failed: #{e.class}: #{e.message}"
+      exit 3
+    end
+  end
   desc "Self-test: log smoke (sync), OTEL span, and direct ingest"
   task self_test: :environment do
     dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
