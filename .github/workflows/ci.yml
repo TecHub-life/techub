@@ -113,7 +113,8 @@ jobs:
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Axiom doctor (main only, if secrets)
-        if: ${{ github.ref == 'refs/heads/main' && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
+        if:
+          ${{ github.ref == 'refs/heads/main' && env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
         env:
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
