@@ -3,10 +3,11 @@
 <% choice = card_prefs&.bg_choice_og || 'default' %>
 <% color_hex = (card_prefs&.bg_color_og || '#0f172a') %>
 
-<% asset_bg16 = @profile.profile_assets.find_by(kind: 'avatar_16x9') %>
-<% asset_card = @profile.profile_assets.find_by(kind: 'card') %>
 <% bg_url = nil %>
-<% if choice == 'ai' %>
+<%# Respect ai_art_opt_in flag: only try AI images if user opted in %>
+<% if choice == 'ai' && @profile.ai_art_opt_in %>
+  <% asset_bg16 = @profile.profile_assets.find_by(kind: 'avatar_16x9') %>
+  <% asset_card = @profile.profile_assets.find_by(kind: 'card') %>
   <% if asset_bg16&.public_url.present? %>
     <% bg_url = asset_bg16.public_url %>
   <% elsif asset_card&.public_url.present? %>
@@ -15,10 +16,12 @@
     <% file = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first || Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
     <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
   <% end %>
+  <%# Fallback to supporting art if no AI images found %>
   <% if bg_url.nil? %>
     <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :og) %>
   <% end %>
-<% elsif choice == 'default' %>
+<% elsif choice == 'default' || (choice == 'ai' && !@profile.ai_art_opt_in) %>
+  <%# Use supporting art library when choice is 'default' or AI is chosen but not opted in %>
   <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :og) %>
 <% end %>
 <div class="w-[<%= (@canvas_w || 1200).to_i %>px] h-[<%= (@canvas_h || 630).to_i %>px] bg-gray-900 overflow-hidden relative flex flex-col">
