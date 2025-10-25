@@ -170,9 +170,19 @@ jobs:
       - name: Resolve image digest for attestation
         id: digest
         run: |
-          ref=$(docker inspect --format='{{index .RepoDigests 0}}' techub:ci)
-          name="${ref%%@*}"
-          digest="${ref##*@}"
+          set -euo pipefail
+          image="techub:ci"
+          # Try to read first RepoDigest if available (present after push or certain builds)
+          ref=$(docker inspect --format='{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "$image" || true)
+          if [ -n "$ref" ] && echo "$ref" | grep -q '@sha256:'; then
+            name="${ref%%@*}"
+            digest="${ref##*@}"
+          else
+            # Fallback to local image ID digest
+            id=$(docker inspect --format='{{.Id}}' "$image" | sed 's/^sha256://')
+            digest="sha256:$id"
+            name="$image"
+          fi
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
