@@ -6,13 +6,32 @@ namespace :motifs do
     broken = []
     fixed = []
 
+    require "net/http"
+    require "uri"
+
+    def url_reachable_and_nonempty?(url)
+      uri = URI.parse(url)
+      http = Net::HTTP
+      klass = uri.scheme == "https" ? Net::HTTP : Net::HTTP
+      req = Net::HTTP::Head.new(uri)
+      req["User-Agent"] = "TecHub/verify 1.0"
+      res = http.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 5, read_timeout: 5) do |h|
+        h.request(req)
+      end
+      return false unless res.is_a?(Net::HTTPSuccess)
+      len = res["content-length"].to_i
+      len > 0
+    rescue StandardError
+      false
+    end
+
     Motif.find_each do |motif|
       if motif.image_1x1_url.present?
         # Check if URL looks broken or unreachable
         uri = URI.parse(motif.image_1x1_url) rescue nil
 
         # Flag suspicious URLs
-        if uri.nil? || uri.scheme.nil? || !%w[http https].include?(uri.scheme)
+        if uri.nil? || uri.scheme.nil? || !%w[http https].include?(uri.scheme) || !url_reachable_and_nonempty?(motif.image_1x1_url)
           broken << {
             name: motif.name,
             slug: motif.slug,

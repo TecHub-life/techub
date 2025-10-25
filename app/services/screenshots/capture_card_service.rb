@@ -124,9 +124,22 @@ module Screenshots
 
       public_url = nil
       if upload_enabled?
-        upload = Storage::ActiveStorageUploadService.call(path: path.to_s, content_type: mime_type, filename: File.basename(path))
-        return upload if upload.failure?
-        public_url = upload.value[:public_url]
+        begin
+          upload = Storage::ActiveStorageUploadService.call(
+            path: path.to_s,
+            content_type: mime_type,
+            filename: File.basename(path)
+          )
+          if upload.success?
+            public_url = upload.value[:public_url]
+          else
+            # Degrade gracefully: keep local file and continue without public URL
+            StructuredLogger.warn(message: "screenshot_upload_failed", login: login, variant: variant, error: upload.error&.message, path: path.to_s) if defined?(StructuredLogger)
+          end
+        rescue StandardError => e
+          # Best-effort: never fail the entire capture due to upload errors
+          StructuredLogger.warn(message: "screenshot_upload_exception", login: login, variant: variant, error: e.message, path: path.to_s) if defined?(StructuredLogger)
+        end
       end
 
       success(
