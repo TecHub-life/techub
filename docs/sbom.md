@@ -57,6 +57,7 @@
 **CI usage**
 
 - Example step that writes an artifact and enforces a license policy:
+
   ```bash
   set -e
   bin/sbom-summary --out docs/pipeline-artifacts/sbom-summary.md \
