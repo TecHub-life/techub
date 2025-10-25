@@ -1,119 +1,57 @@
 <%# Assets Tab %>
 <div class="space-y-6">
   <% card = profile.profile_card %>
-  <% base = Rails.root.join("public", "generated", profile.login) %>
-  <% public_root = Rails.root.join("public") %>
-  <% asset_scope = profile.profile_assets.where(kind: %w[card og simple banner x_profile_400 fb_post_1080 ig_portrait_1080x1350]) %>
-  <% assets_by_kind = asset_scope.index_by(&:kind) %>
+  <% asset_card ||= profile.profile_assets.find_by(kind: "card") %>
+  <% asset_og ||= profile.profile_assets.find_by(kind: "og") %>
+  <% asset_simple ||= profile.profile_assets.find_by(kind: "simple") %>
 
-  <% asset_card ||= assets_by_kind["card"] %>
-  <% asset_og ||= assets_by_kind["og"] %>
-  <% asset_simple ||= assets_by_kind["simple"] %>
-  <% assets_by_kind["card"] ||= asset_card if asset_card %>
-  <% assets_by_kind["og"] ||= asset_og if asset_og %>
-  <% assets_by_kind["simple"] ||= asset_simple if asset_simple %>
-
-  <%# Resolve a canonical URL for an asset without falling back to repo samples %>
-
-  <% asset_url = lambda do |asset, _fallback_name|
-       if asset&.public_url.present?
-         canonical_profile_asset_url(asset.public_url)
-       elsif asset&.local_path.present?
-         canonical_profile_asset_url(asset.local_path)
-       end
-     end %>
-
-  <% variants = [
-       { kind: "card", label: "Main Card", dims: "1280×720", aspect: "16/9", usage: "Social posts" },
-       { kind: "og", label: "Open Graph", dims: "1200×630", aspect: "1200/630", usage: "Portfolio link previews" },
-       { kind: "simple", label: "Simple", dims: "1280×720", aspect: "16/9", usage: "Profiles & CVs" },
-       { kind: "banner", label: "Banner", dims: "1500×500", aspect: "3/1", usage: "Header/banner" },
-       { kind: "x_profile_400", label: "X Profile", dims: "400×400", aspect: "1/1", usage: "X avatar" },
-       { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", dims: "1080×1350", aspect: "4/5", usage: "Instagram post" },
-       { kind: "fb_post_1080", label: "Facebook Post", dims: "1080×1080", aspect: "1/1", usage: "Facebook post" }
-     ].map do |variant|
-       asset = assets_by_kind[variant[:kind]]
-       fallback = variant[:fallback] || variant[:kind]
-       url = asset_url.call(asset, fallback)
-       generated_at = asset&.generated_at || asset&.updated_at
-       variant.merge(asset: asset, url: url, generated_at: generated_at)
-     end %>
-
-  <%# URL for the Main Card preview/download %>
-  <% card_img = asset_url.call(asset_card, "card") %>
-
-  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+  <%# Card Previews Section - Using the same styling as profile show %>
+  <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-6 shadow-lg dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
     <div class="mb-4">
       <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Card Previews</h2>
       <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Your generated trading cards and social images</p>
     </div>
-    
-    <%# Card Previews Grid - Responsive: 1 col mobile, 2 col tablet, 3 col desktop %>
-    <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-      <%# Main Trading Card %>
-      <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition">
-      <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div class="flex items-center gap-2">
-          <svg class="h-5 w-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
-          </svg>
-          <span>Main Card</span>
-        </div>
-        <% if card_img.present? %>
-          <a href="<%= card_img %>" download target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
-          </a>
-        <% end %>
-      </div>
-      <% if card_img.present? %>
-        <div class="w-full" style="aspect-ratio: 16/9;">
-          <img src="<%= card_img %>" alt="Main trading card" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-        </div>
-      <% else %>
-        <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: 16/9;">
-          <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-          <p class="text-sm font-medium">Generating...</p>
-        </div>
-      <% end %>
-    </div>
+    <% variants = profile_card_variants(profile) %>
+    <% has_assets = profile.profile_assets.exists? %>
 
-    <% if variants.all? { |variant| variant[:url].blank? } %>
-      <div class="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900/60">
-        <div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-slate-200 text-2xl text-slate-500 dark:bg-slate-800">🎴</div>
-        <p class="text-sm text-slate-600 dark:text-slate-300">No assets yet. Run the full pipeline to capture cards and artwork.</p>
+    <% unless has_assets %>
+      <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 text-center mb-4">
+        <div class="mx-auto mb-2 h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 grid place-items-center text-slate-500 text-xl">🎴</div>
+        <p class="text-sm text-slate-600 dark:text-slate-300">No card assets yet. Generate your profile to create shareable cards.</p>
       </div>
     <% end %>
 
-    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-      <% variants.each do |variant| %>
-        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <div class="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            <div class="min-w-0">
-              <div class="truncate"><%= variant[:label] %></div>
-              <div class="text-[11px] text-slate-500 dark:text-slate-400"><%= variant[:dims] %> • <%= variant[:usage] %></div>
-              <% if variant[:generated_at] %>
-                <div class="text-[11px] text-slate-400 dark:text-slate-500">Captured <%= time_ago_in_words(variant[:generated_at]) %> ago</div>
-              <% end %>
+    <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <% variants.each do |v| %>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition">
+          <div class="flex items-center justify-between px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2">
+              <span><%= v[:label] %></span>
+              <span class="text-slate-500">•</span>
+              <span class="text-slate-500"><%= v[:dims] %> (<%= v[:aspect] %>)</span>
+              <span class="text-slate-500">•</span>
+              <span class="text-slate-500"><%= v[:usage] %></span>
             </div>
-            <% if variant[:url].present? %>
-              <a href="<%= variant[:url] %>" download target="_blank" rel="noopener" class="text-indigo-600 transition hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 dark:text-indigo-300 dark:hover:text-indigo-200" aria-label="Download <%= variant[:label] %>">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4-4 4m0 0-4-4m4 4V4"/>
+            <% if v[:url].present? %>
+              <a href="<%= v[:url] %>" download target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
               </a>
             <% end %>
           </div>
-          <div class="relative w-full bg-slate-100 dark:bg-slate-900 <%= "aspect-[#{variant[:aspect]}]" %>" style="aspect-ratio: <%= variant[:aspect] %>">
-            <% if variant[:url].present? %>
-              <img src="<%= variant[:url] %>" alt="<%= "#{variant[:label]} for #{profile.display_name}" %>" class="absolute inset-0 h-full w-full object-contain" loading="lazy">
-            <% else %>
-              <div class="absolute inset-0 grid place-items-center text-xs text-slate-400 dark:text-slate-500">Not generated yet</div>
-            <% end %>
-          </div>
+          <% if v[:url].present? %>
+            <div class="w-full" style="aspect-ratio: <%= v[:aspect] %>;">
+              <img src="<%= v[:url] %>" alt="<%= v[:label] %>" class="w-full h-full object-contain bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+            </div>
+          <% else %>
+            <div class="w-full flex flex-col items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" style="aspect-ratio: <%= v[:aspect] %>;">
+              <svg class="h-12 w-12 mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <p class="text-sm font-medium">Generating...</p>
+            </div>
+          <% end %>
         </div>
       <% end %>
     </div>
@@ -180,24 +118,26 @@
       <% simple_generated_at = asset_simple&.generated_at || asset_simple&.updated_at %>
       <% simple_settings_updated_at = card&.updated_at %>
       <% simple_stale = simple_generated_at && simple_settings_updated_at && simple_settings_updated_at > simple_generated_at %>
-      <% if simple_generated_at %>
-        <p class="text-xs text-slate-500 mb-2">Last captured <%= time_ago_in_words(simple_generated_at) %> ago</p>
-      <% end %>
-      <% if simple_stale %>
-        <p class="text-xs text-amber-600 dark:text-amber-400 mb-2">Settings changed — re-capture recommended</p>
-      <% end %>
-      <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-3">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-        <input type="hidden" name="kind" value="simple">
-        <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
-        <button class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload Custom Background</button>
-      </form>
-      <p class="mt-2 text-xs text-slate-500">Uploads replace the generated background for Simple.</p>
-      <% unless uploads_enabled %>
-        <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
-      <% end %>
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-6 shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Simple Background</h3>
+        <% if simple_generated_at %>
+          <p class="text-xs text-slate-500 mb-2">Last captured <%= time_ago_in_words(simple_generated_at) %> ago</p>
+        <% end %>
+        <% if simple_stale %>
+          <p class="text-xs text-amber-600 dark:text-amber-400 mb-2">Settings changed — re-capture recommended</p>
+        <% end %>
+        <form action="<%= upload_my_profile_asset_path(username: profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-3">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <input type="hidden" name="kind" value="simple">
+          <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300" <%= 'disabled' unless uploads_enabled %>>
+          <button class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600 <%= 'opacity-50 cursor-not-allowed' unless uploads_enabled %>" <%= 'disabled' unless uploads_enabled %>>Upload Custom Background</button>
+        </form>
+        <p class="mt-2 text-xs text-slate-500">Uploads replace the generated background for Simple.</p>
+        <% unless uploads_enabled %>
+          <p class="mt-1 text-xs text-slate-500">Uploads are disabled in this environment.</p>
+        <% end %>
+      </div>
     </div>
-  </div>
   </div>
 
   <%# Social Assets Section %>
@@ -207,7 +147,7 @@
       <p class="text-sm text-slate-600 dark:text-slate-400">Generated assets sized for major networks. Click to open full size.</p>
     </div>
     <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-    <% assets_map = @profile.profile_assets.index_by(&:kind) %>
+    <% assets_map = profile.profile_assets.index_by(&:kind) %>
     <% @social_targets.each do |t| %>
       <% asset = assets_map[t[:kind].to_s] %>
       <% url = nil %>
@@ -246,6 +186,5 @@
       </div>
     <% end %>
     </div>
-  </div>
   </div>
 </div>
