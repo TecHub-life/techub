@@ -90,9 +90,9 @@ module Github
         return nil
       end
 
-      # Skip SVGs and common badge hosts (non-binary and not useful inline)
-      if uri.path.to_s.downcase.end_with?(".svg") || (uri.host == "shields.io" || uri.host&.end_with?(".shields.io"))
-        StructuredLogger.warn(message: "Skipping SVG/badge image", url: url)
+      # Skip SVGs and common badge/graph hosts (non-binary and not useful inline)
+      if uri.path.to_s.downcase.end_with?(".svg") || (uri.host == "shields.io" || uri.host&.end_with?(".shields.io")) || uri.host == "github-readme-stats.vercel.app"
+        StructuredLogger.debug(message: "Skipping SVG/badge image", url: url) if defined?(StructuredLogger)
         return nil
       end
 
@@ -121,7 +121,11 @@ module Github
         # Validate content type
         content_type = response["content-type"].to_s.downcase
         unless content_type.start_with?("image/") && !content_type.include?("svg")
-          StructuredLogger.warn(message: "Invalid content type for image download", url: url, content_type: content_type)
+          # Downgrade to debug for known SVG-only hosts to reduce noise
+          level = (uri.host == "github-readme-stats.vercel.app") ? :debug : :warn
+          if defined?(StructuredLogger)
+            StructuredLogger.send(level, message: "Invalid content type for image download", url: url, content_type: content_type)
+          end
           return nil
         end
 

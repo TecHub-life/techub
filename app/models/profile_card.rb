@@ -8,7 +8,7 @@ class ProfileCard < ApplicationRecord
   validates :archetype, inclusion: { in: ->(_) { Motifs::Catalog.archetype_names }, allow_blank: true }
   validates :spirit_animal, inclusion: { in: ->(_) { Motifs::Catalog.spirit_animal_names }, allow_blank: true }
 
-  before_save :normalize_tags
+  before_validation :normalize_tags
 
   def tags_array
     Array(tags)
