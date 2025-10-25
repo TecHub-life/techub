@@ -50,7 +50,12 @@ export default class extends Controller {
     const value = (e.currentTarget.dataset.value || '').trim()
     if (this.fieldValue === 'tag') {
       const current = (this.inputTarget.value || '').trim()
-      const existing = current.length ? current.split(/[\,\s]+/).map(s => s.toLowerCase()).filter(Boolean) : []
+      const existing = current.length
+        ? current
+            .split(/[\,\s]+/)
+            .map((s) => s.toLowerCase())
+            .filter(Boolean)
+        : []
       const lower = value.toLowerCase()
       if (!existing.includes(lower)) {
         existing.push(lower)

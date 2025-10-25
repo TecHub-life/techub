@@ -85,6 +85,9 @@ RUN npm install --omit=optional --no-audit --no-fund && npm cache clean --force
 # Copy application code
 COPY . .
 
+# Ensure Font Awesome assets are copied into app assets before precompile
+RUN npm run postinstall
+
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
