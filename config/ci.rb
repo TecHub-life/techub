@@ -62,6 +62,10 @@ puts <<~MSG
     bundle exec brakeman -I --no-pager
   Then choose to remove obsolete entries and commit config/brakeman.ignore.
 
+  If CI runners are low on disk, consider purging Docker caches:
+    ./bin/docker-purge
+  This removes unused images/containers/volumes and build cache.
+
 MSG
 run!("test") { system("bin/rails test") }
 

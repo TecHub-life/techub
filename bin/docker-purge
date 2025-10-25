@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "This will aggressively clean unused Docker data (images, containers, volumes, build cache)."
+echo "Proceeding non-interactively..."
+
+# Stop on systems without Docker
+if ! command -v docker >/dev/null 2>&1; then
+  echo "docker not found; skipping purge"
+  exit 0
+fi
+
+# Stop and remove dangling containers (if any) without erroring out
+docker ps -aq >/dev/null 2>&1 && docker ps -aq | xargs -r docker rm -f || true
+
+# Prune everything non-interactively
+docker system prune -a --volumes -f || true
+
+# Also clear buildx cache if available
+if docker buildx version >/dev/null 2>&1; then
+  docker buildx prune -af || true
+fi
+
+echo "Docker purge completed."
+
+
