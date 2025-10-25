@@ -10,6 +10,22 @@ Rails.application.configure do
                 { message: msg.inspect }
     end
 
+    # Correlate logs with OpenTelemetry traces when available
+    trace_id = nil
+    span_id = nil
+    begin
+      require "opentelemetry-api"
+      span = OpenTelemetry::Trace.current_span
+      ctx = span&.context
+      if ctx && ctx.valid?
+        trace_id = ctx.trace_id.unpack1("H*") rescue nil
+        span_id = ctx.span_id.unpack1("H*") rescue nil
+      end
+    rescue LoadError
+      # OTEL not installed; skip correlation fields
+    rescue StandardError
+    end
+
     base = {
       ts: time.utc.iso8601(3),
       level: severity,
@@ -20,7 +36,10 @@ Rails.application.configure do
       ip: Current.ip,
       ua: Current.user_agent,
       path: Current.path,
-      method: Current.method
+      method: Current.method,
+      trace_id: trace_id,
+      span_id: span_id,
+      _time: time.utc.iso8601(3)
     }
 
     (base.merge(payload)).to_json + "\n"
@@ -80,13 +99,16 @@ module StructuredLogger
         begin
           require "faraday"
           conn = Faraday.new(url: "https://api.axiom.co") do |f|
-            f.request :json
+            f.request :retry
             f.response :raise_error
             f.adapter Faraday.default_adapter
           end
           conn.headers["Authorization"] = "Bearer #{axiom_token}"
           # Use v1 ingest API
-          conn.post("/v1/datasets/#{axiom_dataset}/ingest", [ payload ])
+          conn.post("/v1/datasets/#{axiom_dataset}/ingest") do |req|
+            req.headers["Content-Type"] = "application/json"
+            req.body = [ payload ].to_json
+          end
         rescue StandardError => e
           warn "Axiom forward failed: #{e.class}: #{e.message}" if ENV["AXIOM_DEBUG"] == "1"
         end

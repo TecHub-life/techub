@@ -20,14 +20,17 @@ namespace :axiom do
 
     require "faraday"
     conn = Faraday.new(url: "https://api.axiom.co") do |f|
-      f.request :json
+      f.request :retry
       f.response :raise_error
       f.adapter Faraday.default_adapter
     end
     conn.headers["Authorization"] = "Bearer #{token}"
     payload = [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor", env: Rails.env, app: "techub" } ]
     begin
-      resp = conn.post("/v1/datasets/#{dataset}/ingest", payload)
+      resp = conn.post("/v1/datasets/#{dataset}/ingest") do |req|
+        req.headers["Content-Type"] = "application/json"
+        req.body = payload.to_json
+      end
       puts "POST /v1/datasets/#{dataset}/ingest => #{resp.status}"
       puts "OK — event sent"
     rescue Faraday::ResourceNotFound
@@ -60,7 +63,10 @@ namespace :axiom do
     # Optionally validate metrics dataset
     if metrics_dataset.to_s.strip != ""
       begin
-        resp_m = conn.post("/v1/datasets/#{metrics_dataset}/ingest", [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor_metrics", env: Rails.env, app: "techub" } ])
+        resp_m = conn.post("/v1/datasets/#{metrics_dataset}/ingest") do |req|
+          req.headers["Content-Type"] = "application/json"
+          req.body = [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor_metrics", env: Rails.env, app: "techub" } ].to_json
+        end
         puts "POST /v1/datasets/#{metrics_dataset}/ingest => #{resp_m.status}"
         puts "OK — metrics event sent"
       rescue Faraday::ResourceNotFound
@@ -120,7 +126,7 @@ namespace :axiom do
     begin
       require "opentelemetry/sdk"
       tracer = OpenTelemetry.tracer_provider.tracer("techub.smoke", "1.0")
-      tracer.in_span("otel_smoke", attributes: { "smoke" => true, "env" => Rails.env, "service.name" => (ENV["OTEL_SERVICE_NAME"] || "techub") }) do
+      tracer.in_span("otel_smoke", attributes: { "smoke" => true, "env" => Rails.env, "service.name" => "techub" }) do
         sleep 0.01
       end
       puts "OTEL smoke span emitted — check your Axiom traces UI."
@@ -135,6 +141,24 @@ namespace :axiom do
 end
 
 namespace :axiom do
+  desc "Emit a simple OpenTelemetry metrics data point to verify OTLP metrics export"
+  task otel_metrics_smoke: :environment do
+    begin
+      require "opentelemetry/sdk"
+      meter = OpenTelemetry.meter_provider.meter("techub.metrics", "1.0")
+      counter = meter.create_counter("otel_smoke_metric_total", unit: "1", description: "OTEL metrics smoke counter")
+      counter.add(1, attributes: { env: Rails.env })
+      # Give the PeriodicExportingMetricReader a moment to export on its interval (if short)
+      sleep 2
+      puts "OTEL metrics smoke emitted — check your Axiom metrics UI for otel_smoke_metric_total."
+    rescue LoadError
+      warn "OpenTelemetry gems not installed. Run bundle install."
+      exit 2
+    rescue StandardError => e
+      warn "OTEL metrics smoke failed: #{e.class}: #{e.message}"
+      exit 3
+    end
+  end
   desc "Self-test: log smoke (sync), OTEL span, and direct ingest"
   task self_test: :environment do
     dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]

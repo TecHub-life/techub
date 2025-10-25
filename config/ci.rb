@@ -2,6 +2,13 @@
 
 require "open3"
 
+# Silent mode for CI environments like GitHub Actions
+SILENT = (
+  ENV["CI_SILENT"] == "1" ||
+  ARGV.include?("--silent") ||
+  ENV["GITHUB_ACTIONS"] == "true"
+)
+
 ENV["RUBOCOP_CACHE_ROOT"] ||= "tmp/rubocop"
 ENV["PARALLEL_WORKERS"] ||= "1"
 # Disable parallel tests in CI/sandboxed environments to avoid DRb socket issues
@@ -23,14 +30,14 @@ techub.life • AI-powered GitHub trading cards
   # rubocop:enable Layout/TrailingWhitespace
 end
 
-puts banner
+puts banner unless SILENT
 
 def run!(label)
-  puts "\n== #{label} =="
+  puts "\n== #{label} ==" unless SILENT
   success = yield
   return if success
 
-  puts "#{label} failed"
+  puts "#{label} failed" unless SILENT
   exit(1)
 end
 
@@ -50,20 +57,41 @@ run!("npm install") do
   system(cmd)
 end
 
+run!("fontawesome assets present") do
+  system("./bin/check-fontawesome")
+end
+
 run!("db:prepare") { system("bin/rails db:prepare") }
 run!("db:setup:queue") { system("bin/rails db:setup:queue") }
 run!("rubocop") { system("bin/rubocop -A && bin/rubocop") }
 run!("prettier") { system("npm run --silent prettier:check") }
 # Use bundle exec to avoid bin/brakeman's --ensure-latest in CI sandboxes
 run!("brakeman") { system("bundle exec brakeman -q -w2 --no-exit-on-warn --no-pager") }
-puts <<~MSG
+puts <<~MSG unless SILENT
 
   Note: If Brakeman reported "Obsolete Ignore Entries", clean them locally:
     bundle exec brakeman -I --no-pager
   Then choose to remove obsolete entries and commit config/brakeman.ignore.
 
+  If CI runners are low on disk, consider purging Docker caches:
+    ./bin/docker-purge
+  This removes unused images/containers/volumes and build cache.
+
+  To run production-like tests locally with Docker Compose:
+    RAILS_MASTER_KEY=$(cat config/master.key) docker compose up --build -d
+    docker compose exec -T web bin/rails test
+
+  To inspect Docker disk usage locally:
+    docker system df
+
 MSG
 run!("test") { system("bin/rails test") }
+
+# Optional: display Docker disk usage in CI environments that have Docker
+if !SILENT && system("command -v docker >/dev/null")
+  puts "\nDocker disk usage (for awareness):"
+  system("docker system df || true")
+end
 
 # Optional Docker build + smoke test
 if ENV["CI_BUILD_DOCKER"] == "1"
@@ -75,5 +103,5 @@ if ENV["CI_BUILD_DOCKER"] == "1"
   end
 end
 
-puts "\nAll green!"
-puts "techub.life"
+puts "\nAll green!" unless SILENT
+puts "techub.life" unless SILENT

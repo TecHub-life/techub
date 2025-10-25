@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Verify Font Awesome assets exist and provide remediation steps if missing.
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CSS_FILE="$ROOT_DIR/app/assets/stylesheets/application.css"
+WEBFONTS_DIR_PUBLIC="$ROOT_DIR/public/webfonts"
+WEBFONTS_DIR_APP="$ROOT_DIR/app/assets/webfonts"
+
+missing=()
+
+require_file() {
+  local path="$1"
+  if [ ! -f "$path" ]; then
+    missing+=("$path")
+  fi
+}
+
+# Required font files (at least these three should exist in both locations for runtime)
+for base in fa-solid-900.woff2 fa-regular-400.woff2 fa-brands-400.woff2; do
+  require_file "$WEBFONTS_DIR_PUBLIC/$base"
+  require_file "$WEBFONTS_DIR_APP/$base"
+done
+
+# CSS should contain Font Awesome marker
+if ! grep -q "Font Awesome" "$CSS_FILE" 2>/dev/null; then
+  missing+=("$CSS_FILE (Font Awesome CSS not appended)")
+fi
+
+if [ "${#missing[@]}" -eq 0 ]; then
+  echo "Font Awesome assets OK"
+  exit 0
+fi
+
+echo "Detected missing Font Awesome assets:" >&2
+for m in "${missing[@]}"; do
+  echo "  - $m" >&2
+done
+echo >&2
+echo "How to fix:" >&2
+echo "  1) Ensure node dependencies are installed to trigger postinstall:" >&2
+echo "     npm install" >&2
+echo "     # or on CI/build stage:" >&2
+echo "     npm ci --no-fund --no-audit" >&2
+echo "  2) If needed, manually run the postinstall step:" >&2
+echo "     npm run postinstall" >&2
+echo "  3) Then re-run this check:" >&2
+echo "     ./bin/check-fontawesome" >&2
+exit 1
+
+

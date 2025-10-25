@@ -3,7 +3,7 @@ module Motifs
     module_function
 
     def archetypes
-      @archetypes ||= [
+      [
         [ "The Innocent", "Optimistic beginner’s mind; values simplicity and sincerity." ],
         [ "The Everyman", "Grounded, relatable collaborator who keeps teams steady." ],
         [ "The Hero", "Steps up under pressure; ships ambitious work against odds." ],
@@ -20,7 +20,7 @@ module Motifs
     end
 
     def spirit_animals
-      @spirit_animals ||= [
+      [
         [ "Danger Noodle", "Playful serpent spirit; quick, clever, and a little chaotic." ],
         [ "Wedge-tailed Eagle", "High vantage and precision; surveys systems end-to-end." ],
         [ "Platypus", "Unorthodox but effective; thrives across disciplines." ],
@@ -52,7 +52,8 @@ module Motifs
         [ "Funnel-web Spider", "Defensive design; locks down security pathways." ],
         [ "Cockatoo", "Noisy when needed; calls attention to crucial issues." ],
         [ "Possum", "Resourceful survivor; thrives in complex legacy code." ],
-        [ "Flying Fox", "Night navigator; maps systems across long distances." ]
+        [ "Flying Fox", "Night navigator; maps systems across long distances." ],
+        [ "Loftbubu", "Mischief with heart; a little devil toy spirit who hacks with charm." ]
       ]
     end
 

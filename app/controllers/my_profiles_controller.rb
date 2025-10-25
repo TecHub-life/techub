@@ -66,6 +66,20 @@ class MyProfilesController < ApplicationController
     @asset_card = assets["card"]
     @asset_simple = assets["simple"]
 
+    # Targets for social previews (used in assets tab)
+    # Canonical, deduped social targets (avoid duplicates for same dimensions)
+    @social_targets = [
+      { kind: "x_profile_400", label: "X Profile (Avatar)", aspect: "1/1" },
+      { kind: "x_header_1500x500", label: "X Header", aspect: "3/1" },
+      { kind: "x_feed_1600x900", label: "X Feed", aspect: "16/9" },
+      { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", aspect: "4/5" },
+      { kind: "ig_landscape_1080x566", label: "Instagram Landscape", aspect: "540/283" },
+      { kind: "fb_post_1080", label: "Facebook Post", aspect: "1/1" },
+      { kind: "fb_cover_851x315", label: "Facebook Cover", aspect: "851/315" },
+      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover", aspect: "4/1" },
+      { kind: "youtube_cover_2560x1440", label: "YouTube Cover", aspect: "16/9" }
+    ]
+
     # For UI: compute AI regen availability
     @ai_regen_available_at = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
 

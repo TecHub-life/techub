@@ -1,0 +1,32 @@
+name: Notify on CI Failure
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types:
+      - completed
+
+jobs:
+  notify:
+    if: |
+      github.event.workflow_run.conclusion == 'failure' &&
+      (secrets.RESEND_API_KEY != '' && secrets.TO_EMAIL != '')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Send Resend email
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          TO_EMAIL: ${{ secrets.TO_EMAIL }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          payload=$(jq -n --arg to "$TO_EMAIL" \
+                        --arg subject "[CI Failure] $REPO" \
+                        --arg text "CI failed. Details: $RUN_URL" \
+                        '{from:"onboarding@resend.dev", to:[$to], subject:$subject, text:$text}')
+          curl -sfS https://api.resend.com/emails \
+            -H "Authorization: Bearer $RESEND_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$payload"

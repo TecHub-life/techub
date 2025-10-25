@@ -2,7 +2,8 @@
   "name": "techub",
   "private": true,
   "dependencies": {
-    "puppeteer": "^24.15.0"
+    "puppeteer": "^24.15.0",
+    "@fortawesome/fontawesome-free": "^7.1.0"
   },
   "devDependencies": {
     "@prettier/plugin-xml": "^3.3.2",
@@ -12,6 +13,7 @@
   "scripts": {
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
-    "screenshot": "node script/screenshot.js --url http://127.0.0.1:3000/cards/loftwah/og --out tmp/og.png --width 1200 --height 630"
+    "screenshot": "node script/screenshot.js --url http://127.0.0.1:3000/cards/loftwah/og --out tmp/og.png --width 1200 --height 630",
+    "postinstall": "mkdir -p app/assets/stylesheets app/assets/webfonts public/webfonts && cp -rf node_modules/@fortawesome/fontawesome-free/webfonts/* app/assets/webfonts/ public/webfonts/ && (grep -q 'Font Awesome' app/assets/stylesheets/application.css || (echo '\n/* vendor: fontawesome */' >> app/assets/stylesheets/application.css && cat node_modules/@fortawesome/fontawesome-free/css/all.min.css >> app/assets/stylesheets/application.css))"
   }
 }

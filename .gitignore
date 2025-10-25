@@ -11,6 +11,8 @@
 
 # Dependencies
 /.bundle
+!/vendor/javascript
+/vendor/bundle
 node_modules/
 
 # Logs, temp files, and storage

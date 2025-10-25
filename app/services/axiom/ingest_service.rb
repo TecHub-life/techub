@@ -13,12 +13,15 @@ module Axiom
       return failure(StandardError.new("missing_token")) if token.to_s.strip.empty?
 
       conn = Faraday.new(url: "https://api.axiom.co") do |f|
-        f.request :json
+        f.request :retry
         f.response :raise_error
         f.adapter Faraday.default_adapter
       end
       conn.headers["Authorization"] = "Bearer #{token}"
-      resp = conn.post("/v1/datasets/#{dataset}/ingest", events)
+      resp = conn.post("/v1/datasets/#{dataset}/ingest") do |req|
+        req.headers["Content-Type"] = "application/json"
+        req.body = events.to_json
+      end
       success(resp.status)
     rescue Faraday::ResourceNotFound
       # Optionally create dataset on the fly if missing

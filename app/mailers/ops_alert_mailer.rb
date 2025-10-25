@@ -16,7 +16,11 @@ class OpsAlertMailer < ApplicationMailer
     @app_revision = ENV["APP_REVISION"].to_s.presence
 
     to = params[:to]
-    subject = "[TecHub][#{Rails.env}] Job failed: #{@job} for @#{@profile&.login}"
+    if @error_message.present?
+      subject = "[TecHub][#{Rails.env}] Job failed: #{@job} for @#{@profile&.login}"
+    else
+      subject = "[TecHub][#{Rails.env}] Job report: #{@job} for @#{@profile&.login}"
+    end
 
     mail(to: to, subject: subject)
   end

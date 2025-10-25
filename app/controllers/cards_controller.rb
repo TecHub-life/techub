@@ -31,7 +31,7 @@ class CardsController < ApplicationController
   def x_header_1500x500
     @canvas_w = 1500
     @canvas_h = 500
-    render :banner
+    render :x_header_1500x500
   end # 1500x500 reuse banner
   def x_feed_1600x900
     @canvas_w = 1600
@@ -53,7 +53,7 @@ class CardsController < ApplicationController
   def fb_cover_851x315
     @canvas_w = 851
     @canvas_h = 315
-    render :banner
+    render :x_header_1500x500
   end # 851x315 reuse banner
 
   # LinkedIn
@@ -61,14 +61,14 @@ class CardsController < ApplicationController
   def linkedin_cover_1584x396
     @canvas_w = 1584
     @canvas_h = 396
-    render :banner
+    render :x_header_1500x500
   end # 1584x396 reuse banner
 
   # YouTube
   def youtube_cover_2560x1440
     @canvas_w = 2560
     @canvas_h = 1440
-    render :og
+    render :youtube_cover_2560x1440
   end # 2560x1440 reuse OG layout
 
   # Alias: explicit OG variant name for service consistency

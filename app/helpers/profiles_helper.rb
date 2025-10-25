@@ -6,7 +6,13 @@ module ProfilesHelper
     { kind: "banner", label: "Banner", dims: "1500×500", aspect: "3/1", usage: "Header/banner", fallback: "banner" },
     { kind: "x_profile_400", label: "X Profile", dims: "400×400", aspect: "1/1", usage: "X avatar", fallback: "x_profile_400" },
     { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", dims: "1080×1350", aspect: "4/5", usage: "Instagram post", fallback: "ig_portrait_1080x1350" },
-    { kind: "fb_post_1080", label: "Facebook Post", dims: "1080×1080", aspect: "1/1", usage: "Facebook post", fallback: "fb_post_1080" }
+    { kind: "fb_post_1080", label: "Facebook Post", dims: "1080×1080", aspect: "1/1", usage: "Facebook post", fallback: "fb_post_1080" },
+    { kind: "x_header_1500x500", label: "X Header", dims: "1500×500", aspect: "3/1", usage: "X banner", fallback: "x_header_1500x500" },
+    { kind: "x_feed_1600x900", label: "X Feed", dims: "1600×900", aspect: "16/9", usage: "X feed post", fallback: "x_feed_1600x900" },
+    { kind: "ig_landscape_1080x566", label: "Instagram Landscape", dims: "1080×566", aspect: "540/283", usage: "Instagram landscape", fallback: "ig_landscape_1080x566" },
+    { kind: "fb_cover_851x315", label: "Facebook Cover", dims: "851×315", aspect: "851/315", usage: "Facebook cover", fallback: "fb_cover_851x315" },
+    { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover", dims: "1584×396", aspect: "4/1", usage: "LinkedIn cover", fallback: "linkedin_cover_1584x396" },
+    { kind: "youtube_cover_2560x1440", label: "YouTube Cover", dims: "2560×1440", aspect: "16/9", usage: "YouTube channel art", fallback: "youtube_cover_2560x1440" }
   ].freeze
 
   def profile_card_variants(profile)
@@ -29,7 +35,41 @@ module ProfilesHelper
     return if source.blank?
 
     str = source.to_s
-    return str if str.start_with?("http://", "https://")
+    if str.start_with?("http://", "https://")
+      # Rewrite third‑party storage hosts (e.g., DigitalOcean Spaces) to our CDN/custom domain.
+      # When using region endpoints with path-style addressing, strip the bucket prefix from the path
+      # because the CDN hostname already implies the bucket.
+      begin
+        cdn_endpoint = (Rails.application.credentials.dig(:do_spaces, :cdn_endpoint) rescue nil).presence || ENV["DO_SPACES_CDN_ENDPOINT"].to_s.presence
+        if cdn_endpoint
+          src = URI.parse(str)
+          cdn = URI.parse(cdn_endpoint)
+          if cdn.host.present?
+            # Optionally remove bucket segment from the path when the source is a Spaces endpoint
+            bucket = (ENV["DO_SPACES_BUCKET"].presence || (Rails.application.credentials.dig(:do_spaces, :bucket_name) rescue nil)).to_s
+            if bucket.present?
+              host = src.host.to_s
+              # Match both origin and CDN Spaces hosts
+              if host.end_with?(".digitaloceanspaces.com") || host.end_with?(".cdn.digitaloceanspaces.com")
+                # If the path starts with /<bucket>/, drop that segment (virtual-host style under CDN)
+                if src.path.to_s.start_with?("/#{bucket}/")
+                  src.path = src.path.sub(%r{^/#{Regexp.escape(bucket)}/}, "/")
+                end
+              end
+            end
+
+            # Replace scheme/host/port
+            src.scheme = cdn.scheme.presence || src.scheme
+            src.host = cdn.host
+            src.port = cdn.port if cdn.port && cdn.port != (cdn.scheme == "https" ? 443 : 80)
+            return src.to_s
+          end
+        end
+      rescue StandardError
+        # If URI parsing fails, fall back to original string
+      end
+      return str
+    end
 
     public_root = Rails.root.join("public")
     url_path = nil
@@ -125,10 +165,19 @@ module ProfilesHelper
     return if fallback_basename.blank?
 
     base = Rails.root.join("public", "generated", profile.login)
-    return unless Dir.exist?(base)
-
-    Dir[base.join("#{fallback_basename}*.{jpg,jpeg,png}").to_s].find do |candidate|
-      (File.size?(candidate) || 0) > 1024
+    if Dir.exist?(base)
+      found = Dir[base.join("#{fallback_basename}*.{jpg,jpeg,png}").to_s].find do |candidate|
+        (File.size?(candidate) || 0) > 1024
+      end
+      return found if found
     end
+
+    # As a last resort for directory previews, use the OG endpoint which
+    # will serve or trigger generation server-side if missing.
+    if fallback_basename.to_s == "og"
+      return "/og/#{profile.login}.jpg"
+    end
+
+    nil
   end
 end

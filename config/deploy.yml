@@ -87,9 +87,9 @@ builder:
   #
   # # Pass arguments and secrets to the Docker build process
   args:
-    RUBY_VERSION: 3.3.0
+    RUBY_VERSION: 3.4.1
     RUBY_BASE: public.ecr.aws/docker/library/ruby
-    RUBY_TAG: 3.3.0-slim
+    RUBY_TAG: 3.4.1-slim
   # secrets:
   #   - GITHUB_TOKEN
   #   - RAILS_MASTER_KEY

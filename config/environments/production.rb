@@ -63,7 +63,18 @@ Rails.application.configure do
 
   # Set host for ActiveStorage URLs (prefer AppHost/current credentials over ENV)
   config.after_initialize do
-    ActiveStorage::Current.url_options = { host: (defined?(AppHost) ? AppHost.current : ENV.fetch("APP_HOST", "https://techub.life")) }
+    full_url = defined?(AppHost) ? AppHost.current : ENV.fetch("APP_HOST", "https://techub.life")
+    begin
+      uri = URI.parse(full_url)
+      url_opts = {}
+      url_opts[:host] = uri.host if uri.host
+      url_opts[:protocol] = uri.scheme if uri.scheme
+      url_opts[:port] = uri.port if uri.port && ![ 80, 443 ].include?(uri.port)
+      ActiveStorage::Current.url_options = url_opts if url_opts[:host].present?
+    rescue URI::InvalidURIError
+      # Fallback to simple host if URL parsing fails
+      ActiveStorage::Current.url_options = { host: "techub.life", protocol: "https" }
+    end
   end
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via rails credentials:edit.

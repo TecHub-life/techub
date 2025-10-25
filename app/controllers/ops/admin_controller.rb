@@ -1,7 +1,13 @@
 module Ops
   class AdminController < BaseController
     def index
-      @engine_present = defined?(MissionControl::Jobs::Engine)
+      # Reflect whether /ops/jobs is actually mounted in this env
+      @engine_present = begin
+        defined?(MissionControl::Jobs::Engine) &&
+          Rails.application.routes.routes.any? { |r| r.path.spec.to_s.start_with?("/ops/jobs") }
+      rescue StandardError
+        false
+      end
       @adapter = ActiveJob::Base.queue_adapter
 
       @stats = {
@@ -112,13 +118,19 @@ module Ops
         org = (Rails.application.credentials.dig(:axiom, :org) rescue nil) || ENV["AXIOM_ORG"]
         dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
         metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
-        service_name = ENV["OTEL_SERVICE_NAME"].presence || (Rails.application.credentials.dig(:otel, :service_name) rescue nil).to_s.presence || "techub"
+        service_name = "techub"
 
-        # Prefer Axiom Streams UI paths
-        dataset_url ||= (org.present? && dataset.present?) ? "https://app.axiom.co/#{org}/stream/#{dataset}" : nil
-        metrics_dataset_url ||= (org.present? && metrics_dataset.present?) ? "https://app.axiom.co/#{org}/stream/#{metrics_dataset}" : nil
-        traces_url ||= org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
-        traces_url = traces_url && service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
+        # Prefer canonical dataset UI paths (stable)
+        if org.present? && dataset.present?
+          dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{dataset}"
+        end
+        if org.present() && metrics_dataset.present?
+          metrics_dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}"
+        end
+        # Traces root (service filter applied via query param)
+        base_traces = org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
+        traces_url ||= base_traces
+        traces_url = service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
 
         @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
       rescue StandardError
@@ -256,6 +268,22 @@ module Ops
         StructuredLogger.info({ message: "ops_axiom_smoke", sample: msg, request_id: request.request_id, env: Rails.env }, force_axiom: true)
       end
       redirect_to ops_admin_path, notice: "Emitted Axiom smoke log"
+    end
+
+    def pipeline_doctor
+      login = params[:login].to_s.downcase.presence
+      host = params[:host].presence
+      email = params[:email].presence
+      variants = (params[:variants].presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS.join(",")).to_s.split(/[,\s]+/).map(&:strip).reject(&:blank?)
+
+      if login.blank?
+        redirect_to ops_admin_path, alert: "Login is required"
+        return
+      end
+
+      # Enqueue doctor job asynchronously so the request is fast and resilient
+      Profiles::PipelineDoctorJob.perform_later(login: login, host: host, email: email, variants: variants)
+      redirect_to ops_admin_path(anchor: "pipeline"), notice: "Pipeline doctor enqueued for @#{login}. Results will be emailed to ops."
     end
 
     private

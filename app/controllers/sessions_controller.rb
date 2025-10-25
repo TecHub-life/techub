@@ -2,6 +2,12 @@ class SessionsController < ApplicationController
   def start
     state = SecureRandom.hex(16)
     session[:github_oauth_state] = state
+    # Preserve invite code sent via querystring or prior form
+    if params[:invite_code].present?
+      # Preserve exact input (including case/whitespace) for UX/debug parity;
+      # validation handles normalization/case-insensitivity downstream
+      session[:invite_code] = params[:invite_code].to_s
+    end
 
     redirect_to oauth_authorize_url(state), allow_other_host: true
   end
@@ -53,9 +59,15 @@ class SessionsController < ApplicationController
       # best-effort; ignore seeding errors
     end
     unless Access::Policy.allowed?(user.login)
-      reset_session
-      msg = "We're not open yet. Only approved accounts can sign in (ask in Ops)."
-      return redirect_to root_path, alert: msg
+      # If user supplied a valid invite code earlier, auto-allow them once
+      code = session.delete(:invite_code)
+      if Access::InviteCodes.valid?(code)
+        Access::Policy.add_allowed_login(user.login)
+      else
+        reset_session
+        msg = "We're not open yet. Only approved accounts can sign in (ask in Ops)."
+        return redirect_to root_path, alert: msg
+      end
     end
 
     session[:current_user_id] = user.id

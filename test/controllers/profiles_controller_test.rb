@@ -54,4 +54,13 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match /profile not found/i, response.body.downcase
   end
+
+  test "profile show renders tags that link to directory" do
+    p = Profile.create!(github_id: 10, login: "dana", name: "Dana", last_pipeline_status: "success")
+    ProfileCard.create!(profile: p, attack: 10, defense: 10, speed: 10, tags: %w[ruby rails ai js ml data])
+
+    get profile_path(username: "dana")
+    assert_response :success
+    assert_match /\/directory\?tags=ruby/, @response.body
+  end
 end

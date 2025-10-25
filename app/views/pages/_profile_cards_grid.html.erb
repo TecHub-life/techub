@@ -106,7 +106,9 @@
             <% if card && Array(card.tags).any? %>
               <div class="mt-auto flex flex-wrap gap-1.5">
                 <% Array(card.tags).first(6).each do |t| %>
-                  <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">#<%= t.to_s.downcase %></span>
+                  <%= link_to directory_path(tags: t.to_s.downcase), class: "inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition" do %>
+                    #<%= t.to_s.downcase %>
+                  <% end %>
                 <% end %>
               </div>
             <% end %>

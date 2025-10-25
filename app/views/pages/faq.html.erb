@@ -6,21 +6,17 @@
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
       <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What is <span class="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-emerald-400 animate-gradient">TecHub</span>?</dt>
       <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        TecHub is an AI‑powered collectible trading card directory for GitHub developer profiles. It turns
-        your public GitHub presence into a stylised card with stats, tags, and flavour that reflect what you build.
+        TecHub is a GitHub‑native profile and content layer — a tasteful “TechDeck for GitHub.” It turns your public GitHub activity into a rich, shareable profile with optional AI‑assisted artwork and summaries.
       </dd>
     </div>
 
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
       <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">How does it <span class="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-emerald-400 animate-gradient">work</span>?</dt>
       <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300 space-y-2">
-        <p><span class="font-semibold">Submission (free):</span> Submit any GitHub username. We run an eligibility check (age, repos, followers,
-        recent activity) to keep quality high.</p>
-        <p><span class="font-semibold">AI‑powered generation:</span> We analyse public GitHub signals (repos, commits, languages, topics) and any optional
-        link you provide to generate stats, buffs, weaknesses, special moves, and tags.</p>
-        <p><span class="font-semibold">Directory entry:</span> Your card joins a searchable directory — discoverable by languages, stacks, vibes, and styles.</p>
-        <p><span class="font-semibold">JSON endpoint:</span> Profile and card data are available at <code class="whitespace-nowrap">/profiles/:username.json</code> for integrations, leaderboards, and apps.</p>
-        <p><span class="font-semibold">Physical edition:</span> The first 52 profiles are eligible for a limited‑edition printed deck.</p>
+        <p><span class="font-semibold">Two modes:</span> Use repo‑based config (“GitHub mode”) or manage via UI (“Managed mode”). You can switch without losing data.</p>
+        <p><span class="font-semibold">JSON‑first:</span> Everything shown on profiles is available at <code class="whitespace-nowrap">/profiles/:username.json</code> for dashboards and embeds.</p>
+        <p><span class="font-semibold">Optional AI:</span> Artwork and summaries are opt‑in, quota‑bounded, and always overrideable by you.</p>
+        <p><span class="font-semibold">Open source:</span> Minimal scopes, transparent ops, and auditable code.</p>
       </dd>
     </div>
 
@@ -93,20 +89,18 @@
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
       <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Can I <span class="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-emerald-400 animate-gradient">opt out</span> permanently?</dt>
       <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        Yes. Once verified, your GitHub login is added to a permanent block list. Neither you nor anyone else can submit it.
-        To reverse this later, contact the official account to remove the block.
+        Yes. Opt‑out is permanent unless you explicitly request removal. We will never add your profile without consent after opt‑out.
       </dd>
     </div>
 
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
-      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What do I get with my <span class="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-emerald-400 animate-gradient">TecHub card</span>?</dt>
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What do I get with my <span class="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-emerald-400 animate-gradient">TecHub profile</span>?</dt>
       <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
         <ul class="list-disc pl-5 space-y-1">
-          <li>A unique, stylised card based on your GitHub persona.</li>
-          <li>Inclusion in the searchable TecHub directory.</li>
-          <li>JSON access to your profile and card data.</li>
-          <li>Eligibility for limited‑edition physical decks.</li>
-          <li>Shareable assets for your README, portfolio, and socials.</li>
+          <li>Sharable profile with optional Cards/OG images.</li>
+          <li>Searchable directory placement with tags, archetypes, and spirit animals.</li>
+          <li>JSON API access to the same data.</li>
+          <li>Configurable via repo or UI.</li>
         </ul>
       </dd>
     </div>
@@ -126,8 +120,16 @@
     <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
       <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">Where can I find images and <span class="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-emerald-400 animate-gradient">JSON</span>?</dt>
       <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        Use <code class="whitespace-nowrap">/profiles/:username.json</code> for JSON. Open Graph images are served from
-        <code class="whitespace-nowrap">/og/:login.jpg</code> (PNG/JPG). We enqueue generation automatically if assets are missing.
+        JSON: <code class="whitespace-nowrap">/profiles/:username.json</code> • OG image: <code class="whitespace-nowrap">/og/:login.jpg</code>. If missing, generation is queued automatically.
+      </dd>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <dt class="text-sm font-semibold text-slate-900 dark:text-slate-100">What permissions does TecHub request?</dt>
+      <dd class="mt-2 text-sm text-slate-600 dark:text-slate-300 space-y-2">
+        <p><span class="font-semibold">Minimal scopes:</span> public GitHub data and your email (optional for contact). We do not request private repo access.</p>
+        <p><span class="font-semibold">Transparency:</span> We show exactly what is requested and why during sign‑in.</p>
+        <p><span class="font-semibold">Overrides:</span> You can hide or remove any self‑identifying info from your profile, and you can set a separate contact email at Settings → Account (it does not have to be your GitHub email).</p>
       </dd>
     </div>
 

@@ -13,62 +13,24 @@
   <% assets_by_kind["og"] ||= asset_og if asset_og %>
   <% assets_by_kind["simple"] ||= asset_simple if asset_simple %>
 
-  <% relative_url = lambda do |path|
-       next nil if path.blank?
-       str_path = path.is_a?(Pathname) ? path.to_s : path.to_s
-       begin
-         pn = Pathname.new(str_path)
-         if pn.exist?
-           rel = pn.relative_path_from(public_root)
-           url = "/#{rel}"
-           ts = File.mtime(pn).to_i rescue nil
-           next ts ? "#{url}?v=#{ts}" : url
-         end
-       rescue ArgumentError
-         # fall through to string handling
-       end
+  <%# Resolve a canonical URL for an asset without falling back to repo samples %>
 
-       if str_path.start_with?("http://", "https://")
-         str_path
-       elsif (public_index = str_path.index("/public/"))
-         rel = str_path[(public_index + 7)..-1]
-         next nil if rel.blank?
-         cleaned = rel.sub(%r{\A/+}, "")
-         full = Rails.root.join("public", cleaned)
-         ts = File.exist?(full) ? (File.mtime(full).to_i rescue nil) : nil
-         url = "/#{cleaned}"
-         ts ? "#{url}?v=#{ts}" : url
-       else
-         nil
-       end
-     end %>
-
-  <% find_existing_for = lambda do |name|
-       next nil unless Dir.exist?(base)
-       Dir[base.join("#{name}*.{jpg,jpeg,png}").to_s].find do |candidate|
-         (File.size?(candidate) || 0) > 1024
-       end
-     end %>
-
-  <% asset_url = lambda do |asset, fallback_name|
+  <% asset_url = lambda do |asset, _fallback_name|
        if asset&.public_url.present?
-         asset.public_url
+         canonical_profile_asset_url(asset.public_url)
        elsif asset&.local_path.present?
-         relative_url.call(asset.local_path)
-       elsif fallback_name
-         candidate = find_existing_for.call(fallback_name)
-         relative_url.call(candidate)
+         canonical_profile_asset_url(asset.local_path)
        end
      end %>
 
   <% variants = [
-       { kind: "card", label: "Main Card", dims: "1280×720", aspect: "16/9", usage: "Social posts & profile features" },
-       { kind: "og", label: "Work (Link)", dims: "1200×630", aspect: "1200/630", usage: "Portfolio link previews" },
-       { kind: "simple", label: "Simple Card", dims: "1280×720", aspect: "16/9", usage: "One-sheet & CVs" },
-       { kind: "banner", label: "Banner", dims: "1500×500", aspect: "3/1", usage: "Headers & cover images" },
-       { kind: "x_profile_400", label: "Square Avatar", dims: "400×400", aspect: "1/1", usage: "Avatars & profile photos" },
-       { kind: "fb_post_1080", label: "Square Post", dims: "1080×1080", aspect: "1/1", usage: "Instagram & Facebook posts" },
-       { kind: "ig_portrait_1080x1350", label: "Portrait Post", dims: "1080×1350", aspect: "4/5", usage: "Instagram portrait posts" }
+       { kind: "card", label: "Main Card", dims: "1280×720", aspect: "16/9", usage: "Social posts" },
+       { kind: "og", label: "Open Graph", dims: "1200×630", aspect: "1200/630", usage: "Portfolio link previews" },
+       { kind: "simple", label: "Simple", dims: "1280×720", aspect: "16/9", usage: "Profiles & CVs" },
+       { kind: "banner", label: "Banner", dims: "1500×500", aspect: "3/1", usage: "Header/banner" },
+       { kind: "x_profile_400", label: "X Profile", dims: "400×400", aspect: "1/1", usage: "X avatar" },
+       { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", dims: "1080×1350", aspect: "4/5", usage: "Instagram post" },
+       { kind: "fb_post_1080", label: "Facebook Post", dims: "1080×1080", aspect: "1/1", usage: "Facebook post" }
      ].map do |variant|
        asset = assets_by_kind[variant[:kind]]
        fallback = variant[:fallback] || variant[:kind]
@@ -76,6 +38,9 @@
        generated_at = asset&.generated_at || asset&.updated_at
        variant.merge(asset: asset, url: url, generated_at: generated_at)
      end %>
+
+  <%# URL for the Main Card preview/download %>
+  <% card_img = asset_url.call(asset_card, "card") %>
 
   <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
     <div class="mb-4">
@@ -242,9 +207,15 @@
       <p class="text-sm text-slate-600 dark:text-slate-400">Generated assets sized for major networks. Click to open full size.</p>
     </div>
     <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-    <% gen_dir = Rails.root.join('public','generated', @profile.login) %>
+    <% assets_map = @profile.profile_assets.index_by(&:kind) %>
     <% @social_targets.each do |t| %>
-      <% file = Dir.exist?(gen_dir) ? Dir[gen_dir.join("#{t[:kind]}*.{jpg,png}").to_s].first : nil %>
+      <% asset = assets_map[t[:kind].to_s] %>
+      <% url = nil %>
+      <% if asset&.public_url.present? %>
+        <% url = canonical_profile_asset_url(asset.public_url) %>
+      <% elsif asset&.local_path.present? %>
+        <% url = canonical_profile_asset_url(asset.local_path) %>
+      <% end %>
       <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
         <div class="flex items-center justify-between gap-2">
           <div class="text-sm font-medium text-slate-800 dark:text-slate-200"><%= t[:label] %></div>
@@ -258,9 +229,9 @@
           <% end %>
         </div>
         <div class="relative mt-2 overflow-hidden rounded bg-slate-100 dark:bg-slate-900" style="aspect-ratio:<%= t[:aspect] %>">
-          <% if file %>
-            <a href="<%= "/generated/#{@profile.login}/#{File.basename(file)}" %>" target="_blank" rel="noopener" aria-label="Open <%= t[:label] %> full size" class="focus:outline-none focus:ring-2 focus:ring-indigo-500/60">
-              <img src="<%= "/generated/#{@profile.login}/#{File.basename(file)}" %>" alt="<%= t[:label] %>" class="h-full w-full object-cover" loading="lazy">
+          <% if url.present? %>
+            <a href="<%= url %>" target="_blank" rel="noopener" aria-label="Open <%= t[:label] %> full size" class="focus:outline-none focus:ring-2 focus:ring-indigo-500/60">
+              <img src="<%= url %>" alt="<%= t[:label] %>" class="h-full w-full object-cover" loading="lazy">
             </a>
           <% else %>
             <div class="h-full w-full grid place-items-center text-xs text-slate-500">Not generated yet</div>
@@ -273,8 +244,8 @@
           <% end %>
         </div>
       </div>
-    </div>
     <% end %>
+    </div>
   </div>
   </div>
 </div>

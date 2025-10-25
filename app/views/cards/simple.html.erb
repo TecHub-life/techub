@@ -90,7 +90,9 @@
       <% if Array(card.tags).any? %>
         <div class="flex items-center justify-center gap-2 flex-nowrap mt-3">
           <% Array(card.tags).first(6).each do |t| %>
-            <span class="text-sm px-3 py-1 rounded-full bg-gray-900/85 border border-gray-700 text-cyan-200 shadow-sm backdrop-blur-[2px]">#<%= t.to_s.downcase %></span>
+            <%= link_to directory_path(tags: t.to_s.downcase), class: "text-sm px-3 py-1 rounded-full bg-gray-900/85 border border-gray-700 text-cyan-200 shadow-sm backdrop-blur-[2px] hover:bg-gray-800/85 transition" do %>
+              #<%= t.to_s.downcase %>
+            <% end %>
           <% end %>
         </div>
       <% end %>

@@ -1,7 +1,7 @@
 # TecHub
 
-[![CI](https://github.com/loftwah/techub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/loftwah/techub/actions/workflows/ci.yml?query=branch%3Amain)
-[![CodeQL](https://github.com/loftwah/techub/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/loftwah/techub/actions/workflows/codeql.yml?query=branch%3Amain)
+[![CI](https://github.com/TecHub-life/techub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/TecHub-life/techub/actions/workflows/ci.yml?query=branch%3Amain)
+[![CodeQL](https://github.com/TecHub-life/techub/actions/workflows/codeql-1.yml/badge.svg?branch=main)](https://github.com/TecHub-life/techub/actions/workflows/codeql-1.yml?query=branch%3Amain)
 
 ```
    _____                   _  _            _
@@ -54,16 +54,39 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
    bin/ci
    ```
 
+### Ruby Version Management (mise recommended)
+
+- We recommend using `mise` to manage tool versions across languages. This repo includes
+  `.ruby-version` and works seamlessly with `mise`.
+- If you prefer `rbenv`, that also works fine. Ensure your Ruby matches `.ruby-version`.
+
+Setup examples:
+
+```bash
+# Using mise (recommended)
+curl https://mise.jdx.dev/install.sh | sh
+mise use -g ruby@$(cat .ruby-version)
+mise install
+
+# Using rbenv
+rbenv install -s $(cat .ruby-version)
+rbenv local $(cat .ruby-version)
+bundle install
+```
+
 ## Docs Map
 
 - Backups (Ops): docs/ops-backups.md
 - Ops Runbook: docs/ops-runbook.md
 - Storage: docs/storage.md
+- Third‑Party Integrations: docs/integrations.md
+- CI / CD: docs/ci-cd.md
 - Ops Admin: docs/ops-admin.md
 - AppSec Overview: docs/appsec-ops-overview.md
 - Observability (Axiom/OTEL): docs/observability/axiom-opentelemetry.md
 - Image Optimization: docs/image-optimization.md
 - OG Images: docs/og-images.md
+- Smoke Checklist: docs/smoke-checklist.md
 - ADR Index: docs/adr-index.md
 - Contributing: CONTRIBUTING.md
 

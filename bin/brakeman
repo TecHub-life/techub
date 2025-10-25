@@ -2,8 +2,9 @@
 require "rubygems"
 require "bundler/setup"
 
-# Only enforce latest interactively; disable in CI or when explicitly turned off.
-unless ENV["CI"] || ENV["BRAKEMAN_NO_ENSURE_LATEST"] == "1"
+# Default to non-interactive: do NOT enforce latest unless explicitly requested.
+# Set BRAKEMAN_ENSURE_LATEST=1 to enable the interactive updater locally.
+if ENV["BRAKEMAN_ENSURE_LATEST"] == "1"
   ARGV.unshift("--ensure-latest")
 end
 

@@ -62,6 +62,14 @@ Auth details:
 - App notifications use `deliver_later` (async). Email failures will not block profile creation; at
   worst, the job fails later. The rake smoke task uses `deliver_now!` by design.
 
+## Privacy: Email addresses
+
+- OAuth scopes include `read:user user:email` to fetch your email addresses from GitHub. This is
+  optional and used for notifications/contact only.
+- You can set or change your contact email at `Settings → Account`; it does not have to be your
+  GitHub email.
+- If you prefer not to share any email, leave it blank; profiles still work.
+
 ## Troubleshooting
 
 - Missing key → set `resend.api_key` in credentials and restart.

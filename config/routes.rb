@@ -28,6 +28,8 @@ Rails.application.routes.draw do
   get "/up/gemini/image", to: "gemini#image"
 
   get "/auth/github", to: "sessions#start", as: :auth_github
+  # Optional explicit POST to stash invite code then redirect to OAuth
+  post "/auth/github", to: "sessions#start"
   get "/auth/github/callback", to: "sessions#callback", as: :auth_github_callback
   resource :session, only: :destroy
 
@@ -96,6 +98,7 @@ Rails.application.routes.draw do
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
+    post "/pipeline_doctor", to: "admin#pipeline_doctor", as: :pipeline_doctor
     resources :admin, only: [] do
       collection do
         post :rebuild_leaderboards
@@ -112,6 +115,9 @@ Rails.application.routes.draw do
     get "/profiles/search", to: "profiles#search", as: :search_profiles
     get "/profiles/:username", to: "profiles#show", as: :profile_admin
     post "/profiles/:username/retry", to: "profiles#retry", as: :retry_profile
+    post "/profiles/:username/reroll_github", to: "profiles#reroll_github", as: :reroll_github_profile
+    post "/profiles/:username/reroll_ai", to: "profiles#reroll_ai", as: :reroll_ai_profile
+    post "/profiles/:username/recapture_screenshots", to: "profiles#recapture_screenshots", as: :recapture_screenshots_profile
     # Image regeneration routes removed to reduce confusion; use default retry path for freshness
     delete "/profiles/:username", to: "profiles#destroy", as: :destroy_profile
     # Ownerships admin
@@ -122,6 +128,14 @@ Rails.application.routes.draw do
     delete "/ownerships/:id", to: "ownerships#destroy", as: :destroy_ownership
     get "/users/search", to: "users#search", as: :search_users
     post "/profiles/:username/generate_social_assets", to: "profiles#generate_social_assets", as: :generate_social_assets
+
+    # Motifs management (archetypes & spirit animals)
+    resources :motifs, only: [ :index, :new, :create, :edit, :update, :destroy ] do
+      collection do
+        post :seed_from_catalog
+        post :generate_missing_lore
+      end
+    end
   end
   # Mission Control (Jobs UI)
   if defined?(MissionControl::Jobs::Engine)

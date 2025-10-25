@@ -36,6 +36,8 @@ Jobs UI (/ops/jobs)
   #   jobs:
   #     http_basic: techub:<strong-password>
   ```
+- Browser caching old credentials: See `docs/ops-auth-clear-cache.md` for solutions. Quick fix: use
+  incognito mode or visit `https://logout@techub.life/ops` to force re-authentication.
 
 Health Checks
 

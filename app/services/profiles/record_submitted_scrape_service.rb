@@ -25,7 +25,8 @@ module Profiles
     attr_reader :profile, :url
 
     def upsert_scrape!(data, meta)
-      rec = ProfileScrape.find_or_initialize_by(profile_id: profile.id, url: url)
+      persisted_url = meta[:url].presence || url
+      rec = ProfileScrape.find_or_initialize_by(profile_id: profile.id, url: persisted_url)
       rec.assign_attributes(
         title: data[:title],
         description: data[:description],

@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.1"
+gem "rails", "~> 8.1.0"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use sqlite3 as the database for Active Record
@@ -19,7 +19,8 @@ gem "tailwindcss-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 gem "jwt"
-gem "faraday-retry"
+gem "faraday", "~> 2.0"
+gem "faraday-retry", "~> 2.0"
 gem "octokit"
 gem "commonmarker" # GitHub-flavored markdown
 
@@ -89,3 +90,5 @@ group :test do
   gem "selenium-webdriver"
   gem "webmock"
 end
+
+ruby "3.4.1"

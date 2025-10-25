@@ -11,6 +11,10 @@ module Techub
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
 
+    # Ensure Propshaft can serve assets directly from node_modules and Font Awesome's package
+    config.assets.paths << Rails.root.join("node_modules")
+    config.assets.paths << Rails.root.join("node_modules", "@fortawesome", "fontawesome-free")
+
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
