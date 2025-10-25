@@ -357,21 +357,27 @@
           <div class="mb-3">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Streaming Datasets</h3>
             <div class="flex flex-wrap gap-2">
-              <a href="https://app.axiom.co/echosight-7xtu/stream/techub" target="_blank" rel="noopener" class="rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30">
-                Logs Stream (techub)
-              </a>
-              <a href="https://app.axiom.co/echosight-7xtu/stream/techub-metrics" target="_blank" rel="noopener" class="rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
-                Metrics Stream (techub-metrics)
-              </a>
+              <% if @axiom[:dataset_url].present? %>
+                <a href="<%= @axiom[:dataset_url] %>" target="_blank" rel="noopener" class="rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30">
+                  Logs Dataset
+                </a>
+              <% end %>
+              <% if @axiom[:metrics_dataset_url].present? %>
+                <a href="<%= @axiom[:metrics_dataset_url] %>" target="_blank" rel="noopener" class="rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
+                  Metrics Dataset
+                </a>
+              <% end %>
             </div>
           </div>
 
           <div class="mb-3">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">OpenTelemetry Traces</h3>
             <div class="flex flex-wrap gap-2">
-              <a href="https://app.axiom.co/echosight-7xtu/traces" target="_blank" rel="noopener" class="rounded border border-purple-200 bg-purple-50 px-3 py-1.5 text-sm text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-900/30">
-                OTEL Traces
-              </a>
+              <% if @axiom[:traces_url].present? %>
+                <a href="<%= @axiom[:traces_url] %>" target="_blank" rel="noopener" class="rounded border border-purple-200 bg-purple-50 px-3 py-1.5 text-sm text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-900/30">
+                  OTEL Traces
+                </a>
+              <% end %>
             </div>
             <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">OTEL traces are automatically collected and viewable in Axiom's traces view when configured.</p>
           </div>

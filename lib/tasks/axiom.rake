@@ -63,7 +63,10 @@ namespace :axiom do
     # Optionally validate metrics dataset
     if metrics_dataset.to_s.strip != ""
       begin
-        resp_m = conn.post("/v1/datasets/#{metrics_dataset}/ingest", [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor_metrics", env: Rails.env, app: "techub" } ])
+        resp_m = conn.post("/v1/datasets/#{metrics_dataset}/ingest") do |req|
+          req.headers["Content-Type"] = "application/json"
+          req.body = [ { ts: Time.now.utc.iso8601, level: "INFO", message: "axiom_doctor_metrics", env: Rails.env, app: "techub" } ].to_json
+        end
         puts "POST /v1/datasets/#{metrics_dataset}/ingest => #{resp_m.status}"
         puts "OK — metrics event sent"
       rescue Faraday::ResourceNotFound
