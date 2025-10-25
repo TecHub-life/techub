@@ -69,15 +69,15 @@ class MyProfilesController < ApplicationController
     # Targets for social previews (used in assets tab)
     # Canonical, deduped social targets (avoid duplicates for same dimensions)
     @social_targets = [
-      { kind: "x_profile_400", label: "Profile Avatar 400×400", aspect: "1/1" },
-      { kind: "x_header_1500x500", label: "X Header 1500×500", aspect: "3/1" },
-      { kind: "x_feed_1600x900", label: "X Feed 1600×900", aspect: "16/9" },
-      { kind: "ig_portrait_1080x1350", label: "Instagram Portrait 1080×1350", aspect: "4/5" },
-      { kind: "ig_landscape_1080x566", label: "Instagram Landscape 1080×566", aspect: "540/283" },
-      { kind: "fb_post_1080", label: "Square Post 1080×1080", aspect: "1/1" },
-      { kind: "fb_cover_851x315", label: "Facebook Cover 851×315", aspect: "851/315" },
-      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover 1584×396", aspect: "4/1" },
-      { kind: "youtube_cover_2560x1440", label: "YouTube Cover 2560×1440", aspect: "16/9" }
+      { kind: "x_profile_400", label: "X Profile (Avatar)", aspect: "1/1" },
+      { kind: "x_header_1500x500", label: "X Header", aspect: "3/1" },
+      { kind: "x_feed_1600x900", label: "X Feed", aspect: "16/9" },
+      { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", aspect: "4/5" },
+      { kind: "ig_landscape_1080x566", label: "Instagram Landscape", aspect: "540/283" },
+      { kind: "fb_post_1080", label: "Facebook Post", aspect: "1/1" },
+      { kind: "fb_cover_851x315", label: "Facebook Cover", aspect: "851/315" },
+      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover", aspect: "4/1" },
+      { kind: "youtube_cover_2560x1440", label: "YouTube Cover", aspect: "16/9" }
     ]
 
     # For UI: compute AI regen availability

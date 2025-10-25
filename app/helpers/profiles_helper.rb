@@ -6,7 +6,14 @@ module ProfilesHelper
     { kind: "banner", label: "Banner", dims: "1500×500", aspect: "3/1", usage: "Header/banner", fallback: "banner" },
     { kind: "x_profile_400", label: "X Profile", dims: "400×400", aspect: "1/1", usage: "X avatar", fallback: "x_profile_400" },
     { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", dims: "1080×1350", aspect: "4/5", usage: "Instagram post", fallback: "ig_portrait_1080x1350" },
-    { kind: "fb_post_1080", label: "Facebook Post", dims: "1080×1080", aspect: "1/1", usage: "Facebook post", fallback: "fb_post_1080" }
+    { kind: "fb_post_1080", label: "Facebook Post", dims: "1080×1080", aspect: "1/1", usage: "Facebook post", fallback: "fb_post_1080" },
+    # Additional social targets
+    { kind: "x_header_1500x500", label: "X Header", dims: "1500×500", aspect: "3/1", usage: "X banner", fallback: "x_header_1500x500" },
+    { kind: "x_feed_1600x900", label: "X Feed", dims: "1600×900", aspect: "16/9", usage: "X feed post", fallback: "x_feed_1600x900" },
+    { kind: "ig_landscape_1080x566", label: "Instagram Landscape", dims: "1080×566", aspect: "540/283", usage: "Instagram landscape", fallback: "ig_landscape_1080x566" },
+    { kind: "fb_cover_851x315", label: "Facebook Cover", dims: "851×315", aspect: "851/315", usage: "Facebook cover", fallback: "fb_cover_851x315" },
+    { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover", dims: "1584×396", aspect: "4/1", usage: "LinkedIn cover", fallback: "linkedin_cover_1584x396" },
+    { kind: "youtube_cover_2560x1440", label: "YouTube Cover", dims: "2560×1440", aspect: "16/9", usage: "YouTube channel art", fallback: "youtube_cover_2560x1440" }
   ].freeze
 
   def profile_card_variants(profile)
