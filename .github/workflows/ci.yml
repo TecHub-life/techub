@@ -61,11 +61,11 @@ jobs:
             npm install --no-fund --no-audit --loglevel=error
           fi
 
-      - name: Run CI script
+      - name: Run CI script (silent)
         env:
           DISABLE_PARALLEL_TESTS: '1'
         run: |
-          bin/ci
+          CI_SILENT=1 bin/ci
 
       - name: Emit Axiom ci_success
         if: ${{ success() && secrets.AXIOM_TOKEN != '' && secrets.AXIOM_DATASET != '' }}
