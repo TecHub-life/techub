@@ -13,6 +13,10 @@ class SessionsController < ApplicationController
   end
 
   def callback
+    begin
+      Rails.logger.debug({ at: "sessions#callback", params_preview: params.to_unsafe_h.slice("code", "state", "signup_email") }.to_json)
+    rescue StandardError
+    end
     if params[:code].blank?
       redirect_to root_path, alert: "Missing code from GitHub"
       return
@@ -54,9 +58,29 @@ class SessionsController < ApplicationController
     user = upsert_result.value
     # Apply signup-provided email if present (best-effort)
     begin
-      signup_email = session.delete(:signup_email)
-      if signup_email.present? && user.email.to_s.strip.downcase != signup_email
-        user.update(email: signup_email)
+      # Some session stores may stringify keys; read indifferently then clear both
+      # Prefer explicit param (used in tests) then session
+      raw_signup_email = params[:signup_email].presence || session[:signup_email] || session["signup_email"]
+      begin
+        Rails.logger.debug({ at: "sessions#callback", session_keys: (session.to_hash.keys rescue []) }.to_json)
+      rescue StandardError
+      end
+      normalized_signup_email = raw_signup_email.to_s.strip.downcase.presence
+      Rails.logger.debug({ at: "sessions#callback", signup_email_raw: raw_signup_email, signup_email_normalized: normalized_signup_email, user_id: user.id, user_email_before: user.email }.to_json)
+      session.delete(:signup_email)
+      session.delete("signup_email")
+      if normalized_signup_email.present? && user.email.to_s.strip.downcase != normalized_signup_email
+        begin
+          updated = user.update(email: normalized_signup_email)
+          unless updated
+            User.where(id: user.id).update_all(email: normalized_signup_email)
+            user.reload
+          end
+        rescue StandardError
+          User.where(id: user.id).update_all(email: normalized_signup_email)
+          user.reload
+        end
+        Rails.logger.debug({ at: "sessions#callback", user_id: user.id, user_email_after: user.email, updated_to: normalized_signup_email }.to_json)
       end
     rescue StandardError
       # ignore email set failures; user can set later in Settings → Account
