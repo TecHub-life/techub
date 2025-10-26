@@ -128,7 +128,9 @@
     <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Privacy & Sharing</h2>
     <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-4">
       <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="_method" value="patch">
       <label class="inline-flex items-center gap-3 text-sm md:text-base cursor-pointer">
+        <input type="hidden" name="ai_art_opt_in" value="0">
         <input type="checkbox" name="ai_art_opt_in" value="1" <%= 'checked' if @profile.ai_art_opt_in %> class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600">
         <span class="text-slate-700 dark:text-slate-300">Allow my AI artwork to be featured publicly (gallery & promos)</span>
       </label>
@@ -155,6 +157,7 @@
     <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Avatar Selection</h2>
     <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-4">
       <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="_method" value="patch">
       <% choice = @profile.profile_card&.avatar_choice || 'real' %>
       <% base = Rails.root.join('public','generated', @profile.login) %>
       <% ai_opts = [] %>
