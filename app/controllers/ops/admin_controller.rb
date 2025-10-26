@@ -335,7 +335,9 @@ module Ops
 
     # Advanced: StructuredLogger test with level, message, payload, and force toggle
     def axiom_log_test
-      level = params[:level].to_s.presence || "info"
+      allowed_levels = %w[debug info warn error fatal unknown]
+      level_param = params[:level].to_s.presence
+      level = allowed_levels.include?(level_param) ? level_param : "info"
       message = params[:message].to_s.presence || "ops_axiom_test"
       force = ActiveModel::Type::Boolean.new.cast(params[:force])
       payload_json = params[:payload].to_s
