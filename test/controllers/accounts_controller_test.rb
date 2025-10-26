@@ -8,7 +8,7 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
   test "requires login" do
     get edit_account_path
     assert_response :redirect
-    assert_match "/auth/github", @response.redirect_url
+    assert_match "/login", @response.redirect_url
   end
 
   test "updates email and notify_on_pipeline" do

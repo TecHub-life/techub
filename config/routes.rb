@@ -2,6 +2,12 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "pages#home"
+  # Signup flow
+  get "/signup", to: "signups#new", as: :signup
+  post "/signup", to: "signups#create"
+
+  # Login flow (existing users)
+  get "/login", to: "sessions#start", as: :login
 
   get "/directory", to: "pages#directory"
   get "/directory/autocomplete", to: "pages#autocomplete"
@@ -28,7 +34,7 @@ Rails.application.routes.draw do
   get "/up/gemini/image", to: "gemini#image"
 
   get "/auth/github", to: "sessions#start", as: :auth_github
-  # Optional explicit POST to stash invite code then redirect to OAuth
+  # Keep POST for backwards-compat, but UI will point to /signup
   post "/auth/github", to: "sessions#start"
   get "/auth/github/callback", to: "sessions#callback", as: :auth_github_callback
   resource :session, only: :destroy

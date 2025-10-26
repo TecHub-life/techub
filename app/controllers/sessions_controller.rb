@@ -52,6 +52,15 @@ class SessionsController < ApplicationController
     end
 
     user = upsert_result.value
+    # Apply signup-provided email if present (best-effort)
+    begin
+      signup_email = session.delete(:signup_email)
+      if signup_email.present? && user.email.to_s.strip.downcase != signup_email
+        user.update(email: signup_email)
+      end
+    rescue StandardError
+      # ignore email set failures; user can set later in Settings → Account
+    end
     # Enforce access policy (whitelist until open)
     begin
       Access::Policy.seed_defaults!
@@ -89,7 +98,7 @@ class SessionsController < ApplicationController
   def oauth_authorize_url(state)
     client_id = Github::Configuration.client_id
     redirect_uri = Github::Configuration.callback_url(default: auth_github_callback_url)
-    scope = %w[read:user user:email].join(" ")
+    scope = %w[read:user].join(" ")
 
     URI::HTTPS.build(
       host: "github.com",

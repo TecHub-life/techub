@@ -64,11 +64,11 @@ Auth details:
 
 ## Privacy: Email addresses
 
-- OAuth scopes include `read:user user:email` to fetch your email addresses from GitHub. This is
-  optional and used for notifications/contact only.
+- OAuth now only requests `read:user` (no `user:email`). We do not read your email from GitHub.
 - You can set or change your contact email at `Settings → Account`; it does not have to be your
   GitHub email.
-- If you prefer not to share any email, leave it blank; profiles still work.
+- If you prefer not to share any email, leave it blank; profiles still work (you simply won’t
+  receive emails).
 
 ## Troubleshooting
 
