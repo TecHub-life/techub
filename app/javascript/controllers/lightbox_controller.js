@@ -1,15 +1,15 @@
-import { Controller } from "@hotwired/stimulus"
+import { Controller } from '@hotwired/stimulus'
 
 // Connects to data-controller="lightbox"
 export default class extends Controller {
-  static targets = ["modal", "image", "title", "counter", "prevBtn", "nextBtn"]
-  static values = { 
+  static targets = ['modal', 'image', 'title', 'counter', 'prevBtn', 'nextBtn']
+  static values = {
     images: Array,
-    currentIndex: Number 
+    currentIndex: Number,
   }
 
   connect() {
-    console.log("Lightbox controller connected")
+    console.log('Lightbox controller connected')
     this.currentIndexValue = 0
     this.bindKeyboardEvents()
   }
@@ -32,7 +32,7 @@ export default class extends Controller {
   handleKeydown(event) {
     if (!this.isOpen()) return
 
-    switch(event.key) {
+    switch (event.key) {
       case 'Escape':
         this.close()
         break
@@ -50,12 +50,12 @@ export default class extends Controller {
     const imageLabel = event.currentTarget.dataset.imageLabel
     const imageType = event.currentTarget.dataset.imageType || 'image'
 
-    console.log("Opening lightbox:", imageUrl, imageLabel, imageType)
+    console.log('Opening lightbox:', imageUrl, imageLabel, imageType)
 
     // Find the image in our images array
-    const imageIndex = this.imagesValue.findIndex(img => img.url === imageUrl)
+    const imageIndex = this.imagesValue.findIndex((img) => img.url === imageUrl)
     if (imageIndex === -1) {
-      console.error("Image not found in images array")
+      console.error('Image not found in images array')
       return
     }
 
@@ -71,10 +71,10 @@ export default class extends Controller {
     if (event) {
       event.preventDefault()
     }
-    
+
     this.modalTarget.classList.remove('opacity-100')
     this.modalTarget.classList.add('opacity-0')
-    
+
     setTimeout(() => {
       this.modalTarget.style.display = 'none'
       document.body.style.overflow = ''
@@ -89,17 +89,16 @@ export default class extends Controller {
 
   previous() {
     if (this.imagesValue.length <= 1) return
-    
-    this.currentIndexValue = this.currentIndexValue === 0 
-      ? this.imagesValue.length - 1 
-      : this.currentIndexValue - 1
-    
+
+    this.currentIndexValue =
+      this.currentIndexValue === 0 ? this.imagesValue.length - 1 : this.currentIndexValue - 1
+
     this.updateDisplay()
   }
 
   next() {
     if (this.imagesValue.length <= 1) return
-    
+
     this.currentIndexValue = (this.currentIndexValue + 1) % this.imagesValue.length
     this.updateDisplay()
   }
