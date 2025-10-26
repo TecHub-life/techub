@@ -105,6 +105,10 @@ class MyProfilesController < ApplicationController
       @profile.update_columns(hireable_override: ActiveModel::Type::Boolean.new.cast(permitted[:hireable_override]))
     end
 
+    # Remove profile-level fields from card attributes
+    attrs.delete("ai_art_opt_in")
+    attrs.delete("hireable_override")
+
     # If user chose "Use these background settings for all card types",
     # propagate Card choices to OG and Simple before saving.
     apply_everywhere = ActiveModel::Type::Boolean.new.cast(params[:apply_everywhere])
