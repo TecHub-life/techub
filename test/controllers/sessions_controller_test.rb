@@ -76,8 +76,8 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     user = User.create!(github_id: 9, login: "emailuser", access_token: "tok")
 
-    # Seed session email as if from /signup
-    session[:signup_email] = "someone@example.com"
+    # Seed session email as if from /signup (use unique to avoid collisions)
+    session[:signup_email] = "emailuser@example.com"
 
     Github::Configuration.stub :callback_url, auth_github_callback_url do
       Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
@@ -87,7 +87,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
               get auth_github_callback_path(code: "xyz", state: state)
               assert_redirected_to root_path
               assert_equal user.id, session[:current_user_id]
-              assert_equal "someone@example.com", user.reload.email
+              assert_equal "emailuser@example.com", user.reload.email
               assert_nil session[:signup_email]
             end
           end
