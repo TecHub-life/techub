@@ -71,24 +71,24 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "callback applies session email if provided" do
-    get auth_github_path
-    state = session[:github_oauth_state]
-
     user = User.create!(github_id: 9, login: "emailuser", access_token: "tok")
 
-    # Seed session email as if from /signup (use unique to avoid collisions)
-    session[:signup_email] = "emailuser@example.com"
+    open_session do |sess|
+      sess.get auth_github_path
+      state = sess.session[:github_oauth_state]
+      sess.session[:signup_email] = "emailuser@example.com"
 
-    Github::Configuration.stub :callback_url, auth_github_callback_url do
-      Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
-        Github::FetchAuthenticatedUser.stub :call, ServiceResult.success({ user: { id: 9, login: "emailuser", name: "E", avatar_url: "https://example.com/e.png" }, emails: [] }) do
-          Users::UpsertFromGithub.stub :call, ServiceResult.success(user) do
-            Access::Policy.stub :allowed?, true do
-              get auth_github_callback_path(code: "xyz", state: state)
-              assert_redirected_to root_path
-              assert_equal user.id, session[:current_user_id]
-              assert_equal "emailuser@example.com", user.reload.email
-              assert_nil session[:signup_email]
+      Github::Configuration.stub :callback_url, auth_github_callback_url do
+        Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
+          Github::FetchAuthenticatedUser.stub :call, ServiceResult.success({ user: { id: 9, login: "emailuser", name: "E", avatar_url: "https://example.com/e.png" }, emails: [] }) do
+            Users::UpsertFromGithub.stub :call, ServiceResult.success(user) do
+              Access::Policy.stub :allowed?, true do
+                sess.get auth_github_callback_path(code: "xyz", state: state)
+                assert_redirected_to root_path
+                assert_equal user.id, sess.session[:current_user_id]
+                assert_equal "emailuser@example.com", user.reload.email
+                assert_nil sess.session[:signup_email]
+              end
             end
           end
         end
