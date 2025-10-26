@@ -10,26 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_22_000100) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_26_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
-    t.string "name", null: false
-    t.string "record_type", null: false
-    t.integer "record_id", null: false
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "record_id", null: false
+    t.string "record_type", null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
 
   create_table "active_storage_blobs", force: :cascade do |t|
-    t.string "key", null: false
-    t.string "filename", null: false
-    t.string "content_type"
-    t.text "metadata"
-    t.string "service_name", null: false
     t.bigint "byte_size", null: false
     t.string "checksum"
+    t.string "content_type"
     t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
 
@@ -40,36 +40,36 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_000100) do
   end
 
   create_table "app_settings", force: :cascade do |t|
-    t.string "key", null: false
-    t.text "value"
     t.datetime "created_at", null: false
+    t.string "key", null: false
     t.datetime "updated_at", null: false
+    t.text "value"
     t.index ["key"], name: "index_app_settings_on_key", unique: true
   end
 
   create_table "leaderboards", force: :cascade do |t|
-    t.string "kind", null: false
-    t.string "window", default: "30d", null: false
     t.date "as_of", null: false
-    t.json "entries", default: [], null: false
     t.datetime "created_at", null: false
+    t.json "entries", default: [], null: false
+    t.string "kind", null: false
     t.datetime "updated_at", null: false
+    t.string "window", default: "30d", null: false
     t.index ["kind", "window", "as_of"], name: "index_leaderboards_on_kind_and_window_and_as_of", unique: true
   end
 
   create_table "motifs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "image_16x9_path"
+    t.string "image_16x9_url"
+    t.string "image_1x1_path"
+    t.string "image_1x1_url"
     t.string "kind", null: false
+    t.text "long_lore"
     t.string "name", null: false
+    t.text "short_lore"
     t.string "slug", null: false
     t.string "theme", default: "core", null: false
-    t.text "short_lore"
-    t.text "long_lore"
-    t.string "image_1x1_path"
-    t.string "image_16x9_path"
-    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "image_1x1_url"
-    t.string "image_16x9_url"
     t.index ["image_16x9_url"], name: "index_motifs_on_image_16x9_url"
     t.index ["image_1x1_url"], name: "index_motifs_on_image_1x1_url"
     t.index ["kind", "slug", "theme"], name: "index_motifs_on_kind_and_slug_and_theme", unique: true
@@ -78,125 +78,125 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_000100) do
   end
 
   create_table "notification_deliveries", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.string "event", null: false
-    t.string "subject_type", null: false
-    t.bigint "subject_id", null: false
-    t.datetime "delivered_at"
     t.datetime "created_at", null: false
+    t.datetime "delivered_at"
+    t.string "event", null: false
+    t.bigint "subject_id", null: false
+    t.string "subject_type", null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
     t.index ["user_id", "event", "subject_type", "subject_id"], name: "idx_delivery_uniqueness", unique: true
     t.index ["user_id"], name: "index_notification_deliveries_on_user_id"
   end
 
   create_table "profile_activities", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.integer "total_events", default: 0
-    t.json "event_breakdown", default: {}
-    t.text "recent_repos"
-    t.datetime "last_active"
     t.datetime "created_at", null: false
+    t.json "event_breakdown", default: {}
+    t.datetime "last_active"
+    t.integer "profile_id", null: false
+    t.text "recent_repos"
+    t.integer "total_events", default: 0
     t.datetime "updated_at", null: false
     t.index ["last_active"], name: "index_profile_activities_on_last_active"
     t.index ["profile_id"], name: "index_profile_activities_on_profile_id"
   end
 
   create_table "profile_assets", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.string "kind", null: false
-    t.string "provider"
-    t.string "mime_type"
-    t.integer "width"
-    t.integer "height"
-    t.string "local_path"
-    t.string "public_url"
-    t.datetime "generated_at"
     t.datetime "created_at", null: false
+    t.datetime "generated_at"
+    t.integer "height"
+    t.string "kind", null: false
+    t.string "local_path"
+    t.string "mime_type"
+    t.integer "profile_id", null: false
+    t.string "provider"
+    t.string "public_url"
     t.datetime "updated_at", null: false
+    t.integer "width"
     t.index ["profile_id", "kind"], name: "index_profile_assets_on_profile_id_and_kind", unique: true
     t.index ["profile_id"], name: "index_profile_assets_on_profile_id"
   end
 
   create_table "profile_cards", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.string "title"
-    t.string "tagline"
-    t.integer "attack", default: 0
-    t.integer "defense", default: 0
-    t.integer "speed", default: 0
-    t.string "vibe"
-    t.string "special_move"
-    t.string "spirit_animal"
+    t.string "ai_model"
     t.string "archetype"
-    t.json "tags", default: []
-    t.string "style_profile"
-    t.string "theme"
-    t.datetime "generated_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.integer "attack", default: 0
+    t.string "avatar_choice", default: "real", null: false
+    t.text "avatar_description"
     t.string "bg_choice_card", default: "ai", null: false
-    t.string "bg_color_card"
     t.string "bg_choice_og", default: "ai", null: false
-    t.string "bg_color_og"
     t.string "bg_choice_simple", default: "ai", null: false
+    t.string "bg_color_card"
+    t.string "bg_color_og"
     t.string "bg_color_simple"
     t.float "bg_fx_card"
-    t.float "bg_fy_card"
-    t.float "bg_zoom_card"
     t.float "bg_fx_og"
-    t.float "bg_fy_og"
-    t.float "bg_zoom_og"
     t.float "bg_fx_simple"
+    t.float "bg_fy_card"
+    t.float "bg_fy_og"
     t.float "bg_fy_simple"
+    t.float "bg_zoom_card"
+    t.float "bg_zoom_og"
     t.float "bg_zoom_simple"
-    t.text "short_bio"
-    t.text "long_bio"
     t.string "buff"
     t.text "buff_description"
+    t.datetime "created_at", null: false
+    t.integer "defense", default: 0
+    t.string "flavor_text"
+    t.datetime "generated_at"
+    t.text "long_bio"
+    t.string "playing_card"
+    t.integer "profile_id", null: false
+    t.string "prompt_version"
+    t.text "short_bio"
+    t.string "special_move"
+    t.text "special_move_description"
+    t.integer "speed", default: 0
+    t.string "spirit_animal"
+    t.string "style_profile"
+    t.string "tagline"
+    t.json "tags", default: []
+    t.string "theme"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "vibe"
+    t.text "vibe_description"
     t.string "weakness"
     t.text "weakness_description"
-    t.string "flavor_text"
-    t.string "playing_card"
-    t.text "vibe_description"
-    t.text "special_move_description"
-    t.text "avatar_description"
-    t.string "ai_model"
-    t.string "prompt_version"
-    t.string "avatar_choice", default: "real", null: false
     t.index ["archetype"], name: "index_profile_cards_on_archetype"
     t.index ["profile_id"], name: "index_profile_cards_on_profile_id", unique: true
     t.index ["spirit_animal"], name: "index_profile_cards_on_spirit_animal"
   end
 
   create_table "profile_languages", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.string "name", null: false
     t.integer "count", default: 0
     t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "profile_id", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_profile_languages_on_name"
     t.index ["profile_id"], name: "index_profile_languages_on_profile_id"
   end
 
   create_table "profile_organizations", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.string "login", null: false
-    t.string "name"
     t.string "avatar_url"
+    t.datetime "created_at", null: false
     t.text "description"
     t.string "html_url"
-    t.datetime "created_at", null: false
+    t.string "login", null: false
+    t.string "name"
+    t.integer "profile_id", null: false
     t.datetime "updated_at", null: false
     t.index ["login"], name: "index_profile_organizations_on_login"
     t.index ["profile_id"], name: "index_profile_organizations_on_profile_id"
   end
 
   create_table "profile_ownerships", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "profile_id", null: false
     t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.boolean "is_owner", default: false, null: false
+    t.integer "profile_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
     t.index ["profile_id"], name: "idx_one_owner_per_profile", unique: true, where: "is_owner = TRUE"
     t.index ["profile_id"], name: "index_profile_ownerships_on_profile_id"
     t.index ["user_id", "profile_id"], name: "index_profile_ownerships_on_user_id_and_profile_id", unique: true
@@ -204,37 +204,37 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_000100) do
   end
 
   create_table "profile_pipeline_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "duration_ms"
+    t.string "message"
     t.integer "profile_id", null: false
     t.string "stage", null: false
     t.string "status", null: false
-    t.integer "duration_ms"
-    t.string "message"
-    t.datetime "created_at", null: false
     t.index ["created_at"], name: "index_profile_pipeline_events_on_created_at"
     t.index ["profile_id"], name: "index_profile_pipeline_events_on_profile_id"
   end
 
   create_table "profile_readmes", force: :cascade do |t|
-    t.integer "profile_id", null: false
     t.text "content"
     t.datetime "created_at", null: false
+    t.integer "profile_id", null: false
     t.datetime "updated_at", null: false
     t.index ["profile_id"], name: "index_profile_readmes_on_profile_id"
   end
 
   create_table "profile_repositories", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.string "name", null: false
-    t.string "full_name"
+    t.datetime "created_at", null: false
     t.text "description"
-    t.string "html_url"
-    t.integer "stargazers_count", default: 0
     t.integer "forks_count", default: 0
-    t.string "language"
-    t.string "repository_type", null: false
+    t.string "full_name"
     t.datetime "github_created_at"
     t.datetime "github_updated_at"
-    t.datetime "created_at", null: false
+    t.string "html_url"
+    t.string "language"
+    t.string "name", null: false
+    t.integer "profile_id", null: false
+    t.string "repository_type", null: false
+    t.integer "stargazers_count", default: 0
     t.datetime "updated_at", null: false
     t.index ["profile_id", "repository_type"], name: "index_profile_repositories_on_profile_id_and_repository_type"
     t.index ["profile_id"], name: "index_profile_repositories_on_profile_id"
@@ -242,134 +242,136 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_000100) do
   end
 
   create_table "profile_scrapes", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.string "url", null: false
-    t.string "title"
-    t.string "description"
+    t.integer "bytes"
     t.string "canonical_url"
     t.string "content_type"
-    t.integer "http_status"
-    t.integer "bytes"
-    t.datetime "fetched_at"
-    t.text "text"
-    t.json "links"
     t.datetime "created_at", null: false
+    t.string "description"
+    t.datetime "fetched_at"
+    t.integer "http_status"
+    t.json "links"
+    t.integer "profile_id", null: false
+    t.text "text"
+    t.string "title"
     t.datetime "updated_at", null: false
+    t.string "url", null: false
     t.index ["profile_id", "url"], name: "index_profile_scrapes_on_profile_id_and_url", unique: true
     t.index ["profile_id"], name: "index_profile_scrapes_on_profile_id"
   end
 
   create_table "profile_social_accounts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "display_name"
     t.integer "profile_id", null: false
     t.string "provider", null: false
-    t.string "url"
-    t.string "display_name"
-    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "url"
     t.index ["profile_id"], name: "index_profile_social_accounts_on_profile_id"
     t.index ["provider"], name: "index_profile_social_accounts_on_provider"
   end
 
   create_table "profile_stats", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.date "stat_date", null: false
+    t.datetime "captured_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.integer "followers", default: 0, null: false
     t.integer "following", default: 0, null: false
+    t.integer "profile_id", null: false
     t.integer "public_repos", default: 0, null: false
-    t.integer "total_stars", default: 0, null: false
-    t.integer "total_forks", default: 0, null: false
     t.integer "repo_count", default: 0, null: false
-    t.datetime "captured_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.date "stat_date", null: false
+    t.integer "total_forks", default: 0, null: false
+    t.integer "total_stars", default: 0, null: false
     t.index ["profile_id", "stat_date"], name: "index_profile_stats_on_profile_id_and_stat_date", unique: true
     t.index ["profile_id"], name: "index_profile_stats_on_profile_id"
   end
 
   create_table "profiles", force: :cascade do |t|
-    t.bigint "github_id", null: false
-    t.string "login", null: false
-    t.string "name"
+    t.boolean "ai_art_opt_in", default: false, null: false
     t.string "avatar_url"
     t.text "bio"
-    t.string "company"
-    t.string "location"
     t.string "blog"
+    t.string "company"
+    t.datetime "created_at", null: false
     t.string "email"
-    t.string "twitter_username"
-    t.boolean "hireable", default: false
-    t.string "html_url"
     t.integer "followers", default: 0
     t.integer "following", default: 0
-    t.integer "public_repos", default: 0
-    t.integer "public_gists", default: 0
-    t.text "summary"
     t.datetime "github_created_at"
+    t.bigint "github_id", null: false
     t.datetime "github_updated_at"
-    t.datetime "last_synced_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "submitted_scrape_url"
-    t.datetime "submitted_at"
-    t.string "last_pipeline_status"
-    t.text "last_pipeline_error"
+    t.boolean "hireable", default: false
+    t.boolean "hireable_override"
+    t.string "html_url"
     t.datetime "last_ai_regenerated_at"
+    t.text "last_pipeline_error"
+    t.string "last_pipeline_status"
     t.text "last_sync_error"
     t.datetime "last_sync_error_at"
-    t.boolean "ai_art_opt_in", default: false, null: false
+    t.datetime "last_synced_at"
+    t.string "location"
+    t.string "login", null: false
+    t.string "name"
+    t.integer "public_gists", default: 0
+    t.integer "public_repos", default: 0
+    t.datetime "submitted_at"
+    t.string "submitted_scrape_url"
+    t.text "summary"
+    t.string "twitter_username"
+    t.datetime "updated_at", null: false
     t.index ["ai_art_opt_in"], name: "index_profiles_on_ai_art_opt_in"
     t.index ["followers"], name: "index_profiles_on_followers"
     t.index ["github_id"], name: "index_profiles_on_github_id", unique: true
     t.index ["hireable"], name: "index_profiles_on_hireable"
+    t.index ["hireable_override"], name: "index_profiles_on_hireable_override"
     t.index ["last_ai_regenerated_at"], name: "index_profiles_on_last_ai_regenerated_at"
     t.index ["last_synced_at"], name: "index_profiles_on_last_synced_at"
     t.index ["login"], name: "index_profiles_on_login", unique: true
   end
 
   create_table "repository_topics", force: :cascade do |t|
-    t.integer "profile_repository_id", null: false
-    t.string "name", null: false
     t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "profile_repository_id", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_repository_topics_on_name"
     t.index ["profile_repository_id"], name: "index_repository_topics_on_profile_repository_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "queue_name", null: false
-    t.integer "priority", default: 0, null: false
     t.string "concurrency_key", null: false
-    t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "job_id", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
     t.index ["concurrency_key", "priority", "job_id"], name: "index_solid_queue_blocked_executions_for_release"
     t.index ["expires_at", "concurrency_key"], name: "index_solid_queue_blocked_executions_for_maintenance"
     t.index ["job_id"], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_claimed_executions", force: :cascade do |t|
+    t.datetime "created_at", null: false
     t.bigint "job_id", null: false
     t.bigint "process_id"
-    t.datetime "created_at", null: false
     t.index ["job_id"], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
     t.index ["process_id", "job_id"], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
   end
 
   create_table "solid_queue_failed_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.text "error"
     t.datetime "created_at", null: false
+    t.text "error"
+    t.bigint "job_id", null: false
     t.index ["job_id"], name: "index_solid_queue_failed_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_jobs", force: :cascade do |t|
-    t.string "queue_name", null: false
-    t.string "class_name", null: false
-    t.text "arguments"
-    t.integer "priority", default: 0, null: false
     t.string "active_job_id"
-    t.datetime "scheduled_at"
-    t.datetime "finished_at"
+    t.text "arguments"
+    t.string "class_name", null: false
     t.string "concurrency_key"
     t.datetime "created_at", null: false
+    t.datetime "finished_at"
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
+    t.datetime "scheduled_at"
     t.datetime "updated_at", null: false
     t.index ["active_job_id"], name: "index_solid_queue_jobs_on_active_job_id"
     t.index ["class_name"], name: "index_solid_queue_jobs_on_class_name"
@@ -379,91 +381,91 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_000100) do
   end
 
   create_table "solid_queue_pauses", force: :cascade do |t|
-    t.string "queue_name", null: false
     t.datetime "created_at", null: false
+    t.string "queue_name", null: false
     t.index ["queue_name"], name: "index_solid_queue_pauses_on_queue_name", unique: true
   end
 
   create_table "solid_queue_processes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "hostname"
     t.string "kind", null: false
     t.datetime "last_heartbeat_at", null: false
-    t.bigint "supervisor_id"
-    t.integer "pid", null: false
-    t.string "hostname"
     t.text "metadata"
-    t.datetime "created_at", null: false
     t.string "name", null: false
+    t.integer "pid", null: false
+    t.bigint "supervisor_id"
     t.index ["last_heartbeat_at"], name: "index_solid_queue_processes_on_last_heartbeat_at"
     t.index ["name", "supervisor_id"], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
     t.index ["supervisor_id"], name: "index_solid_queue_processes_on_supervisor_id"
   end
 
   create_table "solid_queue_ready_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "queue_name", null: false
-    t.integer "priority", default: 0, null: false
     t.datetime "created_at", null: false
+    t.bigint "job_id", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
     t.index ["job_id"], name: "index_solid_queue_ready_executions_on_job_id", unique: true
     t.index ["priority", "job_id"], name: "index_solid_queue_poll_all"
     t.index ["queue_name", "priority", "job_id"], name: "index_solid_queue_poll_by_queue"
   end
 
   create_table "solid_queue_recurring_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "task_key", null: false
-    t.datetime "run_at", null: false
     t.datetime "created_at", null: false
+    t.bigint "job_id", null: false
+    t.datetime "run_at", null: false
+    t.string "task_key", null: false
     t.index ["job_id"], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
     t.index ["task_key", "run_at"], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
   end
 
   create_table "solid_queue_recurring_tasks", force: :cascade do |t|
-    t.string "key", null: false
-    t.string "schedule", null: false
-    t.string "command", limit: 2048
-    t.string "class_name"
     t.text "arguments"
-    t.string "queue_name"
-    t.integer "priority", default: 0
-    t.boolean "static", default: true, null: false
-    t.text "description"
+    t.string "class_name"
+    t.string "command", limit: 2048
     t.datetime "created_at", null: false
+    t.text "description"
+    t.string "key", null: false
+    t.integer "priority", default: 0
+    t.string "queue_name"
+    t.string "schedule", null: false
+    t.boolean "static", default: true, null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_solid_queue_recurring_tasks_on_key", unique: true
     t.index ["static"], name: "index_solid_queue_recurring_tasks_on_static"
   end
 
   create_table "solid_queue_scheduled_executions", force: :cascade do |t|
-    t.bigint "job_id", null: false
-    t.string "queue_name", null: false
-    t.integer "priority", default: 0, null: false
-    t.datetime "scheduled_at", null: false
     t.datetime "created_at", null: false
+    t.bigint "job_id", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "queue_name", null: false
+    t.datetime "scheduled_at", null: false
     t.index ["job_id"], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
     t.index ["scheduled_at", "priority", "job_id"], name: "index_solid_queue_dispatch_all"
   end
 
   create_table "solid_queue_semaphores", force: :cascade do |t|
-    t.string "key", null: false
-    t.integer "value", default: 1, null: false
-    t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "key", null: false
     t.datetime "updated_at", null: false
+    t.integer "value", default: 1, null: false
     t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
     t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "access_token_ciphertext"
+    t.string "avatar_url"
+    t.datetime "created_at", null: false
+    t.string "email"
     t.bigint "github_id", null: false
     t.string "login", null: false
     t.string "name"
-    t.string "avatar_url"
-    t.string "access_token_ciphertext"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "email"
     t.boolean "notify_on_pipeline", default: true, null: false
+    t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["github_id"], name: "index_users_on_github_id", unique: true
     t.index ["login"], name: "index_users_on_login", unique: true

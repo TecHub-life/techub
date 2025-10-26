@@ -43,7 +43,8 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - `AXIOM_DATASET` — logs/events dataset name (maps from credentials)
   - `AXIOM_METRICS_DATASET` — metrics/events dataset name (maps from credentials)
   - `AXIOM_ORG` — Axiom org slug (for Ops UI deep-links only; optional)
-  - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU: `https://api.eu.axiom.co`
+  - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU:
+    `https://api.eu.axiom.co`
   - `AXIOM_ENABLED` — enable log forwarding in non‑prod (optional)
   - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTEL base endpoint (default US traces endpoint)
     - US: `https://api.axiom.co/v1/traces`

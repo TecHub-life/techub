@@ -102,7 +102,7 @@
             <a href="https://twitter.com/<%= profile.twitter_username %>" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener">@<%= profile.twitter_username %></a>
           </div>
         <% end %>
-        <% if profile.hireable %>
+        <% if profile.hireable_display? %>
           <div class="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold">
             <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.951 22.951 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/>
