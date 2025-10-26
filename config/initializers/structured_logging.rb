@@ -97,18 +97,8 @@ module StructuredLogger
     if forwarding && axiom_token.present? && axiom_dataset.present?
       deliver = proc do
         begin
-          require "faraday"
-          conn = Faraday.new(url: "https://api.axiom.co") do |f|
-            f.request :retry
-            f.response :raise_error
-            f.adapter Faraday.default_adapter
-          end
-          conn.headers["Authorization"] = "Bearer #{axiom_token}"
-          # Use v1 ingest API
-          conn.post("/v1/datasets/#{axiom_dataset}/ingest") do |req|
-            req.headers["Content-Type"] = "application/json"
-            req.body = [ payload ].to_json
-          end
+          # Reuse the shared ingest client for consistency and region support
+          Axiom::IngestService.call(dataset: axiom_dataset, events: [ payload ])
         rescue StandardError => e
           warn "Axiom forward failed: #{e.class}: #{e.message}" if ENV["AXIOM_DEBUG"] == "1"
         end

@@ -19,7 +19,8 @@ namespace :axiom do
     end
 
     require "faraday"
-    conn = Faraday.new(url: "https://api.axiom.co") do |f|
+    base_url = (Rails.application.credentials.dig(:axiom, :base_url) rescue nil) || ENV["AXIOM_BASE_URL"] || "https://api.axiom.co"
+    conn = Faraday.new(url: base_url) do |f|
       f.request :retry
       f.response :raise_error
       f.adapter Faraday.default_adapter
@@ -41,7 +42,10 @@ namespace :axiom do
           create_resp = conn.post("/v2/datasets", { name: dataset, description: "techub logs" })
           puts "POST /v2/datasets => #{create_resp.status}"
           # Retry ingest once
-          resp2 = conn.post("/v1/datasets/#{dataset}/ingest", payload)
+          resp2 = conn.post("/v1/datasets/#{dataset}/ingest") do |req|
+            req.headers["Content-Type"] = "application/json"
+            req.body = payload.to_json
+          end
           puts "POST /v1/datasets/#{dataset}/ingest => #{resp2.status}"
           puts "OK — event sent after creating dataset"
         rescue Faraday::Error => e

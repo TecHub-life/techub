@@ -7,12 +7,13 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
 
 - Current logging is JSON to STDOUT via `config/initializers/structured_logging.rb`.
 - If `AXIOM_TOKEN` and `AXIOM_DATASET` are set, logs are also sent to Axiom (best-effort) via
-  Faraday.
+  the shared ingest client.
 - Configure (env or Rails credentials):
   - `AXIOM_TOKEN`: Axiom personal or ingest token (sensitive)
   - `AXIOM_ORG`: your org slug (e.g., `echosight-7xtu`) — non‑sensitive
   - `AXIOM_DATASET`: logs/events dataset (e.g., `techub`) — non‑sensitive
   - `AXIOM_METRICS_DATASET`: metrics dataset (e.g., `techub-metrics`) — non‑sensitive
+  - `AXIOM_BASE_URL`: region base URL (`https://api.axiom.co` US default, EU: `https://api.eu.axiom.co`)
   - `OTEL_EXPORTER_OTLP_ENDPOINT`: traces endpoint (defaults to `https://api.axiom.co/v1/traces`;
     use EU endpoint if applicable)
   - `OTEL_SERVICE_NAME`: service name for traces (defaults to `techub`)
@@ -67,6 +68,7 @@ Forwarding controls
 
 - GitHub Actions emits deployment and CI events to Axiom when `AXIOM_TOKEN` and `AXIOM_DATASET` are
   present as repository secrets.
+  - Optional: `AXIOM_BASE_URL` secret to target EU region, otherwise defaults to US.
 - CI emits:
   - `ci_start`, `ci_success`, `ci_failed` for the test job
   - `ci_image_built` with image `name` and `digest`

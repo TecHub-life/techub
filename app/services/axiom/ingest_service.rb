@@ -12,7 +12,8 @@ module Axiom
       token = (Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]
       return failure(StandardError.new("missing_token")) if token.to_s.strip.empty?
 
-      conn = Faraday.new(url: "https://api.axiom.co") do |f|
+      base_url = (Rails.application.credentials.dig(:axiom, :base_url) rescue nil) || ENV["AXIOM_BASE_URL"] || "https://api.axiom.co"
+      conn = Faraday.new(url: base_url) do |f|
         f.request :retry
         f.response :raise_error
         f.adapter Faraday.default_adapter
@@ -24,12 +25,16 @@ module Axiom
       end
       success(resp.status)
     rescue Faraday::ResourceNotFound
-      # Optionally create dataset on the fly if missing
-      begin
-        conn.post("/v2/datasets", { name: dataset, description: "techub metrics" })
-        retry
-      rescue StandardError => e
-        failure(e)
+      # Optionally create dataset on the fly if missing (guarded by env flag)
+      if ENV["AXIOM_ALLOW_DATASET_CREATE"] == "1"
+        begin
+          conn.post("/v2/datasets", { name: dataset, description: "techub metrics" })
+          retry
+        rescue StandardError => e
+          failure(e)
+        end
+      else
+        failure(StandardError.new("dataset_not_found"))
       end
     rescue StandardError => e
       failure(e)

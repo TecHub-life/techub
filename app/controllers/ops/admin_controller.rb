@@ -131,9 +131,20 @@ module Ops
           metrics_dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}"
         end
         # Traces root (service filter applied via query param)
+        otel_configured = begin
+          token_present = ((Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]).to_s.strip != ""
+          endpoint_present = ((Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || ENV["OTEL_EXPORTER_OTLP_ENDPOINT"]).to_s.strip != ""
+          token_present && endpoint_present
+        rescue StandardError
+          false
+        end
+
         base_traces = org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
         traces_url ||= base_traces
         traces_url = service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
+
+        # Hide traces link if OTEL isn't configured
+        traces_url = nil unless otel_configured
 
         @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
       rescue StandardError

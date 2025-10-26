@@ -25,6 +25,7 @@ jobs:
       RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
       AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
+      AXIOM_BASE_URL: ${{ secrets.AXIOM_BASE_URL }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       SSH_KEY: ${{ secrets.SSH_KEY }}
     steps:
@@ -48,7 +49,7 @@ jobs:
             --arg actor "$ACTOR" \
             --arg url "$RUN_URL" \
             '{ts: (now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"deploy_start", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" \
             -H "Content-Type: application/json" \
             -d "[$payload]"
@@ -106,7 +107,7 @@ jobs:
             --arg actor "$ACTOR" \
             --arg url "$RUN_URL" \
             '{ts: (now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"deploy_success", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" \
             -H "Content-Type: application/json" \
             -d "[$payload]"
@@ -128,7 +129,7 @@ jobs:
             --arg actor "$ACTOR" \
             --arg url "$RUN_URL" \
             '{ts: (now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"ERROR", message:"deploy_failed", app:"techub", env:"production", repo:$repo, ref:$ref, actor:$actor, run_url:$url}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" \
             -H "Content-Type: application/json" \
             -d "[$payload]"
