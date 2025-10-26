@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO_DIR="/home/loftwah/gits/techub"
+LOGO_PATH="$REPO_DIR/public/android-chrome-512x512.png"
+
+# Defaults
+WIDTH=1920
+HEIGHT=1080
+FRAMERATE=60
+SECONDS_PER_DAY=0.2
+AUTO_SKIP_SECONDS=1
+FILE_IDLE_TIME=0
+CAMERA_MODE="overview"
+HIDE="mouse"
+DATE_FORMAT="%Y-%m-%d %H:%M"
+FONT_SIZE=22
+TITLE="Techub — Repository History"
+BACKGROUND_COLOUR="000000"
+CRF=18
+PRESET="slow"
+OUTPUT="techub-gource-1080p-info.mp4"
+
+usage() {
+  cat <<USAGE
+Usage: bin/gource [options]
+
+Render a gource video for the Techub repository with sensible defaults.
+
+Options:
+  -o, --output FILE         Output MP4 file (default: $OUTPUT)
+  -r, --framerate N         Video framerate (default: $FRAMERATE)
+  -s, --seconds-per-day F   Gource seconds per day (default: $SECONDS_PER_DAY)
+  -a, --auto-skip F         Auto-skip seconds (default: $AUTO_SKIP_SECONDS)
+  -i, --file-idle-time N    File idle time (default: $FILE_IDLE_TIME)
+  -f, --font-size N         Font size (default: $FONT_SIZE)
+  -t, --title TEXT          Title text (default: "$TITLE")
+  -c, --crf N               x264 CRF value (lower=better, default: $CRF)
+  -p, --preset NAME         x264 preset (default: $PRESET)
+  -4, --4k                  Render 3840x2160 (4K) and adjust default output name
+  -1, --1080p               Render 1920x1080 (default)
+  --logo PATH               Path to logo image (default: $LOGO_PATH)
+  --title-only              Hide filenames/dirnames/progress (minimal view)
+  --max-files N             Limit max simultaneous files on screen
+  --help                    Show this help and exit
+
+Examples:
+  # Default 1080p info-rich video
+  bin/gource
+
+  # 4K version with slower encode and smaller file size
+  bin/gource --4k -p veryslow -c 20 -o techub-gource-4k.mp4
+
+  # Faster timeline (shorter video) and bigger labels
+  bin/gource -s 0.4 -f 26 -o fast-1080p.mp4
+USAGE
+}
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -o|--output)
+      OUTPUT="$2"; shift 2 ;;
+    -r|--framerate)
+      FRAMERATE="$2"; shift 2 ;;
+    -s|--seconds-per-day)
+      SECONDS_PER_DAY="$2"; shift 2 ;;
+    -a|--auto-skip)
+      AUTO_SKIP_SECONDS="$2"; shift 2 ;;
+    -i|--file-idle-time)
+      FILE_IDLE_TIME="$2"; shift 2 ;;
+    -f|--font-size)
+      FONT_SIZE="$2"; shift 2 ;;
+    -t|--title)
+      TITLE="$2"; shift 2 ;;
+    -c|--crf)
+      CRF="$2"; shift 2 ;;
+    -p|--preset)
+      PRESET="$2"; shift 2 ;;
+    -4|--4k)
+      WIDTH=3840; HEIGHT=2160; [[ "$OUTPUT" == "techub-gource-1080p-info.mp4" ]] && OUTPUT="techub-gource-4k-info.mp4"; shift ;;
+    -1|--1080p)
+      WIDTH=1920; HEIGHT=1080; shift ;;
+    --logo)
+      LOGO_PATH="$2"; shift 2 ;;
+    --title-only)
+      HIDE="mouse,progress,dirnames,filenames"; shift ;;
+    --max-files)
+      MAX_FILES="$2"; shift 2 ;;
+    --help|-h)
+      usage; exit 0 ;;
+    --)
+      shift; break ;;
+    -*)
+      echo "Unknown option: $1" >&2; usage; exit 1 ;;
+    *)
+      POSITIONAL+=("$1"); shift ;;
+  esac
+done
+
+cd "$REPO_DIR"
+
+GOURCE_HIDE="$HIDE"
+
+GOURCE_ARGS=(
+  "-${WIDTH}x${HEIGHT}"
+  "--seconds-per-day" "$SECONDS_PER_DAY"
+  "--auto-skip-seconds" "$AUTO_SKIP_SECONDS"
+  "--file-idle-time" "$FILE_IDLE_TIME"
+  "--camera-mode" "$CAMERA_MODE"
+  "--highlight-users"
+  "--hide" "$GOURCE_HIDE"
+  "--date-format" "$DATE_FORMAT"
+  "--file-extensions"
+  "--font-size" "$FONT_SIZE"
+  "--title" "$TITLE"
+  "--logo" "$LOGO_PATH"
+  "--background-colour" "$BACKGROUND_COLOUR"
+  "--stop-at-end"
+  -r "$FRAMERATE"
+  -o -
+)
+
+if [[ -n "${MAX_FILES:-}" ]]; then
+  GOURCE_ARGS+=("--max-files" "$MAX_FILES")
+fi
+
+FFMPEG_ARGS=(
+  -y -r "$FRAMERATE" -f image2pipe -vcodec ppm -i -
+  -c:v libx264 -preset "$PRESET" -crf "$CRF" -pix_fmt yuv420p -movflags +faststart
+  "$OUTPUT"
+)
+
+echo "Running: gource ${GOURCE_ARGS[*]} | ffmpeg ${FFMPEG_ARGS[*]}" >&2
+
+gource "${GOURCE_ARGS[@]}" | ffmpeg ${FFMPEG_ARGS[@]}
+
+

@@ -55,3 +55,5 @@ techub-474511-de0b7383bd5b.json
 # Downloaded profile README images
 /public/profile_images/*
 !/public/profile_images/.keep
+
+techub-gource-1080p.mp4
