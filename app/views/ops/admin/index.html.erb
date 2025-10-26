@@ -394,12 +394,108 @@
             <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">OTEL traces are automatically collected and viewable in Axiom's traces view when configured.</p>
           </div>
 
+          <div class="mb-3">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Axiom / OTEL Status</h3>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <% if defined?(@axiom_status) && @axiom_status.present? %>
+                <span class="rounded bg-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-100 px-2 py-0.5 text-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-800 dark:bg-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-900/30 dark:text-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-300">Forwarding <%= @axiom_status[:forwarding_enabled] ? 'On' : 'Off' %></span>
+                <span class="rounded bg-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-100 px-2 py-0.5 text-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-800 dark:bg-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-900/30 dark:text-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-300">Token <%= @axiom_status[:token_present] ? 'Present' : 'Missing' %></span>
+                <span class="rounded bg-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-100 px-2 py-0.5 text-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-800 dark:bg-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-900/30 dark:text-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-300">Logs dataset <%= @axiom_status[:dataset_present] ? 'Set' : 'Unset' %></span>
+                <span class="rounded bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-100 px-2 py-0.5 text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-800 dark:bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-900/30 dark:text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-300">Metrics dataset <%= @axiom_status[:metrics_dataset_present] ? 'Set' : 'Unset' %></span>
+                <% if @axiom_status[:otel_endpoint].present? %>
+                  <span class="rounded bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">OTEL endpoint set</span>
+                <% else %>
+                  <span class="rounded bg-slate-100 px-2 py-0.5 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">OTEL endpoint default/none</span>
+                <% end %>
+                <span class="rounded bg-slate-100 px-2 py-0.5 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Env <%= @axiom_status[:env] %></span>
+              <% else %>
+                <span class="rounded bg-slate-100 px-2 py-0.5 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Status unavailable</span>
+              <% end %>
+            </div>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Forwarding is automatic in production or when <code>AXIOM_ENABLED=1</code> and not <code>AXIOM_DISABLE=1</code>.</p>
+          </div>
+
           <div>
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Test & Debug</h3>
-            <div class="flex flex-wrap gap-2">
-              <%= button_to "Send Smoke Log", ops_axiom_smoke_path, method: :post, class: "rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" %>
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                <h4 class="text-sm font-semibold mb-2">StructuredLogger</h4>
+                <form action="<%= ops_axiom_log_test_path %>" method="post" class="space-y-2">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs text-slate-500">Level</label>
+                      <select name="level" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                        <option>info</option>
+                        <option>warn</option>
+                        <option>error</option>
+                        <option>debug</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs text-slate-500">Force send</label>
+                      <select name="force" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-500">Message</label>
+                    <input type="text" name="message" placeholder="custom message" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-500">Payload (JSON)</label>
+                    <textarea name="payload" rows="3" class="w-full rounded border px-2 py-1 text-sm font-mono dark:border-slate-700" placeholder='{"kind":"test","code":123}'></textarea>
+                  </div>
+                  <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Send</button>
+                </form>
+              </div>
+
+              <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                <h4 class="text-sm font-semibold mb-2">Direct Ingest</h4>
+                <form action="<%= ops_axiom_direct_ingest_path %>" method="post" class="space-y-2">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs text-slate-500">Dataset</label>
+                      <input type="text" name="dataset" placeholder="<%= (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV['AXIOM_DATASET'] || 'techub' %>" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-500">Body (JSON array or object)</label>
+                    <textarea name="body" rows="4" class="w-full rounded border px-2 py-1 text-sm font-mono dark:border-slate-700" placeholder='[{"ts":"<%= Time.now.utc.iso8601 %>","level":"INFO","message":"ops_direct","env":"<%= Rails.env %>"}]'></textarea>
+                  </div>
+                  <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Ingest</button>
+                </form>
+              </div>
+
+              <div class="rounded border border-slate-200 p-3 dark:border-slate-700 md:col-span-2">
+                <h4 class="text-sm font-semibold mb-2">OpenTelemetry Span</h4>
+                <form action="<%= ops_axiom_otel_smoke_path %>" method="post" class="space-y-2">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <div class="grid grid-cols-3 gap-2">
+                    <div>
+                      <label class="block text-xs text-slate-500">Name</label>
+                      <input type="text" name="name" placeholder="ops_otel_smoke" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                    </div>
+                    <div>
+                      <label class="block text-xs text-slate-500">Mark error</label>
+                      <select name="error" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-slate-500">Attributes (JSON object)</label>
+                    <textarea name="attributes" rows="3" class="w-full rounded border px-2 py-1 text-sm font-mono dark:border-slate-700" placeholder='{"smoke":true,"env":"<%= Rails.env %>"}'></textarea>
+                  </div>
+                  <button class="rounded bg-purple-600 px-3 py-1 text-white hover:bg-purple-700">Emit Span</button>
+                </form>
+              </div>
             </div>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Use "Send Smoke Log" to send a test event to verify Axiom integration is working.</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Tip: Use StructuredLogger for logs into the logs dataset, Direct Ingest to bypass forwarding gates or to target metrics dataset, and OTEL Span to verify traces/attributes and error status.</p>
           </div>
         </div>
       </div>

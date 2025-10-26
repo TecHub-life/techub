@@ -147,6 +147,24 @@ module Ops
         traces_url = nil unless otel_configured
 
         @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
+
+        # Expose status booleans for Ops visibility
+        axiom_enabled = (Rails.env.production? || ENV["AXIOM_ENABLED"] == "1") && ENV["AXIOM_DISABLE"] != "1"
+        axiom_token_present = ((Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]).to_s.strip != ""
+        axiom_dataset_present = ((Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]).to_s.strip != ""
+        metrics_dataset_present = ((Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]).to_s.strip != ""
+        axiom_base_url = ((Rails.application.credentials.dig(:axiom, :base_url) rescue nil) || ENV["AXIOM_BASE_URL"] || "https://api.axiom.co").to_s
+        otel_endpoint = ((Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || ENV["OTEL_EXPORTER_OTLP_ENDPOINT"]).to_s
+
+        @axiom_status = {
+          forwarding_enabled: axiom_enabled,
+          token_present: axiom_token_present,
+          dataset_present: axiom_dataset_present,
+          metrics_dataset_present: metrics_dataset_present,
+          base_url: axiom_base_url,
+          otel_endpoint: otel_endpoint,
+          env: Rails.env
+        }
       rescue StandardError
         @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
       end
@@ -313,6 +331,83 @@ module Ops
         StructuredLogger.info({ message: "ops_axiom_smoke", sample: msg, request_id: request.request_id, env: Rails.env }, force_axiom: true)
       end
       redirect_to ops_admin_path, notice: "Emitted Axiom smoke log"
+    end
+
+    # Advanced: StructuredLogger test with level, message, payload, and force toggle
+    def axiom_log_test
+      level = params[:level].to_s.presence || "info"
+      message = params[:message].to_s.presence || "ops_axiom_test"
+      force = ActiveModel::Type::Boolean.new.cast(params[:force])
+      payload_json = params[:payload].to_s
+      payload_hash = {}
+      if payload_json.present?
+        begin
+          parsed = JSON.parse(payload_json)
+          payload_hash = parsed.is_a?(Hash) ? parsed : { payload: parsed }
+        rescue JSON::ParserError => e
+          return redirect_to ops_admin_path(anchor: "ai"), alert: "Invalid JSON payload: #{e.message}"
+        end
+      end
+      data = { message: message, source: "ops", env: Rails.env }.merge(payload_hash)
+      if defined?(StructuredLogger) && StructuredLogger.respond_to?(level)
+        StructuredLogger.public_send(level, data, force_axiom: force)
+        redirect_to ops_admin_path(anchor: "ai"), notice: "Sent StructuredLogger #{level}"
+      else
+        redirect_to ops_admin_path(anchor: "ai"), alert: "Unknown log level: #{level}"
+      end
+    end
+
+    # Direct ingest to a specified dataset (bypasses logger forwarding gates)
+    def axiom_direct_ingest
+      dataset = params[:dataset].to_s.presence || ((Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"])
+      body = params[:body].to_s
+      if dataset.to_s.strip.empty?
+        return redirect_to ops_admin_path(anchor: "ai"), alert: "Dataset is required"
+      end
+      begin
+        parsed = JSON.parse(body.presence || "{}")
+        events = parsed.is_a?(Array) ? parsed : [ parsed ]
+      rescue JSON::ParserError => e
+        return redirect_to ops_admin_path(anchor: "ai"), alert: "Invalid JSON body: #{e.message}"
+      end
+      res = Axiom::IngestService.call(dataset: dataset, events: events)
+      if res.success?
+        redirect_to ops_admin_path(anchor: "ai"), notice: "Ingested #{events.size} event(s) to #{dataset}"
+      else
+        redirect_to ops_admin_path(anchor: "ai"), alert: "Ingest failed: #{res.error.message}"
+      end
+    end
+
+    # Emit an OTEL span with optional attributes and error flag
+    def axiom_otel_smoke
+      attrs_json = params[:attributes].to_s
+      name = params[:name].presence || "ops_otel_smoke"
+      error = ActiveModel::Type::Boolean.new.cast(params[:error])
+      attributes = {}
+      if attrs_json.present?
+        begin
+          parsed = JSON.parse(attrs_json)
+          attributes = parsed.is_a?(Hash) ? parsed : { payload: parsed }
+        rescue JSON::ParserError => e
+          return redirect_to ops_admin_path(anchor: "ai"), alert: "Invalid attributes JSON: #{e.message}"
+        end
+      end
+      begin
+        require "opentelemetry/sdk"
+        tracer = OpenTelemetry.tracer_provider.tracer("techub.ops", "1.0")
+        tracer.in_span(name, attributes: attributes) do |span|
+          if error
+            span.record_exception(StandardError.new("ops_otel_smoke_error"))
+            span.status = OpenTelemetry::Trace::Status.error("ops smoke error")
+          end
+          sleep 0.01
+        end
+        redirect_to ops_admin_path(anchor: "ai"), notice: "Emitted OTEL span"
+      rescue LoadError
+        redirect_to ops_admin_path(anchor: "ai"), alert: "OpenTelemetry not installed"
+      rescue StandardError => e
+        redirect_to ops_admin_path(anchor: "ai"), alert: "OTEL smoke failed: #{e.message}"
+      end
     end
 
     def pipeline_doctor
