@@ -1,5 +1,7 @@
 module Ops
   class AdminController < BaseController
+    ALLOWED_LOG_LEVELS = %w[debug info warn error fatal].freeze
+
     def index
       # Reflect whether /ops/jobs is actually mounted in this env
       @engine_present = begin
@@ -335,9 +337,8 @@ module Ops
 
     # Advanced: StructuredLogger test with level, message, payload, and force toggle
     def axiom_log_test
-      allowed_levels = %w[debug info warn error fatal unknown]
-      level_param = params[:level].to_s.presence
-      level = allowed_levels.include?(level_param) ? level_param : "info"
+      level_param = params[:level].to_s.strip.downcase
+      level = ALLOWED_LOG_LEVELS.include?(level_param) ? level_param : "info"
       message = params[:message].to_s.presence || "ops_axiom_test"
       force = ActiveModel::Type::Boolean.new.cast(params[:force])
       payload_json = params[:payload].to_s
