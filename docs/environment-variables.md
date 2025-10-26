@@ -42,12 +42,17 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - `AXIOM_TOKEN` — required for OTEL export and dataset ingest (maps from credentials)
   - `AXIOM_DATASET` — logs/events dataset name (maps from credentials)
   - `AXIOM_METRICS_DATASET` — metrics/events dataset name (maps from credentials)
+  - `AXIOM_ORG` — Axiom org slug (for Ops UI deep-links only; optional)
+  - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU:
+    `https://api.eu.axiom.co`
   - `AXIOM_ENABLED` — enable log forwarding in non‑prod (optional)
   - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTEL base endpoint (default US traces endpoint)
     - US: `https://api.axiom.co/v1/traces`
     - EU: `https://api.eu.axiom.co/v1/traces`
   - `OTEL_METRICS_EXPORT_INTERVAL_MS` — metrics export interval (default 60000) for dev forcing.
-  - Refs: config/initializers/structured_logging.rb:18.
+  - Refs: config/initializers/structured_logging.rb, config/initializers/axiom.rb,
+    config/initializers/opentelemetry.rb, app/services/axiom/ingest_service.rb,
+    .github/workflows/ci.yml, .github/workflows/kamal-deploy.yml.
 - Twitter meta: `TWITTER_SITE_HANDLE`, `TWITTER_CREATOR_HANDLE`
   - Home: credentials under `:twitter`.
   - Refs: app/views/layouts/application.html.erb:42.

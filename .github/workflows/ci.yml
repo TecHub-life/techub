@@ -19,6 +19,7 @@ jobs:
     env:
       AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
+      AXIOM_BASE_URL: ${{ secrets.AXIOM_BASE_URL }}
     steps:
       - name: Emit Axiom ci_start
         if: ${{ env.AXIOM_TOKEN != '' && env.AXIOM_DATASET != '' }}
@@ -38,7 +39,7 @@ jobs:
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" \
             --arg actor "$ACTOR" --arg url "$RUN_URL" --arg job "$JOB_NAME" --arg wf "$WORKFLOW" \
             '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_start", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Checkout
@@ -88,7 +89,7 @@ jobs:
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" \
             --arg actor "$ACTOR" --arg url "$RUN_URL" --arg job "$JOB_NAME" --arg wf "$WORKFLOW" \
             '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_success", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Emit Axiom ci_failed
@@ -109,7 +110,7 @@ jobs:
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" \
             --arg actor "$ACTOR" --arg url "$RUN_URL" --arg job "$JOB_NAME" --arg wf "$WORKFLOW" \
             '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"ERROR", message:"ci_failed", app:"techub", job:$job, workflow:$wf, repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Axiom doctor (main only, if secrets)
@@ -134,6 +135,7 @@ jobs:
     env:
       AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       AXIOM_DATASET: ${{ secrets.AXIOM_DATASET }}
+      AXIOM_BASE_URL: ${{ secrets.AXIOM_BASE_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -204,7 +206,7 @@ jobs:
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" --arg actor "$ACTOR" --arg url "$RUN_URL" \
             --arg img "$IMAGE_NAME" --arg dig "$IMAGE_DIGEST" \
             '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_image_built", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url, image:{name:$img,digest:$dig}}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Attest SBOM (GitHub attestations)
@@ -232,7 +234,7 @@ jobs:
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" --arg actor "$ACTOR" --arg url "$RUN_URL" \
             --arg img "$IMAGE_NAME" --arg dig "$IMAGE_DIGEST" \
             '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"INFO", message:"ci_sbom_attested", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url, image:{name:$img,digest:$dig}}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Emit Axiom ci_docker_failed
@@ -250,7 +252,7 @@ jobs:
           payload=$(jq -n \
             --arg repo "$REPO" --arg ref "$REF" --arg sha "$SHA" --arg actor "$ACTOR" --arg url "$RUN_URL" \
             '{ts:(now | strftime("%Y-%m-%dT%H:%M:%SZ")), level:"ERROR", message:"ci_docker_failed", app:"techub", repo:$repo, ref:$ref, sha:$sha, actor:$actor, run_url:$url}')
-          curl -sfS https://api.axiom.co/v1/datasets/$AXIOM_DATASET/ingest \
+          curl -sfS "${AXIOM_BASE_URL:-https://api.axiom.co}/v1/datasets/$AXIOM_DATASET/ingest" \
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Upload SBOM to GitHub Release (tags only)

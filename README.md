@@ -84,6 +84,8 @@ bundle install
 - Ops Admin: docs/ops-admin.md
 - AppSec Overview: docs/appsec-ops-overview.md
 - Observability (Axiom/OTEL): docs/observability/axiom-opentelemetry.md
+  - Includes region support via `AXIOM_BASE_URL` (US default). For CI, add `AXIOM_BASE_URL` secret
+    if you need EU.
 - Image Optimization: docs/image-optimization.md
 - OG Images: docs/og-images.md
 - Smoke Checklist: docs/smoke-checklist.md

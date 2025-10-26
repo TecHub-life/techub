@@ -35,6 +35,7 @@ Rails.application.configure do
       user_id: Current.user_id,
       ip: Current.ip,
       ua: Current.user_agent,
+      user_agent: Current.user_agent,
       path: Current.path,
       method: Current.method,
       trace_id: trace_id,
@@ -50,6 +51,18 @@ Rails.application.configure do
 end
 
 module StructuredLogger
+  # Initialize forwarding queue/worker at module load to avoid dynamic constant assignment in methods
+  unless defined?(AXIOM_FORWARD_QUEUE)
+    AXIOM_FORWARD_QUEUE = Queue.new
+  end
+  unless defined?(AXIOM_FORWARD_WORKER)
+    AXIOM_FORWARD_WORKER = Thread.new do
+      loop do
+        job = AXIOM_FORWARD_QUEUE.pop
+        job.call
+      end
+    end
+  end
   module_function
 
   def info(message_or_hash = nil, **extra)
@@ -97,24 +110,19 @@ module StructuredLogger
     if forwarding && axiom_token.present? && axiom_dataset.present?
       deliver = proc do
         begin
-          require "faraday"
-          conn = Faraday.new(url: "https://api.axiom.co") do |f|
-            f.request :retry
-            f.response :raise_error
-            f.adapter Faraday.default_adapter
-          end
-          conn.headers["Authorization"] = "Bearer #{axiom_token}"
-          # Use v1 ingest API
-          conn.post("/v1/datasets/#{axiom_dataset}/ingest") do |req|
-            req.headers["Content-Type"] = "application/json"
-            req.body = [ payload ].to_json
-          end
+          # Reuse the shared ingest client for consistency and region support
+          Axiom::IngestService.call(dataset: axiom_dataset, events: [ payload ])
         rescue StandardError => e
           warn "Axiom forward failed: #{e.class}: #{e.message}" if ENV["AXIOM_DEBUG"] == "1"
         end
       end
       # Synchronous when forced to guarantee delivery before process exits
-      force_axiom ? deliver.call : Thread.new { deliver.call }
+      if force_axiom
+        deliver.call
+      else
+        # Single-threaded queue to avoid unbounded thread creation
+        AXIOM_FORWARD_QUEUE << deliver
+      end
     elsif ENV["AXIOM_DEBUG"] == "1"
       warn "Axiom forward skipped (forwarding=#{forwarding}, token_present=#{axiom_token.present?}, dataset_present=#{axiom_dataset.present?})"
     end

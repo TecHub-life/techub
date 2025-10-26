@@ -123,6 +123,14 @@ class Profile < ApplicationRecord
     name.presence || login
   end
 
+  # Returns whether to display the hireable badge, considering user override.
+  # If hireable_override is nil, fall back to GitHub-derived hireable field.
+  def hireable_display?
+    return hireable unless has_attribute?(:hireable_override)
+    override = self[:hireable_override]
+    override.nil? ? hireable : !!override
+  end
+
   def needs_sync?
     last_synced_at.nil? || last_synced_at < 1.hour.ago
   end
