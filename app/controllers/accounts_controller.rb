@@ -26,7 +26,7 @@ class AccountsController < ApplicationController
 
   def require_login
     @current_user ||= User.find_by(id: session[:current_user_id]) if @current_user.nil? && session[:current_user_id].present?
-    redirect_to auth_github_path, alert: "Please sign in with GitHub" unless current_user
+    redirect_to login_path, alert: "Please sign in" unless current_user
   end
 
   def account_params

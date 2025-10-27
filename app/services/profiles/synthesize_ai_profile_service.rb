@@ -142,8 +142,23 @@ module Profiles
       apply_overrides!(cleaned)
       cleaned["playing_card"] = fallback_playing_card(profile) unless playing_card_valid?(cleaned["playing_card"])
 
-      # Persist to ProfileCard
-      record = profile.profile_card || profile.build_profile_card
+      # Persist to ProfileCard (concurrency-safe)
+      # Ensure a single card per profile even when multiple jobs run concurrently
+      begin
+        record = ProfileCard.find_or_create_by(profile_id: profile.id) do |card|
+          # Set default values when creating
+          card.title = profile.display_name
+          card.attack = 70
+          card.defense = 60
+          card.speed = 80
+          card.tags = %w[coder developer maker builder engineer hacker]
+        end
+      rescue ActiveRecord::RecordNotUnique
+        # Race condition: another job created the card between find and create
+        # Just reload and use the existing one
+        record = ProfileCard.find_by!(profile_id: profile.id)
+      end
+
       record.assign_attributes(
         title: cleaned["title"].presence || profile.display_name,
         tagline: cleaned["tagline"].presence || cleaned["flavor_text"].presence || record.tagline,

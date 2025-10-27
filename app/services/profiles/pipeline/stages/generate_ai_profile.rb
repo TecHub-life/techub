@@ -4,16 +4,16 @@ module Profiles
       class GenerateAiProfile < BaseStage
         STAGE_ID = :generate_ai_profile
 
-        def call
-          profile = context.profile
-          return failure_with_context(StandardError.new("profile_missing_for_ai")) unless profile
+      def call
+        profile = context.profile
+        return failure_with_context(StandardError.new("profile_missing_for_ai")) unless profile
 
-          if FeatureFlags.enabled?(:ai_text)
-            run_ai_traits(profile)
-          else
-            run_heuristic(profile)
-          end
+        if FeatureFlags.enabled?(:ai_text)
+          run_ai_traits(profile)
+        else
+          run_heuristic(profile)
         end
+      end
 
         private
 

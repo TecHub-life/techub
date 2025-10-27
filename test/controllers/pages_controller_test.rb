@@ -8,6 +8,15 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "login link is present for signed-out users" do
+    Github::ProfileSummaryService.stub :call, ServiceResult.failure(StandardError.new("oops")) do
+      get root_path
+      assert_response :success
+      assert_match /Sign in/, @response.body
+      assert_match /href=\"#{Regexp.escape(login_path)}\"/, @response.body
+    end
+  end
+
   test "directory supports multiple tags via CSV" do
     p1 = Profile.create!(github_id: 1, login: "alice", name: "Alice", last_pipeline_status: "success")
     ProfileCard.create!(profile: p1, attack: 10, defense: 10, speed: 10, tags: %w[ruby rails ai js ml data])

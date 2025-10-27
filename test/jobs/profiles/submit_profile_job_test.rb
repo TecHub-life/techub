@@ -18,7 +18,6 @@ module Profiles
     test "enqueues pipeline on subsequent submissions" do
       user = User.create!(github_id: 778, login: "owner2")
       prof = Profile.create!(github_id: 7002, login: "second")
-      prof.create_profile_card!(attack: 10, defense: 10, speed: 10, tags: [ "ruby", "rails", "oss", "devops", "linux", "cloud" ]) rescue nil
       prof.update_columns(last_ai_regenerated_at: Time.current)
 
       Github::ProfileSummaryService.stub :call, ServiceResult.success({ profile: { id: prof.github_id, login: prof.login, avatar_url: "https://example.com/b.png" } }) do
