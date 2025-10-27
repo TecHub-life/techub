@@ -7,7 +7,14 @@ module Profiles
         def call
           payload = context.github_payload || {}
           profile_data = payload[:profile] || {}
-          avatar_url = profile_data[:avatar_url].presence || default_avatar_url(profile_data[:login] || login)
+          avatar_url = profile_data[:avatar_url].presence
+
+          # Skip download if no avatar URL from GitHub (user has no avatar set)
+          if avatar_url.blank?
+            context.avatar_local_path = nil
+            trace(:skipped, reason: "No avatar URL from GitHub")
+            return success_with_context(nil, metadata: { skipped: true })
+          end
 
           trace(:started, avatar_url: avatar_url)
           download = Github::DownloadAvatarService.call(avatar_url: avatar_url, login: login)
@@ -29,12 +36,6 @@ module Profiles
         rescue StandardError => e
           trace(:failed, error: e.message)
           failure_with_context(e)
-        end
-
-        private
-
-        def default_avatar_url(login)
-          "https://github.com/#{login}.png"
         end
       end
     end
