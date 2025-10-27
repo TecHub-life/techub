@@ -210,7 +210,7 @@ jobs:
             -H "Authorization: Bearer $AXIOM_TOKEN" -H "Content-Type: application/json" -d "[$payload]"
 
       - name: Attest SBOM (GitHub attestations)
-        uses: actions/attest-sbom@v1
+        uses: actions/attest-sbom@v3
         with:
           sbom-path: sbom/sbom-techub-image.cdx.json
           subject-name: ${{ steps.digest.outputs.name }}
