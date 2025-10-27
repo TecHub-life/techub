@@ -13,13 +13,48 @@ module Profiles
         @trace = []
       end
 
-      def trace(stage, event, payload = {})
-        @trace << {
+    def trace(stage, event, payload = {})
+      # Ensure payload is a Hash and compact it safely to remove nil values
+      safe_payload = begin
+        payload.is_a?(Hash) ? payload.compact : {}
+      rescue StandardError => e
+        # If compact fails, log the error and use the original payload without compacting
+        if defined?(StructuredLogger)
+          StructuredLogger.warn(
+            message: "trace_payload_compact_failed",
+            stage: stage.to_s,
+            event: event.to_s,
+            error: e.message,
+            payload_class: payload.class.name
+          )
+        end
+        payload.is_a?(Hash) ? payload : {}
+      end
+
+      @trace << {
+        stage: stage.to_s,
+        event: event.to_s,
+        at: Time.current.iso8601(3)
+      }.merge(safe_payload)
+    rescue StandardError => e
+      # If trace itself fails, log it but don't break the pipeline
+      if defined?(StructuredLogger)
+        StructuredLogger.error(
+          message: "trace_failed",
           stage: stage.to_s,
           event: event.to_s,
-          at: Time.current.iso8601(3)
-        }.merge(payload.compact)
+          error: e.message,
+          error_class: e.class.name
+        )
       end
+      # Still add a minimal trace entry so we don't lose the event
+      @trace << {
+        stage: stage.to_s,
+        event: event.to_s,
+        at: Time.current.iso8601(3),
+        trace_error: e.message
+      }
+    end
 
       def trace_entries
         @trace.dup
