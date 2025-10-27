@@ -36,11 +36,16 @@ module CardsHelper
         rel = Pathname.new(files[idx]).relative_path_from(Rails.root.join("app", "assets", "images")).to_s
         return asset_path(rel)
       end
+      # Final fallback: global placeholder (same as motifs)
+      return asset_path("android-chrome-512x512.jpg")
     end
 
-    profile.avatar_url
+    # Real avatar path with placeholder fallback when missing
+    url = profile.avatar_url.to_s
+    return url if url.present?
+    asset_path("android-chrome-512x512.jpg")
   rescue StandardError
-    profile.avatar_url
+    (profile.avatar_url.presence || asset_path("android-chrome-512x512.jpg"))
   end
 
   # Build inline styles for background <img> based on normalized crop/zoom values.

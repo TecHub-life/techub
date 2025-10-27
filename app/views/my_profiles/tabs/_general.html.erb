@@ -176,7 +176,7 @@
           <input type="radio" name="avatar_choice" value="real" <%= 'checked' if choice == 'real' %> class="peer sr-only">
           <div class="rounded border-2 border-slate-300 p-2 peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 dark:border-slate-700 dark:peer-checked:ring-indigo-900 transition">
             <div class="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
-              <img src="<%= @profile.avatar_url %>" alt="GitHub avatar" class="h-full w-full object-cover">
+              <img src="<%= avatar_image_url_for(@profile) %>" alt="GitHub avatar" class="h-full w-full object-cover">
             </div>
             <div class="mt-1.5 text-center text-xs font-medium text-slate-700 dark:text-slate-300">GitHub</div>
           </div>

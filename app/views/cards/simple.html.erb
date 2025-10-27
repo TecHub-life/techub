@@ -37,7 +37,7 @@
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-900">
         <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
         <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
-        <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
+        <% avatar_src = avatar_image_url_for(@profile) %>
         <% if avatar_src.present? %>
           <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover">
         <% else %>
