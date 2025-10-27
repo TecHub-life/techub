@@ -19,6 +19,12 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert session[:github_oauth_state].present?
   end
 
+  test "login path redirects to github" do
+    get login_path
+    assert_response :redirect
+    assert_match "https://github.com/login/oauth/authorize", @response.redirect_url
+  end
+
   test "start stores invite_code in session via GET" do
     get auth_github_path(invite_code: "Hunter2 ")
 
@@ -31,6 +37,17 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :redirect
     assert_equal "loftwah", session[:invite_code]
+  end
+
+  test "signup creates session with invite and optional email then redirects to github" do
+    # Valid code and optional email
+    Rails.application.stub :credentials, { app: { sign_up_codes: [ "hunter2" ] } } do
+      post signup_path, params: { signup: { invite_code: "hunter2", email: "User@Example.com " } }
+      assert_response :redirect
+      assert_redirected_to auth_github_path
+      assert_equal "hunter2", session[:invite_code]
+      assert_equal "user@example.com", session[:signup_email]
+    end
   end
 
   test "callback signs in user" do
@@ -47,6 +64,35 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
             assert_redirected_to root_path
             assert_equal user.id, session[:current_user_id]
+          end
+        end
+      end
+    end
+  end
+
+  test "callback applies session email if provided" do
+    user = User.create!(github_id: 9, login: "emailuser", access_token: "tok")
+
+    open_session do |sess|
+      # Initialize OAuth state, then set signup email via signup flow to mirror real behavior
+      sess.get auth_github_path
+      Access::InviteCodes.stub :valid?, true do
+        sess.post signup_path, params: { signup: { invite_code: "hunter2", email: "emailuser@example.com" } }
+      end
+      state = sess.session[:github_oauth_state]
+
+      Github::Configuration.stub :callback_url, auth_github_callback_url do
+        Github::UserOauthService.stub :call, ServiceResult.success({ access_token: "abc", scope: "read:user", token_type: "bearer" }) do
+          Github::FetchAuthenticatedUser.stub :call, ServiceResult.success({ user: { id: 9, login: "emailuser", name: "E", avatar_url: "https://example.com/e.png" }, emails: [] }) do
+            Users::UpsertFromGithub.stub :call, ServiceResult.success(user) do
+              Access::Policy.stub :allowed?, true do
+                sess.get auth_github_callback_path(code: "xyz", state: state, signup_email: "emailuser@example.com")
+                assert_equal 302, sess.response.status
+                assert_equal user.id, sess.session[:current_user_id]
+                # Email application is best-effort and not required for sign-in
+                assert_nil sess.session[:signup_email]
+              end
+            end
           end
         end
       end

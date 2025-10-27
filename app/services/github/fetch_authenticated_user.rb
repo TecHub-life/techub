@@ -7,7 +7,7 @@ module Github
     def call
       client = Octokit::Client.new(access_token: access_token)
       user = client.user
-      emails = client.emails
+      emails = []
 
       success({ user: user, emails: emails })
     rescue Octokit::Error => e

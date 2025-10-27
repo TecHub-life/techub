@@ -21,7 +21,7 @@
     <div class="flex-shrink-0 pr-2">
       <div class="w-28 h-28 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-xl">
         <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-          <img src="<%= avatar_image_url_for(@profile) %>" alt="avatar" class="w-full h-full object-cover object-center">
+          <img src="<%= avatar_image_url_for(@profile) %>" alt="avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
         </div>
       </div>
     </div>

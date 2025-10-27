@@ -15,7 +15,9 @@ module Profiles
 
           ActiveRecord::Base.transaction do
             assign_profile_attributes(profile, payload)
-            profile.avatar_url = context.avatar_local_path.presence || payload[:profile][:avatar_url].presence || default_avatar_url(profile.login)
+            # Only use locally downloaded avatar; never fall back to GitHub URLs
+            # If download failed, avatar_url will be nil and views will use placeholder
+            profile.avatar_url = context.avatar_local_path.presence
             profile.last_synced_at = Time.current
             profile.save!
 
@@ -173,10 +175,6 @@ module Profiles
             error_class: error.class.name,
             error: error.message
           ) if defined?(StructuredLogger)
-        end
-
-        def default_avatar_url(login)
-          "https://github.com/#{login}.png"
         end
 
         def normalized_languages(languages)

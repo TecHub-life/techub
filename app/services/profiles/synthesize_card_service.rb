@@ -25,7 +25,22 @@ module Profiles
       end
 
       if persist
-        record = profile.profile_card || profile.build_profile_card
+        # Concurrency-safe create-or-find to respect unique index on profile_id
+        begin
+          record = ProfileCard.find_or_create_by(profile_id: profile.id) do |card|
+            # Set default values when creating
+            card.title = profile.display_name
+            card.attack = 70
+            card.defense = 60
+            card.speed = 80
+            card.tags = %w[coder developer maker builder engineer hacker]
+          end
+        rescue ActiveRecord::RecordNotUnique
+          # Race condition: another job created the card between find and create
+          # Just reload and use the existing one
+          record = ProfileCard.find_by!(profile_id: profile.id)
+        end
+
         record.assign_attributes(attrs.merge(generated_at: Time.current))
         if record.save
           success(record)

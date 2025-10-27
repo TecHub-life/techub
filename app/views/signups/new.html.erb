@@ -1,0 +1,31 @@
+<section class="mx-auto max-w-xl px-4 py-12">
+  <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Create your account</h1>
+  <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <%= form_with url: signup_path, scope: :signup, method: :post, local: true do |f| %>
+      <div class="mb-4">
+        <%= f.label :invite_code, "Invite code", class: "block text-sm font-medium" %>
+        <%= f.text_field :invite_code, required: true, class: "mt-1 w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" %>
+        <p class="mt-1 text-xs text-slate-500">Required for new accounts during early access.</p>
+      </div>
+
+      <div class="mb-6">
+        <div class="flex items-center justify-between">
+          <%= f.label :email, "Contact email (optional)", class: "block text-sm font-medium" %>
+          <span class="text-xs text-slate-500">We don’t request your GitHub email; adding one here is optional.</span>
+        </div>
+        <%= f.email_field :email, placeholder: "you@example.com", class: "mt-1 w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" %>
+        <p class="mt-1 text-xs text-slate-500">If left blank, you simply won’t receive emails. You can set this later in Settings → Account.</p>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-slate-500">We'll ask GitHub only for your basic profile (no email).</div>
+        <%= f.submit "Continue with GitHub", class: "inline-flex items-center justify-center gap-2 cursor-pointer rounded bg-slate-900 px-6 py-2.5 font-medium text-white transition-all duration-200 hover:bg-slate-700 hover:shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 dark:focus:ring-slate-400", data: { disable_with: "Connecting..." } %>
+      </div>
+      <div class="mt-4 text-xs text-slate-600 dark:text-slate-400">
+        Already have an account? <%= link_to "Sign in", login_path, data: { turbo: false }, class: "underline" %>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+

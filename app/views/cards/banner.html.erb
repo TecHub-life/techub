@@ -68,8 +68,8 @@
         <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
         <% avatar_choice = 'real' unless @profile.ai_art_opt_in %>
         <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
-        <% avatar_src = (avatar_choice == 'ai' && ai_avatar&.public_url.present?) ? ai_avatar.public_url : @profile.avatar_url %>
-        <img src="<%= avatar_src %>" alt="avatar" class="h-full w-full object-cover" />
+        <% avatar_src = avatar_image_url_for(@profile) %>
+        <img src="<%= avatar_src %>" alt="avatar" class="h-full w-full object-cover" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'" />
       </div>
     </div>
   </div>

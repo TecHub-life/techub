@@ -33,11 +33,8 @@
             <!-- Avatar Badge -->
             <div class="absolute bottom-3 left-3">
               <div class="h-16 w-16 rounded-full border-2 border-white/90 bg-slate-800 p-0.5 shadow-lg">
-                <% avatar_src = profile.avatar_url %>
-                <% if (card&.avatar_choice == 'ai') && (asset = profile.profile_assets.find_by(kind: 'avatar_1x1')) %>
-                  <% avatar_src = asset.public_url if asset&.public_url.present? %>
-                <% end %>
-                <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="h-full w-full rounded-full object-cover">
+                <% avatar_src = avatar_image_url_for(profile) %>
+                <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="h-full w-full rounded-full object-cover" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
               </div>
             </div>
 

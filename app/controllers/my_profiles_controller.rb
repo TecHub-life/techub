@@ -184,7 +184,7 @@ class MyProfilesController < ApplicationController
   def upload_asset
     kind = params[:kind].to_s
     file = params[:file]
-    allowed = %w[og card simple avatar_3x1]
+    allowed = %w[og card simple avatar_3x1 avatar_1x1]
     unless allowed.include?(kind)
       return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
     end
