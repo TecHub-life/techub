@@ -183,7 +183,7 @@
               <div class="absolute bottom-3 left-3">
                 <div class="h-16 w-16 rounded-full border-2 border-white/90 bg-slate-800 p-0.5 shadow-lg">
                   <% avatar_src = avatar_image_url_for(profile) %>
-                  <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="h-full w-full rounded-full object-cover">
+                  <img src="<%= avatar_src %>" alt="<%= profile.login %>" class="h-full w-full rounded-full object-cover" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
                 </div>
               </div>
 

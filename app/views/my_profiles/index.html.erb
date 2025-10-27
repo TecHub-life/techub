@@ -17,7 +17,7 @@
       <% @profiles.each do |profile| %>
         <div class="flex items-center justify-between p-4">
           <div class="flex items-center gap-4">
-            <img src="<%= avatar_image_url_for(profile) %>" alt="<%= profile.login %>" class="w-10 h-10 rounded">
+            <img src="<%= avatar_image_url_for(profile) %>" alt="<%= profile.login %>" class="w-10 h-10 rounded" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
             <div>
               <a href="<%= profile_path(username: profile.login) %>" class="font-medium text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400">@<%= profile.login %></a>
 

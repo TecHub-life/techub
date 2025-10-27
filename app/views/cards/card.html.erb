@@ -28,7 +28,7 @@
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
         <% avatar_src = avatar_image_url_for(@profile) %>
         <% if avatar_src.present? %>
-          <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center">
+          <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
         <% else %>
           <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400">?</div>
         <% end %>
