@@ -18,8 +18,8 @@
       </div>
 
       <div class="flex items-center justify-between">
-        <div class="text-xs text-slate-500">We’ll ask GitHub only for your basic profile (no email).</div>
-        <%= f.submit "Continue with GitHub", class: "rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900" %>
+        <div class="text-xs text-slate-500">We'll ask GitHub only for your basic profile (no email).</div>
+        <%= f.submit "Continue with GitHub", class: "inline-flex items-center justify-center gap-2 cursor-pointer rounded bg-slate-900 px-6 py-2.5 font-medium text-white transition-all duration-200 hover:bg-slate-700 hover:shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 dark:focus:ring-slate-400", data: { disable_with: "Connecting..." } %>
       </div>
       <div class="mt-4 text-xs text-slate-600 dark:text-slate-400">
         Already have an account? <%= link_to "Sign in", login_path, data: { turbo: false }, class: "underline" %>
