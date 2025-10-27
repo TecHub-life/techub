@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_26_120000) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_27_001553) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -350,6 +350,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_26_120000) do
     t.index ["login"], name: "index_users_on_login", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "notification_deliveries", "users"
   add_foreign_key "profile_activities", "profiles"
   add_foreign_key "profile_assets", "profiles"
@@ -358,6 +360,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_26_120000) do
   add_foreign_key "profile_organizations", "profiles"
   add_foreign_key "profile_ownerships", "profiles"
   add_foreign_key "profile_ownerships", "users"
+  add_foreign_key "profile_pipeline_events", "profiles"
   add_foreign_key "profile_readmes", "profiles"
   add_foreign_key "profile_repositories", "profiles"
   add_foreign_key "profile_scrapes", "profiles"
