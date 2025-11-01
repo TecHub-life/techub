@@ -114,18 +114,58 @@
   </div>
 </section>
 
-<!-- Embedded Audio Widget -->
-<section class="embed-row">
-  <iframe
-    src="https://fm.loftwah.com/widget?album=run-it&file=Run%20it.mp3&variant=compact&shuffle=1&repeat=all&width=560"
-    width="100%"
-    height="240"
-    frameborder="0"
-    loading="lazy"
-    allow="clipboard-write">
-  </iframe>
+<!-- Embedded Audio Widget - Collapsible Floating Bottom Right -->
+<div id="musicPlayerContainer" class="fixed bottom-4 right-4 z-40">
+  <!-- Collapsed State: Music Bubble (desktop only, mobile uses header button) -->
+  <button 
+    id="musicBubble"
+    onclick="toggleMusicPlayer()"
+    class="hidden lg:flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-2xl hover:scale-110 transition-transform duration-300 cursor-pointer"
+    aria-label="Toggle music player">
+    <i class="fa-solid fa-music text-xl"></i>
+  </button>
   
-</section>
+  <!-- Expanded State: Music Player -->
+  <div 
+    id="musicPlayer"
+    class="hidden w-48 lg:w-80 max-w-[calc(100vw-2rem)]">
+    <div class="relative">
+      <button 
+        onclick="toggleMusicPlayer()"
+        class="absolute -top-2 -right-2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 text-white hover:bg-slate-700 transition-colors cursor-pointer"
+        aria-label="Close music player">
+        <i class="fa-solid fa-times text-sm"></i>
+      </button>
+      <iframe
+        id="musicIframe"
+        src="https://fm.loftwah.com/widget?album=run-it&file=Run%20it.mp3&variant=compact&shuffle=1&repeat=all&width=192"
+        width="100%"
+        height="120"
+        frameborder="0"
+        loading="lazy"
+        allow="clipboard-write"
+        class="rounded-lg shadow-2xl lg:h-[200px]">
+      </iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleMusicPlayer() {
+    const bubble = document.getElementById('musicBubble');
+    const player = document.getElementById('musicPlayer');
+    
+    if (player.classList.contains('hidden')) {
+      // Open player, hide bubble
+      player.classList.remove('hidden');
+      bubble.classList.add('hidden');
+    } else {
+      // Close player, show bubble (only on desktop where bubble is visible)
+      player.classList.add('hidden');
+      bubble.classList.remove('hidden');
+    }
+  }
+</script>
 
 <!-- How It Works -->
 <section class="py-12 sm:py-20 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950">

@@ -25,6 +25,10 @@ Rails.application.routes.draw do
   get "/motifs", to: "pages#motifs"
   get "/archetypes", to: "pages#archetypes"
   get "/spirit-animals", to: "pages#spirit_animals"
+  
+  # Battles
+  resources :battles, only: [:index, :show, :new, :create]
+  
   # Account settings
   get "/settings/account", to: "accounts#edit", as: :edit_account
   patch "/settings/account", to: "accounts#update", as: :account
@@ -92,8 +96,13 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
+      get "/profiles/:username/card", to: "profiles#card", defaults: { format: :json }
+      get "/profiles/battle-ready", to: "profiles#battle_ready", defaults: { format: :json }
       get "/leaderboards", to: "leaderboards#index", defaults: { format: :json }
       get "/leaderboards/podium", to: "leaderboards#podium", defaults: { format: :json }
+      
+      # Battle API
+      resources :battles, only: [:index, :show, :create], defaults: { format: :json }
     end
   end
 

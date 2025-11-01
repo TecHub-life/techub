@@ -1,0 +1,127 @@
+<section class="mx-auto max-w-4xl space-y-6 px-4 py-12">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-bold bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent dark:from-red-400 dark:via-orange-400 dark:to-yellow-400 mb-2">
+      Start a Battle
+    </h1>
+    <p class="text-slate-600 dark:text-slate-400">
+      Choose two GitHub developer cards to battle
+    </p>
+  </div>
+
+  <!-- Battle Form -->
+  <%= form_with url: battles_path, method: :post, class: "space-y-6" do |f| %>
+    <div class="rounded-xl border border-slate-200 bg-white p-8 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+      <!-- Challenger Selection -->
+      <div class="mb-8">
+        <label class="block text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <i class="fa-solid fa-user-shield text-blue-600 dark:text-blue-400"></i>
+          Challenger
+        </label>
+        
+        <select name="challenger_profile_id" required
+                class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+          <option value="">Select a profile...</option>
+          <% @profiles.each do |profile| %>
+            <option value="<%= profile.id %>">
+              @<%= profile.login %> - <%= profile.profile_card.archetype %> (ATK: <%= profile.profile_card.attack %>, DEF: <%= profile.profile_card.defense %>, SPD: <%= profile.profile_card.speed %>)
+            </option>
+          <% end %>
+        </select>
+      </div>
+
+      <!-- VS Divider -->
+      <div class="flex items-center justify-center my-6">
+        <div class="h-px bg-slate-200 flex-1 dark:bg-slate-700"></div>
+        <div class="mx-4 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-6 py-2 text-white font-bold shadow-lg">
+          VS
+        </div>
+        <div class="h-px bg-slate-200 flex-1 dark:bg-slate-700"></div>
+      </div>
+
+      <!-- Opponent Selection -->
+      <div class="mb-8">
+        <label class="block text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <i class="fa-solid fa-user-ninja text-red-600 dark:text-red-400"></i>
+          Opponent
+        </label>
+        
+        <select name="opponent_profile_id" required
+                class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-red-500 focus:ring-2 focus:ring-red-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+          <option value="">Select a profile...</option>
+          <% @profiles.each do |profile| %>
+            <option value="<%= profile.id %>">
+              @<%= profile.login %> - <%= profile.profile_card.archetype %> (ATK: <%= profile.profile_card.attack %>, DEF: <%= profile.profile_card.defense %>, SPD: <%= profile.profile_card.speed %>)
+            </option>
+          <% end %>
+        </select>
+      </div>
+
+      <!-- Battle Info -->
+      <div class="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20 mb-6">
+        <div class="flex gap-3">
+          <i class="fa-solid fa-info-circle text-blue-600 dark:text-blue-400 text-xl flex-shrink-0"></i>
+          <div class="text-sm text-blue-900 dark:text-blue-300">
+            <p class="font-semibold mb-2">Battle System Features:</p>
+            <ul class="space-y-1 list-disc list-inside">
+              <li><strong>Type Advantages:</strong> Archetypes have strengths and weaknesses against each other (like Pokémon!)</li>
+              <li><strong>Spirit Animal Bonuses:</strong> Each spirit animal provides stat modifiers</li>
+              <li><strong>Speed Determines Turn Order:</strong> Faster cards attack first</li>
+              <li><strong>Dynamic Damage:</strong> Based on ATK vs DEF with random variance</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex gap-4">
+        <%= link_to battles_path, class: "flex-1 rounded-lg border border-slate-300 bg-white px-6 py-3 text-center font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" do %>
+          Cancel
+        <% end %>
+        
+        <%= f.submit "Start Battle!", class: "flex-1 rounded-lg bg-gradient-to-r from-red-600 to-orange-600 px-6 py-3 text-white font-bold hover:from-red-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl cursor-pointer" %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Type Advantage Chart -->
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-chart-network"></i>
+      Type Advantage Chart
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+      <div>
+        <h3 class="font-semibold text-slate-700 dark:text-slate-300 mb-2">Strong Matchups (1.5x damage):</h3>
+        <ul class="space-y-1 text-slate-600 dark:text-slate-400">
+          <li><strong>The Hero</strong> → The Innocent, The Everyman</li>
+          <li><strong>The Outlaw</strong> → The Hero, The Ruler</li>
+          <li><strong>The Explorer</strong> → The Innocent, The Lover</li>
+          <li><strong>The Creator</strong> → The Everyman, The Jester</li>
+          <li><strong>The Ruler</strong> → The Everyman, The Caregiver</li>
+          <li><strong>The Magician</strong> → The Hero, The Ruler</li>
+        </ul>
+      </div>
+      
+      <div>
+        <h3 class="font-semibold text-slate-700 dark:text-slate-300 mb-2">More Matchups:</h3>
+        <ul class="space-y-1 text-slate-600 dark:text-slate-400">
+          <li><strong>The Lover</strong> → The Jester, The Caregiver</li>
+          <li><strong>The Caregiver</strong> → The Innocent, The Lover</li>
+          <li><strong>The Jester</strong> → The Sage, The Ruler</li>
+          <li><strong>The Sage</strong> → The Outlaw, The Magician</li>
+          <li><strong>The Innocent</strong> → The Sage, The Jester</li>
+          <li><strong>The Everyman</strong> → The Creator, The Explorer</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+      <p class="text-xs text-amber-800 dark:text-amber-300">
+        <i class="fa-solid fa-lightbulb"></i>
+        <strong>Tip:</strong> Even with lower stats, type advantage can turn the tide of battle!
+      </p>
+    </div>
+  </div>
+</section>

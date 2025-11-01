@@ -18,6 +18,10 @@
         <i class="fa-solid fa-chart-line text-[16px] leading-none align-middle"></i>
         <span class="leading-none">Analytics</span>
       <% end %>
+      <%= link_to battles_path, class: "#{nav_link_class(battles_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(battles_path) ? 'page' : nil) } do %>
+        <i class="fa-solid fa-swords text-[16px] leading-none align-middle"></i>
+        <span class="leading-none">Battles</span>
+      <% end %>
       <%= link_to faq_path, class: "#{nav_link_class(faq_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(faq_path) ? 'page' : nil) } do %>
         <i class="fa-solid fa-circle-question text-[16px] leading-none align-middle"></i>
         <span class="leading-none">FAQ</span>
@@ -49,6 +53,16 @@
         aria-label="Open main menu"
       >
         <i class="fa-solid fa-bars text-xl"></i>
+      </button>
+
+      <!-- Music player toggle (mobile only) -->
+      <button
+        type="button"
+        class="inline-flex lg:hidden h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-sm transition hover:scale-105 cursor-pointer"
+        onclick="toggleMusicPlayer()"
+        aria-label="Toggle music player"
+      >
+        <i class="fa-solid fa-music text-lg"></i>
       </button>
 
       <button
@@ -83,6 +97,10 @@
         <%= link_to analytics_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(analytics_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-chart-line text-[18px]"></i>
           <span>Analytics</span>
+        <% end %>
+        <%= link_to battles_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(battles_path) ? 'page' : nil) } do %>
+          <i class="fa-solid fa-swords text-[18px]"></i>
+          <span>Battles</span>
         <% end %>
         <%= link_to faq_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(faq_path) ? 'page' : nil) } do %>
           <i class="fa-solid fa-circle-question text-[18px]"></i>

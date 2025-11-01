@@ -127,6 +127,19 @@
           <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Gists</p>
         </a>
       </div>
+
+      <%# Battle Button %>
+      <div class="pt-4">
+        <%= link_to new_battle_path(challenger_id: profile.id), class: "w-full flex items-center justify-center gap-3 rounded-lg bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 px-6 py-4 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:from-red-700 hover:via-orange-600 hover:to-yellow-600 transition-all transform hover:scale-105" do %>
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span>Battle This Card</span>
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>

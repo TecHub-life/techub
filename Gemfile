@@ -19,6 +19,7 @@ gem "tailwindcss-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 gem "jwt"
+gem "rack-cors"  # Enable CORS for API endpoints
 gem "faraday", "~> 2.0"
 gem "faraday-retry", "~> 2.0"
 gem "octokit"

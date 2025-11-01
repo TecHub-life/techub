@@ -1,0 +1,271 @@
+<section class="mx-auto max-w-6xl space-y-6 px-4 py-12">
+  <!-- Back Button -->
+  <div>
+    <%= link_to battles_path, class: "inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" do %>
+      <i class="fa-solid fa-arrow-left"></i>
+      <span>Back to Battles</span>
+    <% end %>
+  </div>
+
+  <!-- Battle Header -->
+  <div class="rounded-xl border border-slate-200 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 p-8 shadow-lg">
+    <div class="text-center">
+      <h1 class="text-4xl font-bold text-white mb-2">Battle #<%= @battle.id %></h1>
+      <p class="text-white/90"><%= @battle.created_at.strftime("%B %d, %Y at %I:%M %p") %></p>
+    </div>
+  </div>
+
+  <!-- Battle Arena -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Challenger Card -->
+    <div class="rounded-xl border-2 <%= @battle.winner_profile_id == @battle.challenger_profile_id ? 'border-yellow-500 ring-4 ring-yellow-500/20' : 'border-blue-500' %> bg-white p-6 shadow-lg dark:bg-slate-900">
+      <div class="flex flex-col items-center">
+        <% if @battle.challenger.avatar_url.present? %>
+          <%= image_tag @battle.challenger.avatar_url, class: "h-20 w-20 rounded-full ring-4 ring-blue-500 mb-4", alt: @battle.challenger.login %>
+        <% end %>
+        
+        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          @<%= @battle.challenger.login %>
+        </h2>
+        
+        <div class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <%= @battle.challenger.profile_card.archetype %>
+        </div>
+
+        <% if @battle.winner_profile_id == @battle.challenger_profile_id %>
+          <div class="mb-4 rounded-full bg-yellow-500 px-4 py-2 text-white font-bold shadow-lg">
+            <i class="fa-solid fa-trophy"></i> WINNER
+          </div>
+        <% end %>
+
+        <!-- Final HP -->
+        <div class="w-full mb-4">
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold text-slate-700 dark:text-slate-300">Final HP</span>
+            <span class="font-bold text-emerald-600 dark:text-emerald-400"><%= @battle.challenger_hp %></span>
+          </div>
+          <div class="h-6 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+            <div class="h-6 <%= @battle.challenger_hp > 60 ? 'bg-emerald-500' : @battle.challenger_hp > 30 ? 'bg-yellow-500' : 'bg-red-500' %> rounded-full"
+                 style="width: <%= @battle.challenger_hp %>%"></div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="w-full grid grid-cols-3 gap-2 text-center text-xs mb-4">
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">ATK</div>
+            <div class="font-bold text-red-600 dark:text-red-400"><%= @battle.challenger.profile_card.attack %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">DEF</div>
+            <div class="font-bold text-blue-600 dark:text-blue-400"><%= @battle.challenger.profile_card.defense %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">SPD</div>
+            <div class="font-bold text-yellow-600 dark:text-yellow-400"><%= @battle.challenger.profile_card.speed %></div>
+          </div>
+        </div>
+
+        <!-- Moves/Traits 2x2 Grid -->
+        <div class="w-full grid grid-cols-2 gap-2 text-xs">
+          <!-- Buff -->
+          <div class="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20 rounded p-2">
+            <div class="text-green-700 dark:text-green-400 font-bold mb-1">BUFF</div>
+            <div class="text-slate-900 dark:text-slate-100 font-semibold truncate"><%= @battle.challenger.profile_card.buff.presence || "—" %></div>
+          </div>
+          
+          <!-- Weakness -->
+          <div class="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 rounded p-2">
+            <div class="text-red-700 dark:text-red-400 font-bold mb-1">WEAK</div>
+            <div class="text-slate-900 dark:text-slate-100 font-semibold truncate"><%= @battle.challenger.profile_card.weakness.presence || "—" %></div>
+          </div>
+          
+          <!-- Vibe -->
+          <div class="border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/20 rounded p-2">
+            <div class="text-teal-700 dark:text-teal-400 font-bold mb-1">VIBE</div>
+            <div class="text-slate-900 dark:text-slate-100 font-semibold truncate"><%= @battle.challenger.profile_card.vibe.presence || "—" %></div>
+          </div>
+          
+          <!-- Special Move -->
+          <div class="border-2 border-indigo-300 dark:border-indigo-700 bg-indigo-100 dark:bg-indigo-950/30 rounded p-2">
+            <div class="text-indigo-700 dark:text-indigo-400 font-bold mb-1">SPECIAL</div>
+            <div class="text-indigo-900 dark:text-indigo-100 font-bold truncate"><%= @battle.challenger.profile_card.special_move.presence || "—" %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VS Badge -->
+    <div class="flex items-center justify-center">
+      <div class="rounded-full bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white shadow-2xl">
+        <div class="text-3xl font-bold">VS</div>
+      </div>
+    </div>
+
+    <!-- Opponent Card -->
+    <div class="rounded-xl border-2 <%= @battle.winner_profile_id == @battle.opponent_profile_id ? 'border-yellow-500 ring-4 ring-yellow-500/20' : 'border-red-500' %> bg-white p-6 shadow-lg dark:bg-slate-900">
+      <div class="flex flex-col items-center">
+        <% if @battle.opponent.avatar_url.present? %>
+          <%= image_tag @battle.opponent.avatar_url, class: "h-20 w-20 rounded-full ring-4 ring-red-500 mb-4", alt: @battle.opponent.login %>
+        <% end %>
+        
+        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          @<%= @battle.opponent.login %>
+        </h2>
+        
+        <div class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <%= @battle.opponent.profile_card.archetype %>
+        </div>
+
+        <% if @battle.winner_profile_id == @battle.opponent_profile_id %>
+          <div class="mb-4 rounded-full bg-yellow-500 px-4 py-2 text-white font-bold shadow-lg">
+            <i class="fa-solid fa-trophy"></i> WINNER
+          </div>
+        <% end %>
+
+        <!-- Final HP -->
+        <div class="w-full mb-4">
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold text-slate-700 dark:text-slate-300">Final HP</span>
+            <span class="font-bold text-emerald-600 dark:text-emerald-400"><%= @battle.opponent_hp %></span>
+          </div>
+          <div class="h-6 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+            <div class="h-6 <%= @battle.opponent_hp > 60 ? 'bg-emerald-500' : @battle.opponent_hp > 30 ? 'bg-yellow-500' : 'bg-red-500' %> rounded-full"
+                 style="width: <%= @battle.opponent_hp %>%"></div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="w-full grid grid-cols-3 gap-2 text-center text-xs mb-4">
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">ATK</div>
+            <div class="font-bold text-red-600 dark:text-red-400"><%= @battle.opponent.profile_card.attack %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">DEF</div>
+            <div class="font-bold text-blue-600 dark:text-blue-400"><%= @battle.opponent.profile_card.defense %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">SPD</div>
+            <div class="font-bold text-yellow-600 dark:text-yellow-400"><%= @battle.opponent.profile_card.speed %></div>
+          </div>
+        </div>
+
+        <!-- Moves/Traits 2x2 Grid -->
+        <div class="w-full grid grid-cols-2 gap-2 text-xs">
+          <!-- Buff -->
+          <div class="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20 rounded p-2">
+            <div class="text-green-700 dark:text-green-400 font-bold mb-1">BUFF</div>
+            <div class="text-slate-900 dark:text-slate-100 font-semibold truncate"><%= @battle.opponent.profile_card.buff.presence || "—" %></div>
+          </div>
+          
+          <!-- Weakness -->
+          <div class="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 rounded p-2">
+            <div class="text-red-700 dark:text-red-400 font-bold mb-1">WEAK</div>
+            <div class="text-slate-900 dark:text-slate-100 font-semibold truncate"><%= @battle.opponent.profile_card.weakness.presence || "—" %></div>
+          </div>
+          
+          <!-- Vibe -->
+          <div class="border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/20 rounded p-2">
+            <div class="text-teal-700 dark:text-teal-400 font-bold mb-1">VIBE</div>
+            <div class="text-slate-900 dark:text-slate-100 font-semibold truncate"><%= @battle.opponent.profile_card.vibe.presence || "—" %></div>
+          </div>
+          
+          <!-- Special Move -->
+          <div class="border-2 border-indigo-300 dark:border-indigo-700 bg-indigo-100 dark:bg-indigo-950/30 rounded p-2">
+            <div class="text-indigo-700 dark:text-indigo-400 font-bold mb-1">SPECIAL</div>
+            <div class="text-indigo-900 dark:text-indigo-100 font-bold truncate"><%= @battle.opponent.profile_card.special_move.presence || "—" %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Battle Log -->
+  <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="border-b border-slate-200 p-4 dark:border-slate-700">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <i class="fa-solid fa-scroll"></i>
+        Battle Log
+      </h2>
+    </div>
+
+    <div class="p-4 space-y-2 max-h-[500px] overflow-y-auto">
+      <% @battle.battle_log.each_with_index do |entry, index| %>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+          <% case entry["type"] %>
+          <% when "battle_start" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-flag-checkered text-lg text-emerald-600 dark:text-emerald-400"></i>
+              <div>
+                <div class="font-semibold text-slate-900 dark:text-slate-100">Battle Start</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "type_advantage" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-bolt text-lg text-yellow-600 dark:text-yellow-400"></i>
+              <div>
+                <div class="font-semibold text-yellow-700 dark:text-yellow-300">Type Advantage!</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "speed_check" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-gauge-high text-lg text-blue-600 dark:text-blue-400"></i>
+              <div>
+                <div class="font-semibold text-slate-900 dark:text-slate-100">Speed Check</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "attack" %>
+            <div class="flex items-center gap-2">
+              <div class="flex-shrink-0 rounded-full bg-red-100 px-2 py-1 text-xs font-bold text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                Turn <%= entry["turn"] %>
+              </div>
+              <div class="flex-1">
+                <div class="font-semibold text-slate-900 dark:text-slate-100">
+                  @<%= entry["attacker"] %> → @<%= entry["defender"] %>
+                </div>
+                <div class="text-sm text-slate-600 dark:text-slate-400">
+                  <span class="text-red-600 dark:text-red-400 font-bold"><%= entry["damage"].round(1) %> damage</span>
+                  <span class="mx-1">•</span>
+                  <span>HP: <%= entry["defender_hp"].round(1) %></span>
+                </div>
+              </div>
+            </div>
+
+          <% when "knockout" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-skull text-lg text-red-600 dark:text-red-400"></i>
+              <div>
+                <div class="font-semibold text-red-700 dark:text-red-300">K.O.!</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "battle_end" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-trophy text-lg text-yellow-500"></i>
+              <div>
+                <div class="font-semibold text-emerald-700 dark:text-emerald-300">Victory!</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex justify-center gap-4">
+    <%= link_to new_battle_path, class: "inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-orange-600 px-6 py-3 text-white font-semibold hover:from-red-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl" do %>
+      <i class="fa-solid fa-swords"></i>
+      <span>Start New Battle</span>
+    <% end %>
+  </div>
+</section>

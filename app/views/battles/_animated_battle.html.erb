@@ -1,0 +1,191 @@
+<div data-controller="battle-animator"
+     data-battle-animator-battle-log-value='<%= @battle.battle_log.to_json.html_safe %>'
+     data-battle-animator-challenger-max-hp-value="100"
+     data-battle-animator-opponent-max-hp-value="100"
+     data-challenger-login="<%= @battle.challenger.login %>"
+     data-opponent-login="<%= @battle.opponent.login %>"
+     class="space-y-6">
+
+  <!-- Battle Arena with HP Bars -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Challenger Card with HP Bar -->
+    <div class="challenger-card rounded-xl border-2 border-blue-500 bg-white p-6 shadow-lg dark:bg-slate-900 transition-all">
+      <div class="flex flex-col items-center">
+        <% if @battle.challenger.avatar_url.present? %>
+          <%= image_tag @battle.challenger.avatar_url, class: "h-20 w-20 rounded-full ring-4 ring-blue-500 mb-4", alt: @battle.challenger.login %>
+        <% end %>
+        
+        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          @<%= @battle.challenger.login %>
+        </h2>
+        
+        <div class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <%= @battle.challenger.profile_card.archetype %>
+        </div>
+
+        <!-- HP Bar -->
+        <div class="w-full mb-4">
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold text-slate-700 dark:text-slate-300">HP</span>
+            <span data-battle-animator-target="challengerHpText" class="font-bold text-emerald-600 dark:text-emerald-400">100</span>
+          </div>
+          <div class="h-6 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+            <div data-battle-animator-target="challengerHpBar"
+                 class="hp-bar h-6 bg-emerald-500 rounded-full transition-all duration-300"
+                 style="width: 100%"></div>
+          </div>
+        </div>
+
+        <!-- Stats (Compact) -->
+        <div class="w-full grid grid-cols-3 gap-2 text-center text-xs">
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">ATK</div>
+            <div class="font-bold text-red-600 dark:text-red-400"><%= @battle.challenger.profile_card.attack %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">DEF</div>
+            <div class="font-bold text-blue-600 dark:text-blue-400"><%= @battle.challenger.profile_card.defense %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">SPD</div>
+            <div class="font-bold text-yellow-600 dark:text-yellow-400"><%= @battle.challenger.profile_card.speed %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VS Badge -->
+    <div class="flex items-center justify-center">
+      <div class="rounded-full bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white shadow-2xl">
+        <div class="text-3xl font-bold">VS</div>
+      </div>
+    </div>
+
+    <!-- Opponent Card with HP Bar -->
+    <div class="opponent-card rounded-xl border-2 border-red-500 bg-white p-6 shadow-lg dark:bg-slate-900 transition-all">
+      <div class="flex flex-col items-center">
+        <% if @battle.opponent.avatar_url.present? %>
+          <%= image_tag @battle.opponent.avatar_url, class: "h-20 w-20 rounded-full ring-4 ring-red-500 mb-4", alt: @battle.opponent.login %>
+        <% end %>
+        
+        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          @<%= @battle.opponent.login %>
+        </h2>
+        
+        <div class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <%= @battle.opponent.profile_card.archetype %>
+        </div>
+
+        <!-- HP Bar -->
+        <div class="w-full mb-4">
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold text-slate-700 dark:text-slate-300">HP</span>
+            <span data-battle-animator-target="opponentHpText" class="font-bold text-emerald-600 dark:text-emerald-400">100</span>
+          </div>
+          <div class="h-6 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+            <div data-battle-animator-target="opponentHpBar"
+                 class="hp-bar h-6 bg-emerald-500 rounded-full transition-all duration-300"
+                 style="width: 100%"></div>
+          </div>
+        </div>
+
+        <!-- Stats (Compact) -->
+        <div class="w-full grid grid-cols-3 gap-2 text-center text-xs">
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">ATK</div>
+            <div class="font-bold text-red-600 dark:text-red-400"><%= @battle.opponent.profile_card.attack %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">DEF</div>
+            <div class="font-bold text-blue-600 dark:text-blue-400"><%= @battle.opponent.profile_card.defense %></div>
+          </div>
+          <div>
+            <div class="text-slate-500 dark:text-slate-400">SPD</div>
+            <div class="font-bold text-yellow-600 dark:text-yellow-400"><%= @battle.opponent.profile_card.speed %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Animated Battle Log -->
+  <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="border-b border-slate-200 p-4 dark:border-slate-700">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <i class="fa-solid fa-scroll"></i>
+        Live Battle Log
+      </h2>
+    </div>
+
+    <div class="battle-log-container p-4 space-y-2 max-h-[500px] overflow-y-auto">
+      <% @battle.battle_log.each_with_index do |entry, index| %>
+        <div data-battle-animator-target="logEntry"
+             class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 transition-all duration-300 hidden opacity-0">
+          <% case entry["type"] %>
+          <% when "battle_start" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-flag-checkered text-lg text-emerald-600 dark:text-emerald-400"></i>
+              <div>
+                <div class="font-semibold text-slate-900 dark:text-slate-100">Battle Start</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "type_advantage" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-bolt text-lg text-yellow-600 dark:text-yellow-400"></i>
+              <div>
+                <div class="font-semibold text-yellow-700 dark:text-yellow-300">Type Advantage!</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "speed_check" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-gauge-high text-lg text-blue-600 dark:text-blue-400"></i>
+              <div>
+                <div class="font-semibold text-slate-900 dark:text-slate-100">Speed Check</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "attack" %>
+            <div class="flex items-center gap-2">
+              <div class="flex-shrink-0 rounded-full bg-red-100 px-2 py-1 text-xs font-bold text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                Turn <%= entry["turn"] %>
+              </div>
+              <div class="flex-1">
+                <div class="font-semibold text-slate-900 dark:text-slate-100">
+                  @<%= entry["attacker"] %> → @<%= entry["defender"] %>
+                </div>
+                <div class="text-sm text-slate-600 dark:text-slate-400">
+                  <span class="text-red-600 dark:text-red-400 font-bold"><%= entry["damage"].round(1) %> damage</span>
+                  <span class="mx-1">•</span>
+                  <span>HP: <%= entry["defender_hp"].round(1) %></span>
+                </div>
+              </div>
+            </div>
+
+          <% when "knockout" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-skull text-lg text-red-600 dark:text-red-400"></i>
+              <div>
+                <div class="font-semibold text-red-700 dark:text-red-300">K.O.!</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+
+          <% when "battle_end" %>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-trophy text-lg text-yellow-500"></i>
+              <div>
+                <div class="font-semibold text-emerald-700 dark:text-emerald-300">Victory!</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400"><%= entry["message"] %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

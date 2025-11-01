@@ -13,6 +13,9 @@ class Profile < ApplicationRecord
   has_many :profile_pipeline_events, dependent: :destroy
   has_many :profile_ownerships, dependent: :destroy
   has_many :owners, through: :profile_ownerships, source: :user
+  has_many :battles_as_challenger, class_name: "Battle", foreign_key: :challenger_profile_id, dependent: :destroy
+  has_many :battles_as_opponent, class_name: "Battle", foreign_key: :opponent_profile_id, dependent: :destroy
+  has_many :battles_won, class_name: "Battle", foreign_key: :winner_profile_id, dependent: :nullify
 
   # Validations
   validates :github_id, presence: true, uniqueness: true
@@ -150,5 +153,27 @@ class Profile < ApplicationRecord
       has_social_accounts: profile_social_accounts.exists?,
       has_readme: has_readme?
     }
+  end
+
+  # Battle stats
+  def all_battles
+    Battle.where("challenger_profile_id = ? OR opponent_profile_id = ?", id, id)
+  end
+
+  def battle_record
+    wins = battles_won.count
+    total = all_battles.completed.count
+    losses = total - wins
+
+    {
+      wins: wins,
+      losses: losses,
+      total: total,
+      win_rate: total > 0 ? (wins * 100.0 / total).round(1) : 0
+    }
+  end
+
+  def battle_ready?
+    profile_card.present?
   end
 end
