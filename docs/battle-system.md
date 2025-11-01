@@ -2,14 +2,19 @@
 
 ## Overview
 
-The TecHub Battle System allows GitHub developer cards to battle each other using their stats (ATK/DEF/SPD), archetypes, and spirit animals. The system is inspired by Pokémon's type advantage mechanics and is designed to be easily expandable for future features like animations, sound effects, and real-time battles.
+The TecHub Battle System allows GitHub developer cards to battle each other using their stats
+(ATK/DEF/SPD), archetypes, and spirit animals. The system is inspired by Pokémon's type advantage
+mechanics and is designed to be easily expandable for future features like animations, sound
+effects, and real-time battles.
 
 ## Architecture
 
 ### Models
 
 #### Battle (`app/models/battle.rb`)
+
 Stores battle records with the following key fields:
+
 - `challenger_profile_id` - The initiating profile
 - `opponent_profile_id` - The defending profile
 - `winner_profile_id` - The victorious profile (null until completed)
@@ -20,18 +25,22 @@ Stores battle records with the following key fields:
 - `metadata` - JSON object for extensibility
 
 **Associations:**
+
 - `belongs_to :challenger_profile`
 - `belongs_to :opponent_profile`
 - `belongs_to :winner_profile` (optional)
 
 **Scopes:**
+
 - `Battle.completed` - All finished battles
 - `Battle.pending` - Queued battles
 - `Battle.recent` - Ordered by creation date
 - `Battle.for_profile(id)` - All battles involving a profile
 
 #### Profile Extensions
+
 Added battle-related associations and methods:
+
 - `has_many :battles_as_challenger`
 - `has_many :battles_as_opponent`
 - `has_many :battles_won`
@@ -42,9 +51,11 @@ Added battle-related associations and methods:
 ### Services
 
 #### Battles::SimulateService (`app/services/battles/simulate_service.rb`)
+
 Core battle simulation logic following the ServiceResult pattern.
 
 **Usage:**
+
 ```ruby
 result = Battles::SimulateService.call(
   challenger_id: 1,
@@ -60,6 +71,7 @@ end
 ```
 
 **Battle Flow:**
+
 1. Validate profiles exist and have cards
 2. Create battle record with `in_progress` status
 3. Calculate effective stats with spirit animal modifiers
@@ -72,27 +84,32 @@ end
 ### Controllers
 
 #### BattlesController (`app/controllers/battles_controller.rb`)
+
 RESTful controller with authentication for battle creation.
 
 **Actions:**
+
 - `index` - List recent battles (paginated)
 - `show` - Display battle details and log
 - `new` - Battle setup form
 - `create` - Initiate battle simulation
 
 **Authentication:**
+
 - `new` and `create` require user login
 - Public viewing of battles (index/show)
 
 ### Views
 
 #### Battles Index (`app/views/battles/index.html.erb`)
+
 - Battle statistics dashboard
 - Recent battles list with participant info
 - Winner badges and HP displays
 - Responsive grid layout
 
 #### Battle Show (`app/views/battles/show.html.erb`)
+
 - Detailed battle participants with stats
 - Complete battle log with turn-by-turn breakdown
 - Type advantage indicators
@@ -100,6 +117,7 @@ RESTful controller with authentication for battle creation.
 - Visual HP bars and stat displays
 
 #### Battle New (`app/views/battles/new.html.erb`)
+
 - Dropdown selectors for challenger and opponent
 - Type advantage reference chart
 - Battle system explanation
@@ -112,11 +130,13 @@ RESTful controller with authentication for battle creation.
 Inspired by Pokémon, each archetype has strengths and weaknesses:
 
 **Damage Multipliers:**
+
 - Strong against: **1.5x damage** (50% bonus)
 - Weak against: **0.75x damage** (25% reduction)
 - Neutral: **1.0x damage**
 
 **Type Chart:**
+
 ```
 The Hero → Strong vs: Innocent, Everyman | Weak vs: Outlaw, Magician
 The Outlaw → Strong vs: Hero, Ruler | Weak vs: Sage, Caregiver
@@ -137,6 +157,7 @@ The Everyman → Strong vs: Creator, Explorer | Weak vs: Hero, Ruler
 Each spirit animal provides stat multipliers:
 
 **Examples:**
+
 - **Taipan**: Speed 1.3x, Attack 1.2x (fast striker)
 - **Saltwater Crocodile**: Defense 1.3x, Attack 1.2x (tank)
 - **Loftbubu**: Speed 1.3x, Attack 1.2x, Defense 1.1x (balanced powerhouse)
@@ -155,6 +176,7 @@ final_damage = [final_damage, 5].max  # Minimum 5 damage
 ```
 
 **Factors:**
+
 1. **Attack vs Defense ratio** - Core damage calculation
 2. **Random variance** - ±15% for unpredictability
 3. **Type advantage** - 0.75x, 1.0x, or 1.5x multiplier
@@ -172,6 +194,7 @@ final_damage = [final_damage, 5].max  # Minimum 5 damage
 The `battle_log` JSON array tracks all battle events:
 
 **Event Types:**
+
 - `battle_start` - Battle initialization
 - `type_advantage` - Type advantage detected
 - `speed_check` - Turn order determination
@@ -180,6 +203,7 @@ The `battle_log` JSON array tracks all battle events:
 - `battle_end` - Victory declaration
 
 **Example Log Entry:**
+
 ```json
 {
   "type": "attack",
@@ -227,6 +251,7 @@ add_index :battles, :created_at
 ## Future Enhancements
 
 ### Phase 2: Visual Enhancements
+
 - [ ] Stimulus controller for animated battles
 - [ ] CSS animations for attacks and HP changes
 - [ ] Sound effects for hits, knockouts, victories
@@ -234,6 +259,7 @@ add_index :battles, :created_at
 - [ ] Animated type advantage indicators
 
 ### Phase 3: Advanced Features
+
 - [ ] Real-time battles with ActionCable
 - [ ] Tournaments and brackets
 - [ ] Ranked matchmaking system
@@ -242,6 +268,7 @@ add_index :battles, :created_at
 - [ ] Battle statistics and leaderboards
 
 ### Phase 4: Gameplay Depth
+
 - [ ] Status effects (burn, freeze, paralysis)
 - [ ] Critical hits
 - [ ] Dodge/evasion mechanics
@@ -250,6 +277,7 @@ add_index :battles, :created_at
 - [ ] Team battles (2v2, 3v3)
 
 ### Phase 5: Social Features
+
 - [ ] Battle challenges (send to specific users)
 - [ ] Battle history on profile pages
 - [ ] Share battle results on social media
@@ -261,11 +289,13 @@ add_index :battles, :created_at
 ### Manual Testing
 
 1. **Run migration:**
+
    ```bash
    rails db:migrate
    ```
 
 2. **Create test battle in console:**
+
    ```ruby
    # Ensure profiles have cards
    challenger = Profile.joins(:profile_card).first
@@ -362,6 +392,7 @@ Response:
 ## Credits
 
 Battle system designed and implemented following Rails 8 best practices:
+
 - Service objects with ServiceResult pattern
 - RESTful routing
 - Turbo-compatible views

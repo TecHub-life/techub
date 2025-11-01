@@ -3,18 +3,18 @@ module Battles
     # Type advantage system inspired by Pokemon
     # Archetypes have advantages/disadvantages against each other
     TYPE_ADVANTAGES = {
-      "The Hero" => { strong_against: ["The Innocent", "The Everyman"], weak_against: ["The Outlaw", "The Magician"] },
-      "The Outlaw" => { strong_against: ["The Hero", "The Ruler"], weak_against: ["The Sage", "The Caregiver"] },
-      "The Explorer" => { strong_against: ["The Innocent", "The Lover"], weak_against: ["The Hero", "The Ruler"] },
-      "The Creator" => { strong_against: ["The Everyman", "The Jester"], weak_against: ["The Outlaw", "The Explorer"] },
-      "The Ruler" => { strong_against: ["The Everyman", "The Caregiver"], weak_against: ["The Outlaw", "The Magician"] },
-      "The Magician" => { strong_against: ["The Hero", "The Ruler"], weak_against: ["The Sage", "The Creator"] },
-      "The Lover" => { strong_against: ["The Jester", "The Caregiver"], weak_against: ["The Explorer", "The Sage"] },
-      "The Caregiver" => { strong_against: ["The Innocent", "The Lover"], weak_against: ["The Outlaw", "The Ruler"] },
-      "The Jester" => { strong_against: ["The Sage", "The Ruler"], weak_against: ["The Creator", "The Hero"] },
-      "The Sage" => { strong_against: ["The Outlaw", "The Magician"], weak_against: ["The Jester", "The Innocent"] },
-      "The Innocent" => { strong_against: ["The Sage", "The Jester"], weak_against: ["The Hero", "The Explorer"] },
-      "The Everyman" => { strong_against: ["The Creator", "The Explorer"], weak_against: ["The Hero", "The Ruler"] }
+      "The Hero" => { strong_against: [ "The Innocent", "The Everyman" ], weak_against: [ "The Outlaw", "The Magician" ] },
+      "The Outlaw" => { strong_against: [ "The Hero", "The Ruler" ], weak_against: [ "The Sage", "The Caregiver" ] },
+      "The Explorer" => { strong_against: [ "The Innocent", "The Lover" ], weak_against: [ "The Hero", "The Ruler" ] },
+      "The Creator" => { strong_against: [ "The Everyman", "The Jester" ], weak_against: [ "The Outlaw", "The Explorer" ] },
+      "The Ruler" => { strong_against: [ "The Everyman", "The Caregiver" ], weak_against: [ "The Outlaw", "The Magician" ] },
+      "The Magician" => { strong_against: [ "The Hero", "The Ruler" ], weak_against: [ "The Sage", "The Creator" ] },
+      "The Lover" => { strong_against: [ "The Jester", "The Caregiver" ], weak_against: [ "The Explorer", "The Sage" ] },
+      "The Caregiver" => { strong_against: [ "The Innocent", "The Lover" ], weak_against: [ "The Outlaw", "The Ruler" ] },
+      "The Jester" => { strong_against: [ "The Sage", "The Ruler" ], weak_against: [ "The Creator", "The Hero" ] },
+      "The Sage" => { strong_against: [ "The Outlaw", "The Magician" ], weak_against: [ "The Jester", "The Innocent" ] },
+      "The Innocent" => { strong_against: [ "The Sage", "The Jester" ], weak_against: [ "The Hero", "The Explorer" ] },
+      "The Everyman" => { strong_against: [ "The Creator", "The Explorer" ], weak_against: [ "The Hero", "The Ruler" ] }
     }.freeze
 
     # Spirit animals provide stat modifiers
@@ -123,11 +123,11 @@ module Battles
       end
 
       # Determine who goes first (speed stat)
-      attacker, defender = challenger_stats[:speed] >= opponent_stats[:speed] ? 
-        [{ profile: challenger, card: challenger_card, stats: challenger_stats, hp: challenger_hp, advantage: challenger_advantage }, 
-         { profile: opponent, card: opponent_card, stats: opponent_stats, hp: opponent_hp, advantage: opponent_advantage }] :
-        [{ profile: opponent, card: opponent_card, stats: opponent_stats, hp: opponent_hp, advantage: opponent_advantage },
-         { profile: challenger, card: challenger_card, stats: challenger_stats, hp: challenger_hp, advantage: challenger_advantage }]
+      attacker, defender = challenger_stats[:speed] >= opponent_stats[:speed] ?
+        [ { profile: challenger, card: challenger_card, stats: challenger_stats, hp: challenger_hp, advantage: challenger_advantage },
+         { profile: opponent, card: opponent_card, stats: opponent_stats, hp: opponent_hp, advantage: opponent_advantage } ] :
+        [ { profile: opponent, card: opponent_card, stats: opponent_stats, hp: opponent_hp, advantage: opponent_advantage },
+         { profile: challenger, card: challenger_card, stats: challenger_stats, hp: challenger_hp, advantage: challenger_advantage } ]
 
       battle.add_log_entry({
         type: "speed_check",
@@ -144,7 +144,7 @@ module Battles
         # Calculate damage
         damage = calculate_damage(attacker[:stats], defender[:stats], attacker[:advantage])
         defender[:hp] -= damage
-        defender[:hp] = [defender[:hp], 0].max
+        defender[:hp] = [ defender[:hp], 0 ].max
 
         battle.add_log_entry({
           type: "attack",
@@ -217,7 +217,7 @@ module Battles
       return 1.0 unless TYPE_ADVANTAGES[attacker_type]
 
       advantages = TYPE_ADVANTAGES[attacker_type]
-      
+
       if advantages[:strong_against]&.include?(defender_type)
         1.5 # 50% damage bonus
       elsif advantages[:weak_against]&.include?(defender_type)
@@ -229,12 +229,12 @@ module Battles
 
     def calculate_damage(attacker_stats, defender_stats, type_advantage)
       # Base damage formula: (Attack / Defense) * random factor * type advantage
-      base_damage = (attacker_stats[:attack] / [defender_stats[:defense], 1].max) * 10
+      base_damage = (attacker_stats[:attack] / [ defender_stats[:defense], 1 ].max) * 10
       random_factor = 0.85 + (rand * 0.3) # Random between 0.85 and 1.15
       damage = base_damage * random_factor * type_advantage
 
       # Minimum damage of 5
-      [damage, 5].max
+      [ damage, 5 ].max
     end
   end
 end

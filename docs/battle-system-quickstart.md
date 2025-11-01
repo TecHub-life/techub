@@ -3,16 +3,19 @@
 ## Setup
 
 1. **Run the migration:**
+
    ```bash
    rails db:migrate
    ```
 
 2. **Verify routes:**
+
    ```bash
    rails routes | grep battles
    ```
 
    Should show:
+
    ```
    GET    /battles          battles#index
    GET    /battles/:id      battles#show
@@ -48,7 +51,7 @@ if result.success?
   puts "Challenger HP: #{battle.challenger_hp}"
   puts "Opponent HP: #{battle.opponent_hp}"
   puts "Turns: #{battle.battle_log.count { |e| e['type'] == 'attack' }}"
-  
+
   # View full battle log
   pp battle.battle_log
 else
@@ -78,6 +81,7 @@ end
 ### Type Advantages (Quick Reference)
 
 **Strong Matchups (1.5x damage):**
+
 - Hero beats Innocent, Everyman
 - Outlaw beats Hero, Ruler
 - Magician beats Hero, Ruler
@@ -88,6 +92,7 @@ end
 ### Spirit Animal Bonuses
 
 **Top Performers:**
+
 - **Taipan** - Speed 1.3x, Attack 1.2x (fast striker)
 - **Loftbubu** - Speed 1.3x, Attack 1.2x, Defense 1.1x (all-rounder)
 - **Saltwater Crocodile** - Defense 1.3x, Attack 1.2x (tank)
@@ -143,6 +148,7 @@ Profile.joins(:battles_as_challenger)
 ### "Profile has no card" Error
 
 Profiles need a `profile_card` to battle. Check:
+
 ```ruby
 profile = Profile.find(id)
 profile.battle_ready?  # Should return true
@@ -156,7 +162,8 @@ Challenger and opponent must be different profiles.
 
 ### Battle Takes Too Long
 
-Battles are capped at 20 turns. If both cards have very high defense and low attack, battles may hit the turn limit. The winner is determined by remaining HP.
+Battles are capped at 20 turns. If both cards have very high defense and low attack, battles may hit
+the turn limit. The winner is determined by remaining HP.
 
 ## Files Created
 

@@ -369,8 +369,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_180400) do
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "battles", "profiles", column: "challenger_profile_id"
   add_foreign_key "battles", "profiles", column: "opponent_profile_id"
@@ -383,7 +381,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_180400) do
   add_foreign_key "profile_organizations", "profiles"
   add_foreign_key "profile_ownerships", "profiles"
   add_foreign_key "profile_ownerships", "users"
-  add_foreign_key "profile_pipeline_events", "profiles"
   add_foreign_key "profile_pipeline_events", "profiles"
   add_foreign_key "profile_readmes", "profiles"
   add_foreign_key "profile_repositories", "profiles"

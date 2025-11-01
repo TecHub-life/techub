@@ -10,7 +10,7 @@ module Api
         return render json: { error: "no_card" }, status: :not_found unless profile.profile_card
 
         card = profile.profile_card
-        
+
         render json: {
           profile: {
             id: profile.id,
@@ -45,7 +45,7 @@ module Api
                          .includes(:profile_card)
                          .order(:login)
                          .limit(params[:limit] || 100)
-        
+
         render json: {
           profiles: profiles.map do |profile|
             {

@@ -6,13 +6,13 @@ module Api
                          .completed
                          .recent
                          .limit(params[:limit] || 50)
-        
+
         render json: @battles.map { |battle| battle_summary(battle) }
       end
 
       def show
         @battle = Battle.includes(:challenger_profile, :opponent_profile, :winner_profile).find(params[:id])
-        
+
         render json: battle_detail(@battle)
       end
 
@@ -63,7 +63,7 @@ module Api
 
       def profile_summary(profile)
         return nil unless profile
-        
+
         {
           id: profile.id,
           login: profile.login,

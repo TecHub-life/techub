@@ -1,5 +1,5 @@
 class BattlesController < ApplicationController
-  before_action :require_authentication, only: [:new, :create]
+  before_action :require_authentication, only: [ :new, :create ]
 
   def index
     @battles = Battle.includes(:challenger_profile, :opponent_profile, :winner_profile)
@@ -10,7 +10,7 @@ class BattlesController < ApplicationController
 
   def show
     @battle = Battle.includes(:challenger_profile, :opponent_profile, :winner_profile).find(params[:id])
-    
+
     # If battle hasn't been simulated yet, simulate it now
     if @battle.battle_log.blank?
       result = Battles::SimulateService.call(
@@ -18,12 +18,12 @@ class BattlesController < ApplicationController
         opponent_id: @battle.opponent_profile_id,
         battle: @battle
       )
-      
+
       unless result.success?
         redirect_to battles_path, alert: "Battle simulation failed: #{result.error.message}"
         return
       end
-      
+
       @battle.reload
     end
   end
@@ -41,7 +41,7 @@ class BattlesController < ApplicationController
       challenger_profile_id: params[:challenger_profile_id],
       opponent_profile_id: params[:opponent_profile_id]
     )
-    
+
     redirect_to battle_path(@battle)
   rescue ActiveRecord::RecordInvalid => e
     redirect_to new_battle_path, alert: "Failed to create battle: #{e.message}"
