@@ -92,8 +92,18 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
+      get "/profiles/:username/card", to: "profiles#card", defaults: { format: :json }
+      get "/profiles/battle-ready", to: "profiles#battle_ready", defaults: { format: :json }
       get "/leaderboards", to: "leaderboards#index", defaults: { format: :json }
       get "/leaderboards/podium", to: "leaderboards#podium", defaults: { format: :json }
+
+      # Game Data API (for Next.js battle app)
+      get "/game-data/archetypes", to: "game_data#archetypes", defaults: { format: :json }
+      get "/game-data/spirit-animals", to: "game_data#spirit_animals", defaults: { format: :json }
+      get "/game-data/all", to: "game_data#all", defaults: { format: :json }
+
+      # Battle Results Recording (optional - for leaderboards)
+      resources :battles, only: [ :index, :show, :create ], defaults: { format: :json }
     end
   end
 

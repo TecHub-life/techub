@@ -23,6 +23,7 @@ gem "faraday", "~> 2.0"
 gem "faraday-retry", "~> 2.0"
 gem "octokit"
 gem "commonmarker" # GitHub-flavored markdown
+gem "rack-cors" # CORS support for API
 
 # Observability: OpenTelemetry tracing (export to Axiom OTLP)
 gem "opentelemetry-sdk"
