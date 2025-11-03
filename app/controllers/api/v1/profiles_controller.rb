@@ -57,7 +57,13 @@ module Api
             defense: card.defense,
             speed: card.speed,
             vibe: card.vibe,
-            special_move: card.special_move
+            vibe_description: card.vibe_description,
+            special_move: card.special_move,
+            special_move_description: card.special_move_description,
+            buff: card.buff,
+            buff_description: card.buff_description,
+            weakness: card.weakness,
+            weakness_description: card.weakness_description
           }
         }
       end
@@ -89,7 +95,13 @@ module Api
                 defense: card.defense || 50,
                 speed: card.speed || 50,
                 vibe: card.vibe,
-                special_move: card.special_move
+                vibe_description: card.vibe_description,
+                special_move: card.special_move,
+                special_move_description: card.special_move_description,
+                buff: card.buff,
+                buff_description: card.buff_description,
+                weakness: card.weakness,
+                weakness_description: card.weakness_description
               }
             }
           end
