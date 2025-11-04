@@ -1,5 +1,4 @@
 # config/initializers/cors.rb
-# Allow cross-origin requests from Next.js app
 
 if defined?(Rack::Cors)
   Rails.application.config.middleware.insert_before 0, Rack::Cors do
