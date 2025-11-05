@@ -28,10 +28,10 @@ class ApplicationService
       error_class: extract_error_class(error)
     }
     level = case status
-            when :failed then :error
-            when :degraded then :warn
-            else :info
-            end
+    when :failed then :error
+    when :degraded then :warn
+    else :info
+    end
     safe = safe_metadata(metadata)
     safe = {} unless safe.is_a?(Hash)
     StructuredLogger.public_send(

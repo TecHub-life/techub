@@ -15,9 +15,20 @@ module Profiles
           end
 
           trace(:started, count: repos.size)
-          Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: repos)
+          result = Profiles::IngestSubmittedRepositoriesService.call(profile: profile, repo_full_names: repos)
+
+          if result.failure?
+            trace(:failed, error: result.error&.message)
+            return failure_with_context(result.error || StandardError.new("repo_ingest_failed"), metadata: safe_metadata(result))
+          end
+
           trace(:completed, count: repos.size)
-          success_with_context(true, metadata: { ingested: repos.size })
+          metadata = { ingested: repos.size }.merge(safe_metadata(result) || {})
+          if result.degraded?
+            degraded_with_context(true, metadata: metadata.merge(reason: metadata[:reason] || "partial_ingest"))
+          else
+            success_with_context(true, metadata: metadata)
+          end
         rescue StandardError => e
           trace(:failed, error: e.message)
           failure_with_context(e)

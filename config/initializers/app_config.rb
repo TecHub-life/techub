@@ -133,11 +133,11 @@ module AppConfig
 
   def default_hosts
     default = case environment
-              when "production" then "https://techub.life"
-              when "staging" then ENV["APP_URL"].presence
-              else
+    when "production" then "https://techub.life"
+    when "staging" then ENV["APP_URL"].presence
+    else
                 nil
-              end
+    end
     default ? [ default ] : []
   end
   private :default_hosts

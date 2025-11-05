@@ -6,8 +6,8 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
 ## Logs → Axiom
 
 - Current logging is JSON to STDOUT via `config/initializers/structured_logging.rb`.
-- `AppConfig.axiom` centralises token, dataset, region, and trace URLs; the logger and ops panel read
-  through it so runtime and doctor output stay consistent.
+- `AppConfig.axiom` centralises token, dataset, region, and trace URLs; the logger and ops panel
+  read through it so runtime and doctor output stay consistent.
 - If tokens/datasets are present, logs are forwarded to Axiom (best-effort) when
   `AppConfig.axiom_forwarding(force: false)[:allowed]` resolves to `true`.
 - Configure (env or Rails credentials):
