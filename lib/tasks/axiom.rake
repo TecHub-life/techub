@@ -33,27 +33,8 @@ namespace :axiom do
       puts "POST /v1/datasets/#{cfg[:dataset]}/ingest => #{resp.status}"
       puts "OK — event sent"
     rescue Faraday::ResourceNotFound
-      puts "Dataset '#{cfg[:dataset]}' not found."
-      if cfg[:allow_dataset_create]
-        puts "Attempting to create it (AXIOM_ALLOW_DATASET_CREATE=1)..."
-        begin
-          create_resp = conn.post("/v2/datasets", { name: cfg[:dataset], description: "techub logs" })
-          puts "POST /v2/datasets => #{create_resp.status}"
-          # Retry ingest once
-          resp2 = conn.post("/v1/datasets/#{cfg[:dataset]}/ingest") do |req|
-            req.headers["Content-Type"] = "application/json"
-            req.body = payload.to_json
-          end
-          puts "POST /v1/datasets/#{cfg[:dataset]}/ingest => #{resp2.status}"
-          puts "OK — event sent after creating dataset"
-        rescue Faraday::Error => e
-          warn "Create/ingest failed: #{e.class}: #{e.message}"
-          exit(2)
-        end
-      else
-        puts "Create the dataset in Axiom UI or set AXIOM_ALLOW_DATASET_CREATE=1 with a token that can create datasets."
-        exit(4)
-      end
+      puts "Dataset '#{cfg[:dataset]}' not found. Create it in the Axiom UI and rerun."
+      exit(4)
     rescue Faraday::Error => e
       warn "HTTP error: #{e.class}: #{e.message}"
       exit(2)

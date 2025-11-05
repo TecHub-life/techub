@@ -67,11 +67,10 @@ Job correlation
 
 Forwarding controls
 
-- Set `AXIOM_TOKEN` and `AXIOM_DATASET` to enable log forwarding (best-effort; failures are
-  swallowed).
-- Forwarding is on in production by default; to enable in other envs set `AXIOM_ENABLED=1`.
-- You can force a one-off send with `StructuredLogger.info(..., force_axiom: true)`.
-- For troubleshooting, set `AXIOM_DEBUG=1` to print skip/exception reasons to STDERR.
+- Set `AXIOM_TOKEN` and `AXIOM_DATASET` (usually via credentials). Forwarding runs automatically in
+  production when both are present. In other environments, opt in with `AXIOM_ENABLED=1`.
+- You can force a one-off send with `StructuredLogger.info(..., force_axiom: true)` (used by the
+  runtime doctor task).
 
 ### CI and Deploy Telemetry
 

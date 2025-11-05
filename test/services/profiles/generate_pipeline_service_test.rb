@@ -152,6 +152,33 @@ class GeneratePipelineServiceTest < ActiveSupport::TestCase
     assert events.where(stage: "pipeline", status: "completed").exists?
   end
 
+  test "skips stages via overrides and records skipped event" do
+    login = "override-skip"
+    profile = Profile.create!(github_id: 8123, login: login, name: "Skip Stage")
+    calls = []
+
+    stubbed_stages = Profiles::GeneratePipelineService::STAGES.map do |stage|
+      stage_dup(stage, ->(context:, **_) {
+        calls << stage.id
+        context.trace(stage.id, :stubbed)
+        ServiceResult.success(true)
+      })
+    end
+    redefine_pipeline_stages(stubbed_stages)
+
+    result = Profiles::GeneratePipelineService.call(
+      login: login,
+      overrides: { skip_stages: [ :generate_ai_profile ], trigger_source: "test_override" }
+    )
+
+    assert result.success?
+    refute_includes calls, :generate_ai_profile
+    events = ProfilePipelineEvent.where(profile_id: profile.id)
+    assert events.where(stage: "generate_ai_profile", status: "skipped").exists?
+    assert_equal "test_override", events.where(stage: "pipeline").order(:created_at).first.trigger
+    assert_equal "test_override", result.metadata[:trigger]
+  end
+
   private
 
   def stage_dup(stage, proc)

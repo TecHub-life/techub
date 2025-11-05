@@ -30,19 +30,9 @@ module Axiom
       end
       ServiceResult.success(resp.status, metadata: metadata.merge(base_url: base_url))
     rescue Faraday::ResourceNotFound
-      # Optionally create dataset on the fly if missing (guarded by env flag)
-      if cfg[:allow_dataset_create]
-        begin
-          conn.post("/v2/datasets", { name: dataset, description: "techub metrics" })
-          retry
-        rescue StandardError => e
-          ServiceResult.failure(e, metadata: metadata)
-        end
-      else
-        ServiceResult.failure(StandardError.new("dataset_not_found"), metadata: metadata)
-      end
+      ServiceResult.failure(StandardError.new("dataset_not_found"), metadata: metadata.merge(base_url: base_url))
     rescue StandardError => e
-      ServiceResult.failure(e, metadata: metadata)
+      ServiceResult.failure(e, metadata: metadata.merge(base_url: base_url))
     end
 
     private

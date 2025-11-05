@@ -29,7 +29,7 @@ namespace :ops do
     logins = (args[:logins] || "").split(",").map { |s| s.strip.downcase }.reject(&:empty?)
     abort "Provide LOGINS=login1,login2" if logins.empty?
     logins.each do |login|
-      Profiles::GeneratePipelineJob.perform_later(login)
+      Profiles::GeneratePipelineJob.perform_later(login, trigger_source: "ops:bulk_retry")
     end
     puts "Queued pipeline run for #{logins.size} profile(s)"
   end
@@ -38,7 +38,7 @@ namespace :ops do
   task bulk_retry_all: :environment do
     count = 0
     Profile.find_each do |p|
-      Profiles::GeneratePipelineJob.perform_later(p.login)
+      Profiles::GeneratePipelineJob.perform_later(p.login, trigger_source: "ops:bulk_retry_all")
       p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
       count += 1
     end
@@ -49,7 +49,7 @@ namespace :ops do
   task :retry, [ :login ] => :environment do |_t, args|
     login = args[:login].to_s.downcase
     abort "Provide LOGIN=username" if login.empty?
-    Profiles::GeneratePipelineJob.perform_later(login)
+    Profiles::GeneratePipelineJob.perform_later(login, trigger_source: "ops:retry")
     Profile.where(login: login).update_all(last_pipeline_status: "queued", last_pipeline_error: nil)
     puts "Pipeline run queued for @#{login}"
   end

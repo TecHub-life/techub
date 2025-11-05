@@ -45,7 +45,8 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - `AXIOM_ORG` — Axiom org slug (for Ops UI deep-links only; optional)
   - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU:
     `https://api.eu.axiom.co`
-  - `AXIOM_ENABLED` — enable log forwarding in non‑prod (optional)
+  - `AXIOM_ENABLED` — optional override. Default: production forwards automatically when token +
+    dataset are present; other environments stay off unless this flag is set to `1`.
   - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTEL base endpoint (default US traces endpoint)
     - US: `https://api.axiom.co/v1/traces`
     - EU: `https://api.eu.axiom.co/v1/traces`

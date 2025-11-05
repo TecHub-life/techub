@@ -199,9 +199,10 @@ module StructuredLogger
   end
 
   def warn_skip(forwarding)
-    return unless AppConfig.axiom[:debug]
-
-    warn "Axiom forward skipped (reason=#{forwarding[:reason]}, token_present=#{forwarding[:token_present]}, dataset_present=#{forwarding[:dataset_present]})"
+    message = "Axiom forward skipped (reason=#{forwarding[:reason]}, token_present=#{forwarding[:token_present]}, dataset_present=#{forwarding[:dataset_present]})"
+    AXIOM_FORWARD_LAST_ERROR.set(message)
+    AXIOM_FORWARD_LAST_ERROR_AT.set(Time.now.utc.iso8601(3))
+    Kernel.warn(message)
   end
 
   def record_forward_result(result, dataset)

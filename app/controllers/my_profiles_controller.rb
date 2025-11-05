@@ -163,7 +163,14 @@ class MyProfilesController < ApplicationController
       return redirect_to my_profile_settings_path(username: @profile.login), alert: "Please wait ~#{wait_m}m before re-capturing screenshots again"
     end
 
-    Profiles::GeneratePipelineJob.perform_later(@profile.login)
+    Profiles::GeneratePipelineJob.perform_later(
+      @profile.login,
+      trigger_source: "my_profiles#regenerate",
+      pipeline_overrides: {
+        skip_stages: [ :generate_ai_profile, :notify_pipeline_outcome ],
+        preserve_profile_avatar: true
+      }
+    )
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
     redirect_to my_profile_settings_path(username: @profile.login), notice: "Pipeline queued for @#{@profile.login}"
   end
@@ -176,7 +183,10 @@ class MyProfilesController < ApplicationController
       return redirect_to my_profile_settings_path(username: @profile.login), alert: "AI regeneration available in ~#{wait_h}h"
     end
 
-    Profiles::GeneratePipelineJob.perform_later(@profile.login)
+    Profiles::GeneratePipelineJob.perform_later(
+      @profile.login,
+      trigger_source: "my_profiles#regenerate_ai"
+    )
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
     redirect_to my_profile_settings_path(username: @profile.login), notice: "Full regeneration queued for @#{@profile.login} (weekly limit in effect)"
   end
