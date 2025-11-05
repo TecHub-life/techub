@@ -8,8 +8,8 @@ smoke‑test and troubleshoot quickly.
 - Development
   - `config.active_storage.service = :local`
   - Files are written to `storage/` on disk.
-- Override `ACTIVE_STORAGE_SERVICE` to `do_spaces` if you want development to exercise real
-    uploads; otherwise everything stays on disk and URLs are served locally.
+- Override `ACTIVE_STORAGE_SERVICE` to `do_spaces` if you want development to exercise real uploads;
+  otherwise everything stays on disk and URLs are served locally.
 
 - Production
   - Defaults to `:do_spaces` (DigitalOcean Spaces, S3‑compatible) via `config/storage.yml`.
