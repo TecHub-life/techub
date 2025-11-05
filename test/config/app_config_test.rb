@@ -1,7 +1,7 @@
 require "test_helper"
 
 class AppConfigTest < ActiveSupport::TestCase
-  AFFECTED_ENV = %w[AXIOM_TOKEN AXIOM_DATASET AXIOM_ENABLED APP_ENV].freeze
+  AFFECTED_ENV = %w[AXIOM_TOKEN AXIOM_DATASET AXIOM_ENABLED RAILS_ENV].freeze
 
   setup do
     @env_backup = AFFECTED_ENV.to_h { |key| [ key, ENV[key] ] }
@@ -19,7 +19,7 @@ class AppConfigTest < ActiveSupport::TestCase
     Rails.application.credentials.stub(:dig, nil) do
       ENV["AXIOM_TOKEN"] = "secret"
       ENV["AXIOM_DATASET"] = "techub"
-      ENV.delete("APP_ENV")
+      ENV.delete("RAILS_ENV")
       ENV.delete("AXIOM_ENABLED")
       AppConfig.reload!
 
@@ -48,7 +48,7 @@ class AppConfigTest < ActiveSupport::TestCase
     Rails.application.credentials.stub(:dig, nil) do
       ENV["AXIOM_TOKEN"] = "secret"
       ENV["AXIOM_DATASET"] = "techub"
-      ENV["APP_ENV"] = "production"
+      ENV["RAILS_ENV"] = "production"
       ENV.delete("AXIOM_ENABLED")
       AppConfig.reload!
 

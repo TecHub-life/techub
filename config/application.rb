@@ -171,7 +171,7 @@ module AppConfig
   private :normalize_env
 
   def raw_env
-    ENV["APP_ENV"] || ENV["RAILS_ENV"] || ENV["NODE_ENV"]
+    ENV["RAILS_ENV"] || ENV["NODE_ENV"]
   end
   private :raw_env
 
