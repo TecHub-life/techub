@@ -106,7 +106,8 @@ module StructuredLogger
     # Forward in production by default, or when explicitly enabled via AXIOM_ENABLED=1.
     # Always allow an explicit disable via AXIOM_DISABLE=1.
     enabled_env = (Rails.env.production? || ENV["AXIOM_ENABLED"] == "1")
-    forwarding = enabled_env && ENV["AXIOM_DISABLE"] != "1"
+    forwarding_enabled = ENV["AXIOM_DISABLE"] != "1"
+    forwarding = forwarding_enabled && (force_axiom || enabled_env)
     if forwarding && axiom_token.present? && axiom_dataset.present?
       deliver = proc do
         begin
