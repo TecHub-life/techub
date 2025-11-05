@@ -47,24 +47,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_000001) do
     t.index ["key"], name: "index_app_settings_on_key", unique: true
   end
 
-  create_table "battles", force: :cascade do |t|
-    t.json "battle_log", default: []
-    t.integer "challenger_hp", default: 100
-    t.integer "challenger_profile_id", null: false
-    t.datetime "created_at", null: false
-    t.json "metadata", default: {}
-    t.integer "opponent_hp", default: 100
-    t.integer "opponent_profile_id", null: false
-    t.string "status", default: "pending", null: false
-    t.datetime "updated_at", null: false
-    t.integer "winner_profile_id"
-    t.index ["challenger_profile_id"], name: "index_battles_on_challenger_profile_id"
-    t.index ["created_at"], name: "index_battles_on_created_at"
-    t.index ["opponent_profile_id"], name: "index_battles_on_opponent_profile_id"
-    t.index ["status"], name: "index_battles_on_status"
-    t.index ["winner_profile_id"], name: "index_battles_on_winner_profile_id"
-  end
-
   create_table "leaderboards", force: :cascade do |t|
     t.date "as_of", null: false
     t.datetime "created_at", null: false
@@ -370,12 +352,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_000001) do
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "battles", "profiles", column: "challenger_profile_id"
-  add_foreign_key "battles", "profiles", column: "opponent_profile_id"
-  add_foreign_key "battles", "profiles", column: "winner_profile_id"
   add_foreign_key "notification_deliveries", "users"
   add_foreign_key "profile_activities", "profiles"
   add_foreign_key "profile_assets", "profiles"
@@ -384,7 +361,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_000001) do
   add_foreign_key "profile_organizations", "profiles"
   add_foreign_key "profile_ownerships", "profiles"
   add_foreign_key "profile_ownerships", "users"
-  add_foreign_key "profile_pipeline_events", "profiles"
   add_foreign_key "profile_pipeline_events", "profiles"
   add_foreign_key "profile_readmes", "profiles"
   add_foreign_key "profile_repositories", "profiles"

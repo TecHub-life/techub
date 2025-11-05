@@ -248,7 +248,7 @@ module Github
           current_streak = 0
         end
 
-        longest = [longest, current_streak].max
+        longest = [ longest, current_streak ].max
 
         previous_date = entry[:date]
       end
