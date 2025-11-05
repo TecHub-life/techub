@@ -8,8 +8,8 @@ smoke‑test and troubleshoot quickly.
 - Development
   - `config.active_storage.service = :local`
   - Files are written to `storage/` on disk.
-  - Set `GENERATED_IMAGE_UPLOAD=1` to force services that normally upload (e.g., screenshots) to
-    perform uploads. In dev, the generated `blob.url` points to the local Rails blob endpoint.
+- Override `ACTIVE_STORAGE_SERVICE` to `do_spaces` if you want development to exercise real
+    uploads; otherwise everything stays on disk and URLs are served locally.
 
 - Production
   - Defaults to `:do_spaces` (DigitalOcean Spaces, S3‑compatible) via `config/storage.yml`.

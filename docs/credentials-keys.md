@@ -44,8 +44,8 @@ References: `config/routes.rb` (mounting behavior differs by env), `docs/ops-adm
 These are usually set as ENV, not in credentials; listed here for awareness.
 
 - GEMINI_INCLUDE_ASPECT_HINT (default on): whether to include aspectRatio in requests
-- GENERATED_IMAGE_UPLOAD (default false except production): enable uploading generated files to
-  storage
+- ACTIVE_STORAGE_SERVICE (default `local` in dev/test): set to `do_spaces` when you want generated
+  files uploaded to Spaces outside production
 - IMAGE_OPT_VIPS (default off): prefer vips for image optimization/resize
 - IM_CLI (optional): override ImageMagick CLI (magick/convert)
 - PROFILE_OWNERSHIP_CAP (default 5): cap owned profiles in UI

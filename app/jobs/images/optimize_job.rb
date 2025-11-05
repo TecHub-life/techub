@@ -56,7 +56,7 @@ module Images
       savings = size > 0 ? (((size - new_size) * 100.0) / size).round(1) : 0.0
 
       public_url = nil
-      if upload_enabled?(upload)
+      if should_upload?(upload)
         content_type = content_type_for_ext(path.extname)
         up = Storage::ActiveStorageUploadService.call(path: path.to_s, content_type: content_type, filename: path.basename.to_s)
         if up.success?
@@ -111,10 +111,9 @@ module Images
       end
     end
 
-    def upload_enabled?(override)
+    def should_upload?(override)
       return !!override unless override.nil?
-      flag = ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase
-      [ "1", "true", "yes" ].include?(flag) || Rails.env.production?
+      Storage::ServiceProfile.remote_service?
     end
   end
 end

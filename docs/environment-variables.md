@@ -98,7 +98,7 @@ Build/Deploy/Dev convenience (env is fine)
 - Image optimization tuning: `IMAGE_OPT_VIPS`, `IMAGE_OPT_BG_THRESHOLD`
   - OK as env; can move to AppSetting if you want runtime control.
   - Refs: Dockerfile:62, docs/image-optimization.md, app/services/images/optimize_service.rb:61.
-- Generated image upload (legacy) `GENERATED_IMAGE_UPLOAD`
+- Active Storage backend override `ACTIVE_STORAGE_SERVICE`
   - Now superseded by `AppSetting[:generated_image_upload]`; env kept as fallback only.
 - (Removed) Motifs bootstrap env: these were tied to motif generators that no longer exist.
 - Rake/script helpers: `UPLOAD`, `SMOKE_LOGIN`

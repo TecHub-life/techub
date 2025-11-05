@@ -11,21 +11,20 @@ module Profiles
             return success_with_context(nil, metadata: { skipped: true, reason: "no_local_avatar" })
           end
 
-          service = ActiveStorage::Blob.service
-          if service.is_a?(ActiveStorage::Service::DiskService)
+          if Storage::ServiceProfile.disk_service?
             public_path = context.avatar_relative_path.presence || relative_path_for(local_path)
             context.avatar_public_url = public_path
             context.avatar_upload_metadata = {
-              service: service.name,
+              service: Storage::ServiceProfile.service_name,
               disk: true,
               local_path: local_path
             }.compact
-            trace(:skipped_disk_service, public_path: public_path, service: service.name)
+            trace(:skipped_disk_service, public_path: public_path, service: Storage::ServiceProfile.service_name)
             return success_with_context(
               public_path,
               metadata: {
                 disk_service: true,
-                service: service.name,
+                service: Storage::ServiceProfile.service_name,
                 public_path: public_path
               }.compact
             )

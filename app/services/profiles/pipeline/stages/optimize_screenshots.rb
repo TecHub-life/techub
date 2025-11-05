@@ -68,7 +68,8 @@ module Profiles
         end
 
         def upload_after_optimization?
-          options.key?(:upload) ? !!options[:upload] : Rails.env.production?
+          return !!options[:upload] if options.key?(:upload)
+          Storage::ServiceProfile.remote_service?
         end
 
         def safe_file_size(path)

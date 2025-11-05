@@ -7,7 +7,7 @@ failures.
 
 - Optimizer: libvips via the `image_processing` gem (fast, low memory)
 - Fallback: ImageMagick 7 `magick` CLI; if unavailable, `convert` (IM6)
-- Uploads: controlled by `GENERATED_IMAGE_UPLOAD`
+- Upload destination: determined by `ACTIVE_STORAGE_SERVICE` (`:local` in dev/test, `:do_spaces` in production)
 
 ### Build Guarantees
 

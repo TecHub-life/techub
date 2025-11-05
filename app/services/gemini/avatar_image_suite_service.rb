@@ -109,7 +109,7 @@ module Gemini
           # If conversion fails, keep original PNG
         end
 
-        if upload_enabled?
+        if Storage::ServiceProfile.remote_service?
           begin
             out_path = payload[:output_path].to_s
             if out_path.strip.empty? || !File.exist?(out_path)
@@ -342,12 +342,6 @@ module Gemini
       base = File.basename(filename, File.extname(filename))
       ext = File.extname(filename)
       "#{base}-#{filename_suffix}#{ext}"
-    end
-
-    def upload_enabled?
-      flag = ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase
-      env_enabled = [ "1", "true", "yes" ].include?(flag)
-      env_enabled || Rails.env.production?
     end
 
     def record_variant_asset(kind:, local_path:, public_url:, mime_type:, provider: nil)

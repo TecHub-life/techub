@@ -123,7 +123,7 @@ module Screenshots
       end
 
       public_url = nil
-      if upload_enabled?
+      if Storage::ServiceProfile.remote_service?
         begin
           upload = Storage::ActiveStorageUploadService.call(
             path: path.to_s,
@@ -133,11 +133,9 @@ module Screenshots
           if upload.success?
             public_url = upload.value[:public_url]
           else
-            # Degrade gracefully: keep local file and continue without public URL
             StructuredLogger.warn(message: "screenshot_upload_failed", login: login, variant: variant, error: upload.error&.message, path: path.to_s) if defined?(StructuredLogger)
           end
         rescue StandardError => e
-          # Best-effort: never fail the entire capture due to upload errors
           StructuredLogger.warn(message: "screenshot_upload_exception", login: login, variant: variant, error: e.message, path: path.to_s) if defined?(StructuredLogger)
         end
       end
@@ -168,16 +166,6 @@ module Screenshots
       type == "png" ? "image/png" : "image/jpeg"
     end
 
-    def upload_enabled?
-      return true if Rails.env.production?
-
-      if defined?(AppSetting)
-        setting = AppSetting.get(:generated_image_upload)
-        return ActiveModel::Type::Boolean.new.cast(setting) unless setting.nil?
-      end
-
-      flag = ENV["GENERATED_IMAGE_UPLOAD"].to_s.downcase
-      [ "1", "true", "yes" ].include?(flag)
-    end
+    # Upload support is governed strictly by Active Storage configuration.
   end
 end
