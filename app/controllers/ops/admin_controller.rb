@@ -430,27 +430,64 @@ module Ops
         return
       end
 
-      unless file.match?(/\A[a-zA-Z0-9_.-]+\z/)
+      unless valid_safe_filename?(file)
         redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
         return
       end
 
       dir = latest_pipeline_snapshot_dir(login)
-      unless dir
+      unless dir&.exist?
         redirect_to ops_admin_path(anchor: "pipeline"), alert: "No snapshot found for @#{login}"
         return
       end
 
-      path = dir.join(file)
+      dir_path = begin
+        dir.realpath
+      rescue StandardError
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "No snapshot found for @#{login}"
+        return
+      end
+      path = dir_path.join(file)
+
+      unless path_within_directory?(dir_path, path)
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
+        return
+      end
+
       unless path.exist? && path.file?
         redirect_to ops_admin_path(anchor: "pipeline"), alert: "File not available in snapshot"
         return
       end
 
-      send_file path, filename: "#{login}-#{file}"
+      real_path = begin
+        path.realpath
+      rescue StandardError
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "File not available in snapshot"
+        return
+      end
+      unless path_within_directory?(dir_path, real_path)
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
+        return
+      end
+
+      send_file real_path, filename: "#{login}-#{file}"
     end
 
     private
+
+    def valid_safe_filename?(name)
+      return false unless name.is_a?(String) && name.present?
+      return false if name.include?("\0") || name.include?("..")
+      return false unless name.match?(/\A[a-zA-Z0-9](?:[a-zA-Z0-9_.-]*[a-zA-Z0-9])?\z/)
+      true
+    end
+
+    def path_within_directory?(base, target)
+      relative = target.cleanpath.relative_path_from(base.cleanpath)
+      relative.each_filename.none? { |segment| segment == ".." }
+    rescue ArgumentError
+      false
+    end
 
     def tail_log(path, lines)
       file_path = Rails.root.join(path)
