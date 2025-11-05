@@ -106,8 +106,10 @@ Env for identity/boot **only**. Allowed:
 ```
 RAILS_ENV
 WEB_HOSTS
+JOB_HOSTS
 DATABASE_URL # SQLite only (sqlite3:./data/app.sqlite3)
-MASTER_KEY
+KAMAL_REGISTRY_PASSWORD
+RAILS_MASTER_KEY
 APP_URL
 APP_NAME
 # CI/deploy only
