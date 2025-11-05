@@ -85,7 +85,7 @@ namespace :profiles do
   desc "Enqueue background pipeline job for a login"
   task :pipeline_enqueue, [ :login ] => :environment do |_, args|
     login = (args[:login] || ENV["LOGIN"] || "loftwah").to_s.downcase
-    Profiles::GeneratePipelineJob.perform_later(login)
+    Profiles::GeneratePipelineJob.perform_later(login, trigger_source: "rake:pipeline_enqueue")
     puts "Enqueued pipeline job for #{login}"
   end
 

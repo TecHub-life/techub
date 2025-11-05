@@ -74,6 +74,7 @@ module StructuredLogger
     AXIOM_FORWARD_LAST_ERROR = Concurrent::AtomicReference.new(nil)
     AXIOM_FORWARD_LAST_ERROR_AT = Concurrent::AtomicReference.new(nil)
     AXIOM_FORWARD_LAST_DELIVERY = Concurrent::AtomicReference.new(nil)
+    AXIOM_FORWARD_LAST_SKIP = Concurrent::AtomicReference.new(nil)
   end
 
   def info(message_or_hash = nil, **extra)
@@ -128,7 +129,8 @@ module StructuredLogger
       pending: pending.positive? ? pending : 0,
       last_delivery: AXIOM_FORWARD_LAST_DELIVERY.value,
       last_error: AXIOM_FORWARD_LAST_ERROR.value,
-      last_error_at: AXIOM_FORWARD_LAST_ERROR_AT.value
+      last_error_at: AXIOM_FORWARD_LAST_ERROR_AT.value,
+      last_skip: AXIOM_FORWARD_LAST_SKIP.value
     }
   end
 
@@ -181,7 +183,7 @@ module StructuredLogger
   def forward_to_axiom(payload, force_axiom:)
     axiom_cfg = AppConfig.axiom
     forwarding = AppConfig.axiom_forwarding(force: force_axiom)
-    return warn_skip(forwarding) if !forwarding[:allowed]
+    return record_skip(forwarding) if !forwarding[:allowed]
 
     dataset = axiom_cfg[:dataset]
     deliver = proc do
@@ -198,10 +200,15 @@ module StructuredLogger
     end
   end
 
-  def warn_skip(forwarding)
-    return unless AppConfig.axiom[:debug]
-
-    warn "Axiom forward skipped (reason=#{forwarding[:reason]}, token_present=#{forwarding[:token_present]}, dataset_present=#{forwarding[:dataset_present]})"
+  def record_skip(forwarding)
+    AXIOM_FORWARD_LAST_SKIP.set({
+      at: Time.now.utc.iso8601(3),
+      reason: forwarding[:reason],
+      force: forwarding[:force],
+      token_present: forwarding[:token_present],
+      dataset_present: forwarding[:dataset_present]
+    })
+    nil
   end
 
   def record_forward_result(result, dataset)
@@ -215,6 +222,7 @@ module StructuredLogger
         status: result.value,
         metadata: result.metadata
       })
+      AXIOM_FORWARD_LAST_SKIP.set(nil)
     else
       AXIOM_FORWARD_LAST_ERROR.set(format_error(result.error))
       AXIOM_FORWARD_LAST_ERROR_AT.set(Time.now.utc.iso8601(3))

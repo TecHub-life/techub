@@ -44,7 +44,7 @@ class OgController < ApplicationController
     end
 
     # Not available yet — enqueue pipeline to generate assets without generating new images
-    Profiles::GeneratePipelineJob.perform_later(login)
+    Profiles::GeneratePipelineJob.perform_later(login, trigger_source: "og_controller")
     render json: { status: "generating", login: login }, status: :accepted
   end
 

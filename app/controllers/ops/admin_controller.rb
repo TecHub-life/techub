@@ -297,7 +297,7 @@ module Ops
       logins = Array(params[:logins]).map { |s| s.to_s.downcase.strip }.reject(&:blank?)
       count = 0
       logins.each do |login|
-        Profiles::GeneratePipelineJob.perform_later(login)
+        Profiles::GeneratePipelineJob.perform_later(login, trigger_source: "ops_admin#bulk_retry")
         count += 1
       end
       redirect_to ops_admin_path, notice: "Queued pipeline run for #{count} profile(s)."
@@ -308,7 +308,7 @@ module Ops
     def bulk_retry_all
       count = 0
       Profile.find_each do |p|
-        Profiles::GeneratePipelineJob.perform_later(p.login)
+        Profiles::GeneratePipelineJob.perform_later(p.login, trigger_source: "ops_admin#bulk_retry_all")
         p.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
         count += 1
       end

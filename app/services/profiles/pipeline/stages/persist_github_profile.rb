@@ -12,11 +12,18 @@ module Profiles
 
           trace(:started)
           profile = Profile.find_or_initialize_by(github_id: payload[:profile][:id])
+          preserve_avatar = context.override(:preserve_profile_avatar, false)
+          existing_avatar = preserve_avatar ? profile.avatar_url : nil
 
           ActiveRecord::Base.transaction do
             assign_profile_attributes(profile, payload)
+            new_avatar = context.avatar_public_url.presence || context.avatar_relative_path.presence
             # Prefer Spaces-hosted avatar, fall back to downloaded relative path if upload failed.
-            profile.avatar_url = context.avatar_public_url.presence || context.avatar_relative_path.presence
+            if preserve_avatar && existing_avatar.present?
+              profile.avatar_url = existing_avatar
+            else
+              profile.avatar_url = new_avatar
+            end
             profile.last_synced_at = Time.current
             profile.save!
 

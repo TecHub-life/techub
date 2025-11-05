@@ -420,9 +420,10 @@
                 <div>Queue: enqueued=<%= queue[:enqueued] || 0 %>, delivered=<%= queue[:delivered] || 0 %>, pending=<%= queue[:pending] || 0 %></div>
                 <div>Last delivery: <%= queue[:last_delivery]&.dig(:at) || '—' %></div>
                 <div>Last error: <%= queue[:last_error] || '—' %></div>
+                <div>Last skip: <%= queue[:last_skip] ? "#{queue[:last_skip][:reason]} @ #{queue[:last_skip][:at]}" : '—' %></div>
               </dl>
             <% end %>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Forwarding is automatic in production or when <code>AXIOM_ENABLED=1</code> and not <code>AXIOM_DISABLE=1</code>. Run <code>rake axiom:runtime_doctor</code> to exercise the StructuredLogger queue end-to-end.</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Forwarding runs in production when credentials are present, or in other environments when <code>AXIOM_ENABLED=1</code>. Run <code>rake axiom:runtime_doctor</code> to exercise the StructuredLogger queue end-to-end.</p>
           </div>
 
           <div>

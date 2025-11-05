@@ -170,7 +170,10 @@ module Profiles
     def initialize(login:, host: nil, overrides: {})
       @login = login.to_s.downcase
       @host_override = host
-      @overrides = overrides || {}
+      @overrides = normalize_overrides(overrides)
+      @skip_stages = Array(@overrides[:skip_stages]).map { |s| s.to_sym rescue nil }.compact.uniq
+      @only_stages = Array(@overrides[:only_stages]).map { |s| s.to_sym rescue nil }.compact.uniq
+      @trigger_source = extract_trigger_source(@overrides)
     end
 
     def call
@@ -184,7 +187,7 @@ module Profiles
       context = Pipeline::Context.new(login: login, host: resolved_host, run_id: run_id, overrides: overrides)
       context.degraded_steps = []
       @last_known_profile = Profile.for_login(login).first
-      context.trace(:pipeline, :started, login: login, host: context.host)
+      context.trace(:pipeline, :started, login: login, host: context.host, trigger: trigger_source)
       @pending_pipeline_events = []
       pipeline_started_at = Time.current
       record_pipeline_event(stage: :pipeline, status: "started", started_at: pipeline_started_at)
@@ -193,6 +196,13 @@ module Profiles
       degraded_steps = []
 
       STAGES.each do |stage|
+        if skip_stage?(stage.id)
+          skip_started_at = Time.current
+          context.trace(stage.id, :skipped, reason: "skipped_via_override", trigger: trigger_source)
+          record_stage_event(stage, status: "skipped", started_at: skip_started_at, message: "skipped_via_override")
+          next
+        end
+
         if stage.id == :notify_pipeline_outcome
           snapshot_duration_ms = elapsed_ms(pipeline_started_at)
           snapshot_metadata = pipeline_metadata(
@@ -209,7 +219,8 @@ module Profiles
             duration_ms: snapshot_duration_ms,
             degraded_steps: degraded_steps,
             metadata: snapshot_metadata,
-            error: nil
+            error: nil,
+            trigger: trigger_source
           }
         end
         stage_started_at = Time.current
@@ -248,7 +259,8 @@ module Profiles
             duration_ms: failure_duration_ms,
             degraded_steps: degraded_steps,
             metadata: failure_metadata,
-            error: result.error&.message
+            error: result.error&.message,
+            trigger: trigger_source
           }
           enriched_failure = attach_pipeline_metadata(
             result,
@@ -290,7 +302,8 @@ module Profiles
         duration_ms: duration_ms,
         degraded_steps: degraded_steps,
         metadata: metadata,
-        error: nil
+        error: nil,
+        trigger: trigger_source
       }
       if degraded_steps.any?
         log_pipeline(:warn, "pipeline_completed_degraded", run_id: run_id, duration_ms: duration_ms, degraded_steps: degraded_steps)
@@ -315,7 +328,7 @@ module Profiles
         end
       end
 
-      metadata = { login: login, host: resolved_host }
+      metadata = { login: login, host: resolved_host, trigger: trigger_source }
       if defined?(context) && context
         duration_ms = defined?(pipeline_started_at) ? elapsed_ms(pipeline_started_at) : nil
         failure_metadata = if defined?(run_id) && defined?(pipeline_started_at)
@@ -342,7 +355,7 @@ module Profiles
 
     private
 
-    attr_reader :login, :host_override, :overrides
+    attr_reader :login, :host_override, :overrides, :trigger_source, :skip_stages, :only_stages
 
     def execute_stage(stage, context)
       result = stage.service.call(context: context, **stage.options)
@@ -396,7 +409,8 @@ module Profiles
         run_id: run_id,
         duration_ms: duration_ms,
         degraded_steps: degraded_steps.presence,
-        github_summary: summarize_github_payload(snapshot[:github_payload])
+        github_summary: summarize_github_payload(snapshot[:github_payload]),
+        trigger: trigger_source
       )
       metadata.compact
     end
@@ -429,7 +443,7 @@ module Profiles
         return
       end
 
-      persist_pipeline_event(profile: profile, stage: stage, status: status, started_at: started_at, message: message)
+      persist_pipeline_event(profile: profile, stage: stage, status: status, started_at: started_at, message: message, trigger: trigger_source)
     rescue StandardError => e
       if defined?(StructuredLogger)
         StructuredLogger.warn(
@@ -470,7 +484,8 @@ module Profiles
         stage: stage,
         status: status,
         started_at: started_at,
-        message: message
+        message: message,
+        trigger: trigger_source
       }
     end
 
@@ -489,7 +504,8 @@ module Profiles
             stage: event[:stage],
             status: event[:status],
             started_at: event[:started_at],
-            message: event[:message]
+            message: event[:message],
+            trigger: event[:trigger] || trigger_source
           )
         rescue StandardError => e
           StructuredLogger.warn(
@@ -504,7 +520,7 @@ module Profiles
       end
     end
 
-    def persist_pipeline_event(profile:, stage:, status:, started_at:, message:)
+    def persist_pipeline_event(profile:, stage:, status:, started_at:, message:, trigger:)
       duration_ms = if started_at && %w[completed failed].include?(status.to_s)
         ((Time.current - started_at) * 1000).to_i
       end
@@ -515,6 +531,7 @@ module Profiles
         status: status.to_s,
         duration_ms: duration_ms,
         message: truncate_message(message),
+        trigger: trigger,
         created_at: Time.current
       )
     end
@@ -597,6 +614,13 @@ module Profiles
       nil
     end
 
+    def skip_stage?(stage_id)
+      symbol = stage_id.to_sym
+      return true if only_stages.any? && !only_stages.include?(symbol)
+
+      skip_stages.include?(symbol)
+    end
+
     def notification_stage
       @notification_stage ||= self.class.stage_with_id(:notify_pipeline_outcome)
     end
@@ -620,7 +644,8 @@ module Profiles
         duration_ms: duration_ms,
         degraded_steps: degraded_steps,
         metadata: metadata_snapshot,
-        error: error
+        error: error,
+        trigger: trigger_source
       }
 
       stage_started_at = Time.current
@@ -690,6 +715,29 @@ module Profiles
       []
     end
 
+    def normalize_overrides(value)
+      return {} if value.blank?
+
+      case value
+      when Hash
+        value.deep_symbolize_keys
+      else
+        value.respond_to?(:to_h) ? value.to_h.deep_symbolize_keys : {}
+      end
+    rescue StandardError
+      {}
+    end
+
+    def extract_trigger_source(overrides)
+      candidate = overrides[:trigger_source]
+      candidate = overrides[:trigger] if candidate.blank?
+      candidate = candidate.call if candidate.respond_to?(:call)
+      str = candidate.to_s.strip
+      str.present? ? str : "unspecified"
+    rescue StandardError
+      "unspecified"
+    end
+
     def resolved_host
       return @resolved_host if defined?(@resolved_host)
 
@@ -703,12 +751,13 @@ module Profiles
 
     def log_pipeline(level, message, **details)
       payload_details = details.compact
+      payload_details[:trigger] ||= trigger_source
       StructuredLogger.public_send(
         level,
         { message: message, login: login }.merge(payload_details),
         component: "pipeline",
         event: "pipeline.#{message}",
-        ops_details: { login: login, steps: self.class.steps }.merge(payload_details)
+        ops_details: { login: login, steps: self.class.steps, trigger: trigger_source }.merge(payload_details)
       )
     end
   end

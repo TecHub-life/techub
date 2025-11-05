@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_04_000001) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_06_090123) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -211,8 +211,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_000001) do
     t.integer "profile_id", null: false
     t.string "stage", null: false
     t.string "status", null: false
+    t.string "trigger"
     t.index ["created_at"], name: "index_profile_pipeline_events_on_created_at"
     t.index ["profile_id"], name: "index_profile_pipeline_events_on_profile_id"
+    t.index ["trigger"], name: "index_profile_pipeline_events_on_trigger"
   end
 
   create_table "profile_readmes", force: :cascade do |t|

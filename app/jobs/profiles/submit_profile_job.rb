@@ -59,7 +59,7 @@ module Profiles
       # Enqueue pipeline job and mark status
       persisted.update_columns(submitted_at: Time.current, last_pipeline_status: "queued", last_pipeline_error: nil)
 
-      Profiles::GeneratePipelineJob.perform_later(persisted.login)
+      Profiles::GeneratePipelineJob.perform_later(persisted.login, trigger_source: "submit_profile_job")
       duration_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).to_i
       StructuredLogger.info(
         {

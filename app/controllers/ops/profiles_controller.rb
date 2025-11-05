@@ -40,7 +40,7 @@ module Ops
     end
 
     def retry
-      Profiles::GeneratePipelineJob.perform_later(@profile.login)
+      Profiles::GeneratePipelineJob.perform_later(@profile.login, trigger_source: "ops_profiles#retry")
       @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
       redirect_to ops_admin_path, notice: "Re-roll queued for @#{@profile.login} (full pipeline as fresh submission)"
     end

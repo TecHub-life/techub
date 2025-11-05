@@ -22,7 +22,14 @@ module Profiles
       count = 0
       stale.pluck(:login).each do |login|
         # Run the pipeline to sync data, refresh text, and recapture screenshots.
-        Profiles::GeneratePipelineJob.perform_later(login)
+        Profiles::GeneratePipelineJob.perform_later(
+          login,
+          trigger_source: "refresh_stale_job",
+          pipeline_overrides: {
+            skip_stages: [ :generate_ai_profile, :notify_pipeline_outcome ],
+            preserve_profile_avatar: true
+          }
+        )
         count += 1
       end
 
