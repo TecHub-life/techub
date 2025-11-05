@@ -69,9 +69,11 @@ Use the “Load” button to refresh the view after you capture a new run; the `
 While the pipeline runs, each stage now records richer metadata that travels with the snapshot:
 
 - **GitHub fetch** stores a summary of follower counts, repo counts, and orgs.
+- **Avatar download/upload** records both the downloaded disk path and the Spaces URL, plus the Active Storage key so you can confirm storage.
 - **AI profile generation** includes provider, attempt log, prompt payload, and response preview. Mock runs record that status explicitly.
 - **Screenshot capture** records variant manifests with local paths and DO Spaces URLs.
 - **Image optimisation** captures before/after byte counts per variant.
+- **Notifications** stage logs which owner/ops channels were contacted (including Ops alert recipients) so you can audit downstream messaging.
 
 These details appear in `stage_metadata.json`, the Ops panel stage table, and the `metadata.json` payload.
 

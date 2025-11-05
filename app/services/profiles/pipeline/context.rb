@@ -4,8 +4,10 @@ module Profiles
   module Pipeline
     class Context
       attr_reader :login, :host, :run_id, :overrides
-      attr_accessor :github_payload, :profile, :avatar_local_path,
-                    :scrape, :card, :captures, :optimizations, :eligibility
+      attr_accessor :github_payload, :profile,
+                    :avatar_local_path, :avatar_relative_path, :avatar_public_url, :avatar_upload_metadata,
+                    :scrape, :card, :captures, :optimizations, :eligibility,
+                    :degraded_steps, :pipeline_outcome, :pipeline_metadata
 
       def initialize(login:, host:, run_id: nil, overrides: {})
         @login = login.to_s.downcase
@@ -15,6 +17,7 @@ module Profiles
         @trace = []
         @overrides = normalize_overrides(overrides)
         @stage_metadata = {}
+        @degraded_steps = []
         @run_id = run_id.presence || SecureRandom.uuid
       end
 
@@ -78,6 +81,9 @@ module Profiles
           github_payload: github_payload,
           profile: profile_snapshot,
           avatar_local_path: avatar_local_path,
+          avatar_relative_path: avatar_relative_path,
+          avatar_public_url: avatar_public_url,
+          avatar_upload_metadata: avatar_upload_metadata,
           scrape: scrape_snapshot,
           card: card_snapshot,
           captures: captures,

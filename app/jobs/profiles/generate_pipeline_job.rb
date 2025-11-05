@@ -11,36 +11,16 @@ module Profiles
       profile = Profile.for_login(login).first
       return unless profile
 
+      duration_ms = ((Time.current - started) * 1000).to_i
+
       if result.success?
-        partial = result.respond_to?(:metadata) && (result.metadata || {})[:partial]
+        partial = result.degraded?
         status = partial ? "partial_success" : "success"
         profile.update!(last_pipeline_status: status, last_pipeline_error: nil)
-        # Always notify success to owners only for full success; ops-only alert for partials
-        if partial
-          Notifications::PipelineNotifierService.call(profile: profile, status: "partial")
-          Notifications::OpsAlertService.call(
-            profile: profile,
-            job: self.class.name,
-            error_message: "pipeline completed with partials",
-            metadata: result.respond_to?(:metadata) ? result.metadata : { partial: true },
-            duration_ms: ((Time.current - started) * 1000).to_i
-          )
-        else
-          Notifications::PipelineNotifierService.call(profile: profile, status: "success")
-        end
-        StructuredLogger.info(message: "pipeline_completed", service: self.class.name, login: login, duration_ms: ((Time.current - started) * 1000).to_i, partial: partial)
+        StructuredLogger.info(message: "pipeline_completed", service: self.class.name, login: login, duration_ms: duration_ms, partial: partial)
       else
         profile.update!(last_pipeline_status: "failure", last_pipeline_error: result.error.message)
-        Notifications::PipelineNotifierService.call(profile: profile, status: "failure", error_message: result.error.message)
-        # Ops alert for failed pipeline runs (env/credentials driven)
-        Notifications::OpsAlertService.call(
-          profile: profile,
-          job: self.class.name,
-          error_message: result.error.message,
-          metadata: result.respond_to?(:metadata) ? result.metadata : nil,
-          duration_ms: ((Time.current - started) * 1000).to_i
-        )
-        StructuredLogger.error(message: "pipeline_failed", service: self.class.name, login: login, error: result.error.message, duration_ms: ((Time.current - started) * 1000).to_i)
+        StructuredLogger.error(message: "pipeline_failed", service: self.class.name, login: login, error: result.error.message, duration_ms: duration_ms)
       end
     end
   end

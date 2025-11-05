@@ -52,7 +52,7 @@ module Profiles
         label: "Pull GitHub data",
         service: Pipeline::Stages::FetchGithubProfile,
         options: {},
-        description: "Fetch GitHub summary payload (with user-token fallback)",
+        description: "Fetch GitHub profile + repos via Github::ProfileSummaryService (user token first, app token fallback); stores raw payload on the pipeline context for downstream stages.",
         produces: %w[github_payload]
       ),
       Stage.new(
@@ -60,15 +60,23 @@ module Profiles
         label: "Download GitHub avatar",
         service: Pipeline::Stages::DownloadAvatar,
         options: {},
-        description: "Download avatar locally for card usage",
+        description: "Download current avatar image into /public/avatars; records absolute + relative paths for upload and rendering.",
         produces: %w[avatar_local_path]
+      ),
+      Stage.new(
+        id: :upload_github_avatar,
+        label: "Upload avatar to storage",
+        service: Pipeline::Stages::UploadAvatar,
+        options: {},
+        description: "Push downloaded avatar to configured Active Storage (DO Spaces) and cache public URL for later persistence.",
+        produces: %w[avatar_public_url]
       ),
       Stage.new(
         id: :store_github_profile,
         label: "Store GitHub data",
         service: Pipeline::Stages::PersistGithubProfile,
         options: {},
-        description: "Persist profile, repos, orgs, activity, readme, tags",
+        description: "Persist profile attributes, repos, orgs, social accounts, languages, activity, readme, and avatar path into the database inside a transaction.",
         produces: %w[
           profile
           profile_repositories
@@ -78,12 +86,20 @@ module Profiles
         ]
       ),
       Stage.new(
+        id: :record_avatar_asset,
+        label: "Record avatar asset",
+        service: Pipeline::Stages::RecordAvatarAsset,
+        options: {},
+        description: "Create/update ProfileAsset entry for the current avatar (local path + Spaces URL) so Ops tooling sees the latest source.",
+        produces: %w[profile_assets(avatar)]
+      ),
+      Stage.new(
         id: :evaluate_eligibility,
         label: "Evaluate eligibility",
         service: Pipeline::Stages::EvaluateEligibility,
         options: {},
         gated_by: :require_profile_eligibility,
-        description: "Optionally block pipeline for low-signal profiles",
+        description: "Calls Eligibility::GithubProfileScoreService to score the profile; aborts pipeline when eligibility flag requires a passing score.",
         produces: %w[eligibility]
       ),
       Stage.new(
@@ -91,7 +107,7 @@ module Profiles
         label: "Ingest submitted repositories",
         service: Pipeline::Stages::IngestSubmittedRepositories,
         options: {},
-        description: "Include user-submitted repos into signals",
+        description: "Merge user-submitted repositories into ProfileRepository records so downstream scoring/screenshots see the augmented set.",
         produces: %w[profile_repositories(submitted)]
       ),
       Stage.new(
@@ -99,7 +115,7 @@ module Profiles
         label: "Record submitted scrape",
         service: Pipeline::Stages::RecordSubmittedScrape,
         options: {},
-        description: "Optional scrape of a provided URL to augment signals",
+        description: "Persist optional scraped URL details into associated scrape records; captures any uploaded assets referenced in the scrape payload.",
         produces: %w[profile_scrapes(optional)]
       ),
       Stage.new(
@@ -108,7 +124,7 @@ module Profiles
         service: Pipeline::Stages::GenerateAiProfile,
         options: {},
         gated_by: :ai_text,
-        description: "Structured JSON describing bios, stats, vibe, tags, playing card, archetype, spirit animal",
+        description: "Produce or reuse ProfileCard JSON via Gemini / SynthesizeAiProfileService with overrides and heuristics fallback; persists card fields (stats, copy, prompts) to the database.",
         produces: %w[profile_card]
       ),
       Stage.new(
@@ -116,7 +132,7 @@ module Profiles
         label: "Capture card screenshots",
         service: Pipeline::Stages::CaptureScreenshots,
         options: { variants: SCREENSHOT_VARIANTS },
-        description: "Enqueue card, OG, banner, simple, and social targets",
+        description: "Render card/OG/social variants via Screenshots::CaptureCardJob (Puppeteer); saves images locally and, when configured, uploads to DO Spaces/Active Storage.",
         produces: SCREENSHOT_VARIANTS
       ),
       Stage.new(
@@ -124,8 +140,16 @@ module Profiles
         label: "Optimize card images",
         service: Pipeline::Stages::OptimizeScreenshots,
         options: {},
-        description: "Run post-processing and upload-ready optimizations for generated images",
+        description: "Run Images::OptimizeJob on each capture to compress/rewrite bytes and optionally replace uploads in Spaces so downstream shares use the optimized asset.",
         produces: SCREENSHOT_VARIANTS
+      ),
+      Stage.new(
+        id: :notify_pipeline_outcome,
+        label: "Notify stakeholders",
+        service: Pipeline::Stages::NotifyOutcome,
+        options: {},
+        description: "Deliver pipeline completion notifications to profile owners and ops (success/partial/failure) with run metadata.",
+        produces: %w[notifications]
       )
     ].freeze
 
@@ -136,6 +160,10 @@ module Profiles
 
       def describe
         STAGES.map(&:describe)
+      end
+
+      def stage_with_id(id)
+        STAGES.find { |stage| stage.id == id.to_sym }
       end
     end
 
@@ -154,6 +182,7 @@ module Profiles
 
       run_id = SecureRandom.uuid
       context = Pipeline::Context.new(login: login, host: resolved_host, run_id: run_id, overrides: overrides)
+      context.degraded_steps = []
       @last_known_profile = Profile.for_login(login).first
       context.trace(:pipeline, :started, login: login, host: context.host)
       @pending_pipeline_events = []
@@ -164,6 +193,25 @@ module Profiles
       degraded_steps = []
 
       STAGES.each do |stage|
+        if stage.id == :notify_pipeline_outcome
+          snapshot_duration_ms = elapsed_ms(pipeline_started_at)
+          snapshot_metadata = pipeline_metadata(
+            context: context,
+            run_id: run_id,
+            duration_ms: snapshot_duration_ms,
+            degraded_steps: degraded_steps
+          )
+          context.degraded_steps = degraded_steps.dup
+          context.pipeline_metadata = snapshot_metadata
+          context.pipeline_outcome = {
+            status: degraded_steps.any? ? :partial : :success,
+            run_id: run_id,
+            duration_ms: snapshot_duration_ms,
+            degraded_steps: degraded_steps,
+            metadata: snapshot_metadata,
+            error: nil
+          }
+        end
         stage_started_at = Time.current
         record_stage_event(stage, status: "started", started_at: stage_started_at)
 
@@ -175,12 +223,39 @@ module Profiles
           record_stage_event(stage, status: "failed", started_at: stage_started_at, message: result.error&.message)
           record_pipeline_event(stage: :pipeline, status: "failed", started_at: pipeline_started_at, message: result.error&.message)
           log_pipeline(:error, "pipeline_stage_failed", run_id: run_id, stage: stage.id, error: result.error&.message)
+          failure_duration_ms = elapsed_ms(pipeline_started_at)
+          if stage.id != :notify_pipeline_outcome
+            context.degraded_steps = degraded_steps.dup
+            perform_notification_stage(
+              status: :failure,
+              context: context,
+              run_id: run_id,
+              pipeline_started_at: pipeline_started_at,
+              degraded_steps: degraded_steps,
+              error: result.error&.message
+            )
+          end
+          failure_metadata = pipeline_metadata(
+            context: context,
+            run_id: run_id,
+            duration_ms: failure_duration_ms,
+            degraded_steps: degraded_steps
+          )
+          context.pipeline_metadata = failure_metadata
+          context.pipeline_outcome = {
+            status: :failure,
+            run_id: run_id,
+            duration_ms: failure_duration_ms,
+            degraded_steps: degraded_steps,
+            metadata: failure_metadata,
+            error: result.error&.message
+          }
           enriched_failure = attach_pipeline_metadata(
             result,
             context: context,
             run_id: run_id,
             degraded_steps: degraded_steps,
-            duration_ms: elapsed_ms(pipeline_started_at)
+            duration_ms: failure_duration_ms
           )
           flush_pending_events
           return enriched_failure
@@ -188,12 +263,14 @@ module Profiles
 
         if result.degraded?
           degraded_steps << { stage: stage.id, metadata: result.metadata }
+          context.degraded_steps = degraded_steps.dup
           record_stage_event(stage, status: "degraded", started_at: stage_started_at, message: degrade_message(result))
         else
           record_stage_event(stage, status: "completed", started_at: stage_started_at)
         end
 
         refresh_event_profile(context)
+        context.degraded_steps = degraded_steps.dup
       end
 
       duration_ms = elapsed_ms(pipeline_started_at)
@@ -206,6 +283,15 @@ module Profiles
         duration_ms: duration_ms,
         degraded_steps: degraded_steps
       )
+      context.pipeline_metadata = metadata
+      context.pipeline_outcome = {
+        status: degraded_steps.any? ? :partial : :success,
+        run_id: run_id,
+        duration_ms: duration_ms,
+        degraded_steps: degraded_steps,
+        metadata: metadata,
+        error: nil
+      }
       if degraded_steps.any?
         log_pipeline(:warn, "pipeline_completed_degraded", run_id: run_id, duration_ms: duration_ms, degraded_steps: degraded_steps)
         degraded(context.result_value, metadata: metadata)
@@ -214,13 +300,39 @@ module Profiles
         success(context.result_value, metadata: metadata)
       end
     rescue StandardError => e
+      degraded_snapshot = []
+      if defined?(context) && context
+        degraded_snapshot = context.degraded_steps || []
+        if defined?(run_id) && defined?(pipeline_started_at)
+          perform_notification_stage(
+            status: :failure,
+            context: context,
+            run_id: run_id,
+            pipeline_started_at: pipeline_started_at,
+            degraded_steps: degraded_snapshot,
+            error: e.message
+          )
+        end
+      end
+
       metadata = { login: login, host: resolved_host }
       if defined?(context) && context
+        duration_ms = defined?(pipeline_started_at) ? elapsed_ms(pipeline_started_at) : nil
+        failure_metadata = if defined?(run_id) && defined?(pipeline_started_at)
+          pipeline_metadata(
+            context: context,
+            run_id: run_id,
+            duration_ms: duration_ms,
+            degraded_steps: degraded_snapshot
+          )
+        end
+        context.pipeline_metadata = failure_metadata if failure_metadata.is_a?(Hash)
         metadata = metadata.merge(
           trace: context.trace_entries,
           stage_metadata: context.stage_metadata,
           pipeline_snapshot: context.serializable_snapshot
         )
+        metadata.merge!(failure_metadata) if failure_metadata.is_a?(Hash)
       end
       record_pipeline_event(stage: :pipeline, status: "failed", started_at: pipeline_started_at, message: e.message) if defined?(pipeline_started_at)
       flush_pending_events
@@ -438,10 +550,26 @@ module Profiles
       when :pull_github_data
         summarize_github_payload(context.github_payload)
       when :download_github_avatar
-        context.avatar_local_path.present? ? { avatar_local_path: context.avatar_local_path } : nil
+        if context.avatar_local_path.present? || context.avatar_relative_path.present?
+          {
+            avatar_local_path: context.avatar_local_path,
+            avatar_relative_path: context.avatar_relative_path
+          }.compact
+        end
+      when :upload_github_avatar
+        if context.avatar_public_url.present?
+          {
+            avatar_public_url: context.avatar_public_url,
+            storage_key: context.avatar_upload_metadata&.[](:key)
+          }.compact
+        else
+          result.metadata
+        end
       when :store_github_profile
         profile = context.profile
         profile ? profile.attributes.slice(*snapshot_profile_keys) : nil
+      when :record_avatar_asset
+        result.metadata
       when :evaluate_eligibility
         context.eligibility
       when :ingest_submitted_repositories, :record_submitted_scrape
@@ -466,6 +594,57 @@ module Profiles
         result.metadata
       end
     rescue StandardError
+      nil
+    end
+
+    def notification_stage
+      @notification_stage ||= self.class.stage_with_id(:notify_pipeline_outcome)
+    end
+
+    def perform_notification_stage(status:, context:, run_id:, pipeline_started_at:, degraded_steps:, error: nil)
+      stage = notification_stage
+      return unless stage
+
+      context.degraded_steps = Array(degraded_steps).dup
+      duration_ms = elapsed_ms(pipeline_started_at)
+      metadata_snapshot = pipeline_metadata(
+        context: context,
+        run_id: run_id,
+        duration_ms: duration_ms,
+        degraded_steps: degraded_steps
+      )
+      context.pipeline_metadata = metadata_snapshot
+      context.pipeline_outcome = {
+        status: status.to_sym,
+        run_id: run_id,
+        duration_ms: duration_ms,
+        degraded_steps: degraded_steps,
+        metadata: metadata_snapshot,
+        error: error
+      }
+
+      stage_started_at = Time.current
+      record_stage_event(stage, status: "started", started_at: stage_started_at)
+      result = execute_stage(stage, context)
+      stage_duration_ms = elapsed_ms(stage_started_at)
+      record_stage_snapshot(context, stage, result, stage_duration_ms)
+
+      if result.failure?
+        record_stage_event(stage, status: "failed", started_at: stage_started_at, message: result.error&.message)
+      elsif result.degraded?
+        record_stage_event(stage, status: "degraded", started_at: stage_started_at, message: degrade_message(result))
+      else
+        record_stage_event(stage, status: "completed", started_at: stage_started_at)
+      end
+
+      result
+    rescue StandardError => e
+      StructuredLogger.error(
+        message: "pipeline_notification_stage_exception",
+        service: self.class.name,
+        login: login,
+        error: e.message
+      ) if defined?(StructuredLogger)
       nil
     end
 

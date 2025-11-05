@@ -1,5 +1,6 @@
 require "json"
 require "fileutils"
+require "net/http"
 
 namespace :pipeline do
   desc "Run the full pipeline locally and export artifacts. Usage: rake 'pipeline:run[login,host]'"
@@ -24,6 +25,12 @@ namespace :pipeline do
     overrides[:screenshots_mode] = screenshots_mode if screenshots_mode.present?
 
     puts "Running pipeline for @#{login} (host=#{host}, ai_mode=#{overrides[:ai_mode] || 'default'})..."
+    check = pipeline_endpoint_check(host, login)
+    unless check[:ok]
+      warn check[:error]
+      warn check[:suggestion] if check[:suggestion]
+      exit 1
+    end
     result = Profiles::GeneratePipelineService.call(login: login, host: host, overrides: overrides)
 
     output_dir = pipeline_run_output_dir(login)
@@ -292,4 +299,34 @@ def fetch_hash_value(obj, key)
   return nil unless obj.is_a?(Hash)
 
   obj[key] || obj[key.to_s] || obj[key.to_sym]
+end
+
+def pipeline_endpoint_check(host, login)
+  uri = URI.parse(host)
+  unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+    return { ok: false, error: "Invalid host for pipeline: #{host}" }
+  end
+
+  path = "/cards/#{login}/card"
+  request_uri = uri.dup
+  request_uri.path = File.join(uri.path.to_s.sub(/\/\z/, ""), path)
+  request_uri.query = nil
+
+  Net::HTTP.start(request_uri.host, request_uri.port, use_ssl: request_uri.scheme == "https", open_timeout: 3, read_timeout: 3) do |http|
+    response = http.head(request_uri.request_uri)
+    code = response.code.to_i
+    if code >= 200 && code < 600
+      return { ok: true }
+    end
+  end
+
+  { ok: false, error: "Pipeline host #{host} responded unexpectedly" }
+rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
+  {
+    ok: false,
+    error: "Pipeline host #{host} is not reachable (#{e.class.name}: #{e.message})",
+    suggestion: "Start the application server so Puppeteer can capture screenshots."
+  }
+rescue URI::InvalidURIError => e
+  { ok: false, error: "Invalid pipeline host: #{host} (#{e.message})" }
 end
