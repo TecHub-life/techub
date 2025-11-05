@@ -139,9 +139,10 @@ module Profiles
       end
     end
 
-    def initialize(login:, host: nil)
+    def initialize(login:, host: nil, overrides: {})
       @login = login.to_s.downcase
       @host_override = host
+      @overrides = overrides || {}
     end
 
     def call
@@ -152,7 +153,7 @@ module Profiles
       return failure(StandardError.new("login required"), metadata: { stage: :pipeline }) if login.blank?
 
       run_id = SecureRandom.uuid
-      context = Pipeline::Context.new(login: login, host: resolved_host, run_id: run_id)
+      context = Pipeline::Context.new(login: login, host: resolved_host, run_id: run_id, overrides: overrides)
       @last_known_profile = Profile.for_login(login).first
       context.trace(:pipeline, :started, login: login, host: context.host)
       @pending_pipeline_events = []
@@ -167,11 +168,22 @@ module Profiles
         record_stage_event(stage, status: "started", started_at: stage_started_at)
 
         result = execute_stage(stage, context)
+        stage_duration_ms = elapsed_ms(stage_started_at)
+        record_stage_snapshot(context, stage, result, stage_duration_ms)
+
         if result.failure?
           record_stage_event(stage, status: "failed", started_at: stage_started_at, message: result.error&.message)
           record_pipeline_event(stage: :pipeline, status: "failed", started_at: pipeline_started_at, message: result.error&.message)
           log_pipeline(:error, "pipeline_stage_failed", run_id: run_id, stage: stage.id, error: result.error&.message)
-          return result
+          enriched_failure = attach_pipeline_metadata(
+            result,
+            context: context,
+            run_id: run_id,
+            degraded_steps: degraded_steps,
+            duration_ms: elapsed_ms(pipeline_started_at)
+          )
+          flush_pending_events
+          return enriched_failure
         end
 
         if result.degraded?
@@ -188,10 +200,11 @@ module Profiles
       context.trace(:pipeline, :completed, card_id: context.result_value[:card_id], duration_ms: duration_ms)
       record_pipeline_event(stage: :pipeline, status: "completed", started_at: pipeline_started_at)
       flush_pending_events
-      metadata = final_metadata(context).merge(
-        degraded_steps: degraded_steps,
+      metadata = pipeline_metadata(
+        context: context,
         run_id: run_id,
-        duration_ms: duration_ms
+        duration_ms: duration_ms,
+        degraded_steps: degraded_steps
       )
       if degraded_steps.any?
         log_pipeline(:warn, "pipeline_completed_degraded", run_id: run_id, duration_ms: duration_ms, degraded_steps: degraded_steps)
@@ -202,7 +215,13 @@ module Profiles
       end
     rescue StandardError => e
       metadata = { login: login, host: resolved_host }
-      metadata[:trace] = context&.trace_entries if defined?(context) && context
+      if defined?(context) && context
+        metadata = metadata.merge(
+          trace: context.trace_entries,
+          stage_metadata: context.stage_metadata,
+          pipeline_snapshot: context.serializable_snapshot
+        )
+      end
       record_pipeline_event(stage: :pipeline, status: "failed", started_at: pipeline_started_at, message: e.message) if defined?(pipeline_started_at)
       flush_pending_events
       log_pipeline(:error, "pipeline_failed", run_id: run_id, error: e.message) if defined?(run_id)
@@ -211,7 +230,7 @@ module Profiles
 
     private
 
-    attr_reader :login, :host_override
+    attr_reader :login, :host_override, :overrides
 
     def execute_stage(stage, context)
       result = stage.service.call(context: context, **stage.options)
@@ -250,8 +269,35 @@ module Profiles
       {
         login: login,
         host: context.host,
-        trace: context.trace_entries
+        trace: context.trace_entries,
+        stage_metadata: context.stage_metadata,
+        pipeline_snapshot: context.serializable_snapshot
       }
+    end
+
+    def pipeline_metadata(context:, run_id:, duration_ms:, degraded_steps: [], base: {})
+      metadata = final_metadata(context)
+      base_hash = base.is_a?(Hash) ? base : {}
+      metadata = base_hash.merge(metadata) { |_key, old_val, new_val| old_val.presence || new_val }
+      snapshot = metadata[:pipeline_snapshot] || context.serializable_snapshot
+      metadata.merge!(
+        run_id: run_id,
+        duration_ms: duration_ms,
+        degraded_steps: degraded_steps.presence,
+        github_summary: summarize_github_payload(snapshot[:github_payload])
+      )
+      metadata.compact
+    end
+
+    def attach_pipeline_metadata(result, context:, run_id:, degraded_steps:, duration_ms:)
+      metadata = pipeline_metadata(
+        context: context,
+        run_id: run_id,
+        duration_ms: duration_ms,
+        degraded_steps: degraded_steps,
+        base: result.metadata
+      )
+      result.with_metadata(metadata)
     end
 
     def elapsed_ms(started_at)
@@ -359,6 +405,110 @@ module Profiles
         message: truncate_message(message),
         created_at: Time.current
       )
+    end
+
+    def record_stage_snapshot(context, stage, result, duration_ms)
+      snapshot_value = stage_value_summary(stage.id, context, result)
+      context.record_stage_metadata(
+        stage.id,
+        {
+          id: stage.id,
+          label: stage.label,
+          status: result.status,
+          success: result.success?,
+          degraded: result.degraded?,
+          duration_ms: duration_ms,
+          error: result.error&.message,
+          metadata: result.metadata,
+          value: snapshot_value
+        }.compact
+      )
+    rescue StandardError => e
+      StructuredLogger.warn(
+        message: "stage_snapshot_failed",
+        service: self.class.name,
+        login: login,
+        stage: stage.id,
+        error: e.message
+      ) if defined?(StructuredLogger)
+    end
+
+    def stage_value_summary(stage_id, context, result)
+      case stage_id
+      when :pull_github_data
+        summarize_github_payload(context.github_payload)
+      when :download_github_avatar
+        context.avatar_local_path.present? ? { avatar_local_path: context.avatar_local_path } : nil
+      when :store_github_profile
+        profile = context.profile
+        profile ? profile.attributes.slice(*snapshot_profile_keys) : nil
+      when :evaluate_eligibility
+        context.eligibility
+      when :ingest_submitted_repositories, :record_submitted_scrape
+        result.metadata
+      when :generate_ai_profile
+        card_snapshot = if context.card.respond_to?(:attributes)
+          context.card.attributes.slice(*snapshot_card_keys)
+        end
+        metadata = result.metadata || {}
+        {
+          card: card_snapshot,
+          provider: metadata[:provider],
+          prompt: metadata[:prompt],
+          response_preview: metadata[:response_preview],
+          attempts: metadata[:attempts]
+        }.compact
+      when :capture_card_screenshots
+        context.captures.presence
+      when :optimize_card_images
+        context.optimizations.presence
+      else
+        result.metadata
+      end
+    rescue StandardError
+      nil
+    end
+
+    def summarize_github_payload(payload)
+      return nil unless payload.is_a?(Hash)
+
+      profile = payload[:profile] || {}
+      {
+        login: profile[:login],
+        name: profile[:name],
+        followers: profile[:followers],
+        following: profile[:following],
+        public_repos: profile[:public_repos],
+        public_gists: profile[:public_gists],
+        summary_preview: truncate_text(payload[:summary], 200),
+        repositories: {
+          top: Array(payload[:top_repositories]).size,
+          pinned: Array(payload[:pinned_repositories]).size,
+          active: Array(payload[:active_repositories]).size
+        },
+        organizations: Array(payload[:organizations]).map { |org| org[:login] || org[:name] }.compact
+      }.compact
+    rescue StandardError
+      nil
+    end
+
+    def truncate_text(text, length)
+      return nil if text.blank?
+
+      str = text.to_s
+      str.length > length ? "#{str[0, length]}..." : str
+    end
+
+    def snapshot_profile_keys
+      Profiles::Pipeline::Context::PROFILE_KEYS
+    rescue NameError
+      []
+    end
+
+    def snapshot_card_keys
+      Profiles::Pipeline::Context::CARD_KEYS
+    rescue NameError
+      []
     end
 
     def resolved_host

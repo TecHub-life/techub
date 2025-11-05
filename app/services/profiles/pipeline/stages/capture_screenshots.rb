@@ -8,35 +8,54 @@ module Profiles
           profile = context.profile
           return failure_with_context(StandardError.new("profile_missing_for_screenshots")) unless profile
 
+          screenshots_mode = context.override(:screenshots_mode) || context.override(:screenshots)
+          if screenshots_mode.to_s == "skip"
+            trace(:skipped_via_override, reason: "screenshots_override_skip")
+            context.captures = {}
+            return success_with_context({}, metadata: { skipped: true, reason: "screenshots_override_skip" })
+          end
+
           variants = Array(options[:variants]).presence || []
           trace(:started, variants: variants, host: host)
 
           captures = {}
-        variants.each do |variant|
-          trace(:variant_started, variant: variant)
-          asset = Screenshots::CaptureCardJob.perform_now(
-            login: profile.login,
-            variant: variant,
-            host: host,
-            optimize: false
-          )
-          unless asset && asset.respond_to?(:id)
-            trace(:variant_failed, variant: variant, error: "asset_not_recorded")
-            return failure_with_context(StandardError.new("screenshot_failed"), metadata: { variant: variant })
+          variants.each do |variant|
+            trace(:variant_started, variant: variant)
+            asset = Screenshots::CaptureCardJob.perform_now(
+              login: profile.login,
+              variant: variant,
+              host: host,
+              optimize: false
+            )
+            unless asset && asset.respond_to?(:id)
+              trace(:variant_failed, variant: variant, error: "asset_not_recorded")
+              return failure_with_context(StandardError.new("screenshot_failed"), metadata: { variant: variant })
+            end
+            captures[variant] = snapshot_asset(asset)
+            trace(:variant_completed, variant: variant, asset: captures[variant])
           end
-          captures[variant] = snapshot_asset(asset)
-          trace(:variant_completed, variant: variant, asset: captures[variant])
-        end
 
           context.captures = captures
           trace(:completed, count: captures.length)
-          success_with_context(captures, metadata: { captures: captures.length })
+          success_with_context(
+            captures,
+            metadata: {
+              captures: captures.length,
+              variants: captures.keys,
+              assets: captures
+            }
+          )
         rescue StandardError => e
           trace(:failed, error: e.message)
           failure_with_context(e)
         end
 
         private
+
+        def log_service(status, error: nil, metadata: {})
+          summary = metadata.is_a?(Hash) ? metadata.slice(:captures, :variants, :skipped, :reason) : {}
+          super(status, error: error, metadata: summary)
+        end
 
         def snapshot_asset(asset)
           {

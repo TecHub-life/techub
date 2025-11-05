@@ -3,16 +3,18 @@ require "securerandom"
 module Profiles
   module Pipeline
     class Context
-      attr_reader :login, :host, :run_id
+      attr_reader :login, :host, :run_id, :overrides
       attr_accessor :github_payload, :profile, :avatar_local_path,
                     :scrape, :card, :captures, :optimizations, :eligibility
 
-      def initialize(login:, host:, run_id: nil)
+      def initialize(login:, host:, run_id: nil, overrides: {})
         @login = login.to_s.downcase
         @host = host
         @captures = {}
         @optimizations = {}
         @trace = []
+        @overrides = normalize_overrides(overrides)
+        @stage_metadata = {}
         @run_id = run_id.presence || SecureRandom.uuid
       end
 
@@ -40,6 +42,24 @@ module Profiles
         @trace.dup
       end
 
+      def stage_metadata
+        deep_dup(@stage_metadata)
+      end
+
+      def record_stage_metadata(stage, data)
+        return unless stage
+
+        @stage_metadata[stage.to_sym] = deep_dup(data) if data.present?
+      end
+
+      def override(key, default = nil)
+        return default if overrides.blank?
+
+        overrides.fetch(key.to_sym, default)
+      rescue KeyError
+        default
+      end
+
       def result_value
         {
           login: login,
@@ -62,7 +82,8 @@ module Profiles
           card: card_snapshot,
           captures: captures,
           optimizations: optimizations,
-          eligibility: eligibility
+          eligibility: eligibility,
+          stages: stage_metadata
         }
       end
 
@@ -131,6 +152,28 @@ module Profiles
           error: error.message,
           error_class: error.class.name
         )
+      end
+
+      def normalize_overrides(value)
+        return {} if value.blank?
+        value.respond_to?(:deep_symbolize_keys) ? value.deep_symbolize_keys : value
+      rescue StandardError
+        {}
+      end
+
+      def deep_dup(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) { |(k, v), memo| memo[k] = deep_dup(v) }
+        when Array
+          obj.map { |item| deep_dup(item) }
+        else
+          begin
+            obj.dup
+          rescue TypeError
+            obj
+          end
+        end
       end
     end
   end

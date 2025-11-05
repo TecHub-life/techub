@@ -1,5 +1,5 @@
 <section class="mx-auto max-w-6xl px-4 py-8">
-  <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900" data-controller="tabs" data-tabs-default-value="overview">
+  <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900" data-controller="tabs" data-tabs-default-value="<%= params[:tab].presence || 'overview' %>">
     <div class="flex flex-col gap-4">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -534,6 +534,202 @@
               </div>
             <% end %>
           </div>
+        </div>
+
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Pipeline Snapshot</h2>
+              <p class="text-sm text-slate-600 dark:text-slate-300">Inspect saved artifacts from <code>tmp/pipeline_runs</code> for a GitHub login. Snapshots are written via <code>rake pipeline:run</code>.</p>
+            </div>
+            <form action="<%= ops_admin_path %>" method="get" class="flex items-center gap-2">
+              <input type="hidden" name="tab" value="pipeline">
+              <label class="text-sm text-slate-600 dark:text-slate-300" for="pipeline_login_select">Login</label>
+              <select id="pipeline_login_select" name="pipeline_login" class="rounded border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <% @pipeline_snapshot_logins.each do |login| %>
+                  <option value="<%= login %>" <%= "selected" if login == @pipeline_snapshot_login %>>@<%= login %></option>
+                <% end %>
+              </select>
+              <button class="rounded bg-indigo-600 px-3 py-1 text-sm font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600">Load</button>
+            </form>
+          </div>
+
+          <% if @pipeline_snapshot.present? %>
+            <% snapshot = @pipeline_snapshot[:snapshot] || {} %>
+            <% run_meta = @pipeline_snapshot[:metadata] || {} %>
+            <% stage_metadata = @pipeline_snapshot[:stage_metadata] || {} %>
+            <% captures = snapshot[:captures] || {} %>
+            <div class="mt-4 space-y-4 text-sm text-slate-700 dark:text-slate-200">
+              <div class="grid gap-3 md:grid-cols-2">
+                <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Run Details</h3>
+                  <dl class="mt-2 space-y-1">
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-slate-500 dark:text-slate-400">Run ID</dt>
+                      <dd class="font-mono text-xs"><%= run_meta[:run_id] %></dd>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-slate-500 dark:text-slate-400">Duration</dt>
+                      <dd><%= run_meta[:duration_ms] ? "#{run_meta[:duration_ms]} ms" : "n/a" %></dd>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-slate-500 dark:text-slate-400">Saved Path</dt>
+                      <dd class="font-mono text-xs break-all"><%= @pipeline_snapshot[:path] %></dd>
+                    </div>
+                  </dl>
+                </div>
+                <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Key Files</h3>
+                  <% files = Array(@pipeline_snapshot[:files]) %>
+                  <% if files.any? %>
+                    <ul class="mt-2 space-y-1">
+                      <% files.select { |f| f.ends_with?(".json") }.each do |fname| %>
+                        <li>
+                          <a class="text-indigo-600 hover:underline dark:text-indigo-400" href="<%= ops_pipeline_snapshot_path(login: @pipeline_snapshot_login, file: fname) %>"><%= fname %></a>
+                        </li>
+                      <% end %>
+                    </ul>
+                  <% else %>
+                    <p class="text-slate-500 dark:text-slate-400">No files detected.</p>
+                  <% end %>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Stage Timings</h3>
+                <div class="overflow-x-auto rounded border border-slate-200 dark:border-slate-700">
+                  <table class="min-w-full divide-y divide-slate-200 text-xs dark:divide-slate-700">
+                    <thead class="bg-slate-100 dark:bg-slate-800">
+                      <tr>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Stage</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Status</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Duration</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                      <% Profiles::GeneratePipelineService::STAGES.each do |stage| %>
+                        <% meta = stage_metadata[stage.id] || stage_metadata[stage.id.to_s] %>
+                        <% next unless meta.present? %>
+                        <% details = meta[:metadata].is_a?(Hash) ? meta[:metadata] : {} %>
+                        <% notes = [] %>
+                        <% notes << details[:reason] if details[:reason].present? %>
+                        <% notes << details[:message] if details[:message].present? %>
+                        <% notes << details[:upstream_error] if details[:upstream_error].present? %>
+                        <% notes << "heuristic" if details[:heuristic] %>
+                        <% notes << "mock" if details[:mock] %>
+                        <% notes << meta[:error] if meta[:error].present? %>
+                        <tr>
+                          <td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-100"><%= stage.label %></td>
+                          <td class="px-3 py-2 text-slate-600 dark:text-slate-300"><%= meta[:status] || (meta[:degraded] ? "degraded" : "ok") %></td>
+                          <td class="px-3 py-2 text-slate-600 dark:text-slate-300"><%= meta[:duration_ms] ? "#{meta[:duration_ms]} ms" : "n/a" %></td>
+                          <td class="px-3 py-2 text-slate-600 dark:text-slate-300"><%= notes.compact.uniq.join(" / ").presence || "—" %></td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="grid gap-3 md:grid-cols-2">
+                <% github = snapshot[:github_payload] || {} %>
+                <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">GitHub Payload</h3>
+                  <% profile = github[:profile] || {} %>
+                  <% if profile.present? %>
+                    <ul class="mt-2 space-y-1">
+                      <li><span class="font-semibold">Login:</span> @<%= profile[:login] %></li>
+                      <li><span class="font-semibold">Name:</span> <%= profile[:name] %></li>
+                      <li><span class="font-semibold">Followers:</span> <%= profile[:followers] %></li>
+                      <li><span class="font-semibold">Public Repos:</span> <%= profile[:public_repos] %></li>
+                    </ul>
+                    <% if github[:summary].present? %>
+                      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400"><%= github[:summary] %></p>
+                    <% end %>
+                  <% else %>
+                    <p class="text-slate-500 dark:text-slate-400">No GitHub payload stored.</p>
+                  <% end %>
+                </div>
+
+                <% card = snapshot[:card] || {} %>
+                <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">AI Card</h3>
+                  <% if card.present? %>
+                    <ul class="mt-2 space-y-1">
+                      <li><span class="font-semibold">Title:</span> <%= card[:title] %></li>
+                      <li><span class="font-semibold">Tagline:</span> <%= card[:tagline] %></li>
+                      <li><span class="font-semibold">Vibe:</span> <%= card[:vibe] %></li>
+                      <li><span class="font-semibold">Model:</span> <%= card[:ai_model] %></li>
+                    </ul>
+                  <% else %>
+                    <p class="text-slate-500 dark:text-slate-400">No AI card captured.</p>
+                  <% end %>
+                </div>
+              </div>
+
+              <% ai_meta = @pipeline_snapshot[:ai_metadata] || {} %>
+              <% if ai_meta.present? %>
+                <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">AI Prompt & Response</h3>
+                  <% prompt = @pipeline_snapshot[:ai_prompt] || {} %>
+                  <% if prompt[:system_prompt].present? %>
+                    <details class="mt-2">
+                      <summary class="cursor-pointer text-indigo-600 hover:underline dark:text-indigo-400">System Prompt</summary>
+                      <pre class="mt-2 max-h-64 overflow-auto rounded bg-slate-900 p-3 text-xs text-slate-100"><%= prompt[:system_prompt] %></pre>
+                    </details>
+                  <% end %>
+                  <% if prompt[:context].present? %>
+                    <details class="mt-2">
+                      <summary class="cursor-pointer text-indigo-600 hover:underline dark:text-indigo-400">Prompt Context JSON</summary>
+                      <pre class="mt-2 max-h-64 overflow-auto rounded bg-slate-900 p-3 text-xs text-slate-100"><%= JSON.pretty_generate(prompt[:context]) %></pre>
+                    </details>
+                  <% end %>
+                  <% response_preview = ai_meta.dig(:metadata, :response_preview) %>
+                  <% if response_preview.present? %>
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Response preview: <%= response_preview %></p>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Screenshot Variants</h3>
+                <% if captures.present? %>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-xs dark:divide-slate-700">
+                      <thead class="bg-slate-100 dark:bg-slate-800">
+                        <tr>
+                          <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Variant</th>
+                          <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Local</th>
+                          <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Public URL</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <% captures.each do |variant, data| %>
+                          <tr>
+                            <td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-100"><%= variant %></td>
+                            <td class="px-3 py-2 font-mono text-xs break-all text-slate-500 dark:text-slate-400"><%= data[:local_path] %></td>
+                            <td class="px-3 py-2">
+                              <% if data[:public_url].present? %>
+                                <a class="text-indigo-600 hover:underline dark:text-indigo-400" href="<%= data[:public_url] %>" target="_blank" rel="noopener">Open</a>
+                              <% else %>
+                                <span class="text-slate-500 dark:text-slate-400">n/a</span>
+                              <% end %>
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% else %>
+                  <p class="text-slate-500 dark:text-slate-400">No screenshot captures recorded.</p>
+                <% end %>
+              </div>
+            </div>
+          <% elsif @pipeline_snapshot_logins.any? %>
+            <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Select a login with a saved snapshot to view details.</p>
+          <% else %>
+            <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">No pipeline snapshots found. Run <code>rake pipeline:run[login]</code> to create one.</p>
+          <% end %>
         </div>
 
         <!-- Pipeline Doctor -->

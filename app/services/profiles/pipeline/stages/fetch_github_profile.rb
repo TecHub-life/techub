@@ -24,8 +24,8 @@ module Profiles
           end
 
           context.github_payload = result.value
-          trace(:completed)
-          success_with_context(context.github_payload, metadata: { payload: :github })
+          trace(:completed, summary: summary_for(result.value))
+          success_with_context(context.github_payload, metadata: { payload: :github, summary: summary_for(result.value) })
         rescue StandardError => e
           trace(:failed, error: e.message)
           failure_with_context(e)
@@ -40,6 +40,21 @@ module Profiles
           @user_octokit_client = if user&.access_token.present?
             Octokit::Client.new(access_token: user.access_token)
           end
+        end
+
+        def summary_for(payload)
+          return nil unless payload.is_a?(Hash)
+
+          profile = payload[:profile] || {}
+          {
+            login: profile[:login],
+            followers: profile[:followers],
+            public_repos: profile[:public_repos],
+            public_gists: profile[:public_gists],
+            organizations: Array(payload[:organizations]).size,
+            top_repositories: Array(payload[:top_repositories]).size,
+            pinned_repositories: Array(payload[:pinned_repositories]).size
+          }.compact
         end
       end
     end

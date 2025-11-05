@@ -119,6 +119,7 @@ Rails.application.routes.draw do
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
     post "/pipeline_doctor", to: "admin#pipeline_doctor", as: :pipeline_doctor
+    get "/pipeline_snapshot", to: "admin#pipeline_snapshot", as: :pipeline_snapshot
     resources :admin, only: [] do
       collection do
         post :rebuild_leaderboards

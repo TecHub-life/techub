@@ -8,7 +8,7 @@ module Profiles
           captures = context.captures || {}
           if captures.empty?
             trace(:skipped)
-            return success_with_context({}, metadata: { skipped: true })
+            return success_with_context({}, metadata: { skipped: true, reason: "no_captures" })
           end
 
           trace(:started, count: captures.size)
@@ -43,13 +43,25 @@ module Profiles
 
           context.optimizations = optimizations
           trace(:completed, optimized: optimizations.keys)
-          success_with_context(optimizations, metadata: { optimized: optimizations.length })
+          success_with_context(
+            optimizations,
+            metadata: {
+              optimized: optimizations.length,
+              variants: optimizations.keys,
+              assets: optimizations
+            }
+          )
         rescue StandardError => e
           trace(:failed, error: e.message)
           failure_with_context(e)
         end
 
         private
+
+        def log_service(status, error: nil, metadata: {})
+          summary = metadata.is_a?(Hash) ? metadata.slice(:optimized, :variants, :skipped, :reason) : {}
+          super(status, error: error, metadata: summary)
+        end
 
         def threshold
           (options[:threshold] || ENV["IMAGE_OPT_BG_THRESHOLD"] || 300_000).to_i

@@ -40,14 +40,19 @@ module Profiles
         ),
         build_payload(ctx)
       )
-      unless (200..299).include?(resp.status)
-        return failure(
-          StandardError.new("Gemini AI traits request failed"),
-          metadata: { http_status: resp.status, provider: provider, body_preview: resp.body.to_s[0, 500] }
+      if (200..299).include?(resp.status)
+        attempts << { http_status: resp.status, strict: false }
+        preview = response_text_preview(resp.body)
+      else
+        preview = response_text_preview(resp.body)
+        attempts << { http_status: resp.status, strict: false, error: true, preview: preview }
+        metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(
+          http_status: resp.status,
+          reason: "http_error",
+          body_preview: resp.body.to_s[0, 500]
         )
+        return failure(StandardError.new("Gemini AI traits request failed"), metadata: metadata)
       end
-      attempts << { http_status: resp.status, strict: false }
-      preview = response_text_preview(resp.body)
       json = extract_json_from_response(resp.body)
       cleaned = nil
 
@@ -99,10 +104,10 @@ module Profiles
           attempts.last[:preview] = response_text_preview(resp_strict.body)
         end
 
-        return failure(
-          StandardError.new("ai_traits_unavailable"),
-          metadata: { attempts: attempts, reason: "empty_response" }
-        ) if cleaned.blank?
+        if cleaned.blank?
+          metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(reason: "empty_response")
+          return failure(StandardError.new("ai_traits_unavailable"), metadata: metadata)
+        end
       else
         cleaned = validate_and_normalize(json)
       end
@@ -129,17 +134,15 @@ module Profiles
         end
 
         unless cleaned.present? && constraints_ok?(cleaned)
-          return failure(
-            StandardError.new("ai_traits_invalid"),
-            metadata: { attempts: attempts, reason: "constraints" }
-          )
+          metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(reason: "constraints")
+          return failure(StandardError.new("ai_traits_invalid"), metadata: metadata)
         end
       end
 
-      return failure(
-        StandardError.new("ai_traits_unavailable"),
-        metadata: { attempts: attempts, reason: "empty_output" }
-      ) unless cleaned.present?
+      unless cleaned.present?
+        metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(reason: "empty_output")
+        return failure(StandardError.new("ai_traits_unavailable"), metadata: metadata)
+      end
 
       # Final guardrails and overrides
       apply_overrides!(cleaned)
@@ -190,11 +193,12 @@ module Profiles
       )
 
       unless record.save
-        return failure(StandardError.new("validation failed"), metadata: { errors: record.errors.full_messages })
+        metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(errors: record.errors.full_messages)
+        return failure(StandardError.new("validation failed"), metadata: metadata)
       end
 
       StructuredLogger.info(message: "ai_traits_generated", login: profile.login, provider: provider, model: Gemini::Configuration.model, attempts: attempts) if defined?(StructuredLogger)
-      success(record, metadata: { attempts: attempts })
+      success(record, metadata: ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview))
     rescue Faraday::Error => e
       failure(e)
     end
@@ -202,6 +206,47 @@ module Profiles
     private
 
     attr_reader :profile, :overrides, :provider_override
+
+    def ai_metadata(provider:, attempts:, ctx:, preview: nil)
+      {
+        provider: provider,
+        attempts: attempts,
+        model: Gemini::Configuration.model,
+        prompt_version: PROMPT_VERSION,
+        prompt: prompt_snapshot(ctx),
+        response_preview: best_preview(preview, attempts)
+      }.compact
+    end
+
+    def prompt_snapshot(ctx)
+      {
+        system_prompt: system_prompt,
+        strict_system_prompt: strict_system_prompt,
+        context: ctx
+      }
+    end
+
+    def best_preview(primary, attempts)
+      return primary if primary.present?
+
+      Array(attempts).reverse_each do |attempt|
+        candidate = attempt[:preview]
+        return candidate if candidate.present?
+      end
+      nil
+    end
+
+    def log_service(status, error: nil, metadata: {})
+      summary = if metadata.is_a?(Hash)
+        metadata.slice(:provider, :model, :prompt_version, :reason)
+      else
+        {}
+      end
+      if metadata.is_a?(Hash) && metadata[:attempts].respond_to?(:size)
+        summary[:attempt_count] = metadata[:attempts].size
+      end
+      super(status, error: error, metadata: summary.compact)
+    end
 
     def build_context(record)
       {

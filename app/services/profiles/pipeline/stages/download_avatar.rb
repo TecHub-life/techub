@@ -32,7 +32,7 @@ module Profiles
             ) if defined?(StructuredLogger)
           end
 
-          success_with_context(context.avatar_local_path, metadata: { avatar_url: avatar_url })
+          success_with_context(context.avatar_local_path, metadata: { avatar_url: avatar_url, local_path: context.avatar_local_path })
         rescue StandardError => e
           trace(:failed, error: e.message)
           failure_with_context(e)

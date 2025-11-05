@@ -164,6 +164,11 @@ module Ops
       else
         []
       end
+
+      @pipeline_snapshot_logins = available_pipeline_snapshot_logins
+      preferred_login = params[:pipeline_login].presence&.downcase
+      @pipeline_snapshot_login = preferred_login.presence || @pipeline_snapshot_logins.first
+      @pipeline_snapshot = load_pipeline_snapshot(@pipeline_snapshot_login) if @pipeline_snapshot_login.present?
     end
 
     def update_ai_caps
@@ -416,6 +421,35 @@ module Ops
       redirect_to ops_admin_path(anchor: "pipeline"), notice: "Pipeline doctor enqueued for @#{login}. Results will be emailed to ops."
     end
 
+    def pipeline_snapshot
+      login = params[:login].to_s.downcase
+      file = params[:file].to_s
+
+      if login.blank? || file.blank?
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Login and file are required"
+        return
+      end
+
+      if file.include?("..") || file.include?("/")
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
+        return
+      end
+
+      dir = latest_pipeline_snapshot_dir(login)
+      unless dir
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "No snapshot found for @#{login}"
+        return
+      end
+
+      path = dir.join(file)
+      unless path.exist? && path.file?
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "File not available in snapshot"
+        return
+      end
+
+      send_file path, filename: "#{login}-#{file}"
+    end
+
     private
 
     def tail_log(path, lines)
@@ -423,6 +457,66 @@ module Ops
       return nil unless File.exist?(file_path)
       content = File.read(file_path)
       content.lines.last(lines).join
+    rescue StandardError
+      nil
+    end
+
+    def available_pipeline_snapshot_logins
+      base = Rails.root.join("tmp", "pipeline_runs")
+      Dir[base.join("*")].filter_map do |path|
+        _, login = parse_snapshot_basename(File.basename(path))
+        login
+      end.uniq.sort
+    rescue StandardError
+      []
+    end
+
+    def latest_pipeline_snapshot_dir(login)
+      return nil if login.blank?
+
+      base = Rails.root.join("tmp", "pipeline_runs")
+      pattern = base.join("*-#{login}")
+      Dir[pattern.to_s]
+        .select { |p| File.directory?(p) }
+        .sort
+        .reverse
+        .map { |p| Pathname.new(p) }
+        .first
+    rescue StandardError
+      nil
+    end
+
+    def load_pipeline_snapshot(login)
+      dir = latest_pipeline_snapshot_dir(login)
+      return nil unless dir && dir.exist?
+
+      snapshot = read_snapshot_json(dir.join("pipeline_snapshot.json")) || {}
+      {
+        path: dir,
+        metadata: read_snapshot_json(dir.join("metadata.json")) || {},
+        stage_metadata: read_snapshot_json(dir.join("stage_metadata.json")) || snapshot[:stages] || {},
+        snapshot: snapshot,
+        trace: read_snapshot_json(dir.join("trace.json")),
+        ai_prompt: read_snapshot_json(dir.join("ai_prompt.json")),
+        ai_metadata: read_snapshot_json(dir.join("ai_metadata.json")),
+        files: Dir.children(dir).sort
+      }
+    rescue StandardError
+      nil
+    end
+
+    def parse_snapshot_basename(name)
+      return [ nil, nil ] unless name.is_a?(String)
+      parts = name.split("-", 2)
+      return [ parts[0], parts[1]&.downcase ] if parts.length == 2
+      [ nil, nil ]
+    end
+
+    def read_snapshot_json(path)
+      return nil unless path.exist?
+
+      content = File.read(path)
+      JSON.parse(content, symbolize_names: true)
     rescue StandardError
       nil
     end
