@@ -11,6 +11,26 @@ module Profiles
             return success_with_context(nil, metadata: { skipped: true, reason: "no_local_avatar" })
           end
 
+          service = ActiveStorage::Blob.service
+          if service.is_a?(ActiveStorage::Service::DiskService)
+            public_path = context.avatar_relative_path.presence || relative_path_for(local_path)
+            context.avatar_public_url = public_path
+            context.avatar_upload_metadata = {
+              service: service.name,
+              disk: true,
+              local_path: local_path
+            }.compact
+            trace(:skipped_disk_service, public_path: public_path, service: service.name)
+            return success_with_context(
+              public_path,
+              metadata: {
+                disk_service: true,
+                service: service.name,
+                public_path: public_path
+              }.compact
+            )
+          end
+
           unless File.exist?(local_path)
             trace(:failed, error: "avatar_file_missing", path: local_path)
             return failure_with_context(StandardError.new("avatar_file_missing"), metadata: { path: local_path })
@@ -53,6 +73,18 @@ module Profiles
           Marcel::MimeType.for(Pathname.new(path), fallback: "image/png")
         rescue StandardError
           "image/png"
+        end
+
+        def relative_path_for(path)
+          absolute = Pathname.new(path)
+          public_dir = Rails.root.join("public")
+          if absolute.to_s.start_with?(public_dir.to_s)
+            "/" + absolute.relative_path_from(public_dir).to_s
+          else
+            absolute.to_s
+          end
+        rescue StandardError
+          path
         end
       end
     end
