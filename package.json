@@ -8,7 +8,8 @@
   "devDependencies": {
     "@prettier/plugin-xml": "^3.3.2",
     "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.8"
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "puppeteer": "^24.28.0"
   },
   "scripts": {
     "prettier:check": "prettier --check .",

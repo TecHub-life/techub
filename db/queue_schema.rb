@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_27_002905) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_04_000001) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -90,6 +90,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_27_002905) do
   end
 
   create_table "profile_activities", force: :cascade do |t|
+    t.json "activity_metrics", default: {}, null: false
     t.datetime "created_at", null: false
     t.json "event_breakdown", default: {}
     t.datetime "last_active"
