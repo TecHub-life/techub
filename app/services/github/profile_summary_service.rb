@@ -19,6 +19,7 @@ module Github
 
       # Fetch recent activity
       recent_activity = fetch_recent_activity(github_client)
+      contribution_stats = fetch_contribution_stats(github_client)
 
       # Fetch pinned repositories
       pinned_repos = fetch_pinned_repos(github_client)
@@ -32,7 +33,17 @@ module Github
       # Fetch social accounts and achievements via GraphQL
       social_accounts = fetch_social_accounts(github_client)
 
-      payload = build_payload(user, repos, profile_readme, recent_activity, pinned_repos, active_repo_details, organizations, social_accounts)
+      payload = build_payload(
+        user,
+        repos,
+        profile_readme,
+        recent_activity,
+        pinned_repos,
+        active_repo_details,
+        organizations,
+        social_accounts,
+        contribution_stats
+      )
 
       success(payload)
     rescue Octokit::NotFound => e
@@ -147,6 +158,132 @@ module Github
       []
     end
 
+    def fetch_contribution_stats(github_client)
+      query = <<~GRAPHQL
+        query($login: String!, $from: DateTime!, $to: DateTime!) {
+          user(login: $login) {
+            contributionsCollection(from: $from, to: $to) {
+              totalContributions
+              totalCommitContributions
+              totalPullRequestContributions
+              totalPullRequestReviewContributions
+              totalIssueContributions
+              totalRepositoryContributions
+              restrictedContributionsCount
+              contributionCalendar {
+                weeks {
+                  contributionDays {
+                    date
+                    contributionCount
+                  }
+                }
+              }
+            }
+          }
+        }
+      GRAPHQL
+
+      timeframe_end = Time.current.end_of_day.utc.iso8601
+      timeframe_start = 90.days.ago.beginning_of_day.utc.iso8601
+
+      result = github_client.post "/graphql", {
+        query: query,
+        variables: {
+          login: login,
+          from: timeframe_start,
+          to: timeframe_end
+        }
+      }.to_json
+
+      collection = result.dig(:data, :user, :contributionsCollection)
+      return {} unless collection
+
+      calendar_days = Array(collection.dig(:contributionCalendar, :weeks)).flat_map do |week|
+        Array(week[:contributionDays])
+      end
+
+      streaks = compute_contribution_streaks(calendar_days)
+
+      {
+        "window_days" => 90,
+        "total_contributions_90d" => collection[:totalContributions].to_i,
+        "commit_contributions_90d" => collection[:totalCommitContributions].to_i,
+        "pr_contributions_90d" => collection[:totalPullRequestContributions].to_i,
+        "pr_review_contributions_90d" => collection[:totalPullRequestReviewContributions].to_i,
+        "issue_contributions_90d" => collection[:totalIssueContributions].to_i,
+        "repo_contributions_90d" => collection[:totalRepositoryContributions].to_i,
+        "restricted_contributions_90d" => collection[:restrictedContributionsCount].to_i,
+        "active_weeks_90d" => active_weeks_count(calendar_days),
+        "current_streak" => streaks[:current],
+        "longest_streak" => streaks[:longest]
+      }
+    rescue => e
+      StructuredLogger.debug(message: "Could not fetch contribution stats", login: login, error: e.message) if defined?(StructuredLogger)
+      {}
+    end
+
+    def compute_contribution_streaks(calendar_days)
+      return { current: 0, longest: 0 } if calendar_days.blank?
+
+      days = calendar_days.map do |day|
+        {
+          date: Date.parse(day[:date].to_s),
+          count: day[:contributionCount].to_i
+        } rescue nil
+      end.compact.sort_by { |entry| entry[:date] }
+
+      return { current: 0, longest: 0 } if days.empty?
+
+      longest = 0
+      current = 0
+      current_streak = 0
+      previous_date = nil
+
+      days.each do |entry|
+        if entry[:count] > 0 && (!previous_date || entry[:date] == previous_date + 1)
+          current_streak += 1
+        elsif entry[:count] > 0
+          current_streak = 1
+        else
+          current_streak = 0
+        end
+
+        longest = [longest, current_streak].max
+
+        previous_date = entry[:date]
+      end
+
+      # Compute current streak by walking backwards from last day
+      current = 0
+      prev_date = nil
+      days.reverse_each do |entry|
+        break if entry[:count] <= 0
+        if prev_date.nil? || entry[:date] == prev_date - 1
+          current += 1
+          prev_date = entry[:date]
+        else
+          break
+        end
+      end
+
+      { current: current, longest: longest }
+    end
+
+    def active_weeks_count(calendar_days)
+      return 0 if calendar_days.blank?
+
+      weeks = calendar_days.group_by do |day|
+        date = day[:date].to_s
+        Date.parse(date).cweek rescue nil
+      end
+
+      weeks.count do |_week, days|
+        Array(days).any? { |d| d[:contributionCount].to_i.positive? }
+      end
+    rescue
+      0
+    end
+
     def fetch_social_accounts(github_client)
       query = <<~GRAPHQL
         query($login: String!) {
@@ -177,7 +314,7 @@ module Github
       []
     end
 
-    def build_payload(user, repos, profile_readme, recent_activity, pinned_repos, active_repo_details, organizations, social_accounts)
+    def build_payload(user, repos, profile_readme, recent_activity, pinned_repos, active_repo_details, organizations, social_accounts, contribution_stats)
       top_repositories = repos
         .reject { |repo| repo[:fork] }
         .sort_by { |repo| -repo[:stargazers_count].to_i }
@@ -204,8 +341,14 @@ module Github
         social_accounts: social_accounts,
         languages: language_breakdown,
         profile_readme: profile_readme,
-        recent_activity: recent_activity
+        recent_activity: merge_activity_payload(recent_activity, contribution_stats)
       }
+    end
+
+    def merge_activity_payload(recent_activity, contribution_stats)
+      payload = recent_activity.present? ? recent_activity.deep_dup : {}
+      payload[:contribution_stats] = contribution_stats if contribution_stats.present?
+      payload.presence
     end
 
     def serialize_user(user)

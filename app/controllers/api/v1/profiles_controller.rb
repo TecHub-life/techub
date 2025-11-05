@@ -64,7 +64,8 @@ module Api
             buff_description: card.buff_description,
             weakness: card.weakness,
             weakness_description: card.weakness_description
-          }
+          },
+          activity: serialize_activity(profile.profile_activity)
         }
       end
 
@@ -102,7 +103,8 @@ module Api
                 buff_description: card.buff_description,
                 weakness: card.weakness,
                 weakness_description: card.weakness_description
-              }
+              },
+              activity: serialize_activity(profile.profile_activity)
             }
           end
         }
@@ -119,6 +121,21 @@ module Api
           height: a.height,
           provider: a.provider,
           updated_at: a.updated_at
+        }
+      end
+
+      def serialize_activity(activity)
+        return nil unless activity
+
+        {
+          score: activity.activity_score,
+          total_events: activity.total_events,
+          event_breakdown: activity.event_breakdown,
+          recent_repos: activity.recent_repositories_list,
+          last_active: activity.last_active,
+          activity_metrics: activity.activity_metrics,
+          current_streak: activity.activity_metric_value(:current_streak),
+          longest_streak: activity.activity_metric_value(:longest_streak)
         }
       end
     end
