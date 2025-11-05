@@ -2,6 +2,7 @@ class ProfilePipelineMailer < ApplicationMailer
   def completed
     @user = params[:user]
     @profile = params[:profile]
+    @metadata = params[:metadata] || {}
     mail(to: @user.email, subject: "Your TecHub card is ready for @#{@profile.login}")
   end
 
@@ -9,6 +10,7 @@ class ProfilePipelineMailer < ApplicationMailer
     @user = params[:user]
     @profile = params[:profile]
     @error_message = params[:error_message]
+    @metadata = params[:metadata] || {}
     mail(to: @user.email, subject: "TecHub card failed for @#{@profile.login}")
   end
 end

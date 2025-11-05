@@ -163,7 +163,8 @@ metadata for stories).
 - Production: when Active Storage is configured for DigitalOcean Spaces (see `config/storage.yml`
   and `config/environments/production.rb`), generated images are uploaded after local write and a
   `public_url` is included in results.
-- Toggle in any environment with `GENERATED_IMAGE_UPLOAD=1` to force upload.
+- To exercise real uploads outside production, set `ACTIVE_STORAGE_SERVICE=do_spaces` so the
+  pipeline uses the DO Spaces backend.
 
 Rake output shows remote URLs when available:
 

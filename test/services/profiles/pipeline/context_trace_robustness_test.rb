@@ -14,6 +14,7 @@ class Profiles::Pipeline::ContextTraceRobustnessTest < ActiveSupport::TestCase
     entry = context.trace_entries.first
     assert_equal "test_stage", entry[:stage]
     assert_equal "event", entry[:event]
+    assert entry[:run_id].present?
   end
 
   test "trace handles hash with nil values correctly" do
@@ -28,6 +29,7 @@ class Profiles::Pipeline::ContextTraceRobustnessTest < ActiveSupport::TestCase
     entry = context.trace_entries.first
     assert_equal "test error", entry[:error]
     assert_equal 5, entry[:count]
+    assert entry[:run_id].present?
     assert_nil entry[:details]  # Should not be present after compact
   end
 
@@ -44,6 +46,7 @@ class Profiles::Pipeline::ContextTraceRobustnessTest < ActiveSupport::TestCase
 
     # Verify trace was still recorded
     assert_equal 1, context.trace_entries.length
+    assert context.trace_entries.first[:run_id].present?
   end
 
   test "trace continues to work after an error in one call" do
@@ -57,8 +60,11 @@ class Profiles::Pipeline::ContextTraceRobustnessTest < ActiveSupport::TestCase
 
     # Both should be recorded
     assert_equal 2, context.trace_entries.length
-    assert_equal "stage1", context.trace_entries[0][:stage]
-    assert_equal "stage2", context.trace_entries[1][:stage]
-    assert_equal "success", context.trace_entries[1][:status]
+    first_entry, second_entry = context.trace_entries
+    assert_equal "stage1", first_entry[:stage]
+    assert_equal "stage2", second_entry[:stage]
+    assert_equal "success", second_entry[:status]
+    assert first_entry[:run_id].present?
+    assert_equal first_entry[:run_id], second_entry[:run_id]
   end
 end

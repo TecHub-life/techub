@@ -10,7 +10,9 @@ module Profiles
       return failure(StandardError.new("no_profile")) unless profile.is_a?(::Profile)
       return success([]) if repo_full_names.empty?
 
-      octo = client || Github::AppClientService.call.value
+      client_result = client ? ServiceResult.success(client) : Github::AppClientService.call
+      return client_result if client_result.failure?
+      octo = client_result.value
       created = []
 
       repo_full_names.each do |full_name|
@@ -42,7 +44,11 @@ module Profiles
         end
       end
 
-      success(created)
+      if created.empty?
+        ServiceResult.degraded(created, metadata: { ingested: 0, reason: "no_repos_saved" })
+      else
+        ServiceResult.success(created, metadata: { ingested: created.size })
+      end
     rescue StandardError => e
       failure(e)
     end

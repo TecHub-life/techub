@@ -1,5 +1,9 @@
 module Axiom
-  class IngestService < ApplicationService
+  class IngestService
+    def self.call(...)
+      new(...).call
+    end
+
     def initialize(dataset:, events: [])
       @dataset = dataset.to_s
       @events = Array(events)
@@ -9,10 +13,11 @@ module Axiom
       return ServiceResult.failure(StandardError.new("dataset required")) if dataset.blank?
       return ServiceResult.success(0) if events.empty?
 
-      token = (Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]
-      return ServiceResult.failure(StandardError.new("missing_token")) if token.to_s.strip.empty?
+      cfg = AppConfig.axiom
+      token = cfg[:token]
+      return ServiceResult.failure(StandardError.new("missing_token"), metadata: metadata) if token.to_s.strip.empty?
 
-      base_url = (Rails.application.credentials.dig(:axiom, :base_url) rescue nil) || ENV["AXIOM_BASE_URL"] || "https://api.axiom.co"
+      base_url = cfg[:base_url] || "https://api.axiom.co"
       conn = Faraday.new(url: base_url) do |f|
         f.request :retry
         f.response :raise_error
@@ -23,24 +28,31 @@ module Axiom
         req.headers["Content-Type"] = "application/json"
         req.body = events.to_json
       end
-      ServiceResult.success(resp.status)
+      ServiceResult.success(resp.status, metadata: metadata.merge(base_url: base_url))
     rescue Faraday::ResourceNotFound
       # Optionally create dataset on the fly if missing (guarded by env flag)
-      if ENV["AXIOM_ALLOW_DATASET_CREATE"] == "1"
+      if cfg[:allow_dataset_create]
         begin
           conn.post("/v2/datasets", { name: dataset, description: "techub metrics" })
           retry
         rescue StandardError => e
-          ServiceResult.failure(e)
+          ServiceResult.failure(e, metadata: metadata)
         end
       else
-        ServiceResult.failure(StandardError.new("dataset_not_found"))
+        ServiceResult.failure(StandardError.new("dataset_not_found"), metadata: metadata)
       end
     rescue StandardError => e
-      ServiceResult.failure(e)
+      ServiceResult.failure(e, metadata: metadata)
     end
 
     private
     attr_reader :dataset, :events
+
+    def metadata
+      {
+        dataset: dataset,
+        event_count: events.size
+      }
+    end
   end
 end

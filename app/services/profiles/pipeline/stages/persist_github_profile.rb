@@ -15,9 +15,8 @@ module Profiles
 
           ActiveRecord::Base.transaction do
             assign_profile_attributes(profile, payload)
-            # Only use locally downloaded avatar; never fall back to GitHub URLs
-            # If download failed, avatar_url will be nil and views will use placeholder
-            profile.avatar_url = context.avatar_local_path.presence
+            # Prefer Spaces-hosted avatar, fall back to downloaded relative path if upload failed.
+            profile.avatar_url = context.avatar_public_url.presence || context.avatar_relative_path.presence
             profile.last_synced_at = Time.current
             profile.save!
 
@@ -32,8 +31,8 @@ module Profiles
           profile.update_columns(last_sync_error: nil, last_sync_error_at: nil)
 
           context.profile = profile
-          trace(:completed, profile_id: profile.id)
-          success_with_context(profile, metadata: { profile_id: profile.id })
+          trace(:completed, profile_id: profile.id, avatar_url: profile.avatar_url)
+          success_with_context(profile, metadata: { profile_id: profile.id, avatar_url: profile.avatar_url })
         rescue StandardError => e
           record_sync_error(payload, e)
           trace(:failed, error: e.message)

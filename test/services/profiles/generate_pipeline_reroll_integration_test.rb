@@ -45,7 +45,9 @@ class GeneratePipelineRerollIntegrationTest < ActiveSupport::TestCase
       id: :record_submitted_scrape,
       label: "Record submitted scrape",
       service: Profiles::Pipeline::Stages::RecordSubmittedScrape,
-      options: {}
+      options: {},
+      description: "test scrape",
+      produces: []
     )
 
     ran_ai = false
@@ -65,7 +67,9 @@ class GeneratePipelineRerollIntegrationTest < ActiveSupport::TestCase
           ServiceResult.success(true)
         end
       end,
-      options: { variants: %w[og card] }
+      options: { variants: %w[og card] },
+      description: "capture stub",
+      produces: []
     )
 
     optimize_stub = stage_stub(:optimize_card_images) { |context:| ran_caps = true; ServiceResult.success(true) }
@@ -90,7 +94,9 @@ class GeneratePipelineRerollIntegrationTest < ActiveSupport::TestCase
           block.call(context: context, **options)
         end
       end,
-      options: {}
+      options: {},
+      description: "#{id} stub",
+      produces: []
     )
   end
 

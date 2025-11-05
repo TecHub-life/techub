@@ -114,61 +114,48 @@ module Ops
 
       # Axiom links (datasets + traces)
       begin
-        # Prefer explicit URLs from credentials/ENV
-        dataset_url = (Rails.application.credentials.dig(:axiom, :dataset_url) rescue nil) || ENV["AXIOM_DATASET_URL"]
-        metrics_dataset_url = (Rails.application.credentials.dig(:axiom, :metrics_dataset_url) rescue nil) || ENV["AXIOM_METRICS_DATASET_URL"]
-        traces_url = (Rails.application.credentials.dig(:axiom, :traces_url) rescue nil) || ENV["AXIOM_TRACES_URL"]
+        axiom_cfg = AppConfig.axiom
+        forwarding = AppConfig.axiom_forwarding
+        queue_stats = StructuredLogger.forwarding_stats
 
-        # If URLs are not provided, construct from org/dataset vars when present
-        org = (Rails.application.credentials.dig(:axiom, :org) rescue nil) || ENV["AXIOM_ORG"]
-        dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
-        metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
-        service_name = "techub"
-
-        # Prefer canonical dataset UI paths (stable)
-        if org.present? && dataset.present?
-          dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{dataset}"
-        end
-        if org.present() && metrics_dataset.present?
-          metrics_dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}"
-        end
-        # Traces root (service filter applied via query param)
-        otel_configured = begin
-          token_present = ((Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]).to_s.strip != ""
-          endpoint_present = ((Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || ENV["OTEL_EXPORTER_OTLP_ENDPOINT"]).to_s.strip != ""
-          token_present && endpoint_present
-        rescue StandardError
-          false
+        traces_url = if axiom_cfg[:token].present? && axiom_cfg[:otel_endpoint].present?
+          axiom_cfg[:traces_url]
         end
 
-        base_traces = org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
-        traces_url ||= base_traces
-        traces_url = service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
-
-        # Hide traces link if OTEL isn't configured
-        traces_url = nil unless otel_configured
-
-        @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
-
-        # Expose status booleans for Ops visibility
-        axiom_enabled = (Rails.env.production? || ENV["AXIOM_ENABLED"] == "1") && ENV["AXIOM_DISABLE"] != "1"
-        axiom_token_present = ((Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]).to_s.strip != ""
-        axiom_dataset_present = ((Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]).to_s.strip != ""
-        metrics_dataset_present = ((Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]).to_s.strip != ""
-        axiom_base_url = ((Rails.application.credentials.dig(:axiom, :base_url) rescue nil) || ENV["AXIOM_BASE_URL"] || "https://api.axiom.co").to_s
-        otel_endpoint = ((Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || ENV["OTEL_EXPORTER_OTLP_ENDPOINT"]).to_s
+        @axiom = {
+          dataset_url: axiom_cfg[:dataset_url],
+          metrics_dataset_url: axiom_cfg[:metrics_dataset_url],
+          traces_url: traces_url
+        }
 
         @axiom_status = {
-          forwarding_enabled: axiom_enabled,
-          token_present: axiom_token_present,
-          dataset_present: axiom_dataset_present,
-          metrics_dataset_present: metrics_dataset_present,
-          base_url: axiom_base_url,
-          otel_endpoint: otel_endpoint,
-          env: Rails.env
+          env: AppConfig.environment,
+          forwarding_allowed: forwarding[:allowed],
+          forwarding_reason: forwarding[:reason],
+          token_present: forwarding[:token_present],
+          dataset_present: forwarding[:dataset_present],
+          metrics_dataset_present: axiom_cfg[:metrics_dataset].present?,
+          auto_forward: forwarding[:auto_forward],
+          disabled: forwarding[:disabled],
+          base_url: axiom_cfg[:base_url],
+          otel_endpoint: axiom_cfg[:otel_endpoint],
+          queue: queue_stats
         }
       rescue StandardError
         @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
+        @axiom_status = {
+          env: AppConfig.environment,
+          forwarding_allowed: false,
+          forwarding_reason: :error,
+          token_present: false,
+          dataset_present: false,
+          metrics_dataset_present: false,
+          auto_forward: false,
+          disabled: false,
+          base_url: nil,
+          otel_endpoint: nil,
+          queue: StructuredLogger.forwarding_stats
+        }
       end
 
       # Pipeline visibility (read-only manifest)
@@ -177,6 +164,11 @@ module Ops
       else
         []
       end
+
+      @pipeline_snapshot_logins = available_pipeline_snapshot_logins
+      preferred_login = params[:pipeline_login].presence&.downcase
+      @pipeline_snapshot_login = preferred_login.presence || @pipeline_snapshot_logins.first
+      @pipeline_snapshot = load_pipeline_snapshot(@pipeline_snapshot_login) if @pipeline_snapshot_login.present?
     end
 
     def update_ai_caps
@@ -362,7 +354,7 @@ module Ops
 
     # Direct ingest to a specified dataset (bypasses logger forwarding gates)
     def axiom_direct_ingest
-      dataset = params[:dataset].to_s.presence || ((Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"])
+      dataset = params[:dataset].to_s.presence || AppConfig.axiom[:dataset]
       body = params[:body].to_s
       if dataset.to_s.strip.empty?
         return redirect_to ops_admin_path(anchor: "ai"), alert: "Dataset is required"
@@ -429,13 +421,139 @@ module Ops
       redirect_to ops_admin_path(anchor: "pipeline"), notice: "Pipeline doctor enqueued for @#{login}. Results will be emailed to ops."
     end
 
+    def pipeline_snapshot
+      login = params[:login].to_s.downcase
+      file = params[:file].to_s
+
+      if login.blank? || file.blank?
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Login and file are required"
+        return
+      end
+
+      unless valid_safe_filename?(file)
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
+        return
+      end
+
+      dir = latest_pipeline_snapshot_dir(login)
+      unless dir&.exist?
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "No snapshot found for @#{login}"
+        return
+      end
+
+      dir_path = begin
+        dir.realpath
+      rescue StandardError
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "No snapshot found for @#{login}"
+        return
+      end
+      path = dir_path.join(file)
+
+      unless path_within_directory?(dir_path, path)
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
+        return
+      end
+
+      unless path.exist? && path.file?
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "File not available in snapshot"
+        return
+      end
+
+      real_path = begin
+        path.realpath
+      rescue StandardError
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "File not available in snapshot"
+        return
+      end
+      unless path_within_directory?(dir_path, real_path)
+        redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
+        return
+      end
+
+      send_file real_path, filename: "#{login}-#{file}"
+    end
+
     private
+
+    def valid_safe_filename?(name)
+      return false unless name.is_a?(String) && name.present?
+      return false if name.include?("\0") || name.include?("..")
+      return false unless name.match?(/\A[a-zA-Z0-9](?:[a-zA-Z0-9_.-]*[a-zA-Z0-9])?\z/)
+      true
+    end
+
+    def path_within_directory?(base, target)
+      relative = target.cleanpath.relative_path_from(base.cleanpath)
+      relative.each_filename.none? { |segment| segment == ".." }
+    rescue ArgumentError
+      false
+    end
 
     def tail_log(path, lines)
       file_path = Rails.root.join(path)
       return nil unless File.exist?(file_path)
       content = File.read(file_path)
       content.lines.last(lines).join
+    rescue StandardError
+      nil
+    end
+
+    def available_pipeline_snapshot_logins
+      base = Rails.root.join("tmp", "pipeline_runs")
+      Dir[base.join("*")].filter_map do |path|
+        _, login = parse_snapshot_basename(File.basename(path))
+        login
+      end.uniq.sort
+    rescue StandardError
+      []
+    end
+
+    def latest_pipeline_snapshot_dir(login)
+      return nil if login.blank?
+
+      base = Rails.root.join("tmp", "pipeline_runs")
+      pattern = base.join("*-#{login}")
+      Dir[pattern.to_s]
+        .select { |p| File.directory?(p) }
+        .sort
+        .reverse
+        .map { |p| Pathname.new(p) }
+        .first
+    rescue StandardError
+      nil
+    end
+
+    def load_pipeline_snapshot(login)
+      dir = latest_pipeline_snapshot_dir(login)
+      return nil unless dir && dir.exist?
+
+      snapshot = read_snapshot_json(dir.join("pipeline_snapshot.json")) || {}
+      {
+        path: dir,
+        metadata: read_snapshot_json(dir.join("metadata.json")) || {},
+        stage_metadata: read_snapshot_json(dir.join("stage_metadata.json")) || snapshot[:stages] || {},
+        snapshot: snapshot,
+        trace: read_snapshot_json(dir.join("trace.json")),
+        ai_prompt: read_snapshot_json(dir.join("ai_prompt.json")),
+        ai_metadata: read_snapshot_json(dir.join("ai_metadata.json")),
+        files: Dir.children(dir).sort
+      }
+    rescue StandardError
+      nil
+    end
+
+    def parse_snapshot_basename(name)
+      return [ nil, nil ] unless name.is_a?(String)
+      parts = name.split("-", 2)
+      return [ parts[0], parts[1]&.downcase ] if parts.length == 2
+      [ nil, nil ]
+    end
+
+    def read_snapshot_json(path)
+      return nil unless path.exist?
+
+      content = File.read(path)
+      JSON.parse(content, symbolize_names: true)
     rescue StandardError
       nil
     end

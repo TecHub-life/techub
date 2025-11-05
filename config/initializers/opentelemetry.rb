@@ -1,5 +1,12 @@
 # OpenTelemetry setup (safe to load even if gems are missing)
 begin
+  # Allow environments to short-circuit OTEL entirely (e.g., when the upstream endpoint is broken).
+  otel_disabled = ActiveModel::Type::Boolean.new.cast(ENV["OTEL_DISABLED"])
+  if otel_disabled
+    warn "[OTEL] Disabled via OTEL_DISABLED env flag." if ENV["OTEL_DEBUG"] == "1"
+    raise LoadError
+  end
+
   require "opentelemetry/sdk"
   require "opentelemetry/exporter/otlp"
   require "opentelemetry/instrumentation/all"

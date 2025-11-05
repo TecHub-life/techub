@@ -1,5 +1,50 @@
 require "json"
 require "fileutils"
+require "net/http"
+
+namespace :pipeline do
+  desc "Run the full pipeline locally and export artifacts. Usage: rake 'pipeline:run[login,host]'"
+  task :run, [ :login, :host ] => :environment do |_, args|
+    login = (args[:login] || ENV["LOGIN"] || "loftwah").to_s.downcase
+    host = args[:host].presence || ENV["PIPELINE_HOST"].presence || default_pipeline_host
+
+    force = pipeline_truthy_env("PIPELINE_FORCE", default: false)
+    save_artifacts = pipeline_truthy_env("PIPELINE_SAVE", default: true)
+
+    ai_mode_env = ENV["PIPELINE_AI_MODE"].presence
+    ai_mode = if force
+      "real"
+    else
+      ai_mode_env.presence || "mock"
+    end
+
+    screenshots_mode = ENV["PIPELINE_SCREENSHOTS_MODE"].presence || ENV["PIPELINE_SCREENSHOTS"].presence
+
+    overrides = {}
+    overrides[:ai_mode] = ai_mode if ai_mode.present?
+    overrides[:screenshots_mode] = screenshots_mode if screenshots_mode.present?
+
+    puts "Running pipeline for @#{login} (host=#{host}, ai_mode=#{overrides[:ai_mode] || 'default'})..."
+    check = pipeline_endpoint_check(host, login)
+    unless check[:ok]
+      warn check[:error]
+      warn check[:suggestion] if check[:suggestion]
+      exit 1
+    end
+    result = Profiles::GeneratePipelineService.call(login: login, host: host, overrides: overrides)
+
+    output_dir = pipeline_run_output_dir(login)
+    if save_artifacts
+      Profiles::Pipeline::SnapshotWriter.call(result: result, output_dir: output_dir, copy_files: true)
+      puts "Artifacts saved to #{output_dir}"
+    else
+      puts "Artifacts not saved (PIPELINE_SAVE disabled). Intended path: #{output_dir}"
+    end
+
+    print_pipeline_summary(result, output_dir)
+    exit 1 if result.failure?
+  end
+end
 
 namespace :profiles do
   desc "Run full pipeline via service (AI OFF by default)"
@@ -157,4 +202,131 @@ def copy_pipeline_captures(value, destination)
   rescue StandardError
     # Ignore copy errors; paths remain available in JSON.
   end
+end
+
+def pipeline_truthy_env(key, default:)
+  raw = ENV[key]
+  return default if raw.nil?
+
+  %w[1 true yes on].include?(raw.to_s.strip.downcase)
+end
+
+def pipeline_run_output_dir(login)
+  safe_login = login.to_s.downcase
+  timestamp = Time.current.utc.strftime("%Y%m%d%H%M%S")
+  Rails.root.join("tmp", "pipeline_runs", "#{timestamp}-#{safe_login}")
+end
+
+def print_pipeline_summary(result, output_dir)
+  status = result.respond_to?(:status) ? result.status : (result.success? ? :ok : :failed)
+  metadata = result.respond_to?(:metadata) ? result.metadata || {} : {}
+
+  puts "Pipeline status: #{status}"
+  run_id = fetch_hash_value(metadata, :run_id)
+  puts "Run ID: #{run_id}" if run_id.present?
+  duration = fetch_hash_value(metadata, :duration_ms)
+  puts "Duration: #{duration}ms" if duration
+
+  if result.success?
+    value = result.value
+    if value.is_a?(Hash)
+      puts "Card ID: #{value[:card_id]}" if value[:card_id]
+      shots = fetch_hash_value(value, :screenshots)
+      puts "Screenshots: #{shots.keys.join(', ')}" if shots.is_a?(Hash) && shots.any?
+    end
+  else
+    error = result.error
+    puts "Error: #{error.message}" if error.respond_to?(:message)
+  end
+
+  degraded = fetch_hash_value(metadata, :degraded_steps)
+  if degraded.present?
+    puts "Degraded stages:"
+    Array(degraded).each do |entry|
+      stage = fetch_hash_value(entry, :stage)
+      info = fetch_hash_value(entry, :metadata)
+      reason = fetch_hash_value(info, :reason) || fetch_hash_value(info, :message) || fetch_hash_value(info, :upstream_error)
+      puts "  - #{stage}: #{reason || 'degraded'}"
+    end
+  end
+
+  stages = fetch_hash_value(metadata, :stage_metadata)
+  if stages.present?
+    puts "Stage breakdown:"
+    Profiles::GeneratePipelineService::STAGES.each do |stage|
+      data = stage_metadata_lookup(stages, stage.id)
+      next unless data
+
+      stage_status = fetch_hash_value(data, :status) || (fetch_hash_value(data, :degraded) ? :degraded : :ok)
+      stage_duration = fetch_hash_value(data, :duration_ms)
+      stage_error = fetch_hash_value(data, :error)
+      note = stage_note_for(data)
+
+      line = "  - #{stage.label}: #{stage_status}"
+      line += " (#{stage_duration}ms)" if stage_duration
+      line += " - #{note}" if note.present?
+      line += " (error: #{stage_error})" if stage_error.present?
+      puts line
+    end
+  end
+
+  if output_dir && File.directory?(output_dir)
+    puts "Snapshot directory: #{output_dir}"
+  end
+end
+
+def stage_metadata_lookup(stages, stage_id)
+  fetch_hash_value(stages, stage_id)
+end
+
+def stage_note_for(data)
+  meta = fetch_hash_value(data, :metadata)
+  return unless meta.is_a?(Hash)
+
+  notes = []
+  notes << fetch_hash_value(meta, :reason)
+  notes << fetch_hash_value(meta, :message)
+  notes << fetch_hash_value(meta, :upstream_error)
+  notes << "heuristic" if fetch_hash_value(meta, :heuristic)
+  notes << "mock" if fetch_hash_value(meta, :mock)
+  notes.compact!
+  return nil if notes.empty?
+
+  notes.uniq.join(" / ")
+end
+
+def fetch_hash_value(obj, key)
+  return nil unless obj.is_a?(Hash)
+
+  obj[key] || obj[key.to_s] || obj[key.to_sym]
+end
+
+def pipeline_endpoint_check(host, login)
+  uri = URI.parse(host)
+  unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+    return { ok: false, error: "Invalid host for pipeline: #{host}" }
+  end
+
+  path = "/cards/#{login}/card"
+  request_uri = uri.dup
+  request_uri.path = File.join(uri.path.to_s.sub(/\/\z/, ""), path)
+  request_uri.query = nil
+
+  Net::HTTP.start(request_uri.host, request_uri.port, use_ssl: request_uri.scheme == "https", open_timeout: 3, read_timeout: 3) do |http|
+    response = http.head(request_uri.request_uri)
+    code = response.code.to_i
+    if code >= 200 && code < 600
+      return { ok: true }
+    end
+  end
+
+  { ok: false, error: "Pipeline host #{host} responded unexpectedly" }
+rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
+  {
+    ok: false,
+    error: "Pipeline host #{host} is not reachable (#{e.class.name}: #{e.message})",
+    suggestion: "Start the application server so Puppeteer can capture screenshots."
+  }
+rescue URI::InvalidURIError => e
+  { ok: false, error: "Invalid pipeline host: #{host} (#{e.message})" }
 end

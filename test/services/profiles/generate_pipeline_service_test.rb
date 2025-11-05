@@ -26,6 +26,8 @@ class GeneratePipelineServiceTest < ActiveSupport::TestCase
     assert_equal stubbed_stages.map(&:id), calls
     assert_equal "loftwah", result.value[:login]
     assert_equal "http://example.com", result.metadata[:host]
+    assert result.metadata[:run_id].present?
+    assert result.metadata[:duration_ms].is_a?(Integer)
     trace_stages = result.metadata[:trace].map { |entry| entry[:stage].to_sym }.uniq
     assert_includes trace_stages, :pipeline
     stubbed_stages.each { |stage| assert_includes trace_stages, stage.id }
@@ -58,6 +60,67 @@ class GeneratePipelineServiceTest < ActiveSupport::TestCase
     assert_equal "boom", result.metadata[:upstream][:reason]
     stages_in_trace = result.metadata[:trace].map { |entry| entry[:stage].to_sym }
     assert_includes stages_in_trace, failing_stage.id
+  end
+
+  test "marks pipeline degraded when a stage degrades" do
+    degraded_stage = Profiles::GeneratePipelineService::STAGES.second
+
+    stubbed_stages = Profiles::GeneratePipelineService::STAGES.map do |stage|
+      behaviour = if stage == degraded_stage
+        ->(context:, **_) do
+          context.trace(stage.id, :stubbed)
+          ServiceResult.degraded(true, metadata: { reason: "skip" })
+        end
+      else
+        ->(context:, **_) do
+          context.trace(stage.id, :stubbed)
+          ServiceResult.success(true)
+        end
+      end
+
+      stage_dup(stage, behaviour)
+    end
+
+    redefine_pipeline_stages(stubbed_stages)
+    result = Profiles::GeneratePipelineService.call(login: "loftwah")
+
+    assert result.success?
+    assert result.degraded?
+    assert_equal degraded_stage.id, result.metadata[:degraded_steps].first[:stage]
+  end
+
+  test "includes stage metadata and snapshot output" do
+    stubbed_stages = Profiles::GeneratePipelineService::STAGES.map do |stage|
+      stage_dup(stage, ->(context:, **_) {
+        context.trace(stage.id, :stubbed)
+        ServiceResult.success({ stage: stage.id }, metadata: { foo: stage.id })
+      })
+    end
+    redefine_pipeline_stages(stubbed_stages)
+
+    result = Profiles::GeneratePipelineService.call(login: "loftwah")
+
+    assert result.success?
+    stage_meta = result.metadata[:stage_metadata]
+    assert stage_meta.present?
+    first_stage = stubbed_stages.first.id
+    snapshot_entry = stage_meta[first_stage]
+    assert_equal :ok, snapshot_entry[:status]
+    assert_equal first_stage, snapshot_entry[:metadata][:foo]
+
+    pipeline_snapshot = result.metadata[:pipeline_snapshot]
+    assert pipeline_snapshot[:stages][first_stage].present?
+    assert_equal snapshot_entry[:metadata][:foo], pipeline_snapshot[:stages][first_stage][:metadata][:foo]
+  end
+
+  test "describe exposes pipeline metadata" do
+    description = Profiles::GeneratePipelineService.describe
+
+    assert_equal Profiles::GeneratePipelineService::STAGES.size, description.size
+    first = description.first
+    assert_includes first.keys, :id
+    assert_includes first.keys, :label
+    assert_includes first.keys, :service_name
   end
 
   test "records pipeline events for each stage" do
@@ -100,7 +163,10 @@ class GeneratePipelineServiceTest < ActiveSupport::TestCase
           proc.call(context: context, **options)
         end
       end,
-      options: stage.options
+      options: stage.options,
+      gated_by: stage.gated_by,
+      description: stage.description,
+      produces: stage.produces
     )
   end
 
