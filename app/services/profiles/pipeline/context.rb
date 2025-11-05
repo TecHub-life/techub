@@ -113,7 +113,23 @@ module Profiles
       def card_snapshot
         return unless card
 
-        card.attributes.slice(*CARD_KEYS)
+        attrs =
+          if card.respond_to?(:serializable_hash)
+            card.serializable_hash
+          elsif card.respond_to?(:attributes)
+            card.attributes
+          elsif card.respond_to?(:to_h)
+            card.to_h
+          else
+            card
+          end
+
+        return unless attrs.respond_to?(:slice)
+
+        attrs = attrs.stringify_keys if attrs.respond_to?(:stringify_keys)
+        attrs.slice(*CARD_KEYS)
+      rescue StandardError
+        nil
       end
 
       def scrape_snapshot

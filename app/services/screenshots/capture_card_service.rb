@@ -123,7 +123,7 @@ module Screenshots
       end
 
       public_url = nil
-      if Storage::ServiceProfile.remote_service?
+      if upload_enabled? && Storage::ServiceProfile.remote_service?
         begin
           upload = Storage::ActiveStorageUploadService.call(
             path: path.to_s,
@@ -164,6 +164,14 @@ module Screenshots
 
     def mime_type
       type == "png" ? "image/png" : "image/jpeg"
+    end
+
+    def upload_enabled?
+      return true if Rails.env.production?
+
+      AppSetting.get_bool(:generated_image_upload, default: true)
+    rescue StandardError
+      false
     end
 
     # Upload support is governed strictly by Active Storage configuration.

@@ -430,7 +430,7 @@ module Ops
         return
       end
 
-      if file.include?("..") || file.include?("/")
+      unless file.match?(/\A[a-zA-Z0-9_.-]+\z/)
         redirect_to ops_admin_path(anchor: "pipeline"), alert: "Invalid file requested"
         return
       end
