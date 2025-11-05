@@ -8,6 +8,13 @@ module Profiles
       started = Time.current
       cutoff = Time.current - stale_after
 
+      StructuredLogger.info(
+        { message: "refresh_stale_scan_started", stale_after: stale_after.to_i, limit: limit },
+        component: "job",
+        event: "pipeline.refresh_stale_scan_started",
+        ops_details: { job: self.class.name, limit: limit, stale_after: stale_after.to_i }
+      )
+
       stale = Profile.where("last_synced_at IS NULL OR last_synced_at < ?", cutoff)
                      .order(:last_synced_at)
                      .limit(limit.to_i)
@@ -19,7 +26,13 @@ module Profiles
         count += 1
       end
 
-      StructuredLogger.info(message: "refresh_stale_enqueued", count: count, duration_ms: ((Time.current - started) * 1000).to_i)
+      duration_ms = ((Time.current - started) * 1000).to_i
+      StructuredLogger.info(
+        { message: "refresh_stale_enqueued", count: count, duration_ms: duration_ms },
+        component: "job",
+        event: "pipeline.refresh_stale_enqueued",
+        ops_details: { job: self.class.name, count: count, duration_ms: duration_ms }
+      )
     end
   end
 end
