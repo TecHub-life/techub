@@ -6,8 +6,10 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
 ## Logs → Axiom
 
 - Current logging is JSON to STDOUT via `config/initializers/structured_logging.rb`.
-- If `AXIOM_TOKEN` and `AXIOM_DATASET` are set, logs are also sent to Axiom (best-effort) via the
-  shared ingest client.
+- `AppConfig.axiom` centralises token, dataset, region, and trace URLs; the logger and ops panel read
+  through it so runtime and doctor output stay consistent.
+- If tokens/datasets are present, logs are forwarded to Axiom (best-effort) when
+  `AppConfig.axiom_forwarding(force: false)[:allowed]` resolves to `true`.
 - Configure (env or Rails credentials):
   - `AXIOM_TOKEN`: Axiom personal or ingest token (sensitive)
   - `AXIOM_ORG`: your org slug (e.g., `echosight-7xtu`) — non‑sensitive
@@ -29,6 +31,12 @@ Quick doctor
 
 ```bash
 bin/rails axiom:doctor
+```
+
+- Exercise the StructuredLogger queue and forced/async delivery:
+
+```bash
+bin/rails axiom:runtime_doctor
 ```
 
 - Emit StructuredLogger smoke (uses force_axiom):

@@ -398,7 +398,9 @@
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Axiom / OTEL Status</h3>
             <div class="flex flex-wrap gap-2 text-xs">
               <% if defined?(@axiom_status) && @axiom_status.present? %>
-                <span class="rounded bg-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-100 px-2 py-0.5 text-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-800 dark:bg-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-900/30 dark:text-<%= @axiom_status[:forwarding_enabled] ? 'emerald' : 'slate' %>-300">Forwarding <%= @axiom_status[:forwarding_enabled] ? 'On' : 'Off' %></span>
+                <% allowed = @axiom_status[:forwarding_allowed] %>
+                <span class="rounded bg-<%= allowed ? 'emerald' : 'red' %>-100 px-2 py-0.5 text-<%= allowed ? 'emerald' : 'red' %>-800 dark:bg-<%= allowed ? 'emerald' : 'red' %>-900/30 dark:text-<%= allowed ? 'emerald' : 'red' %>-300">Forwarding <%= allowed ? 'Allowed' : 'Blocked' %></span>
+                <span class="rounded bg-slate-100 px-2 py-0.5 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Reason <%= @axiom_status[:forwarding_reason] %></span>
                 <span class="rounded bg-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-100 px-2 py-0.5 text-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-800 dark:bg-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-900/30 dark:text-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-300">Token <%= @axiom_status[:token_present] ? 'Present' : 'Missing' %></span>
                 <span class="rounded bg-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-100 px-2 py-0.5 text-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-800 dark:bg-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-900/30 dark:text-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-300">Logs dataset <%= @axiom_status[:dataset_present] ? 'Set' : 'Unset' %></span>
                 <span class="rounded bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-100 px-2 py-0.5 text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-800 dark:bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-900/30 dark:text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-300">Metrics dataset <%= @axiom_status[:metrics_dataset_present] ? 'Set' : 'Unset' %></span>
@@ -412,7 +414,15 @@
                 <span class="rounded bg-slate-100 px-2 py-0.5 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Status unavailable</span>
               <% end %>
             </div>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Forwarding is automatic in production or when <code>AXIOM_ENABLED=1</code> and not <code>AXIOM_DISABLE=1</code>.</p>
+            <% if defined?(@axiom_status) && @axiom_status.present? %>
+              <% queue = @axiom_status[:queue] || {} %>
+              <dl class="mt-2 grid gap-1 text-xs text-slate-500 dark:text-slate-400">
+                <div>Queue: enqueued=<%= queue[:enqueued] || 0 %>, delivered=<%= queue[:delivered] || 0 %>, pending=<%= queue[:pending] || 0 %></div>
+                <div>Last delivery: <%= queue[:last_delivery]&.dig(:at) || '—' %></div>
+                <div>Last error: <%= queue[:last_error] || '—' %></div>
+              </dl>
+            <% end %>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Forwarding is automatic in production or when <code>AXIOM_ENABLED=1</code> and not <code>AXIOM_DISABLE=1</code>. Run <code>rake axiom:runtime_doctor</code> to exercise the StructuredLogger queue end-to-end.</p>
           </div>
 
           <div>

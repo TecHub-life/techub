@@ -58,6 +58,56 @@ module Profiles
       stubs.verify_stubbed_calls
     end
 
+    test "fills missing tags without introducing duplicates" do
+      payload = {
+        title: "The Tag Wrangler",
+        tagline: "Knits calm pipelines out of noisy repos.",
+        short_bio: "Short bio",
+        long_bio: "Long bio" * 10,
+        buff: "Signal Hunter",
+        buff_description: "Finds the most important threads in chaotic systems.",
+        weakness: "Noisy Coffee",
+        weakness_description: "Too many late night caffeine-fueled commits.",
+        vibe: "The Creator",
+        vibe_description: "Inventive maker energy with steady delivery.",
+        special_move: "Refactor Surge",
+        special_move_description: "Spins up confident refactors overnight.",
+        flavor_text: "Ships quiet excellence.",
+        tags: %w[coder dev maker],
+        attack: 70,
+        defense: 72,
+        speed: 75,
+        playing_card: "Queen of ♣",
+        spirit_animal: Motifs::Catalog.spirit_animal_names.first,
+        archetype: Motifs::Catalog.archetype_names.first
+      }
+
+      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
+          body = { candidates: [ { content: { parts: [ { text: payload.to_json } ] }, finishReason: "STOP" } ] }
+          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
+        end
+      end
+
+      dummy_conn = Faraday.new do |f|
+        f.request :json
+        f.response :json, content_type: /json/
+        f.adapter :test, stubs
+      end
+
+      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
+        Gemini::Configuration.stub :provider, "ai_studio" do
+          result = Profiles::SynthesizeAiProfileService.call(profile: @profile)
+          assert result.success?, "expected success, got: #{result.error&.message}"
+          card = @profile.reload.profile_card
+          assert_equal 6, Array(card.tags).length
+          assert_equal Array(card.tags).uniq.length, Array(card.tags).length
+        end
+      end
+
+      stubs.verify_stubbed_calls
+    end
+
     test "strict re-ask fixes invalid output (tags count)" do
       bad = {
         title: "",

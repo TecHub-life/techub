@@ -1,19 +1,24 @@
 class ServiceResult
-  attr_reader :value, :error, :metadata
+  attr_reader :value, :error, :metadata, :status
 
-  def self.success(value = nil, metadata: {})
-    new(success: true, value: value, metadata: metadata)
+  def self.success(value = nil, metadata: {}, status: :ok)
+    new(success: true, value: value, metadata: metadata, status: status)
   end
 
-  def self.failure(error = nil, metadata: {})
-    new(success: false, error: error, metadata: metadata)
+  def self.degraded(value = nil, metadata: {})
+    new(success: true, value: value, metadata: metadata, status: :degraded)
   end
 
-  def initialize(success:, value: nil, error: nil, metadata: {})
+  def self.failure(error = nil, metadata: {}, status: :failed)
+    new(success: false, error: error, metadata: metadata, status: status)
+  end
+
+  def initialize(success:, value: nil, error: nil, metadata: {}, status: nil)
     @success = success
     @value = value
     @error = error
-    @metadata = metadata
+    @metadata = metadata || {}
+    @status = status || default_status(success)
   end
 
   def success?
@@ -22,6 +27,10 @@ class ServiceResult
 
   def failure?
     !success?
+  end
+
+  def degraded?
+    status == :degraded
   end
 
   def value!
@@ -41,7 +50,14 @@ class ServiceResult
       success: success?,
       value: value,
       error: error,
-      metadata: metadata.merge(additional_metadata)
+      metadata: metadata.merge(additional_metadata || {}),
+      status: status
     )
+  end
+
+  private
+
+  def default_status(success)
+    success ? :ok : :failed
   end
 end

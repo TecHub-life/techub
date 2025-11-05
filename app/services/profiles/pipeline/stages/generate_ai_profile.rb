@@ -4,16 +4,16 @@ module Profiles
       class GenerateAiProfile < BaseStage
         STAGE_ID = :generate_ai_profile
 
-      def call
-        profile = context.profile
-        return failure_with_context(StandardError.new("profile_missing_for_ai")) unless profile
+        def call
+          profile = context.profile
+          return failure_with_context(StandardError.new("profile_missing_for_ai")) unless profile
 
-        if FeatureFlags.enabled?(:ai_text)
-          run_ai_traits(profile)
-        else
-          run_heuristic(profile)
+          if FeatureFlags.enabled?(:ai_text)
+            run_ai_traits(profile)
+          else
+            run_heuristic(profile)
+          end
         end
-      end
 
         private
 
@@ -42,7 +42,10 @@ module Profiles
           if heur.success?
             context.card = profile.profile_card
             trace(:heuristic_completed, card_id: context.card&.id, fallback: true)
-            success_with_context(context.card, metadata: { heuristic: true, partial: true, reason: "ai_traits_unavailable" })
+            degraded_with_context(
+              context.card,
+              metadata: { heuristic: true, reason: "ai_traits_unavailable", fallback: true, upstream_error: last_error&.message }
+            )
           else
             trace(:heuristic_failed, error: heur.error&.message)
             failure_with_context(heur.error || StandardError.new("card_synthesis_failed"), metadata: { upstream: safe_metadata(heur) })

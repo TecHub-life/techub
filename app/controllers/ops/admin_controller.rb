@@ -114,61 +114,48 @@ module Ops
 
       # Axiom links (datasets + traces)
       begin
-        # Prefer explicit URLs from credentials/ENV
-        dataset_url = (Rails.application.credentials.dig(:axiom, :dataset_url) rescue nil) || ENV["AXIOM_DATASET_URL"]
-        metrics_dataset_url = (Rails.application.credentials.dig(:axiom, :metrics_dataset_url) rescue nil) || ENV["AXIOM_METRICS_DATASET_URL"]
-        traces_url = (Rails.application.credentials.dig(:axiom, :traces_url) rescue nil) || ENV["AXIOM_TRACES_URL"]
+        axiom_cfg = AppConfig.axiom
+        forwarding = AppConfig.axiom_forwarding
+        queue_stats = StructuredLogger.forwarding_stats
 
-        # If URLs are not provided, construct from org/dataset vars when present
-        org = (Rails.application.credentials.dig(:axiom, :org) rescue nil) || ENV["AXIOM_ORG"]
-        dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
-        metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
-        service_name = "techub"
-
-        # Prefer canonical dataset UI paths (stable)
-        if org.present? && dataset.present?
-          dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{dataset}"
-        end
-        if org.present() && metrics_dataset.present?
-          metrics_dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}"
-        end
-        # Traces root (service filter applied via query param)
-        otel_configured = begin
-          token_present = ((Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]).to_s.strip != ""
-          endpoint_present = ((Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || ENV["OTEL_EXPORTER_OTLP_ENDPOINT"]).to_s.strip != ""
-          token_present && endpoint_present
-        rescue StandardError
-          false
+        traces_url = if axiom_cfg[:token].present? && axiom_cfg[:otel_endpoint].present?
+          axiom_cfg[:traces_url]
         end
 
-        base_traces = org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
-        traces_url ||= base_traces
-        traces_url = service_name.present? ? "#{traces_url}?service=#{CGI.escape(service_name)}" : traces_url
-
-        # Hide traces link if OTEL isn't configured
-        traces_url = nil unless otel_configured
-
-        @axiom = { dataset_url: dataset_url, metrics_dataset_url: metrics_dataset_url, traces_url: traces_url }
-
-        # Expose status booleans for Ops visibility
-        axiom_enabled = (Rails.env.production? || ENV["AXIOM_ENABLED"] == "1") && ENV["AXIOM_DISABLE"] != "1"
-        axiom_token_present = ((Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]).to_s.strip != ""
-        axiom_dataset_present = ((Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]).to_s.strip != ""
-        metrics_dataset_present = ((Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]).to_s.strip != ""
-        axiom_base_url = ((Rails.application.credentials.dig(:axiom, :base_url) rescue nil) || ENV["AXIOM_BASE_URL"] || "https://api.axiom.co").to_s
-        otel_endpoint = ((Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || ENV["OTEL_EXPORTER_OTLP_ENDPOINT"]).to_s
+        @axiom = {
+          dataset_url: axiom_cfg[:dataset_url],
+          metrics_dataset_url: axiom_cfg[:metrics_dataset_url],
+          traces_url: traces_url
+        }
 
         @axiom_status = {
-          forwarding_enabled: axiom_enabled,
-          token_present: axiom_token_present,
-          dataset_present: axiom_dataset_present,
-          metrics_dataset_present: metrics_dataset_present,
-          base_url: axiom_base_url,
-          otel_endpoint: otel_endpoint,
-          env: Rails.env
+          env: AppConfig.environment,
+          forwarding_allowed: forwarding[:allowed],
+          forwarding_reason: forwarding[:reason],
+          token_present: forwarding[:token_present],
+          dataset_present: forwarding[:dataset_present],
+          metrics_dataset_present: axiom_cfg[:metrics_dataset].present?,
+          auto_forward: forwarding[:auto_forward],
+          disabled: forwarding[:disabled],
+          base_url: axiom_cfg[:base_url],
+          otel_endpoint: axiom_cfg[:otel_endpoint],
+          queue: queue_stats
         }
       rescue StandardError
         @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
+        @axiom_status = {
+          env: AppConfig.environment,
+          forwarding_allowed: false,
+          forwarding_reason: :error,
+          token_present: false,
+          dataset_present: false,
+          metrics_dataset_present: false,
+          auto_forward: false,
+          disabled: false,
+          base_url: nil,
+          otel_endpoint: nil,
+          queue: StructuredLogger.forwarding_stats
+        }
       end
 
       # Pipeline visibility (read-only manifest)
@@ -362,7 +349,7 @@ module Ops
 
     # Direct ingest to a specified dataset (bypasses logger forwarding gates)
     def axiom_direct_ingest
-      dataset = params[:dataset].to_s.presence || ((Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"])
+      dataset = params[:dataset].to_s.presence || AppConfig.axiom[:dataset]
       body = params[:body].to_s
       if dataset.to_s.strip.empty?
         return redirect_to ops_admin_path(anchor: "ai"), alert: "Dataset is required"

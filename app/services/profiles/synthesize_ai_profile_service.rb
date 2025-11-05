@@ -7,6 +7,9 @@ module Profiles
     MAX_TAGS = 6
     TEMPERATURE = 0.7
     PROMPT_VERSION = "v1"
+    FALLBACK_TAG_POOL = %w[
+      coder builder open-source dev maker hacker engineer maintainer architect mentor tinkerer artisan strategist specialist
+    ].freeze
 
     def initialize(profile:, overrides: nil, provider: nil)
       @profile = profile
@@ -438,7 +441,14 @@ module Profiles
       # Normalize tags
       tags = Array(out["tags"]).map { |t| normalize_tag(t) }.reject(&:blank?).uniq
       tags = tags.first(MAX_TAGS)
-      tags += Array.new([ MIN_TAGS - tags.length, 0 ].max) { fallback_tag }
+      if tags.length < MIN_TAGS
+        fallback_cycle = FALLBACK_TAG_POOL.cycle
+        while tags.length < MIN_TAGS
+          candidate = fallback_cycle.next
+          next if candidate.blank? || tags.include?(candidate)
+          tags << candidate
+        end
+      end
       out["tags"] = tags.first(MAX_TAGS)
       # Clamp lengths where necessary
       out["flavor_text"] = out["flavor_text"].to_s.strip.first(80)
@@ -477,7 +487,7 @@ module Profiles
     end
 
     def fallback_tag
-      %w[coder builder open-source dev maker hacker].sample
+      FALLBACK_TAG_POOL.sample
     end
 
     def fallback_playing_card(record)

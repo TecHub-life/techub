@@ -31,6 +31,10 @@ module Profiles
           success(value, metadata: metadata.merge(stage: stage_id))
         end
 
+        def degraded_with_context(value = nil, metadata: {})
+          degraded(value, metadata: metadata.merge(stage: stage_id))
+        end
+
         def failure_with_context(error, metadata: {})
           failure(error, metadata: metadata.merge(stage: stage_id))
         end
