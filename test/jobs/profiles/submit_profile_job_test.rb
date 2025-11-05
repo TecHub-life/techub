@@ -8,7 +8,7 @@ module Profiles
 
       Github::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
         Github::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/firstrun.png") do
-          assert_enqueued_with(job: Profiles::GeneratePipelineJob, args: [ "firstrun", { "trigger_source" => "submit_profile_job" } ]) do
+          assert_enqueued_with(job: Profiles::GeneratePipelineJob, args: [ "firstrun", { trigger_source: "submit_profile_job" } ]) do
             Profiles::SubmitProfileJob.perform_now("firstRun", user.id)
           end
         end
@@ -22,7 +22,7 @@ module Profiles
 
       Github::ProfileSummaryService.stub :call, ServiceResult.success({ profile: { id: prof.github_id, login: prof.login, avatar_url: "https://example.com/b.png" } }) do
         Github::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/second.png") do
-          assert_enqueued_with(job: Profiles::GeneratePipelineJob, args: [ "second", { "trigger_source" => "submit_profile_job" } ]) do
+          assert_enqueued_with(job: Profiles::GeneratePipelineJob, args: [ "second", { trigger_source: "submit_profile_job" } ]) do
             Profiles::SubmitProfileJob.perform_now("second", user.id)
           end
         end
