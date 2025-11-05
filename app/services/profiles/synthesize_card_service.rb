@@ -101,9 +101,10 @@ module Profiles
       tags = tags.map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq
       # Ensure exactly 6 tags to satisfy model validation
       fallback_pool = %w[developer coder builder maker engineer hacker]
+      fallback_cycle = fallback_pool.cycle
       while tags.length < 6
-        next_tag = fallback_pool[tags.length % fallback_pool.length]
-        tags << next_tag unless tags.include?(next_tag)
+        candidate = fallback_cycle.next
+        tags << candidate unless tags.include?(candidate)
       end
       tags = tags.first(6)
 
