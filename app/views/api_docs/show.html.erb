@@ -1,6 +1,16 @@
 <% info    = @spec.fetch("info", {}) %>
 <% servers = @spec.fetch("servers", []) %>
 <% paths   = @spec.fetch("paths", {}) %>
+<% base_url = (servers.first && servers.first["url"].presence) || request.base_url %>
+<% base_url = base_url.to_s.chomp("/") %>
+<% example_value = lambda do |param|
+     value = param["example"]
+     value = param.dig("schema", "example") if value.blank?
+     value = param.dig("schema", "default") if value.blank?
+     value = "loftwah" if value.blank? && param["name"] == "username"
+     value = "<#{param["name"]}>" if value.blank?
+     value.to_s
+   end %>
 
 <section class="mx-auto max-w-screen-xl space-y-10 px-4 py-12">
   <header class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
@@ -60,17 +70,173 @@
                     <span class="inline-flex min-w-[72px] items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide <%= verb_badge_classes(verb) %>"><%= verb %></span>
                     <span class="font-medium text-slate-900 dark:text-slate-100"><%= summary %></span>
                   </div>
-                  <% if config["operationId"].present? %>
-                    <code class="text-xs text-slate-500 dark:text-slate-400"><%= config["operationId"] %></code>
-                  <% end %>
+                  <div class="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
+                    <% if config["operationId"].present? %>
+                      <code class="text-xs text-slate-500 dark:text-slate-400"><%= config["operationId"] %></code>
+                    <% end %>
+                    <div class="flex items-center gap-1">
+                      <span class="hidden text-[11px] font-medium uppercase tracking-wide md:inline-block">Expand</span>
+                      <i class="fa-solid fa-chevron-down text-sm transition duration-200 group-open:rotate-180"></i>
+                    </div>
+                  </div>
                 </summary>
 
-                <div class="space-y-6 px-4 py-5 text-sm text-slate-700 dark:text-slate-200">
+                <div
+                  class="space-y-6 px-4 py-5 text-sm text-slate-700 dark:text-slate-200"
+                  data-controller="api-doc-example"
+                  data-api-doc-example-base-url-value="<%= base_url %>"
+                  data-api-doc-example-path-value="<%= path %>"
+                  data-api-doc-example-verb-value="<%= verb.upcase %>"
+                >
+                  <% parameters = Array(config["parameters"]) %>
+                  <% path_params = parameters.select { |param| param["in"] == "path" } %>
+                  <% query_params = parameters.select { |param| param["in"] == "query" } %>
+                  <% placeholder_path = path.gsub(/\{([^}]+)\}/) { "<#{$1}>" } %>
+                  <% query_examples = query_params.map { |param| "#{param["name"]}=#{example_value.call(param)}" } %>
+                  <% query_hint = query_examples.any? ? "?#{query_examples.join("&")}" : "" %>
+                  <% display_url = "#{base_url}#{placeholder_path}#{query_hint}" %>
+                  <% curl_example = "curl -sS -X #{verb.upcase} '#{display_url}'" %>
+                  <% fetch_example = <<~JS
+fetch('#{display_url}', {
+  method: '#{verb.upcase}',
+  headers: {
+    'Accept': 'application/json'
+  }
+})
+  .then((response) => response.json())
+  .then((data) => console.log(data));
+JS
+ %>
                   <% if config["description"].present? %>
                     <p class="leading-relaxed"><%= config["description"] %></p>
                   <% end %>
 
-                  <% parameters = Array(config["parameters"]) %>
+                  <div class="space-y-3 rounded-xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-900/40">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Quick start snippets</h3>
+                      <div class="flex items-center gap-2">
+                        <button
+                          type="button"
+                          class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-200"
+                          data-action="api-doc-example#copyCurl"
+                        >
+                          <i class="fa-solid fa-copy text-[11px]"></i>
+                          Copy curl
+                        </button>
+                        <button
+                          type="button"
+                          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800/70"
+                          data-action="api-doc-example#copyFetch"
+                        >
+                          <i class="fa-solid fa-code text-[11px]"></i>
+                          Copy fetch
+                        </button>
+                        <span class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 transition-opacity duration-150 hidden" data-api-doc-example-target="copyNotice"></span>
+                      </div>
+                    </div>
+                    <div class="space-y-4">
+                      <div class="space-y-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Run from your terminal</p>
+                        <pre class="overflow-x-auto rounded bg-slate-900 p-3 text-[11px] text-slate-100 dark:bg-slate-950" data-api-doc-example-target="curl"><code><%= h(curl_example) %></code></pre>
+                      </div>
+                      <div class="space-y-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Use in JavaScript</p>
+                        <pre class="overflow-x-auto rounded bg-slate-900 p-3 text-[11px] text-slate-100 dark:bg-slate-950" data-api-doc-example-target="fetch"><code><%= h(fetch_example.strip) %></code></pre>
+                      </div>
+                    </div>
+                  </div>
+
+                  <% if verb.to_s.casecmp("get").zero? %>
+                    <div class="rounded-xl border border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-900/40">
+                      <button
+                        type="button"
+                        class="flex w-full items-center justify-between gap-3 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-600 transition hover:bg-slate-100/60 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                        aria-expanded="false"
+                        data-action="api-doc-example#toggleTry"
+                      >
+                        <span>Try it now</span>
+                        <i class="fa-solid fa-chevron-down text-xs transition duration-200" data-api-doc-example-target="toggleIcon"></i>
+                      </button>
+                      <div class="space-y-4 border-t border-slate-200 px-4 py-4 text-xs dark:border-slate-800 hidden" data-api-doc-example-target="tryPanel">
+                        <form class="space-y-4" data-api-doc-example-target="form" data-action="submit->api-doc-example#send">
+                          <% if path_params.any? %>
+                            <div class="space-y-2">
+                              <h4 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Path parameters</h4>
+                              <div class="grid gap-3 md:grid-cols-2">
+                                <% path_params.each do |param| %>
+                                  <% suggested = example_value.call(param) %>
+                                  <label class="space-y-1">
+                                    <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300"><%= param["name"] %></span>
+                                    <input
+                                      type="text"
+                                      name="<%= param["name"] %>"
+                                      value="<%= suggested %>"
+                                      required
+                                      class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-400"
+                                      data-api-doc-example-target="pathInput"
+                                    >
+                                    <% if param["description"].present? %>
+                                      <p class="text-[11px] text-slate-500 dark:text-slate-400"><%= param["description"] %></p>
+                                    <% end %>
+                                  </label>
+                                <% end %>
+                              </div>
+                            </div>
+                          <% end %>
+
+                          <% if query_params.any? %>
+                            <div class="space-y-2">
+                              <h4 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Query parameters</h4>
+                              <div class="grid gap-3 md:grid-cols-2">
+                                <% query_params.each do |param| %>
+                                  <% suggested = example_value.call(param) %>
+                                  <% schema = param["schema"] || {} %>
+                                  <% input_type =
+                                       case schema["type"]
+                                       when "integer", "number" then "number"
+                                       else "text"
+                                       end %>
+                                  <% min = schema["minimum"] %>
+                                  <% max = schema["maximum"] %>
+                                  <% has_prefill = param["example"].present? || schema["example"].present? || schema["default"].present? %>
+                                  <label class="space-y-1">
+                                    <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300"><%= param["name"] %></span>
+                                    <input
+                                      type="<%= input_type %>"
+                                      name="<%= param["name"] %>"
+                                      value="<%= has_prefill ? suggested : "" %>"
+                                      <%= "min=\"#{min}\"" if min.present? %>
+                                      <%= "max=\"#{max}\"" if max.present? %>
+                                      placeholder="<%= has_prefill ? "" : suggested %>"
+                                      class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-400"
+                                      data-api-doc-example-target="queryInput"
+                                      <%= "required" if param["required"] %>
+                                    >
+                                    <% if param["description"].present? %>
+                                      <p class="text-[11px] text-slate-500 dark:text-slate-400"><%= param["description"] %></p>
+                                    <% end %>
+                                  </label>
+                                <% end %>
+                              </div>
+                            </div>
+                          <% end %>
+
+                          <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <button
+                              type="submit"
+                              class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:border-emerald-400"
+                            >
+                              <i class="fa-solid fa-paper-plane text-[11px]"></i>
+                              Send request
+                            </button>
+                            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400" data-api-doc-example-target="status"></p>
+                          </div>
+                        </form>
+                        <pre class="hidden overflow-x-auto rounded bg-slate-900 p-3 text-[11px] text-slate-100 dark:bg-slate-950" data-api-doc-example-target="response"></pre>
+                      </div>
+                    </div>
+                  <% end %>
+
                   <% if parameters.any? %>
                     <div class="space-y-3">
                       <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Parameters</h3>
