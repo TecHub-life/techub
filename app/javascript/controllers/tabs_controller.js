@@ -9,7 +9,11 @@ export default class extends Controller {
     this.element.addEventListener('keydown', this.handleKeydown)
 
     const fromQuery = new URLSearchParams(window.location.search).get('tab')
-    const fallback = this.defaultValue || this.tabTargets[0]?.dataset.tabsId
+    const fallback =
+      this.defaultValue ||
+      this.tabTargets[0]?.dataset.tabsId ||
+      this.tabTargets[0]?.dataset.tabName ||
+      this.tabTargets[0]?.dataset.id
     this.selectById(fromQuery || fallback, { focus: false, replace: true })
   }
 
@@ -18,16 +22,25 @@ export default class extends Controller {
   }
 
   select(event) {
-    const id = event.currentTarget.dataset.tabsId
+    const id = this.tabIdFor(event.currentTarget)
     this.selectById(id)
+  }
+
+  change(event) {
+    this.select(event)
   }
 
   selectById(id, { focus = true, replace = false } = {}) {
     if (!id) return
 
     this.tabTargets.forEach((tab) => {
-      const active = tab.dataset.tabsId === id
+      const active = this.tabIdFor(tab) === id
       tab.setAttribute('aria-selected', String(active))
+      if (active) {
+        tab.dataset.active = 'true'
+      } else {
+        delete tab.dataset.active
+      }
       tab.tabIndex = active ? 0 : -1
       tab.classList.toggle('bg-white', active)
       tab.classList.toggle('text-slate-900', active)
@@ -39,7 +52,7 @@ export default class extends Controller {
     })
 
     this.panelTargets.forEach((panel) => {
-      const active = panel.dataset.tabsId === id
+      const active = this.panelIdFor(panel) === id
       panel.classList.toggle('hidden', !active)
       panel.setAttribute('aria-hidden', String(!active))
       panel.tabIndex = active ? 0 : -1
@@ -52,9 +65,9 @@ export default class extends Controller {
     if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return
     event.preventDefault()
 
-    const currentIndex = this.tabTargets.findIndex(
-      (tab) => tab.getAttribute('aria-selected') === 'true'
-    )
+    const currentIndex = this.tabTargets.findIndex((tab) => {
+      return tab.getAttribute('aria-selected') === 'true'
+    })
     if (currentIndex === -1) return
 
     let nextIndex = currentIndex
@@ -65,7 +78,7 @@ export default class extends Controller {
     if (event.key === 'End') nextIndex = this.tabTargets.length - 1
 
     const nextTab = this.tabTargets[nextIndex]
-    this.selectById(nextTab.dataset.tabsId)
+    this.selectById(this.tabIdFor(nextTab))
   }
 
   updateUrl(id, replace) {
@@ -76,5 +89,13 @@ export default class extends Controller {
     } else {
       window.history.pushState({}, '', url)
     }
+  }
+
+  tabIdFor(element) {
+    return element?.dataset?.tabsId || element?.dataset?.tabName || element?.dataset?.id || null
+  }
+
+  panelIdFor(element) {
+    return element?.dataset?.tabsId || element?.dataset?.tabPanel || element?.dataset?.id || null
   }
 }

@@ -46,4 +46,13 @@ module ApplicationHelper
   def ui_file_input_class
     "block w-full text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-5 file:py-2.5 file:text-sm file:font-semibold file:text-white transition hover:file:bg-slate-800 dark:text-slate-300 dark:file:bg-slate-200 dark:file:text-slate-900"
   end
+
+  def ui_spinner_icon(classes: "h-4 w-4")
+    <<~HTML.html_safe
+      <svg class="#{classes} animate-spin" viewBox="0 0 24 24" fill="none">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+      </svg>
+    HTML
+  end
 end
