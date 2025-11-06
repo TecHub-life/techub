@@ -82,7 +82,7 @@
                   <%= account.provider.capitalize %>
                 </p>
                 <% if account.display_name.present? %>
-                  <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
+                  <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400 break-words">
                     <%= account.display_name %>
                   </p>
                 <% end %>

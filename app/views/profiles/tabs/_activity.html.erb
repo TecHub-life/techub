@@ -101,11 +101,11 @@
                   <svg class="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                   </svg>
-                  <span class="truncate"><%= repo.full_name %></span>
+                  <span class="break-words"><%= repo.full_name %></span>
                 </a>
                 <% if repo.description.present? %>
-                  <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
-                    <%= repo.description.truncate(100) %>
+                  <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 break-words">
+                    <%= repo.description %>
                   </p>
                 <% end %>
                 <div class="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
