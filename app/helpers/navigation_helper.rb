@@ -17,7 +17,7 @@ module NavigationHelper
     link_to path, options.merge(class: classes) do
       safe_join([
         (content_tag(:i, nil, class: "#{icon} text-sm opacity-70") if icon),
-        content_tag(:span, label),
+        content_tag(:span, label)
       ].compact, " ")
     end
   end
@@ -28,7 +28,7 @@ module NavigationHelper
     link_to path, options.merge(class: classes) do
       safe_join([
         content_tag(:i, nil, class: "#{icon} text-base"),
-        content_tag(:span, label),
+        content_tag(:span, label)
       ])
     end
   end
@@ -39,7 +39,7 @@ module NavigationHelper
     link_to path, options.merge(class: classes) do
       safe_join([
         content_tag(:i, nil, class: "#{icon} text-sm"),
-        content_tag(:span, label),
+        content_tag(:span, label)
       ])
     end
   end

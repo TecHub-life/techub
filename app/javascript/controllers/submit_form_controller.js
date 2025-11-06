@@ -52,12 +52,15 @@ export default class extends Controller {
 
     if (this.hasButtonTarget) {
       this.buttonTarget.removeAttribute('aria-busy')
-      setTimeout(() => {
-        this.buttonTarget.disabled = false
-        if (this.hasTextTarget) {
-          this.textTarget.textContent = this.defaultTextValue || 'Submit'
-        }
-      }, success ? 800 : 1400)
+      setTimeout(
+        () => {
+          this.buttonTarget.disabled = false
+          if (this.hasTextTarget) {
+            this.textTarget.textContent = this.defaultTextValue || 'Submit'
+          }
+        },
+        success ? 800 : 1400
+      )
     }
   }
 }

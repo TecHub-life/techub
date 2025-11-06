@@ -176,63 +176,6 @@ class PagesController < ApplicationController
 
   def analytics; end
 
-  def docs
-    root = Rails.root.join("docs")
-    @path = params[:path].to_s
-    # Build a simple index of markdown files
-    @docs_index = Dir[root.join("**", "*.md")].map { |p| p.delete_prefix(root.to_s + "/") }.sort
-
-    # If a non-markdown file under docs/ is requested via wildcard, serve it safely
-    if @path.present? && !@path.end_with?(".md")
-      # Only allow files within docs/ and disallow traversal
-      clean = Pathname.new(@path).cleanpath.to_s
-      return head(:bad_request) if clean.start_with?("..")
-
-      # Precompute a whitelist of allowed asset paths relative to docs/
-      allowed_assets = Dir[root.join("**", "*.{png,jpg,jpeg,webp,gif,svg,css,js}")].map { |p| p.delete_prefix(root.to_s + "/") }
-      return head(:not_found) unless clean.presence_in(allowed_assets)
-
-      candidate = root.join(clean).expand_path
-      # Ensure the resolved path is within the docs root
-      return head(:bad_request) unless candidate.to_s.start_with?(root.expand_path.to_s + File::SEPARATOR)
-
-      if candidate.exist? && candidate.file?
-        type = Marcel::MimeType.for(candidate.to_s)
-        data = File.binread(candidate)
-        return send_data data, filename: candidate.basename.to_s, type: type, disposition: "inline"
-      end
-    end
-
-    # Resolve the requested doc or default strictly from index (no arbitrary paths)
-    rel = @path.presence_in(@docs_index) || "marketing-overview.md"
-    target = root.join(rel)
-    if File.exist?(target) && File.file?(target)
-      @active_doc = rel
-      basename = rel.sub(/\.md\z/, "")
-      @doc_title = basename
-      @doc_heading = basename.split("/").last.to_s.tr("-_", " ").split.map(&:capitalize).join(" ")
-      @doc_updated_at = File.mtime(target)
-      md = File.read(target)
-      begin
-        # Prefer the richer renderer used elsewhere for consistency
-        html = Commonmarker.to_html(
-          md,
-          options: { parse: { smart: true }, render: { unsafe: true } },
-          extensions: %i[table strikethrough autolink tasklist footnotes]
-        )
-      rescue StandardError
-        html = md
-      end
-      # Rewrite relative image URLs to /docs/... for proper serving
-      # Matches src="something" where something does not start with http(s) or /
-      rewritten = html.gsub(/src=\"(?!https?:)(?!\/)([^\"]+)\"/) { |m| "src=\"/docs/#{$1}\"" }
-      # Sanitize the HTML to avoid XSS from embedded HTML in markdown
-      allowed_tags = %w[p br strong em b i u a img h1 h2 h3 h4 h5 h6 ul ol li blockquote pre code hr table thead tbody tr th td figure figcaption dl dt dd sup]
-      allowed_attrs = %w[href src alt title class target rel id data-footnote-ref data-footnote-backref aria-label]
-      @doc_html = helpers.sanitize(rewritten, tags: allowed_tags, attributes: allowed_attrs)
-    end
-  end
-
   def autocomplete
     field = params[:field]
     query = params[:q].to_s.downcase

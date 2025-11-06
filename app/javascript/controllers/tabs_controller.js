@@ -52,12 +52,15 @@ export default class extends Controller {
     if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return
     event.preventDefault()
 
-    const currentIndex = this.tabTargets.findIndex((tab) => tab.getAttribute('aria-selected') === 'true')
+    const currentIndex = this.tabTargets.findIndex(
+      (tab) => tab.getAttribute('aria-selected') === 'true'
+    )
     if (currentIndex === -1) return
 
     let nextIndex = currentIndex
     if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % this.tabTargets.length
-    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + this.tabTargets.length) % this.tabTargets.length
+    if (event.key === 'ArrowLeft')
+      nextIndex = (currentIndex - 1 + this.tabTargets.length) % this.tabTargets.length
     if (event.key === 'Home') nextIndex = 0
     if (event.key === 'End') nextIndex = this.tabTargets.length - 1
 

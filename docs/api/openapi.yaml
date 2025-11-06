@@ -142,7 +142,9 @@ paths:
   /api/v1/profiles/battle-ready:
     get:
       summary: List battle-ready profiles
-      description: Returns profiles that currently have generated cards, capped by the optional `limit` parameter.
+      description:
+        Returns profiles that currently have generated cards, capped by the optional `limit`
+        parameter.
       parameters:
         - in: query
           name: limit
@@ -254,7 +256,9 @@ paths:
   /api/v1/leaderboards:
     get:
       summary: Fetch a leaderboard
-      description: Returns the top 100 leaderboard entries for the requested kind and window. Recomputes on-demand if the requested as_of snapshot is not cached.
+      description:
+        Returns the top 100 leaderboard entries for the requested kind and window. Recomputes
+        on-demand if the requested as_of snapshot is not cached.
       parameters:
         - in: query
           name: kind
@@ -327,7 +331,9 @@ paths:
   /api/v1/game-data/all:
     get:
       summary: Fetch entire battle data catalogue
-      description: Returns every archetype, spirit animal stat modifier, ability catalogue, and mechanics constants used by the battle simulator.
+      description:
+        Returns every archetype, spirit animal stat modifier, ability catalogue, and mechanics
+        constants used by the battle simulator.
       responses:
         '200':
           description: OK
