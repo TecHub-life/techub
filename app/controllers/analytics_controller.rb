@@ -1,5 +1,4 @@
 class AnalyticsController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: :showcase
 
   def showcase
     payload = showcase_params.to_h.symbolize_keys
