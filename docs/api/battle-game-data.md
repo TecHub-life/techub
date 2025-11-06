@@ -12,6 +12,20 @@ Production: https://techub.life/api/v1
 Development: http://localhost:3000/api/v1
 ```
 
+### Frozen profile endpoints for TecHub Battles
+
+To guarantee backwards compatibility, the TecHub Battles client should consume the locked endpoints
+under `/api/v1/battles/...`:
+
+```http
+GET /api/v1/battles/profiles/:username/card
+GET /api/v1/battles/profiles/battle-ready
+```
+
+These responses are frozen—any schema changes in the main `/api/v1/profiles/...` routes will only
+ship after coordination and doc updates. The frozen endpoints can be cached aggressively because
+they will not introduce new keys without a version bump.
+
 ---
 
 ## Endpoints

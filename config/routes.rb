@@ -94,6 +94,10 @@ Rails.application.routes.draw do
       get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
       get "/profiles/:username/card", to: "profiles#card", defaults: { format: :json }
       get "/profiles/battle-ready", to: "profiles#battle_ready", defaults: { format: :json }
+      namespace :battles do
+        get "/profiles/:username/card", to: "profiles#card", defaults: { format: :json }
+        get "/profiles/battle-ready", to: "profiles#battle_ready", defaults: { format: :json }
+      end
       get "/leaderboards", to: "leaderboards#index", defaults: { format: :json }
       get "/leaderboards/podium", to: "leaderboards#podium", defaults: { format: :json }
 

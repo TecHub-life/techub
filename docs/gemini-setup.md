@@ -10,8 +10,9 @@ google:
 Use `EDITOR="cursor --wait" bin/rails credentials:edit`.
 
 2. Local env for dev  
-   _(provider auto-detects: we now prefer Vertex when a project is configured; AI Studio is used
-   when only an API key is present. You can always force via `GEMINI_PROVIDER`.)_
+   _(provider auto-detects: we default to **AI Studio** when an API key is present and fall back to
+   **Vertex** only when a project/service account is configured. Override via `GEMINI_PROVIDER` or
+   reorder providers with `GEMINI_PROVIDER_ORDER`.)_
 
 3. Verify healthchecks
 
@@ -28,6 +29,20 @@ Docs:
   [cloud.google.com](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash#image)
 - ADR 0001: LLM cost control via eligibility gate and profile fallback:
   docs/adr/0001-llm-cost-control-eligibility-gate.md
+
+### Provider & feature flag quick reference
+
+- Provider selection lives in `Gemini::Configuration` (`app/services/gemini/configuration.rb:1`):
+  API key present → `ai_studio`, otherwise fall back to Vertex with ADC/service account credentials.
+- Override order with `GEMINI_PROVIDER_ORDER` or edit
+  `config/initializers/gemini_provider_order.rb:4` (defaults to AI Studio only to keep Vertex off
+  unless explicitly requested).
+- Feature flags gate spend-heavy flows:
+  - `:ai_text` → enables `Profiles::SynthesizeAiProfileService`
+  - `:ai_images` → enables `Gemini::ImageGenerationService`
+  - `:ai_image_descriptions` → enables `Gemini::ImageDescriptionService`
+- Per-run overrides in the pipeline use `Profiles::GeneratePipelineService` overrides hash (see
+  `app/services/profiles/generate_pipeline_service.rb:91`).
 
 ---
 
@@ -134,6 +149,108 @@ Outputs:
 
 ---
 
+### Nano Banana modes (REST proof points)
+
+We keep lightweight scripts in the ops toolkit, but you can prove each Gemini image mode via `curl`
+before wiring new flows. These snippets mirror the official docs so we spot regressions quickly.
+
+#### Text-to-image
+
+```bash
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [
+        {"text": "Create a picture of a nano banana dish in a Gemini-themed restaurant"}
+      ]
+    }]
+  }' \
+  | grep -o '"data": "[^"]*"' \
+  | head -n 1 \
+  | cut -d'"' -f4 \
+  | base64 --decode > /tmp/nano-banana.png
+open /tmp/nano-banana.png  # macOS helper; swap for xdg-open/display as needed
+```
+
+#### Image + text editing
+
+```bash
+IMG_PATH="public/avatars/loftwah.png"
+if [[ "$(base64 --version 2>&1)" = *"FreeBSD"* ]]; then B64FLAGS="--input"; else B64FLAGS="-w0"; fi
+
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [
+        {
+          "inline_data": {
+            "mime_type": "image/png",
+            "data": "'"$(base64 $B64FLAGS "$IMG_PATH")"'"
+          }
+        },
+        {
+          "text": "Remix this portrait as a neon-lit hero card with cyberpunk lighting."
+        }
+      ]
+    }]
+  }' \
+  | grep -o '"data": "[^"]*"' \
+  | head -n 1 \
+  | cut -d'"' -f4 \
+  | base64 --decode > /tmp/nano-banana-edit.png
+```
+
+#### Multi-image composition / style transfer
+
+```bash
+STYLE_REF="public/reference/style.png"
+CONTENT_REF="public/reference/pose.png"
+if [[ "$(base64 --version 2>&1)" = *"FreeBSD"* ]]; then B64FLAGS="--input"; else B64FLAGS="-w0"; fi
+
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [
+        {
+          "inline_data": {
+            "mime_type": "image/png",
+            "data": "'"$(base64 $B64FLAGS "$STYLE_REF")"'"
+          }
+        },
+        {
+          "inline_data": {
+            "mime_type": "image/png",
+            "data": "'"$(base64 $B64FLAGS "$CONTENT_REF")"'"
+          }
+        },
+        {
+          "text": "Blend the pose from the second image with the illustrated style from the first."
+        }
+      ]
+    }]
+  }' \
+  | grep -o '"data": "[^"]*"' \
+  | head -n 1 \
+  | cut -d'"' -f4 \
+  | base64 --decode > /tmp/nano-banana-style.png
+```
+
+- Add these flows to ops jobs once we wrap them in services. `Gemini::ImageGenerationService`
+  currently handles text-to-image; we will extend it (or add siblings) for editing and multi-image
+  once the pipelines are baked.
+- Track outputs via `public/generated/<login>/meta/*.json` to keep provenance.
+
+---
+
 ### Artifacts and VERBOSE mode
 
 When generating images via the suite, the exact inputs are persisted for audit and comparison:
@@ -175,6 +292,107 @@ VERBOSE=1 bundle exec rake "gemini:avatar_generate:verify"
 ```
 
 Artifacts JSON remain on disk under `public/generated/<login>/meta/`.
+
+---
+
+### Image understanding (describe existing art)
+
+`Gemini::ImageDescriptionService` (`app/services/gemini/image_description_service.rb`) wraps this
+flow with retries and structured JSON, but you can smoke test the raw API first:
+
+```bash
+IMG_PATH="public/avatars/loftwah.png"
+if [[ "$(base64 --version 2>&1)" = *"FreeBSD"* ]]; then B64FLAGS="--input"; else B64FLAGS="-w0"; fi
+
+curl -s \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [
+        {
+          "inline_data": {
+            "mime_type": "image/png",
+            "data": "'"$(base64 $B64FLAGS "$IMG_PATH")"'"
+          }
+        },
+        {
+          "text": "Describe this avatar in 2-3 grounded sentences plus palette and mood."
+        }
+      ]
+    }]
+  }' | python -m json.tool | head
+```
+
+Enable the `ai_image_descriptions` flag before relying on the service so the pipeline can spend
+tokens safely.
+
+---
+
+### Structured output JSON proof
+
+`Gemini::StructuredOutputService` (`app/services/gemini/structured_output_service.rb`) already
+handles schema wiring. Use this `curl` to validate the schema TecHub battles need:
+
+```bash
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [
+        { "text": "Return a balanced TecHub battle profile for loftwah. JSON only." }
+      ]
+    }],
+    "generationConfig": {
+      "temperature": 0.25,
+      "response_mime_type": "application/json",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "title": {"type": "string"},
+          "attack": {"type": "integer"},
+          "defense": {"type": "integer"},
+          "speed": {"type": "integer"},
+          "tags": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["title", "attack", "defense", "speed", "tags"]
+      }
+    }
+  }' | python -m json.tool
+```
+
+Keep this in sync with the schema inside `Profiles::SynthesizeAiProfileService` so we do not break
+the JSON contract that TecHub Battles consumes.
+
+---
+
+### URL context tool (selective retrieval)
+
+Useful for grounding bios or comparing external docs. The response includes `url_context_metadata`
+so ops can confirm exactly which pages were fetched.
+
+```bash
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
+  -H "x-goog-api-key: $GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [{
+        "text": "Compare the ingredients and cooking times from the recipes at https://www.foodnetwork.com/recipes/ina-garten/perfect-roast-chicken-recipe-1940592 and https://www.allrecipes.com/recipe/21151/simple-whole-roast-chicken/."
+      }]
+    }],
+    "tools": [
+      { "url_context": {} }
+    ]
+  }' | python -m json.tool | head
+```
+
+Combine with `{ "google_search": {} }` in the tools array when you need discovery before URL
+expansion.
 
 ---
 

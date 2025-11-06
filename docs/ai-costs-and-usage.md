@@ -11,12 +11,15 @@ activity.
 ## Assumptions
 
 - **Google AI Studio (Gemini 2.5 Flash) pricing:** Mirrors the public Vertex AI rate card—~1,290
-  tokens per 1024×1024 image billed at **$30 per 1M output tokens**.
+  tokens per 1024×1024 image billed at **$30 per 1M output tokens**. Vertex fallback uses the same
+  rate when we need service-account routing.
 - **Token-to-cost ratio:** 1M tokens = $30 → 1 token = $0.00003.
 - **Variant strategy:** Request **four 1024×1024 profile image variants** per run, then crop or
   resize locally. We avoid relying on aspect ratio parameters until quality improves.
 - **Optional avatar seeding:** Passing a GitHub avatar or uploaded photo as image input adds roughly
   1,290 input tokens (≈$0.0004) per reference—cheap enough to experiment with.
+- **Editing & multi-image inputs:** Each uploaded reference image counts as ~1,290 input tokens, so
+  editing or style transfer flows cost roughly the same as seeding plus the generated output.
 - **Session model:** Each user session creates:
   - 4 _Nano Banana_ profile image variants
   - 4 image descriptions (alt text / moderation blurbs)
@@ -58,10 +61,10 @@ activity.
 
 ---
 
-## Implementation Notes (AI Studio Only)
+## Implementation Notes (AI Studio default, Vertex fallback)
 
-- Route all calls through **Google AI Studio** client libraries or HTTPS endpoints; disable or
-  remove the legacy Vertex AI integration to avoid accidental spend.
+- Route calls through **Google AI Studio** by default; keep Vertex credentials scoped in secrets so
+  ops can explicitly enable service-account runs (e.g., when API-key flows are blocked).
 - Use feature flags to expose “Generate profile art” and “Describe image” in user settings, with
   mirrored controls inside the Ops panel for moderation.
 - Capture the user’s GitHub avatar (if present) as an optional reference asset; store consent and
@@ -110,6 +113,8 @@ regenerations (sessions/user/month).
 > - Each “session” includes four image variants, four descriptions, one summary, and one structured
 >   payload.
 > - Add ~$0.0004 per session if we send a reference avatar into the prompt (image-to-image seeding).
+> - Budget an extra ~$0.0004 for each additional reference image when running editing or multi-image
+>   composition flows.
 > - Apply adoption rates (for example, 60% of users opt in → multiply totals by 0.6) to reflect real
 >   usage.
 
