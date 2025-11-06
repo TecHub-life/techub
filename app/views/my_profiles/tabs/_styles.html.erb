@@ -1,7 +1,5 @@
 <% sort_modes = ProfilePreference::SORT_MODES %>
 <% date_formats = ProfilePreference::DATE_FORMATS %>
-<% time_modes = ProfilePreference::TIME_DISPLAY %>
-<% time_mode_options = time_modes.map { |mode| [mode == "utc" ? "UTC" : mode.titleize, mode] } %>
 <% style_variants = ProfileShowcaseItem::STYLE_VARIANTS %>
 <% style_accents = ProfileShowcaseItem::STYLE_ACCENTS %>
 <% style_shapes = ProfileShowcaseItem::STYLE_SHAPES %>
@@ -45,22 +43,9 @@
         </div>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-3">
-        <div>
-          <%= f.label :achievements_date_format, "Achievement date format", class: label_classes %>
-          <%= f.select :achievements_date_format, date_formats.map { |fmt| [fmt.upcase.gsub("_", "/"), fmt] }, { selected: preference.achievements_date_format }, class: input_classes %>
-        </div>
-        <div>
-          <%= f.label :achievements_time_display, "Time display", class: label_classes %>
-          <%= f.select :achievements_time_display, time_mode_options, { selected: preference.achievements_time_display }, class: input_classes %>
-        </div>
-        <div>
-          <%= f.label :achievements_dual_time, "Show local + UTC", class: label_classes %>
-          <div class="mt-2 flex items-center gap-3">
-            <%= f.check_box :achievements_dual_time, { checked: preference.achievements_dual_time? }, true, false %>
-            <span class="text-sm text-slate-600 dark:text-slate-300">Display both timezones when possible</span>
-          </div>
-        </div>
+      <div>
+        <%= f.label :achievements_date_format, "Achievement date format", class: label_classes %>
+        <%= f.select :achievements_date_format, date_formats.map { |fmt| [fmt.upcase.gsub("_", "/"), fmt] }, { selected: preference.achievements_date_format }, class: input_classes %>
       </div>
 
       <div class="grid gap-4 md:grid-cols-3">

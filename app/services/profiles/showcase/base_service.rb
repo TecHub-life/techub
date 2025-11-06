@@ -45,16 +45,6 @@ module Profiles
         parse_date(value)
       end
 
-      def parse_timestamp(value, timezone: nil)
-        return value if value.is_a?(Time) || value.is_a?(ActiveSupport::TimeWithZone)
-        return nil if value.blank?
-
-        zone = timezone.present? ? ActiveSupport::TimeZone[timezone] : Time.zone
-        zone ? zone.parse(value.to_s) : Time.zone.parse(value.to_s)
-      rescue ArgumentError
-        nil
-      end
-
       def total_pinned_count
         profile.profile_links.pinned.count + profile.profile_achievements.pinned.count + profile.profile_experiences.pinned.count
       end

@@ -3,7 +3,6 @@ class ProfilePreference < ApplicationRecord
 
   SORT_MODES = %w[manual alphabetical oldest newest].freeze
   DATE_FORMATS = %w[yyyy_mm_dd dd_mm_yyyy relative].freeze
-  TIME_DISPLAY = %w[local utc relative profile_default].freeze
   STYLE_VARIANTS = ProfileShowcaseItem::STYLE_VARIANTS
   STYLE_ACCENTS = ProfileShowcaseItem::STYLE_ACCENTS
   STYLE_SHAPES = ProfileShowcaseItem::STYLE_SHAPES
@@ -12,7 +11,6 @@ class ProfilePreference < ApplicationRecord
   validates :achievements_sort_mode, inclusion: { in: SORT_MODES }
   validates :experiences_sort_mode, inclusion: { in: SORT_MODES }
   validates :achievements_date_format, inclusion: { in: DATE_FORMATS }
-  validates :achievements_time_display, inclusion: { in: TIME_DISPLAY }
   validates :default_style_variant, inclusion: { in: STYLE_VARIANTS }
   validates :default_style_accent, inclusion: { in: STYLE_ACCENTS }
   validates :default_style_shape, inclusion: { in: STYLE_SHAPES }
@@ -36,7 +34,6 @@ class ProfilePreference < ApplicationRecord
     self.achievements_sort_mode = normalize_sort_mode(achievements_sort_mode)
     self.experiences_sort_mode = normalize_sort_mode(experiences_sort_mode)
     self.achievements_date_format = normalize_date_format(achievements_date_format)
-    self.achievements_time_display = normalize_time_display(achievements_time_display)
     self.default_style_variant = normalize_choice(default_style_variant, STYLE_VARIANTS, STYLE_VARIANTS.first)
     self.default_style_accent = normalize_choice(default_style_accent, STYLE_ACCENTS, STYLE_ACCENTS.second)
     self.default_style_shape = normalize_choice(default_style_shape, STYLE_SHAPES, STYLE_SHAPES.first)
@@ -51,11 +48,6 @@ class ProfilePreference < ApplicationRecord
   def normalize_date_format(value)
     value = value.to_s.downcase
     DATE_FORMATS.include?(value) ? value : DATE_FORMATS.first
-  end
-
-  def normalize_time_display(value)
-    value = value.to_s.downcase
-    TIME_DISPLAY.include?(value) ? value : TIME_DISPLAY.first
   end
 
   def normalize_choice(value, allowed, fallback)

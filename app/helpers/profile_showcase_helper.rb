@@ -96,30 +96,8 @@ module ProfileShowcaseHelper
   end
 
   def achievement_timestamp_lines(achievement, preference)
-    return [] unless achievement.occurred_at.present? || achievement.occurred_on.present?
-
-    lines = []
     formatted = formatted_achievement_date(achievement, preference)
-    lines << formatted if formatted.present?
-
-    time_mode = preference.achievements_time_display
-    time_mode = "local" if time_mode.blank? || time_mode == "profile_default"
-
-    if achievement.occurred_at.present?
-      case time_mode
-      when "relative"
-        lines << relative_time_phrase(achievement.occurred_at)
-      when "utc"
-        lines << achievement.occurred_at.utc.strftime("%Y/%m/%d %H:%M UTC")
-      else
-        zone = achievement.timezone.presence || "Australia/Melbourne"
-        lines << "#{achievement.occurred_at.in_time_zone(zone).strftime('%Y/%m/%d %H:%M')} #{zone}"
-        if preference.achievements_dual_time?
-          lines << achievement.occurred_at.utc.strftime("%Y/%m/%d %H:%M UTC")
-        end
-      end
-    end
-    lines
+    formatted.present? ? [ formatted ] : []
   end
 
   def formatted_achievement_date(achievement, preference)

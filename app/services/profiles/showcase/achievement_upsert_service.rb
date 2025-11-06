@@ -37,7 +37,6 @@ module Profiles
         record.description = normalize_blank(attributes[:description])
         record.url = normalize_blank(attributes[:url])
         record.fa_icon = normalize_blank(attributes[:fa_icon])
-        record.timezone = normalize_blank(attributes[:timezone]) || record.timezone
         record.date_display_mode = normalize_blank(attributes[:date_display_mode]) || record.date_display_mode
         record.pin_surface = normalize_blank(attributes[:pin_surface]) || record.pin_surface || "spotlight"
         record.style_variant = normalize_blank(attributes[:style_variant])
@@ -47,10 +46,6 @@ module Profiles
         %i[active hidden pinned].each do |flag|
           next unless attributes.key?(flag)
           record.public_send("#{flag}=", boolean(attributes[flag]))
-        end
-
-        if attributes.key?(:occurred_at)
-          record.occurred_at = parse_timestamp(attributes[:occurred_at], timezone: record.timezone)
         end
 
         if attributes.key?(:occurred_on)

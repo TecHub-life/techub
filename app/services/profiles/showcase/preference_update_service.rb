@@ -24,9 +24,6 @@ module Profiles
 
       def prepared_attributes
         data = attributes.dup
-        if data.key?(:achievements_dual_time)
-          data[:achievements_dual_time] = boolean(data[:achievements_dual_time])
-        end
         if data.key?(:pin_limit)
           data[:pin_limit] = normalize_pin_limit(data[:pin_limit])
         end

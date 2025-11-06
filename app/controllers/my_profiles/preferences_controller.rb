@@ -22,8 +22,6 @@ module MyProfiles
         :default_style_accent,
         :default_style_shape,
         :achievements_date_format,
-        :achievements_time_display,
-        :achievements_dual_time,
         :pin_limit
       )
     end

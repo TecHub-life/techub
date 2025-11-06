@@ -6,7 +6,6 @@
 <% input_classes = "w-full rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
 <% primary_button_classes = "inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400" %>
 <% danger_button_classes = "inline-flex items-center justify-center rounded-lg border border-red-500 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-400" %>
-<% default_timezone = (preference.metadata || {}).fetch("timezone", "Australia/Melbourne") rescue "Australia/Melbourne" %>
 <% pin_limit = preference&.pin_limit || profile.showcase_pin_limit %>
 <% pins_used = profile.pinned_showcase_items.count %>
 
@@ -263,28 +262,14 @@
               <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Use any Font Awesome utility class stack (e.g. <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white">fa-solid fa-medal</code>).</p>
             </div>
           </div>
-          <div class="grid gap-3 md:grid-cols-2">
-            <div>
-              <%= f.label :occurred_on, "Date", class: label_classes %>
-              <%= f.date_field :occurred_on, class: input_classes %>
-            </div>
-            <div>
-              <%= f.label :occurred_at, "Date & time", class: label_classes %>
-              <%= f.datetime_local_field :occurred_at, class: input_classes %>
-            </div>
+          <div>
+            <%= f.label :occurred_on, "Date", class: label_classes %>
+            <%= f.date_field :occurred_on, class: input_classes %>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Achievements now only care about the date—no more juggling timezones or timestamps.</p>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            The Date field is the minimum needed for cards. Add Date & time (plus a timezone) when you want the timeline to show exact moments—if you only fill the time, we’ll copy its date automatically.
-          </p>
-          <div class="grid gap-3 md:grid-cols-2">
-            <div>
-              <%= f.label :timezone, "Timezone", class: label_classes %>
-              <%= f.text_field :timezone, value: default_timezone, class: input_classes %>
-            </div>
-            <div>
-              <%= f.label :date_display_mode, "Display", class: label_classes %>
-              <%= f.select :date_display_mode, [["Profile default", "profile_default"], ["YYYY/MM/DD", "yyyy_mm_dd"], ["DD/MM/YYYY", "dd_mm_yyyy"], ["Relative", "relative"]], {}, class: input_classes %>
-            </div>
+          <div>
+            <%= f.label :date_display_mode, "Display", class: label_classes %>
+            <%= f.select :date_display_mode, [["Profile default", "profile_default"], ["YYYY/MM/DD", "yyyy_mm_dd"], ["DD/MM/YYYY", "dd_mm_yyyy"], ["Relative", "relative"]], {}, class: input_classes %>
           </div>
           <div class="grid gap-3 md:grid-cols-3">
             <div>
@@ -397,28 +382,14 @@
                       <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Matches the syntax you already use for links (e.g. <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white">fa-solid fa-award</code>).</p>
                     </div>
                   </div>
-                  <div class="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <%= f.label :occurred_on, "Date", class: label_classes %>
-                      <%= f.date_field :occurred_on, value: achievement.occurred_on, class: input_classes %>
-                    </div>
-                    <div>
-                      <%= f.label :occurred_at, "Date & time", class: label_classes %>
-                      <%= f.datetime_local_field :occurred_at, value: achievement.occurred_at&.strftime("%Y-%m-%dT%H:%M"), class: input_classes %>
-                    </div>
+                  <div>
+                    <%= f.label :occurred_on, "Date", class: label_classes %>
+                    <%= f.date_field :occurred_on, value: achievement.occurred_on, class: input_classes %>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">We dropped the time picker—just set the day you hit the milestone.</p>
                   </div>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">
-                    You can stick to Date for simple milestones. Adding Date & time (and a timezone) unlocks relative/dual time displays; leaving Date blank while setting Date & time auto-derives the day.
-                  </p>
-                  <div class="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <%= f.label :timezone, "Timezone", class: label_classes %>
-                      <%= f.text_field :timezone, value: achievement.timezone, class: input_classes %>
-                    </div>
-                    <div>
-                      <%= f.label :date_display_mode, "Display", class: label_classes %>
-                      <%= f.select :date_display_mode, [["Profile default", "profile_default"], ["YYYY/MM/DD", "yyyy_mm_dd"], ["DD/MM/YYYY", "dd_mm_yyyy"], ["Relative", "relative"]], { selected: achievement.date_display_mode }, class: input_classes %>
-                    </div>
+                  <div>
+                    <%= f.label :date_display_mode, "Display", class: label_classes %>
+                    <%= f.select :date_display_mode, [["Profile default", "profile_default"], ["YYYY/MM/DD", "yyyy_mm_dd"], ["DD/MM/YYYY", "dd_mm_yyyy"], ["Relative", "relative"]], { selected: achievement.date_display_mode }, class: input_classes %>
                   </div>
                   <div class="grid gap-3 md:grid-cols-3">
                     <div>
