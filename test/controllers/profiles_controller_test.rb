@@ -63,4 +63,10 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match /\/directory\?tags=ruby/, @response.body
   end
+
+  test "unlisted profile behaves as missing" do
+    profile = Profile.create!(github_id: 55, login: "ghost", listed: false, unlisted_at: Time.current)
+    get profile_path(username: profile.login)
+    assert_redirected_to submit_path
+  end
 end

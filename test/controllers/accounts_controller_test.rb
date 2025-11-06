@@ -2,7 +2,8 @@ require "test_helper"
 
 class AccountsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(github_id: 7001, login: "tester", email: "old@example.com")
+    @login = unique_login("tester")
+    @user = User.create!(github_id: unique_github_id, login: @login, email: "#{@login}@example.com")
   end
 
   test "requires login" do
@@ -12,7 +13,7 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "updates email and notify_on_pipeline" do
-    uid = User.find_by(login: "tester").id
+    uid = User.find_by(login: @login).id
     open_session do |sess|
       sess.patch account_path, params: { user: { email: "New@Example.com", notify_on_pipeline: "0" } }, headers: { "X-Test-User-Id" => uid.to_s }
       assert_equal 302, sess.response.status

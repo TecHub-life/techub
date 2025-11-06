@@ -36,7 +36,7 @@ module Profiles
       end
     end
 
-    CORE_VARIANTS = %w[og card simple banner].freeze
+    CORE_VARIANTS = %w[og og_pro card card_pro simple banner].freeze
     SOCIAL_VARIANTS = Screenshots::CaptureCardService::SOCIAL_VARIANTS.freeze
     SCREENSHOT_VARIANTS = (CORE_VARIANTS + SOCIAL_VARIANTS).uniq.freeze
 
@@ -187,6 +187,7 @@ module Profiles
       context = Pipeline::Context.new(login: login, host: resolved_host, run_id: run_id, overrides: overrides)
       context.degraded_steps = []
       @last_known_profile = Profile.for_login(login).first
+      context.profile = @last_known_profile if @last_known_profile.present?
       context.trace(:pipeline, :started, login: login, host: context.host, trigger: trigger_source)
       @pending_pipeline_events = []
       pipeline_started_at = Time.current

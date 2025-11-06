@@ -15,8 +15,10 @@ module Profiles
           preserve_avatar = context.override(:preserve_profile_avatar, false)
           existing_avatar = preserve_avatar ? profile.avatar_url : nil
 
+          preserve_fields = preserved_profile_fields
+
           ActiveRecord::Base.transaction do
-            assign_profile_attributes(profile, payload)
+            assign_profile_attributes(profile, payload, preserve_fields)
             new_avatar = context.avatar_public_url.presence || context.avatar_relative_path.presence
             # Prefer Spaces-hosted avatar, fall back to downloaded relative path if upload failed.
             if preserve_avatar && existing_avatar.present?
@@ -48,9 +50,9 @@ module Profiles
 
         private
 
-        def assign_profile_attributes(profile, payload)
+        def assign_profile_attributes(profile, payload, preserve_fields)
           data = payload[:profile]
-          profile.assign_attributes(
+          attrs = {
             login: data[:login].to_s.downcase,
             name: pick(data, :name, profile.name),
             bio: pick(data, :bio, profile.bio),
@@ -67,7 +69,9 @@ module Profiles
             github_created_at: pick(data, :created_at, profile.github_created_at),
             github_updated_at: pick(data, :updated_at, profile.github_updated_at),
             summary: pick(payload, :summary, profile.summary)
-          )
+          }
+          attrs.except!(*preserve_fields) if preserve_fields.present?
+          profile.assign_attributes(attrs)
         end
 
         def pick(hash, key, fallback)
@@ -201,6 +205,14 @@ module Profiles
               count: lang[:count]
             }
           end.select { |lang| lang[:name].present? }
+        end
+
+        def preserved_profile_fields
+          @preserved_profile_fields ||= Array(context.override(:preserve_profile_fields))
+            .map { |field| field.to_s.strip.downcase }
+            .reject(&:blank?)
+            .map(&:to_sym)
+            .uniq
         end
       end
     end

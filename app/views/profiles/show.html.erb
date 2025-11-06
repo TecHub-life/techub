@@ -4,7 +4,8 @@
   desc_text = @profile&.bio.presence || "GitHub profile insights and AI trading card"
   content_for :title, "#{title_text} – TecHub"
   content_for :description, desc_text
-  og_url = @profile ? profile_asset_url(@profile, "og", fallback_basename: "og", absolute: true) : nil
+  og_kind = @profile&.preferred_og_kind || "og"
+  og_url = @profile ? profile_asset_url(@profile, og_kind, fallback_basename: og_kind, absolute: true) : nil
   if og_url.present?
     content_for :og_image, og_url
     content_for :twitter_image, og_url
@@ -54,7 +55,7 @@
   </script>
 <% end %>
 
-<section class="mx-auto max-w-6xl px-4 py-8">
+<section class="mx-auto max-w-6xl px-4 py-8" data-controller="hidden-items" data-hidden-items-hidden-count-value="<%= @hidden_showcase_count %>" data-hidden-items-analytics-endpoint-value="<%= analytics_showcase_path(format: :json) %>" data-hidden-items-profile-value="<%= @profile.login %>">
   <% if @profile.present? %>
     <%# TABBED CONTENT SECTION %>
     <div class="mb-6" data-controller="tabs" data-tabs-default-value="profile">
@@ -162,7 +163,10 @@
           role="tabpanel"
           aria-labelledby="tab-profile">
           <%= render partial: 'profiles/tabs/hero', locals: { 
-            profile: @profile
+            profile: @profile,
+            pinned_items: @pinned_showcase_items,
+            preferences: @profile_preferences,
+            hidden_count: @hidden_showcase_count
           } %>
         </section>
 
@@ -179,7 +183,12 @@
             profile: @profile, 
             languages: @languages,
             social_accounts: @social_accounts,
-            organizations: @organizations
+            organizations: @organizations,
+            links: @profile_links,
+            achievements: @profile_achievements,
+            experiences: @profile_experiences,
+            preferences: @profile_preferences,
+            hidden_count: @hidden_showcase_count
           } %>
         </section>
 

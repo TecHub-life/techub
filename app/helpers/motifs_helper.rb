@@ -6,13 +6,27 @@ module MotifsHelper
   def motif_image_url(kind, slug, db_url = nil)
     return db_url if db_url.present?
 
-    asset = motif_asset_path_for(kind, slug)
+    asset = cached_motif_asset(kind, slug)
     return asset if asset.present?
 
     asset_path("android-chrome-512x512.jpg")
   end
 
   private
+
+  def cached_motif_asset(kind, slug)
+    @_motif_asset_lookup ||= {}
+    key = "#{kind}-#{slug}"
+    if @_motif_asset_lookup.key?(key)
+      cached = @_motif_asset_lookup[key]
+      return nil if cached == :__missing
+      return cached
+    end
+
+    asset = motif_asset_path_for(kind, slug)
+    @_motif_asset_lookup[key] = asset.presence || :__missing
+    asset
+  end
 
   def motif_asset_path_for(kind, slug)
     folder = (kind.to_s == "spirit_animal") ? "spirit-animals" : "archetypes"

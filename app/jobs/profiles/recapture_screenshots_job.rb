@@ -5,6 +5,10 @@ module Profiles
     def perform(login:, variants: nil)
       profile = Profile.for_login(login).first
       return unless profile
+      if profile.unlisted?
+        StructuredLogger.info(message: "recapture_skipped", service: self.class.name, login: login, reason: "unlisted")
+        return
+      end
       kinds = Array(variants).presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS
       kinds.each do |variant|
         Screenshots::CaptureCardJob.perform_later(login: profile.login, variant: variant, optimize: true)

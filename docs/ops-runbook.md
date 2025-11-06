@@ -84,6 +84,20 @@ Gemini::AvatarImageSuiteService.call(login: "loftwah")
 - Status surfaces on the profile page and in `/my/profiles`.
 - Artifacts: `public/generated/<login>/` (PNG + meta); optional upload to Spaces/S3.
 
+### Profile Unlisting & Restoration
+
+- Owners can “Delete” a profile from `/my/profiles` or the settings UI. This does not remove any
+  data; it simply marks the profile as unlisted so it disappears from public pages, APIs, and
+  automated pipelines.
+- Ops tooling now shows an **Unlisted** badge on profile pages (`/ops/profiles/:username`) so you
+  can see hidden entries at a glance. Hard deletes in the Ops panel still remove rows permanently.
+- To restore a hidden profile, have the owner resubmit it at `/submit` (or use
+  `Profiles::RelistService` from the console). Relisting does **not** auto-run the pipeline; once
+  the profile is visible again, queue a regenerate from Ops or ask the owner to click “Regenerate”
+  in their settings if you need fresh screenshots or AI traits.
+- While a profile remains unlisted, the pipeline and screenshot jobs silently skip work unless you
+  explicitly pass `allow_unlisted: true` (reserved for exceptional Ops repair runs).
+
 ## Notifications
 
 - Per-user email & preference (default ON). Settings at `/settings/account`.

@@ -1,6 +1,5 @@
-class MyProfilesController < ApplicationController
-  before_action :require_login
-  before_action :load_profile_and_authorize, only: [ :settings, :update_settings, :regenerate, :regenerate_ai, :upload_asset, :destroy ]
+class MyProfilesController < MyProfiles::BaseController
+  before_action :load_profile_and_authorize, only: [ :settings, :update_settings, :regenerate, :regenerate_ai, :upload_asset, :destroy, :unlist ]
 
   def index
     uid = current_user&.id || session[:current_user_id]
@@ -61,27 +60,21 @@ class MyProfilesController < ApplicationController
 
     puts "✅ Profile loaded successfully: #{@profile.login}"
 
-    assets = @profile.profile_assets.where(kind: %w[og card simple]).index_by(&:kind)
+    asset_kinds = %w[og og_pro card card_pro simple]
+    assets = @profile.profile_assets.where(kind: asset_kinds).index_by(&:kind)
     @asset_og = assets["og"]
+    @asset_og_pro = assets["og_pro"]
     @asset_card = assets["card"]
+    @asset_card_pro = assets["card_pro"]
     @asset_simple = assets["simple"]
-
-    # Targets for social previews (used in assets tab)
-    # Canonical, deduped social targets (avoid duplicates for same dimensions)
-    @social_targets = [
-      { kind: "x_profile_400", label: "X Profile (Avatar)", aspect: "1/1" },
-      { kind: "x_header_1500x500", label: "X Header", aspect: "3/1" },
-      { kind: "x_feed_1600x900", label: "X Feed", aspect: "16/9" },
-      { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", aspect: "4/5" },
-      { kind: "ig_landscape_1080x566", label: "Instagram Landscape", aspect: "540/283" },
-      { kind: "fb_post_1080", label: "Facebook Post", aspect: "1/1" },
-      { kind: "fb_cover_851x315", label: "Facebook Cover", aspect: "851/315" },
-      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover", aspect: "4/1" },
-      { kind: "youtube_cover_2560x1440", label: "YouTube Cover", aspect: "16/9" }
-    ]
 
     # For UI: compute AI regen availability
     @ai_regen_available_at = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
+
+    @profile_links = @profile.profile_links.order(:position, :created_at)
+    @profile_achievements = @profile.profile_achievements.order(:position, :created_at)
+    @profile_experiences = @profile.profile_experiences.includes(:profile_experience_skills).order(:position, :created_at)
+    @profile_preferences = @profile.preferences
 
     puts "✅ Settings action completed successfully"
   end
@@ -93,6 +86,7 @@ class MyProfilesController < ApplicationController
       :bg_fx_card, :bg_fy_card, :bg_zoom_card, :bg_fx_og, :bg_fy_og, :bg_zoom_og, :bg_fx_simple, :bg_fy_simple, :bg_zoom_simple, :ai_art_opt_in,
       :hireable_override)
     attrs = permitted.to_h
+    preferred_kind_param = params[:preferred_og_kind].to_s.presence
 
     # Update profile-level flags
     if permitted.key?(:ai_art_opt_in)
@@ -136,22 +130,30 @@ class MyProfilesController < ApplicationController
       attrs["avatar_choice"] = (choice == "ai") ? "ai" : "real"
     end
 
-    record.assign_attributes(attrs)
-    if record.save
-      # Structured log for observability
-      StructuredLogger.info(
-        message: "settings_updated",
-        controller: self.class.name,
-        login: @profile.login,
-        apply_everywhere: apply_everywhere,
-        avatar_choice: record.avatar_choice,
-        bg_choice_card: record.bg_choice_card,
-        bg_choice_og: record.bg_choice_og,
-        bg_choice_simple: record.bg_choice_simple
-      ) if defined?(StructuredLogger)
-      redirect_to my_profile_settings_path(username: @profile.login), notice: "Settings updated"
+    preference_updated = apply_preferred_og_kind(preferred_kind_param)
+
+    card_saved = true
+    if attrs.present?
+      record.assign_attributes(attrs)
+      card_saved = record.save
+    end
+
+    if card_saved && preference_updated
+      if attrs.present? && defined?(StructuredLogger)
+        StructuredLogger.info(
+          message: "settings_updated",
+          controller: self.class.name,
+          login: @profile.login,
+          apply_everywhere: apply_everywhere,
+          avatar_choice: record.avatar_choice,
+          bg_choice_card: record.bg_choice_card,
+          bg_choice_og: record.bg_choice_og,
+          bg_choice_simple: record.bg_choice_simple
+        )
+      end
+      redirect_to_settings(notice: "Settings updated")
     else
-      redirect_to my_profile_settings_path(username: @profile.login), alert: "Could not save settings"
+      redirect_to_settings(alert: "Could not save settings")
     end
   end
 
@@ -160,7 +162,7 @@ class MyProfilesController < ApplicationController
     recent = ProfilePipelineEvent.where(profile_id: @profile.id, stage: "screenshots").order(created_at: :desc).limit(1).pluck(:created_at).first rescue nil
     if recent && recent > 10.minutes.ago
       wait_m = ((recent + 10.minutes - Time.current) / 60.0).ceil
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Please wait ~#{wait_m}m before re-capturing screenshots again"
+      return redirect_to_settings(alert: "Please wait ~#{wait_m}m before re-capturing screenshots again")
     end
 
     Profiles::GeneratePipelineJob.perform_later(
@@ -172,7 +174,7 @@ class MyProfilesController < ApplicationController
       }
     )
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "Pipeline queued for @#{@profile.login}"
+    redirect_to_settings(notice: "Pipeline queued for @#{@profile.login}")
   end
 
   def regenerate_ai
@@ -180,7 +182,7 @@ class MyProfilesController < ApplicationController
     next_allowed = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
     if Time.current < next_allowed
       wait_h = ((next_allowed - Time.current) / 3600.0).ceil
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "AI regeneration available in ~#{wait_h}h"
+      return redirect_to_settings(alert: "AI regeneration available in ~#{wait_h}h")
     end
 
     Profiles::GeneratePipelineJob.perform_later(
@@ -188,29 +190,29 @@ class MyProfilesController < ApplicationController
       trigger_source: "my_profiles#regenerate_ai"
     )
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "Full regeneration queued for @#{@profile.login} (weekly limit in effect)"
+    redirect_to_settings(notice: "Full regeneration queued for @#{@profile.login} (weekly limit in effect)")
   end
 
   def upload_asset
     kind = params[:kind].to_s
     file = params[:file]
-    allowed = %w[og card simple avatar_3x1 avatar_1x1]
+    allowed = %w[og og_pro card card_pro simple avatar_3x1 avatar_1x1]
     unless allowed.include?(kind)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
+      return redirect_to_settings(alert: "Unsupported kind")
     end
     unless file.respond_to?(:path)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "No file uploaded"
+      return redirect_to_settings(alert: "No file uploaded")
     end
 
     begin
       # Upload to Active Storage / Spaces if enabled
       content_type = file.content_type.presence || "application/octet-stream"
       unless content_type.start_with?("image/")
-        return redirect_to my_profile_settings_path(username: @profile.login), alert: "Only image uploads are allowed"
+        return redirect_to_settings(alert: "Only image uploads are allowed")
       end
       filename = "#{@profile.login}-#{kind}-custom#{File.extname(file.original_filename.to_s)}"
       up = Storage::ActiveStorageUploadService.call(path: file.path, content_type: content_type, filename: filename)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: (up.error&.message || "Upload failed") if up.failure?
+      return redirect_to_settings(alert: (up.error&.message || "Upload failed")) if up.failure?
 
       public_url = up.value[:public_url]
 
@@ -237,12 +239,12 @@ class MyProfilesController < ApplicationController
         provider: "upload"
       )
       if rec.failure?
-        return redirect_to my_profile_settings_path(username: @profile.login), alert: (rec.error&.message || "Save failed")
+        return redirect_to_settings(alert: (rec.error&.message || "Save failed"))
       end
 
-      redirect_to my_profile_settings_path(username: @profile.login), notice: "Updated #{kind.humanize} image"
+      redirect_to_settings(notice: "Updated #{kind.humanize} image")
     rescue StandardError => e
-      redirect_to my_profile_settings_path(username: @profile.login), alert: e.message
+      redirect_to_settings(alert: e.message)
     end
   end
 
@@ -252,8 +254,8 @@ class MyProfilesController < ApplicationController
     kind = params[:kind].to_s
     source_url = params[:public_url].to_s
     source_path = params[:local_path].to_s
-    unless %w[og card simple avatar_3x1 avatar_16x9 avatar_1x1].include?(kind)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
+    unless %w[og og_pro card card_pro simple avatar_3x1 avatar_16x9 avatar_1x1].include?(kind)
+      return redirect_to_settings(alert: "Unsupported kind")
     end
 
     begin
@@ -264,9 +266,9 @@ class MyProfilesController < ApplicationController
       rec.provider = rec.provider.presence || "user_select"
       rec.generated_at = Time.current
       rec.save!
-      redirect_to my_profile_settings_path(username: @profile.login), notice: "Selected #{kind.humanize} image"
+      redirect_to_settings(notice: "Selected #{kind.humanize} image")
     rescue StandardError => e
-      redirect_to my_profile_settings_path(username: @profile.login), alert: e.message
+      redirect_to_settings(alert: e.message)
     end
   end
 
@@ -280,20 +282,30 @@ class MyProfilesController < ApplicationController
     redirect_to my_profiles_path, notice: "Removed @#{@profile.login} from your profiles"
   end
 
-  private
+  def unlist
+    ownership = ProfileOwnership.find_by(user_id: current_user.id, profile_id: @profile.id, is_owner: true)
+    return redirect_to my_profiles_path, alert: "Only owners can delete profiles" unless ownership
 
-  def require_login
-    @current_user ||= User.find_by(id: session[:current_user_id]) if @current_user.nil? && session[:current_user_id].present?
-    return if current_user.present?
-    redirect_to auth_github_path, alert: "Please sign in with GitHub"
-  end
-
-  def load_profile_and_authorize
-    @profile = Profile.for_login(params[:username]).first
-    return redirect_to my_profiles_path, alert: "Profile not found" unless @profile
-    owner_id = current_user&.id || session[:current_user_id]
-    unless ProfileOwnership.exists?(user_id: owner_id, profile_id: @profile.id)
-      redirect_to my_profiles_path, alert: "You do not own this profile"
+    result = Profiles::UnlistService.call(profile: @profile, actor: current_user)
+    if result.success?
+      redirect_to my_profiles_path, notice: "Deleted @#{@profile.login}. You can re-add it anytime from Submit."
+    else
+      redirect_to_settings(alert: result.error&.message || "Could not delete @#{@profile.login}")
     end
   end
+
+  private
+
+  def apply_preferred_og_kind(raw_kind)
+    return true if raw_kind.blank?
+    kind = raw_kind.to_s
+    return false unless Profile::OG_VARIANT_KINDS.include?(kind)
+    return true if @profile.preferred_og_kind == kind
+    @profile.update_columns(preferred_og_kind: kind)
+    true
+  rescue StandardError
+    false
+  end
+
+  # redirect_to_settings inherited from MyProfiles::BaseController
 end

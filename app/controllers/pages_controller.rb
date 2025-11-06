@@ -31,7 +31,7 @@ class PagesController < ApplicationController
     @per_page = (params[:per_page] || default_per).to_i.clamp(1, 60)
     offset = (@page - 1) * @per_page
 
-    scope = Profile.where(last_pipeline_status: [ "success", "partial_success" ]).includes(:profile_assets, :profile_card)
+    scope = Profile.listed.where(last_pipeline_status: [ "success", "partial_success" ]).includes(:profile_assets, :profile_card)
     if @q.present?
       scope = scope.where("profiles.login LIKE :q OR profiles.name LIKE :q", q: "%#{@q}%")
     end
@@ -63,7 +63,7 @@ class PagesController < ApplicationController
       scope = scope.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }) if uid.present?
     end
     # Build tag cloud (from current successful profiles only)
-    cloud_source = Profile.joins(:profile_card).where(last_pipeline_status: [ "success", "partial_success" ]).pluck("profile_cards.tags")
+    cloud_source = Profile.listed.joins(:profile_card).where(last_pipeline_status: [ "success", "partial_success" ]).pluck("profile_cards.tags")
     @tag_cloud = cloud_source.flatten.map { |t| t.to_s.downcase.strip }.reject(&:blank?).tally.sort_by { |(_t, c)| -c }.first(40)
 
     @total = scope.count
@@ -75,7 +75,7 @@ class PagesController < ApplicationController
 
   def gallery
     # Public gallery: opted-in profiles with AI-generated assets in their generated folder
-    @profiles = Profile.where(ai_art_opt_in: true).includes(:profile_assets).limit(500)
+    @profiles = Profile.listed.where(ai_art_opt_in: true).includes(:profile_assets).limit(500)
     @items = []
     @profiles.each do |p|
       base = Rails.root.join("public", "generated", p.login)
@@ -97,14 +97,15 @@ class PagesController < ApplicationController
     @per_page = (params[:per_page] || 12).to_i.clamp(6, 48)
 
     # Get profile counts per archetype
-    rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.archetype")
+    rows = Profile.listed.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.archetype")
     counts = Hash.new(0)
     rows.each { |arch| counts[arch] += 1 if arch.present? }
+    archetype_records = motif_records_for("archetype")
 
     # Build catalog from Motifs::Catalog with counts and DB records
     all_archetypes = Motifs::Catalog.archetypes.map do |name, desc|
       slug = Motifs::Catalog.to_slug(name)
-      rec = Motif.find_by(kind: "archetype", theme: "core", slug: slug)
+      rec = archetype_records[slug]
       {
         name: name,
         description: desc,
@@ -136,14 +137,15 @@ class PagesController < ApplicationController
     @per_page = (params[:per_page] || 12).to_i.clamp(6, 48)
 
     # Get profile counts per spirit animal
-    rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.spirit_animal")
+    rows = Profile.listed.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.spirit_animal")
     counts = Hash.new(0)
     rows.each { |spirit| counts[spirit] += 1 if spirit.present? }
+    spirit_records = motif_records_for("spirit_animal")
 
     # Build catalog from Motifs::Catalog with counts and DB records
     all_spirit_animals = Motifs::Catalog.spirit_animals.map do |name, desc|
       slug = Motifs::Catalog.to_slug(name)
-      rec = Motif.find_by(kind: "spirit_animal", theme: "core", slug: slug)
+      rec = spirit_records[slug]
       {
         name: name,
         description: desc,
@@ -182,12 +184,12 @@ class PagesController < ApplicationController
 
     results = case field
     when "username"
-      Profile.where("lower(login) LIKE ? OR lower(name) LIKE ?", "%#{query}%", "%#{query}%")
+      Profile.listed.where("lower(login) LIKE ? OR lower(name) LIKE ?", "%#{query}%", "%#{query}%")
              .limit(10)
              .pluck(:login, :name)
              .map { |login, name| { value: login, label: "#{name} (@#{login})" } }
     when "tag"
-      Profile.joins(:profile_card)
+      Profile.listed.joins(:profile_card)
              .pluck("profile_cards.tags")
              .flatten
              .uniq
@@ -195,7 +197,7 @@ class PagesController < ApplicationController
              .first(10)
              .map { |t| { value: t, label: t } }
     when "language"
-      ProfileLanguage.where("lower(name) LIKE ?", "%#{query}%")
+      ProfileLanguage.joins(:profile).where("lower(profile_languages.name) LIKE ?", "%#{query}%").where(profiles: { listed: true })
                      .distinct
                      .limit(10)
                      .pluck(:name)
@@ -205,5 +207,12 @@ class PagesController < ApplicationController
     end
 
     render json: { results: results }
+  end
+
+  private
+
+  def motif_records_for(kind)
+    @motif_lookup ||= {}
+    @motif_lookup[kind] ||= Motif.where(kind: kind, theme: "core").index_by(&:slug)
   end
 end

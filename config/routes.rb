@@ -55,7 +55,9 @@ Rails.application.routes.draw do
   # Leaderboard OG (static) must be defined BEFORE dynamic :login routes to avoid clashes
   get "/cards/leaderboard/og", to: "cards#leaderboard_og", as: :leaderboard_og
   get "/cards/:login/og", to: "cards#og", as: :card_og
+  get "/cards/:login/og_pro", to: "cards#og_pro"
   get "/cards/:login/card", to: "cards#card", as: :card_preview
+  get "/cards/:login/card_pro", to: "cards#card_pro"
   get "/cards/:login/simple", to: "cards#simple", as: :card_simple
   get "/cards/:login/banner", to: "cards#banner", as: :card_banner
   # Social-target routes
@@ -77,12 +79,22 @@ Rails.application.routes.draw do
   # Ownership (My Profiles)
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
   delete "/my/profiles/:username", to: "my_profiles#destroy", as: :remove_my_profile
+  delete "/my/profiles/:username/unlist", to: "my_profiles#unlist", as: :unlist_my_profile
   get "/my/profiles/:username/settings", to: "my_profiles#settings", as: :my_profile_settings
   patch "/my/profiles/:username/settings", to: "my_profiles#update_settings", as: :update_my_profile_settings
   post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile
   post "/my/profiles/:username/regenerate_ai", to: "my_profiles#regenerate_ai", as: :regenerate_my_profile_ai
   post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
   post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
+
+  scope "/my/profiles/:username", module: :my_profiles, as: :my_profile do
+    resources :links, only: [ :create, :update, :destroy ]
+    resources :achievements, only: [ :create, :update, :destroy ]
+    resources :experiences, only: [ :create, :update, :destroy ]
+    resource :preference, only: :update, controller: :preferences
+  end
+
+  post "/analytics/showcase", to: "analytics#showcase", defaults: { format: :json }, as: :analytics_showcase
 
   # Direct OG image route (serves/redirects image; enqueues generation if missing)
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
@@ -120,6 +132,8 @@ Rails.application.routes.draw do
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
+    post "/bulk_refresh_assets", to: "admin#bulk_refresh_assets", as: :bulk_refresh_assets
+    post "/bulk_refresh_github", to: "admin#bulk_refresh_github", as: :bulk_refresh_github
     post "/pipeline_doctor", to: "admin#pipeline_doctor", as: :pipeline_doctor
     get "/pipeline_snapshot", to: "admin#pipeline_snapshot", as: :pipeline_snapshot
     resources :admin, only: [] do
@@ -142,6 +156,8 @@ Rails.application.routes.draw do
     post "/profiles/:username/reroll_github", to: "profiles#reroll_github", as: :reroll_github_profile
     post "/profiles/:username/reroll_ai", to: "profiles#reroll_ai", as: :reroll_ai_profile
     post "/profiles/:username/recapture_screenshots", to: "profiles#recapture_screenshots", as: :recapture_screenshots_profile
+    post "/profiles/:username/refresh_assets", to: "profiles#refresh_assets", as: :refresh_assets_profile
+    post "/profiles/:username/refresh_avatar", to: "profiles#refresh_avatar", as: :refresh_avatar_profile
     # Image regeneration routes removed to reduce confusion; use default retry path for freshness
     delete "/profiles/:username", to: "profiles#destroy", as: :destroy_profile
     # Ownerships admin

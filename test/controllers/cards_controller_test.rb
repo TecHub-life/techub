@@ -27,6 +27,22 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, @profile.login
   end
 
+  test "card_pro view renders professional layout" do
+    get "/cards/#{@profile.login}/card_pro"
+    assert_response :success
+    assert_includes @response.body, "rounded-[32px]"
+    assert_includes @response.body, "width: 1280px"
+    assert_includes @response.body, @profile.display_name
+  end
+
+  test "og_pro view renders professional layout" do
+    get "/cards/#{@profile.login}/og_pro"
+    assert_response :success
+    assert_includes @response.body, "rounded-[32px]"
+    assert_includes @response.body, "width: 1200px"
+    assert_includes @response.body, @profile.display_name
+  end
+
   test "simple view renders with avatar and name" do
     get card_simple_path(login: @profile.login)
     assert_response :success
@@ -53,5 +69,11 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       strings.each { |s| assert_includes @response.body, s }
     end
+  end
+
+  test "unlisted profile returns not found" do
+    @profile.update!(listed: false, unlisted_at: Time.current)
+    get card_og_path(login: @profile.login)
+    assert_response :not_found
   end
 end

@@ -36,6 +36,24 @@ module Profiles
           assert_equal "https://spaces.techub/new-avatar.png", @profile.reload.avatar_url
         end
 
+        test "preserve_profile_fields keeps manual values" do
+          @profile.update!(name: "Custom Name", bio: "Custom Bio")
+          context = build_context(overrides: { preserve_profile_fields: [ :name, "bio" ] })
+          payload = github_payload
+          payload[:profile] = payload[:profile].merge(
+            name: "GitHub Name",
+            bio: "New Bio"
+          )
+          context.github_payload = payload
+
+          result = PersistGithubProfile.call(context: context)
+
+          assert result.success?, -> { result.error&.message }
+          @profile.reload
+          assert_equal "Custom Name", @profile.name
+          assert_equal "Custom Bio", @profile.bio
+        end
+
         private
 
         def build_context(overrides: {})

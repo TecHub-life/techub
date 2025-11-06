@@ -1,0 +1,147 @@
+<% canvas_w = (@canvas_w || 1280).to_i %>
+<% canvas_h = (@canvas_h || 720).to_i %>
+<% suffix = "card" %>
+<% card = @profile.profile_card %>
+<% card_prefs = card %>
+<% choice = card_prefs&.public_send("bg_choice_#{suffix}") || "default" %>
+<% color_hex = card_prefs&.public_send("bg_color_#{suffix}") || "#0f172a" %>
+<% fx = card_prefs&.public_send("bg_fx_#{suffix}") || 0.5 %>
+<% fy = card_prefs&.public_send("bg_fy_#{suffix}") || 0.5 %>
+<% zoom = card_prefs&.public_send("bg_zoom_#{suffix}") || 1.0 %>
+<% aspect = :card %>
+<% gen_dir = Rails.root.join("public", "generated", @profile.login) %>
+<% bg_url = nil %>
+<% if choice == "ai" && @profile.ai_art_opt_in %>
+  <% asset_bg16 = @profile.profile_assets.find_by(kind: "avatar_16x9") %>
+  <% asset_card = @profile.profile_assets.find_by(kind: "card") %>
+  <% if asset_bg16&.public_url.present? %>
+    <% bg_url = asset_bg16.public_url %>
+  <% elsif asset_card&.public_url.present? %>
+    <% bg_url = asset_card.public_url %>
+  <% elsif Dir.exist?(gen_dir) %>
+    <% file = Dir[gen_dir.join("avatar-16x9*.jpg").to_s].first || Dir[gen_dir.join("avatar-16x9*.png").to_s].first || Dir[gen_dir.join("card-bg-16x9*.jpg").to_s].first || Dir[gen_dir.join("card-bg-16x9*.png").to_s].first %>
+    <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
+  <% end %>
+  <% bg_url ||= supporting_art_url_for(login: @profile.login, aspect: aspect) %>
+<% elsif choice == "default" || (choice == "ai" && !@profile.ai_art_opt_in) %>
+  <% bg_url = supporting_art_url_for(login: @profile.login, aspect: aspect) %>
+<% end %>
+
+<% name = @profile.display_name %>
+<% handle = @profile.login %>
+<% name_len = name.to_s.length %>
+<% name_class = name_len > 24 ? "text-5xl" : "text-6xl" %>
+<% handle_class = "text-2xl" %>
+
+<% languages = @profile.top_languages(5).to_a %>
+<% language_names =
+    if languages.any?
+      languages.map { |lang| lang.respond_to?(:name) ? lang.name : lang.to_s }.reject(&:blank?)
+    else
+      %w[Ruby Shell Python TypeScript JavaScript]
+    end %>
+<% tags = Array(card&.tags).map(&:to_s).reject(&:blank?) %>
+<% followers = @profile.followers.to_i %>
+<% location = @profile.location.to_s.presence %>
+<% blog_url = @profile.blog.to_s.presence %>
+<% primary_url = blog_url.presence || @profile.github_profile_url %>
+<% bio_text = @profile.bio.to_s.presence || card&.short_bio.presence || @profile.summary.to_s.presence %>
+
+<% twitter_handle = @profile.twitter_username.to_s.presence || (@profile.twitter_account&.username).to_s.presence %>
+<% bluesky_handle = (@profile.bluesky_account&.username).to_s.presence %>
+<% social_handles = [] %>
+<% if twitter_handle.present? %>
+  <% cleaned = twitter_handle.delete_prefix("@") %>
+  <% social_handles << { name: "Twitter / X", value: "@#{cleaned}" } %>
+<% end %>
+<% if bluesky_handle.present? %>
+  <% cleaned = bluesky_handle.delete_prefix("@") %>
+  <% social_handles << { name: "Bluesky", value: "@#{cleaned}" } %>
+<% end %>
+
+<% stat_items = [] %>
+<% stat_items << { label: "Location", value: location } if location.present? %>
+<% if followers.positive? %>
+  <% stat_items << { label: "Followers", value: number_with_delimiter(followers) } %>
+<% end %>
+
+<% background_color = (choice == "color") ? color_hex : "#0b1220" %>
+<div class="relative overflow-hidden rounded-[32px]" style="width: <%= canvas_w %>px; height: <%= canvas_h %>px;">
+  <div class="absolute inset-0" style="background:<%= background_color %>;"></div>
+  <% if choice != "color" && bg_url.present? %>
+    <img src="<%= bg_url %>" alt="Background" class="absolute inset-0 h-full w-full object-cover opacity-30" style="<%= bg_style_from(fx: fx, fy: fy, zoom: zoom) %>">
+  <% end %>
+  <div class="absolute inset-0 bg-gradient-to-br from-slate-950/85 via-slate-950/65 to-slate-900/60"></div>
+
+  <div class="relative z-10 flex h-full flex-col">
+    <div class="flex-1 px-10 py-12">
+      <div class="mx-auto flex w-full max-w-6xl flex-col gap-12 lg:flex-row lg:items-center lg:gap-16">
+        <div class="flex flex-col items-center gap-6 text-center lg:w-[40%] lg:items-start lg:text-left">
+          <div class="rounded-full bg-gradient-to-r from-sky-500 via-cyan-400 to-indigo-500 p-[6px] shadow-[0_18px_48px_rgba(15,23,42,0.55)]">
+            <div class="rounded-full border-4 border-slate-900/70 bg-slate-900 p-1">
+              <div class="h-48 w-48 overflow-hidden rounded-full bg-slate-800">
+                <% avatar_src = avatar_image_url_for(@profile) %>
+                <% if avatar_src.present? %>
+                  <img src="<%= avatar_src %>" alt="<%= name %> avatar" class="h-full w-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
+                <% else %>
+                  <div class="flex h-full w-full items-center justify-center bg-slate-700 text-4xl text-slate-400">?</div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <h1 class="<%= name_class %> font-bold leading-tight tracking-tight text-white drop-shadow-sm"><%= name %></h1>
+            <p class="<%= handle_class %> font-semibold text-sky-300">@<%= handle %></p>
+            <% if bio_text.present? %>
+              <p class="text-lg font-medium leading-relaxed text-slate-100/90"><%= bio_text %></p>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="flex flex-1 flex-col gap-8">
+          <div class="flex flex-wrap justify-center gap-3 lg:justify-start">
+            <span class="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-base font-semibold text-white shadow-sm"><%= primary_url %></span>
+            <% social_handles.each do |handle_info| %>
+              <span class="rounded-full border border-white/15 bg-slate-900/70 px-4 py-1.5 text-sm font-semibold text-white/90">
+                <%= handle_info[:name] %>
+                <span class="ml-1 text-sky-300"><%= handle_info[:value] %></span>
+              </span>
+            <% end %>
+          </div>
+
+          <% if language_names.any? %>
+            <div class="flex flex-wrap justify-center gap-2 lg:justify-start">
+              <% language_names.each do |lang_name| %>
+                <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-sm font-medium text-white"><%= lang_name %></span>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if stat_items.any? %>
+            <div class="flex flex-wrap justify-center gap-4 lg:justify-start">
+              <% stat_items.each do |stat| %>
+                <div class="min-w-[200px] rounded-2xl border border-white/15 bg-white/10 px-5 py-4 text-left text-white/90 backdrop-blur">
+                  <p class="text-sm font-semibold text-slate-200/80"><%= stat[:label] %></p>
+                  <p class="text-3xl font-bold text-white"><%= stat[:value] %></p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <% if tags.any? %>
+      <div class="mt-auto w-full px-10 pb-10">
+        <div class="mx-auto max-w-4xl rounded-[28px] border border-white/12 bg-slate-950/60 px-6 py-4 text-center backdrop-blur">
+          <div class="flex flex-wrap justify-center gap-2">
+            <% tags.each do |tag| %>
+              <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-indigo-200">#<%= tag %></span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

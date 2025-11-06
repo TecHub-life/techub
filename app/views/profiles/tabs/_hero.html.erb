@@ -25,6 +25,42 @@
         </div>
       </div>
 
+      <div
+        data-controller="iddqd-badge"
+        data-iddqd-badge-code-value="42069"
+        data-iddqd-badge-param-value="iddqd">
+        <div
+          data-iddqd-badge-target="badge"
+          class="hidden flex-col gap-4 rounded-2xl border border-red-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-red-900/80 px-4 py-4 text-amber-100 shadow-[0_0_35px_rgba(255,0,0,0.25)] sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-1 items-start gap-4">
+            <span class="text-4xl text-amber-400 drop-shadow-lg">
+              <i class="fa-solid fa-skull-crossbones"></i>
+            </span>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400">Secret unlocked</p>
+              <p class="text-lg font-bold text-white">IDDQD Protocol // Terminal Sleuth</p>
+              <p class="text-sm text-amber-200">
+                You discovered the Doom-inspired backdoor and earned the unstoppable badge. Flex it proudly on your TecHub profile.
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-col gap-2 text-sm sm:text-base">
+            <span class="inline-flex items-center justify-center gap-2 rounded-full border border-amber-400/60 bg-slate-950/40 px-4 py-1 font-mono text-amber-200 shadow-inner">
+              <i class="fa-solid fa-terminal text-amber-400"></i>
+              Code: 42069
+            </span>
+            <a
+              href="https://techub.life/?iddqd=42069"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex items-center justify-center gap-2 rounded-full bg-amber-400 px-4 py-2 font-semibold text-slate-950 shadow-lg shadow-amber-500/40 transition hover:bg-amber-300">
+              <i class="fa-solid fa-trophy"></i>
+              Claim Doomslayer badge
+            </a>
+          </div>
+        </div>
+      </div>
+
       <% about = card&.long_bio.presence || card&.short_bio.presence || profile.bio %>
       <% if about.present? %>
         <% if about.length > 200 %>
@@ -127,6 +163,20 @@
           <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Gists</p>
         </a>
       </div>
+
+      <% if pinned_items.present? %>
+        <div class="mt-6 space-y-4 text-center">
+          <div class="space-y-1">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Featured Pins</h2>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Single column, same order you set backstage</p>
+          </div>
+          <div class="flex flex-col items-center gap-4">
+            <% pinned_items.each do |item| %>
+              <%= render partial: "profiles/showcase/card", locals: { item: item, profile: profile, preferences: preferences, compact: true } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>

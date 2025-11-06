@@ -24,6 +24,9 @@
             <span class="text-slate-500"><%= v[:dims] %> (<%= v[:aspect] %>)</span>
             <span class="text-slate-500">•</span>
             <span class="text-slate-500"><%= v[:usage] %></span>
+            <% if v[:selected] %>
+              <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">Selected OG</span>
+            <% end %>
           </div>
           <% if v[:url].present? %>
             <a href="<%= v[:url] %>" download target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">

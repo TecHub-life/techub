@@ -8,6 +8,7 @@
 
     <form action="<%= update_my_profile_settings_path(username: profile.login) %>" method="post" class="space-y-4" data-controller="submit-form">
       <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      <%= hidden_field_tag :tab, "backgrounds" %>
 
       <label for="apply_everywhere" class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
         <input id="apply_everywhere" type="checkbox" name="apply_everywhere" value="1" class="<%= ui_checkbox_class %>">
@@ -83,6 +84,7 @@
         <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Re-capture screenshots and optimise assets. No AI usage.</p>
         <%= button_to regenerate_my_profile_path(username: profile.login),
               method: :post,
+              params: { tab: "backgrounds" },
               form: { data: { controller: "submit-form" } },
               class: "#{ui_secondary_button_class} w-full" do %>
           <span data-submit-form-target="spinner" class="hidden">
@@ -100,6 +102,7 @@
         <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Run the full AI pipeline (weekly limit).</p>
         <%= button_to regenerate_my_profile_ai_path(username: profile.login),
               method: :post,
+              params: { tab: "backgrounds" },
               disabled: !available,
               form: { data: { controller: "submit-form" } },
               class: "#{ui_primary_button_class} w-full #{'opacity-60 cursor-not-allowed' unless available}" do %>

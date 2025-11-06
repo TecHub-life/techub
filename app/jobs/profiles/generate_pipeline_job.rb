@@ -20,9 +20,30 @@ module Profiles
         overrides: overrides.except(:trigger_source)
       )
 
-      result = Profiles::GeneratePipelineService.call(login: login, overrides: overrides)
       profile = Profile.for_login(login).first
-      return unless profile
+      unless profile
+        StructuredLogger.warn(
+          message: "pipeline_skipped",
+          service: self.class.name,
+          login: login,
+          reason: "missing_profile",
+          trigger: trigger_source
+        )
+        return
+      end
+
+      if profile.unlisted? && !allow_unlisted?(normalized_options)
+        StructuredLogger.info(
+          message: "pipeline_skipped",
+          service: self.class.name,
+          login: login,
+          reason: "unlisted",
+          trigger: trigger_source
+        )
+        return
+      end
+
+      result = Profiles::GeneratePipelineService.call(login: login, overrides: overrides)
 
       duration_ms = ((Time.current - started) * 1000).to_i
 
@@ -59,6 +80,11 @@ module Profiles
       options.respond_to?(:deep_symbolize_keys) ? options.deep_symbolize_keys : options
     rescue StandardError
       {}
+    end
+
+    def allow_unlisted?(options)
+      return false unless options.is_a?(Hash)
+      ActiveModel::Type::Boolean.new.cast(options[:allow_unlisted])
     end
   end
 end

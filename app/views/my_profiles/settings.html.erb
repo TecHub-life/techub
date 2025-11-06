@@ -59,12 +59,24 @@
               </svg>
               <span>Assets</span>
             </button>
-            <%# <button data-tabs-target="tab" data-tab-name="uploads" data-action="click->tabs#change" class="inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
+            <button data-tabs-target="tab" data-tab-name="showcase" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
               <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H15m0 6l-1.5 5m1.5-5l-2-6m-4 6H3l1.405-4.215A2 2 0 017.305 11H9m0 6l1.5 5m-1.5-5l2-6m4-6a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
-              <span>Uploads</span>
-            </button> %>
+              <span>Showcase</span>
+            </button>
+            <button data-tabs-target="tab" data-tab-name="styles" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
+              <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17a4 4 0 01-4-4 4 4 0 118 0 4 4 0 01-4 4zm0 0v5m0-5a4 4 0 01-4-4H2m9 4a4 4 0 004-4h5m-9-4a4 4 0 01-4 4H2m9-4a4 4 0 004-4h5"/>
+              </svg>
+              <span>Pins &amp; Styles</span>
+            </button>
+            <button data-tabs-target="tab" data-tab-name="secrets" data-action="click->tabs#change" class="flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm md:text-base lg:text-lg font-medium transition border-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300 data-[active]:bg-indigo-600 data-[active]:text-white dark:data-[active]:bg-indigo-600">
+              <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276a1 1 0 011.447.894V15.382a1 1 0 01-.553.894L15 18M15 10l-4.553-2.276A1 1 0 009 8.618v6.764a1 1 0 00.553.894L15 18m0-8v8m0 0l-4.553 2.276A1 1 0 019 19.382V12.618a1 1 0 00-.553-.894L3 9"/>
+              </svg>
+              <span>Secrets</span>
+            </button>
           </nav>
         </div>
       </div>
@@ -88,8 +100,36 @@
           <%= render partial: 'my_profiles/tabs/assets', locals: {
             profile: @profile,
             asset_card: @asset_card,
+            asset_card_pro: @asset_card_pro,
             asset_og: @asset_og,
+            asset_og_pro: @asset_og_pro,
             asset_simple: @asset_simple
+          } %>
+        </div>
+
+        <div data-tabs-target="panel" data-tab-panel="showcase" class="hidden">
+          <%= render partial: 'my_profiles/tabs/showcase', locals: {
+            profile: @profile,
+            links: @profile_links,
+            achievements: @profile_achievements,
+            experiences: @profile_experiences,
+            preference: @profile_preferences
+          } %>
+        </div>
+
+        <div data-tabs-target="panel" data-tab-panel="styles" class="hidden">
+          <%= render partial: 'my_profiles/tabs/styles', locals: {
+            profile: @profile,
+            preference: @profile_preferences
+          } %>
+        </div>
+
+        <div data-tabs-target="panel" data-tab-panel="secrets" class="hidden">
+          <%= render partial: 'my_profiles/tabs/secrets', locals: {
+            profile: @profile,
+            links: @profile_links,
+            achievements: @profile_achievements,
+            experiences: @profile_experiences
           } %>
         </div>
 

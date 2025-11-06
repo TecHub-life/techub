@@ -188,6 +188,21 @@ Run workers locally via the `jobs` and `recurring` processes inside `Procfile.de
 - The home page renders Loftwah’s profile summary, top repositories, and marketing copy pulled from
   service objects or the `Profile` model cache.
 
+## Profile Showcase
+
+- Links, achievements, and experience entries live in first-class tables (`profile_links`,
+  `profile_achievements`, `profile_experiences`). Each item supports pinning, hiding, Font Awesome
+  icons, console “secret” codes, and Tailwind-driven style variants.
+- Owners manage showcase content in the `/my/profiles/:username/settings` UI. Tabs cover item CRUD,
+  drag-free manual ordering (position fields), style presets, and console-hint tooling. Pins respect
+  a per-profile limit (default 5) with surfaces for hero strips, spotlight grids, etc.
+- Public profiles render pinned items in the hero tab plus Linktree-style grids inside the Overview
+  tab. Hidden items stay in the DOM with badges and only appear after running
+  `techub.revealHidden()` in the browser console. `techub.iddqd()` adds a small glow animation.
+- Ahoy captures `profile_link_clicked`, `profile_achievement_clicked`, `profile_experience_clicked`,
+  `hidden_items_revealed`, and `iddqd_triggered` events so we can analyse how visitors interact with
+  showcase content.
+
 ## Service Result Pattern
 
 All services inherit from `ApplicationService` and return an instance of `ServiceResult`. This keeps
