@@ -165,12 +165,12 @@
       </div>
 
       <% if pinned_items.present? %>
-        <div class="mt-6 space-y-3">
-          <div class="flex items-center justify-between">
+        <div class="mt-6 space-y-4 text-center">
+          <div class="space-y-1">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Featured Pins</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Spotlighted across hero and previews</p>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Single column, same order you set backstage</p>
           </div>
-          <div class="grid gap-4 md:grid-cols-2">
+          <div class="flex flex-col items-center gap-4">
             <% pinned_items.each do |item| %>
               <%= render partial: "profiles/showcase/card", locals: { item: item, profile: profile, preferences: preferences, compact: true } %>
             <% end %>

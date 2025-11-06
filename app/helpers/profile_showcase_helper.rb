@@ -16,10 +16,14 @@ module ProfileShowcaseHelper
     "rounded" => "rounded-2xl"
   }.freeze
 
-  def showcase_style_classes(item)
+  STYLE_PREFIXES = %w[fa-solid fa-regular fa-light fa-thin fa-duotone fa-sharp fa-brands fa-classic].freeze
+  BRAND_ICON_HINTS = %w[github gitlab twitter x instagram linkedin youtube spotify discord twitch npm docker slack reddit mastodon bluesky behance dribbble medium product-hunt stack-overflow stackexchange facebook soundcloud npmjs notion figma].freeze
+
+  def showcase_style_classes(item, compact: false)
     variant = item.respond_to?(:applied_style_variant) ? item.applied_style_variant : "plain"
     shape = item.respond_to?(:applied_style_shape) ? item.applied_style_shape : "rounded"
-    base = %w[rounded-2xl border p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500]
+    base = %w[rounded-2xl border p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 w-full mx-auto]
+    base << (compact ? "max-w-xl" : "max-w-2xl")
     base << VARIANT_STYLES.fetch(variant, VARIANT_STYLES["plain"])
     base << SHAPE_CLASSES.fetch(shape, SHAPE_CLASSES["rounded"])
     base.join(" ")
@@ -159,7 +163,28 @@ module ProfileShowcaseHelper
 
   def safe_icon_classes(raw)
     return if raw.blank?
-    raw.to_s.split(/[\s,]+/).select { |token| token.match?(/^[a-z0-9\-_]+$/i) }.join(" ")
+
+    tokens = raw.to_s.split(/[\s,]+/).map(&:strip).select { |token| token.match?(/^[a-z0-9\-_]+$/i) }
+    return if tokens.empty?
+
+    tokens.unshift("fa") unless tokens.include?("fa")
+
+    unless tokens.any? { |token| STYLE_PREFIXES.include?(token) }
+      inferred_style = infer_style_for(tokens)
+      tokens.insert(1, inferred_style)
+    end
+
+    tokens.uniq.join(" ")
+  end
+
+  def infer_style_for(tokens)
+    name_token = tokens.find { |token| token.start_with?("fa-") && !STYLE_PREFIXES.include?(token) && token != "fa" }
+    icon_name = name_token.to_s.sub(/\Afa-/, "")
+    if BRAND_ICON_HINTS.any? { |hint| icon_name.include?(hint) }
+      "fa-brands"
+    else
+      "fa-solid"
+    end
   end
 
   def link_host(url)

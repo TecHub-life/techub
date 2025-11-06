@@ -2,7 +2,7 @@
 <% preferences ||= profile.preferences %>
 <% item_kind = showcase_item_kind(item) %>
 <% hidden = item.respond_to?(:hidden?) && item.hidden? %>
-<% classes = [showcase_style_classes(item), (compact ? "p-4" : "p-5"), "h-full"] %>
+<% classes = [showcase_style_classes(item, compact: compact), (compact ? "p-4" : "p-5"), "h-full"] %>
 <% classes << "hidden opacity-60" if hidden %>
 <% data_attrs = {
   controller: "showcase-analytics",
@@ -31,7 +31,7 @@
 <% tag_options[:aria] = { hidden: true } if hidden %>
 
 <%= content_tag tag_name, **tag_options do %>
-  <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+  <div class="flex flex-col gap-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:text-left">
     <span><%= item_kind %></span>
     <div class="flex items-center gap-2">
       <% if item.respond_to?(:pinned?) && item.pinned? %>

@@ -127,12 +127,12 @@
   </div>
 
   <% if links.present? %>
-    <section class="rounded-2xl border border-slate-200 bg-white/90 p-4 md:p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-      <div class="flex items-center justify-between">
+    <section class="rounded-2xl border border-slate-200 bg-white/90 p-5 md:p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900/80 mx-auto max-w-5xl text-center">
+      <div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Links & Buttons</h3>
-        <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Manual order respected</span>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Hand-picked CTAs and destinations, lined up exactly how you curated them.</p>
       </div>
-      <div class="mt-4 grid gap-4 md:grid-cols-2">
+      <div class="mt-6 flex flex-col items-center gap-4">
         <% links.each do |link| %>
           <%= render partial: "profiles/showcase/card", locals: { item: link, profile: profile, preferences: preferences } %>
         <% end %>
@@ -141,12 +141,12 @@
   <% end %>
 
   <% if achievements.present? %>
-    <section class="rounded-2xl border border-slate-200 bg-white/95 p-4 md:p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-      <div class="flex items-center justify-between">
+    <section class="rounded-2xl border border-slate-200 bg-white/95 p-5 md:p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900/80 mx-auto max-w-5xl text-center">
+      <div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Achievements</h3>
-        <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Sorted <%= preferences.achievements_sort_mode.titleize %></span>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Milestones, awards, and ship logs presented as a vertical story.</p>
       </div>
-      <div class="mt-4 grid gap-4">
+      <div class="mt-6 flex flex-col items-center gap-4">
         <% achievements.each do |achievement| %>
           <%= render partial: "profiles/showcase/card", locals: { item: achievement, profile: profile, preferences: preferences } %>
         <% end %>
@@ -155,12 +155,12 @@
   <% end %>
 
   <% if experiences.present? %>
-    <section class="rounded-2xl border border-slate-200 bg-white/95 p-4 md:p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/85">
-      <div class="flex items-center justify-between">
+    <section class="rounded-2xl border border-slate-200 bg-white/95 p-5 md:p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900/85 mx-auto max-w-5xl text-center">
+      <div>
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Experience</h3>
-        <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Sorted <%= preferences.experiences_sort_mode.titleize %></span>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Roles, contracts, and adventures stacked in the same single-column rhythm.</p>
       </div>
-      <div class="mt-4 grid gap-4">
+      <div class="mt-6 flex flex-col items-center gap-4">
         <% experiences.each do |experience| %>
           <%= render partial: "profiles/showcase/card", locals: { item: experience, profile: profile, preferences: preferences } %>
         <% end %>
