@@ -158,4 +158,14 @@ class Profile < ApplicationRecord
       has_readme: has_readme?
     }
   end
+
+  def missing_asset_variants(desired_kinds = nil)
+    kinds = Array(desired_kinds.presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS)
+      .map { |k| k.to_s.strip }
+      .reject(&:blank?)
+    return [] if kinds.empty?
+
+    existing = profile_assets.where(kind: kinds).pluck(:kind)
+    kinds - existing
+  end
 end

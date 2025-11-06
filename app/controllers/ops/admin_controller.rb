@@ -317,6 +317,63 @@ module Ops
 
     # bulk_retry_all with images removed from Ops to avoid confusion and budget risk.
 
+    def bulk_refresh_assets
+      logins = parse_logins(params[:logins])
+      variants = normalized_variants(params[:variants])
+      missing_only = boolean_param(params[:only_missing], default: true)
+      desired_variants = variants.presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS
+      relation = logins.any? ? Profile.where(login: logins) : Profile.all
+
+      count = 0
+      relation.find_each do |profile|
+        effective_variants = missing_only ? profile.missing_asset_variants(desired_variants) : desired_variants
+        next if effective_variants.blank?
+
+        overrides = Profiles::Pipeline::Recipes.screenshot_refresh(variants: effective_variants)
+        next if overrides.blank?
+
+        Profiles::GeneratePipelineJob.perform_later(
+          profile.login,
+          trigger_source: "ops_admin#bulk_refresh_assets",
+          pipeline_overrides: overrides
+        )
+        profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
+        count += 1
+      end
+
+      message = count.zero? ? "No profiles required asset refresh." : "Queued asset refresh for #{count} profile(s)."
+      redirect_to ops_admin_path(anchor: "pipeline"), notice: message
+    end
+
+    def bulk_refresh_github
+      logins = parse_logins(params[:logins])
+      mode = params[:mode].to_s.presence || "github"
+      overrides = case mode
+      when "avatar"
+        Profiles::Pipeline::Recipes.avatar_refresh
+      else
+        Profiles::Pipeline::Recipes.github_sync
+      end
+      if overrides.blank?
+        return redirect_to ops_admin_path(anchor: "pipeline"), alert: "No recipe available for the requested GitHub refresh."
+      end
+
+      relation = logins.any? ? Profile.where(login: logins) : Profile.all
+      count = 0
+      relation.find_each do |profile|
+        Profiles::GeneratePipelineJob.perform_later(
+          profile.login,
+          trigger_source: "ops_admin#bulk_refresh_github",
+          pipeline_overrides: overrides
+        )
+        profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
+        count += 1
+      end
+
+      message = count.zero? ? "No profiles were enqueued for GitHub refresh." : "Queued GitHub refresh for #{count} profile(s)."
+      redirect_to ops_admin_path(anchor: "pipeline"), notice: message
+    end
+
     # Removed write action for installation id: installation id must be configured explicitly.
 
     def axiom_smoke
@@ -474,6 +531,30 @@ module Ops
     end
 
     private
+
+    def parse_logins(values)
+      case values
+      when String
+        values.split(/[,\s]+/)
+      else
+        Array(values)
+      end.map { |login| login.to_s.downcase.strip }.reject(&:blank?).uniq
+    end
+
+    def normalized_variants(values)
+      case values
+      when String
+        values.split(/[,\s]+/)
+      else
+        Array(values)
+      end.map { |variant| variant.to_s.downcase.strip }.reject(&:blank?).uniq
+    end
+
+    def boolean_param(value, default: false)
+      return default if value.nil?
+
+      ActiveModel::Type::Boolean.new.cast(value)
+    end
 
     def valid_safe_filename?(name)
       return false unless name.is_a?(String) && name.present?

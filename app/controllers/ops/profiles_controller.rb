@@ -12,7 +12,7 @@ end
 
 module Ops
   class ProfilesController < BaseController
-    before_action :find_profile, only: [ :show, :retry, :destroy ]
+    before_action :find_profile, only: [ :show, :retry, :destroy, :refresh_assets, :reroll_github, :refresh_avatar ]
 
     def show
       @top_repositories = @profile.top_repositories
@@ -46,8 +46,13 @@ module Ops
     end
 
     def reroll_github
-      Profiles::RerollGithubJob.perform_later(login: params[:username].to_s.downcase)
-      redirect_to ops_admin_path, notice: "GitHub sync queued for @#{params[:username]}"
+      overrides = Profiles::Pipeline::Recipes.github_sync
+      enqueue_pipeline(@profile, overrides, trigger: "ops_profiles#reroll_github", notice: "GitHub data refresh queued for @#{@profile.login}")
+    end
+
+    def refresh_avatar
+      overrides = Profiles::Pipeline::Recipes.avatar_refresh
+      enqueue_pipeline(@profile, overrides, trigger: "ops_profiles#refresh_avatar", notice: "GitHub avatar refresh queued for @#{@profile.login}")
     end
 
     def reroll_ai
@@ -59,6 +64,26 @@ module Ops
       variants = (params[:variants].presence || Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS).map(&:to_s)
       Profiles::RecaptureScreenshotsJob.perform_later(login: params[:username].to_s.downcase, variants: variants)
       redirect_to ops_admin_path, notice: "Screenshot recapture queued for @#{params[:username]} (#{variants.join(', ')})"
+    end
+
+    def refresh_assets
+      variants = normalized_variants(params[:variants])
+      missing_only = boolean_param(params[:only_missing], default: true)
+      variants = Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS if variants.empty?
+      variants = @profile.missing_asset_variants(variants) if missing_only
+
+      if variants.empty?
+        redirect_to ops_admin_path, notice: "All requested assets already exist for @#{@profile.login}"
+        return
+      end
+
+      overrides = Profiles::Pipeline::Recipes.screenshot_refresh(variants: variants)
+      if overrides.blank?
+        redirect_to ops_admin_path, alert: "No variants selected for asset refresh"
+        return
+      end
+
+      enqueue_pipeline(@profile, overrides, trigger: "ops_profiles#refresh_assets", notice: "Asset refresh queued for @#{@profile.login} (#{variants.join(', ')})")
     end
 
     # Image regeneration removed from Ops to avoid confusion. Use Settings UI for artwork decisions.
@@ -80,6 +105,30 @@ module Ops
     def find_profile
       @profile = Profile.for_login(params[:username]).first
       redirect_to ops_admin_path, alert: "Profile not found" unless @profile
+    end
+
+    def normalized_variants(values)
+      list = case values
+      when String
+        values.split(/[,\s]+/)
+      else
+        Array(values)
+      end
+      list.map { |v| v.to_s.strip.downcase }.reject(&:blank?).uniq
+    end
+
+    def boolean_param(value, default: false)
+      return default if value.nil?
+
+      ActiveModel::Type::Boolean.new.cast(value)
+    end
+
+    def enqueue_pipeline(profile, overrides, trigger:, notice:)
+      opts = { trigger_source: trigger }
+      opts[:pipeline_overrides] = overrides if overrides.present?
+      Profiles::GeneratePipelineJob.perform_later(profile.login, opts)
+      profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
+      redirect_to ops_admin_path, notice: notice
     end
   end
 end

@@ -169,6 +169,61 @@
           <% end %>
         </div>
 
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-1">Asset Refresh (Non-destructive)</h2>
+          <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Regenerate missing screenshots (or specific variants) without touching profile data. Useful when new asset kinds launch.</p>
+          <form action="<%= ops_bulk_refresh_assets_path %>" method="post" class="space-y-3" data-controller="submit-form">
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="space-y-2">
+                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Target profiles (optional)</label>
+                <textarea name="logins" rows="4" class="<%= ui_textarea_class %>" placeholder="loftwah&#10;lindsey"></textarea>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Leave blank to process everyone. Separate usernames with spaces, commas, or new lines.</p>
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Asset variants</label>
+                <input type="text" name="variants" class="<%= ui_input_class %>" placeholder="og card simple (defaults to all)">
+                <label class="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                  <input type="checkbox" name="only_missing" value="1" checked class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                  Only refresh missing variants
+                </label>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Uncheck to force-regenerate the listed variants even if they already exist.</p>
+              </div>
+            </div>
+            <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button" onclick="return confirm('Queue non-destructive asset refresh jobs?');">
+              <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+              <span data-submit-form-target="text">Queue asset refresh</span>
+            </button>
+          </form>
+        </div>
+
+        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h2 class="text-lg font-semibold mb-1">GitHub Refresh (Non-destructive)</h2>
+          <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Queue a lightweight GitHub sync that preserves user-edited fields (name, bio, etc.) or refreshes avatars only.</p>
+          <form action="<%= ops_bulk_refresh_github_path %>" method="post" class="space-y-3" data-controller="submit-form">
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="space-y-2">
+                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Target profiles (optional)</label>
+                <textarea name="logins" rows="4" class="<%= ui_textarea_class %>" placeholder="loftwah&#10;lindsey"></textarea>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Leave blank to refresh everyone. Separate usernames with spaces, commas, or line breaks.</p>
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mode</label>
+                <select name="mode" class="<%= ui_select_class %>">
+                  <option value="github">GitHub data (preserve avatar + text fields)</option>
+                  <option value="avatar">Avatar only</option>
+                </select>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Data mode syncs repos/orgs/etc. but keeps manual profile edits. Avatar mode only updates avatar assets.</p>
+              </div>
+            </div>
+            <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+              <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+              <span data-submit-form-target="text">Queue GitHub refresh</span>
+            </button>
+          </form>
+        </div>
+
         <!-- Failed Profiles -->
         <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h2 class="text-lg font-semibold mb-1">Failed Profiles</h2>

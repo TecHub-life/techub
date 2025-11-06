@@ -15,7 +15,15 @@ module Profiles
             return success_with_context({}, metadata: { skipped: true, reason: "screenshots_override_skip" })
           end
 
-          variants = Array(options[:variants]).presence || []
+          override_variants = Array(context.override(:screenshot_variants))
+                              .map { |variant| variant.to_s.strip }
+                              .reject(&:blank?)
+          variants = override_variants.presence || Array(options[:variants]).presence || []
+          if variants.empty?
+            trace(:skipped, reason: "no_variants")
+            context.captures = {}
+            return success_with_context({}, metadata: { skipped: true, reason: "no_variants" })
+          end
           trace(:started, variants: variants, host: host)
 
           captures = {}

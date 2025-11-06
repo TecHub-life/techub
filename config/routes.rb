@@ -122,6 +122,8 @@ Rails.application.routes.draw do
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
+    post "/bulk_refresh_assets", to: "admin#bulk_refresh_assets", as: :bulk_refresh_assets
+    post "/bulk_refresh_github", to: "admin#bulk_refresh_github", as: :bulk_refresh_github
     post "/pipeline_doctor", to: "admin#pipeline_doctor", as: :pipeline_doctor
     get "/pipeline_snapshot", to: "admin#pipeline_snapshot", as: :pipeline_snapshot
     resources :admin, only: [] do
@@ -144,6 +146,8 @@ Rails.application.routes.draw do
     post "/profiles/:username/reroll_github", to: "profiles#reroll_github", as: :reroll_github_profile
     post "/profiles/:username/reroll_ai", to: "profiles#reroll_ai", as: :reroll_ai_profile
     post "/profiles/:username/recapture_screenshots", to: "profiles#recapture_screenshots", as: :recapture_screenshots_profile
+    post "/profiles/:username/refresh_assets", to: "profiles#refresh_assets", as: :refresh_assets_profile
+    post "/profiles/:username/refresh_avatar", to: "profiles#refresh_avatar", as: :refresh_avatar_profile
     # Image regeneration routes removed to reduce confusion; use default retry path for freshness
     delete "/profiles/:username", to: "profiles#destroy", as: :destroy_profile
     # Ownerships admin

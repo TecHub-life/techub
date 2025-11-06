@@ -16,5 +16,21 @@ class ProfileTest < ActiveSupport::TestCase
     profile = Profile.new(login: "tester", github_id: 1001, preferred_og_kind: "og_pro")
     assert_equal "og_pro", profile.preferred_og_kind
   end
-end
 
+  test "missing_asset_variants returns kinds absent from profile assets" do
+    profile = Profile.create!(login: "assets", github_id: 2001)
+    profile.profile_assets.create!(kind: "og", local_path: "/tmp/og.png")
+
+    missing = profile.missing_asset_variants([ "og", "card", "simple" ])
+
+    assert_equal [ "card", "simple" ], missing
+  end
+
+  test "missing_asset_variants defaults to pipeline variants" do
+    profile = Profile.create!(login: "empty-assets", github_id: 2002)
+
+    missing = profile.missing_asset_variants
+
+    assert_equal Profiles::GeneratePipelineService::SCREENSHOT_VARIANTS.sort, missing.sort
+  end
+end

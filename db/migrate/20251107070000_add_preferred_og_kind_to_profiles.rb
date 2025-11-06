@@ -4,4 +4,3 @@ class AddPreferredOgKindToProfiles < ActiveRecord::Migration[8.1]
     add_index :profiles, :preferred_og_kind
   end
 end
-
