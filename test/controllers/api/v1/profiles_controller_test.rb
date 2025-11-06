@@ -2,12 +2,13 @@ require "test_helper"
 
 class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
   test "assets returns new kinds when present" do
-    profile = Profile.create!(github_id: 1, login: "demo")
+    login = unique_login("demo")
+    profile = Profile.create!(github_id: unique_github_id, login: login)
     %w[card og simple banner x_profile_400 fb_post_1080 ig_portrait_1080x1350].each do |kind|
       ProfileAsset.create!(profile: profile, kind: kind, public_url: "https://cdn/#{kind}.jpg", mime_type: "image/jpeg")
     end
 
-    get "/api/v1/profiles/demo/assets"
+    get "/api/v1/profiles/#{login}/assets"
     assert_response :success
     json = JSON.parse(@response.body)
     kinds = json.fetch("assets").map { |a| a["kind"] }
@@ -17,11 +18,12 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "card endpoint returns stable schema" do
+    login = unique_login("schemauser")
     profile = Profile.create!(
-      github_id: 2,
-      login: "schemauser",
+      github_id: unique_github_id,
+      login: login,
       name: "Schema User",
-      avatar_url: "https://cdn.example/schemauser.png"
+      avatar_url: "https://cdn.example/#{login}.png"
     )
 
     ProfileCard.create!(
@@ -61,7 +63,7 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
       }
     )
 
-    get "/api/v1/profiles/schemauser"
+    get "/api/v1/profiles/#{login}"
     assert_response :success
     json = JSON.parse(@response.body)
 
@@ -92,16 +94,17 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
       total_events
     ]
 
-    get "/api/v1/profiles/schemauser/card"
+    get "/api/v1/profiles/#{login}/card"
     assert_response :success
   end
 
   test "battle_ready endpoint preserves profile and card shape" do
+    login = unique_login("readyuser")
     profile = Profile.create!(
-      github_id: 3,
-      login: "readyuser",
+      github_id: unique_github_id,
+      login: login,
       name: "Ready User",
-      avatar_url: "https://cdn.example/readyuser.png"
+      avatar_url: "https://cdn.example/#{login}.png"
     )
 
     ProfileCard.create!(
@@ -133,8 +136,8 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
     payload = JSON.parse(@response.body)
 
     assert payload["profiles"].is_a?(Array)
-    entry = payload["profiles"].find { |p| p.dig("profile", "login") == "readyuser" }
-    refute_nil entry, "readyuser should be included in battle_ready payload"
+    entry = payload["profiles"].find { |p| p.dig("profile", "login") == login }
+    refute_nil entry, "#{login} should be included in battle_ready payload"
 
     assert_superset entry.fetch("profile"), %w[avatar_url id login name]
     assert_superset entry.fetch("card"), %w[
@@ -156,13 +159,15 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "assets endpoint hides unlisted profiles" do
-    profile = Profile.create!(github_id: 4, login: "hidden", listed: false, unlisted_at: Time.current)
-    get "/api/v1/profiles/hidden/assets"
+    login = unique_login("hidden")
+    Profile.create!(github_id: unique_github_id, login: login, listed: false, unlisted_at: Time.current)
+    get "/api/v1/profiles/#{login}/assets"
     assert_response :not_found
   end
 
   test "battle_ready excludes unlisted profiles" do
-    profile = Profile.create!(github_id: 5, login: "shadow", listed: false, unlisted_at: Time.current)
+    login = unique_login("shadow")
+    profile = Profile.create!(github_id: unique_github_id, login: login, listed: false, unlisted_at: Time.current)
     ProfileCard.create!(
       profile: profile,
       title: "Shadow",
@@ -189,7 +194,7 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
     get "/api/v1/profiles/battle-ready"
     assert_response :success
     payload = JSON.parse(@response.body)
-    refute payload.fetch("profiles").any? { |p| p.dig("profile", "login") == "shadow" }
+    refute payload.fetch("profiles").any? { |p| p.dig("profile", "login") == login }
   end
 
   private

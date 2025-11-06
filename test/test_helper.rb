@@ -1,4 +1,5 @@
 require "webmock/minitest"
+require "securerandom"
 WebMock.disable_net_connect!(allow_localhost: true)
 ENV["RAILS_ENV"] ||= "test"
 # Disable OpenTelemetry in tests to prevent hanging on external requests
@@ -34,6 +35,16 @@ module ActiveSupport
     WebMock.disable_net_connect!(allow_localhost: true)
 
     # Add more helper methods to be used by all tests here...
+
+    private
+
+    def unique_login(prefix = "user")
+      "#{prefix}-#{SecureRandom.hex(4)}"
+    end
+
+    def unique_github_id
+      SecureRandom.random_number(1_000_000_000) + 1_000_000
+    end
   end
 end
 
