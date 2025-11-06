@@ -2,7 +2,7 @@
 <% preferences ||= profile.preferences %>
 <% item_kind = showcase_item_kind(item) %>
 <% hidden = item.respond_to?(:hidden?) && item.hidden? %>
-<% classes = [showcase_style_classes(item, compact: compact), (compact ? "p-4" : "p-6"), "h-full", "flex flex-col gap-4 group"] %>
+<% classes = [showcase_style_classes(item, compact: compact), (compact ? "p-4" : "p-6"), "h-full", "flex flex-col items-center text-center gap-4 group"] %>
 <% classes << "hidden opacity-60" if hidden %>
 <% data_attrs = {
   controller: "showcase-analytics",
@@ -42,13 +42,13 @@
     </div>
   <% end %>
 
-  <div class="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+  <div class="flex w-full flex-col items-center gap-4 text-center">
     <% if (icon = showcase_item_icon(item)).present? %>
       <span class="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/40 text-2xl text-indigo-700 shadow-sm dark:bg-slate-800/70 dark:text-indigo-200">
         <%= icon %>
       </span>
     <% end %>
-    <div class="flex-1 space-y-3">
+    <div class="w-full space-y-3 text-center sm:max-w-3xl">
       <div>
         <h4 class="text-lg font-semibold text-slate-900 dark:text-slate-50"><%= showcase_item_title(item) %></h4>
         <% if (subtitle = showcase_item_subtitle(item)).present? %>
@@ -59,17 +59,17 @@
       <% if item.is_a?(ProfileAchievement) %>
         <% timeline = achievement_timestamp_lines(item, preferences) %>
         <% if timeline.any? %>
-          <div class="space-y-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <div class="space-y-1 text-xs font-medium text-slate-500 dark:text-slate-400 text-center">
             <% timeline.each do |line| %>
               <p><%= line %></p>
             <% end %>
           </div>
         <% end %>
       <% elsif item.is_a?(ProfileExperience) %>
-        <div class="space-y-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+        <div class="space-y-2 text-xs font-medium text-slate-500 dark:text-slate-400 text-center">
           <p><%= experience_range(item) %></p>
           <% if item.profile_experience_skills.any? %>
-            <div class="flex flex-wrap justify-center gap-1.5 sm:justify-start">
+            <div class="flex flex-wrap justify-center gap-1.5">
               <% item.profile_experience_skills.first(6).each do |skill| %>
                 <span class="rounded-full bg-white/70 px-2 py-0.5 text-[0.7rem] font-semibold text-slate-700 shadow-sm dark:bg-slate-800/70 dark:text-slate-200"><%= skill.name %></span>
               <% end %>
@@ -80,7 +80,7 @@
 
       <% meta_lines = showcase_item_meta_lines(item, preferences) %>
       <% if meta_lines.any? %>
-        <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+        <div class="space-y-1 text-xs text-slate-600 dark:text-slate-300 text-center">
           <% meta_lines.each do |line| %>
             <p><%= line %></p>
           <% end %>
@@ -90,7 +90,7 @@
   </div>
 
   <% if clickable %>
-    <div class="flex items-center justify-center gap-2 text-sm font-semibold text-indigo-600 transition group-hover:text-indigo-700 dark:text-indigo-300 sm:justify-start">
+    <div class="flex w-full items-center justify-center gap-2 text-sm font-semibold text-indigo-600 transition group-hover:text-indigo-700 dark:text-indigo-300">
       <span>Visit</span>
       <i class="fa-solid fa-arrow-up-right-from-square"></i>
     </div>
