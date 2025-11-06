@@ -15,55 +15,55 @@
   <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
     <h2 class="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Submit form</h2>
     <% if current_user %>
-      <form action="<%= create_submission_path %>" method="post" class="space-y-4" data-controller="submit-form">
-        <%= csrf_meta_tags %>
+      <form action="<%= create_submission_path %>" method="post" class="space-y-5" data-controller="submit-form">
+        <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+
         <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">GitHub username</label>
-          <input
-            name="login"
-            required
-            class="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
-            placeholder="octocat" />
+          <%= label_tag :login, "GitHub username", class: "block text-sm font-semibold text-slate-700 dark:text-slate-200" %>
+          <%= text_field_tag :login, nil,
+            required: true,
+            placeholder: "octocat",
+            class: "#{ui_input_class} mt-2" %>
         </div>
+
         <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Personal URL to scrape (optional)</label>
-          <input
-            name="submitted_scrape_url"
-            class="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
-            placeholder="https://example.com/me" />
+          <%= label_tag :submitted_scrape_url, "Personal URL to scrape (optional)", class: "block text-sm font-semibold text-slate-700 dark:text-slate-200" %>
+          <%= text_field_tag :submitted_scrape_url, nil,
+            placeholder: "https://example.com/me",
+            class: "#{ui_input_class} mt-2" %>
         </div>
+
         <div>
-          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">GitHub repositories (up to 4)</label>
-          <div class="grid gap-2 md:grid-cols-2">
-            <% 4.times do |i| %>
-              <input
-                name="submitted_repositories[]"
-                class="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
-                placeholder="owner/repo" />
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">GitHub repositories (up to 4)</p>
+          <div class="grid gap-3 pt-1 md:grid-cols-2">
+            <% 4.times do |index| %>
+              <%= text_field_tag "submitted_repositories[]", nil,
+                placeholder: "owner/repo",
+                aria: { label: "Repository #{index + 1}" },
+                class: "#{ui_input_class} mt-2" %>
             <% end %>
           </div>
         </div>
-        <button type="submit" 
-                data-submit-form-target="button"
-                class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 enabled:hover:scale-[1.01] enabled:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:enabled:hover:bg-slate-200"
-                data-submit-form-default-text-value="Submit Profile">
+
+        <button
+          type="submit"
+          class="<%= ui_primary_button_class %> enabled:hover:scale-[1.01]"
+          data-submit-form-target="button">
           <span data-submit-form-target="spinner" class="hidden">
             <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </span>
-          <span data-submit-form-target="text">Submit Profile</span>
+          <span data-submit-form-target="text">Submit profile</span>
         </button>
       </form>
     <% else %>
       <form action="<%= login_path %>" method="get" data-turbo-frame="_top" class="flex flex-col items-stretch gap-2 sm:flex-row">
-        <input
-          type="text"
-          name="invite_code"
-          placeholder="Invite code (optional)"
-          class="h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500" />
-        <button type="submit" class="inline-flex h-11 items-center justify-center rounded-full bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400">
+        <%= text_field_tag :invite_code, nil,
+          placeholder: "Invite code (optional)",
+          class: "#{ui_input_class} sm:w-64" %>
+        <button type="submit" class="<%= ui_primary_button_class %> bg-gradient-to-r from-slate-700 to-slate-900 text-white hover:from-slate-600 hover:to-slate-800 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 dark:from-slate-600 dark:to-slate-800">
           Sign in with GitHub
         </button>
       </form>

@@ -5,11 +5,9 @@
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Have an invite code?</span>
         <form action="<%= login_path %>" method="get" data-turbo-frame="_top" class="flex flex-col items-stretch gap-2 sm:ml-auto sm:flex-row">
-          <input
-            type="text"
-            name="invite_code"
-            placeholder="Invite code (optional)"
-            class="h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500" />
+          <%= text_field_tag :invite_code, nil,
+            placeholder: "Invite code (optional)",
+            class: "#{ui_input_class} sm:w-64" %>
           <button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-slate-700 to-slate-900 px-5 text-sm font-semibold text-white shadow-sm transition hover:from-slate-600 hover:to-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:from-slate-600 dark:to-slate-800">
             Sign in with GitHub
           </button>

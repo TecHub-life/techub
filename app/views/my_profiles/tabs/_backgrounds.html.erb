@@ -1,123 +1,125 @@
 <%# Backgrounds Tab %>
 <div class="space-y-6">
-  <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Background Defaults</h2>
-  <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Set default background behavior for Card, OG, and Simple. You can override results by uploading per‑variant images below.</p>
-  <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-3">
-    <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-    <div class="flex items-center gap-2">
-      <input id="apply_everywhere" type="checkbox" name="apply_everywhere" value="1" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-      <label for="apply_everywhere" class="text-sm text-slate-700 dark:text-slate-300">Use these background settings for all card types</label>
-    </div>
-    <div class="grid gap-3 sm:grid-cols-3">
-      <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
-        <label class="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Card background</label>
-        <select name="bg_choice_card" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-          <% sel = @profile.profile_card&.bg_choice_card || 'ai' %>
-          <option value="ai" <%= 'selected' if sel == 'ai' %>>AI (latest)</option>
-          <option value="default" <%= 'selected' if sel == 'default' %>>Default image</option>
-          <option value="color" <%= 'selected' if sel == 'color' %>>Solid color</option>
-        </select>
-        <input type="color" name="bg_color_card" value="<%= @profile.profile_card&.bg_color_card || '#0f172a' %>" class="mt-2 h-9 w-16 rounded border border-slate-300 dark:border-slate-600" title="Card color">
-        <details class="mt-2 text-xs">
-          <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: Crop & zoom</summary>
-          <div class="mt-2 grid grid-cols-3 gap-2">
-            <div>
-              <label class="block">Crop X</label>
-              <input type="number" step="0.01" min="0" max="1" name="bg_fx_card" value="<%= @profile.profile_card&.bg_fx_card || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-            <div>
-              <label class="block">Crop Y</label>
-              <input type="number" step="0.01" min="0" max="1" name="bg_fy_card" value="<%= @profile.profile_card&.bg_fy_card || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-            <div>
-              <label class="block">Zoom</label>
-              <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_card" value="<%= @profile.profile_card&.bg_zoom_card || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-          </div>
-        </details>
-      </div>
-      <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
-        <label class="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">OG background</label>
-        <select name="bg_choice_og" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-          <% sel = @profile.profile_card&.bg_choice_og || 'ai' %>
-          <option value="ai" <%= 'selected' if sel == 'ai' %>>AI (latest)</option>
-          <option value="default" <%= 'selected' if sel == 'default' %>>Default image</option>
-          <option value="color" <%= 'selected' if sel == 'color' %>>Solid color</option>
-        </select>
-        <input type="color" name="bg_color_og" value="<%= @profile.profile_card&.bg_color_og || '#0f172a' %>" class="mt-2 h-9 w-16 rounded border border-slate-300 dark:border-slate-600" title="OG color">
-        <details class="mt-2 text-xs">
-          <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: Crop & zoom</summary>
-          <div class="mt-2 grid grid-cols-3 gap-2">
-            <div>
-              <label class="block">Crop X</label>
-              <input type="number" step="0.01" min="0" max="1" name="bg_fx_og" value="<%= @profile.profile_card&.bg_fx_og || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-            <div>
-              <label class="block">Crop Y</label>
-              <input type="number" step="0.01" min="0" max="1" name="bg_fy_og" value="<%= @profile.profile_card&.bg_fy_og || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-            <div>
-              <label class="block">Zoom</label>
-              <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_og" value="<%= @profile.profile_card&.bg_zoom_og || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-          </div>
-        </details>
-      </div>
-      <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
-        <label class="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Simple background</label>
-        <select name="bg_choice_simple" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-          <% sel = @profile.profile_card&.bg_choice_simple || 'ai' %>
-          <option value="ai" <%= 'selected' if sel == 'ai' %>>AI (latest)</option>
-          <option value="default" <%= 'selected' if sel == 'default' %>>Default image</option>
-          <option value="color" <%= 'selected' if sel == 'color' %>>Solid color</option>
-        </select>
-        <input type="color" name="bg_color_simple" value="<%= @profile.profile_card&.bg_color_simple || '#0f172a' %>" class="mt-2 h-9 w-16 rounded border border-slate-300 dark:border-slate-600" title="Simple color">
-        <details class="mt-2 text-xs">
-          <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: Crop & zoom</summary>
-          <div class="mt-2 grid grid-cols-3 gap-2">
-            <div>
-              <label class="block">Crop X</label>
-              <input type="number" step="0.01" min="0" max="1" name="bg_fx_simple" value="<%= @profile.profile_card&.bg_fx_simple || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-            <div>
-              <label class="block">Crop Y</label>
-              <input type="number" step="0.01" min="0" max="1" name="bg_fy_simple" value="<%= @profile.profile_card&.bg_fy_simple || 0.5 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-            <div>
-              <label class="block">Zoom</label>
-              <input type="number" step="0.01" min="0.5" max="3" name="bg_zoom_simple" value="<%= @profile.profile_card&.bg_zoom_simple || 1.0 %>" class="w-full rounded border border-slate-300 px-2 py-1 dark:border-slate-600">
-            </div>
-          </div>
-        </details>
-      </div>
-    </div>
-    <div>
-      <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600" data-disable-with="Saving…">Save Backgrounds</button>
-    </div>
-  </form>
-</div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-lg transition dark:border-slate-700 dark:bg-slate-900 md:p-6">
+    <h2 class="mb-2 text-xl font-bold text-slate-900 dark:text-slate-100">Background Defaults</h2>
+    <p class="mb-4 text-sm text-slate-600 dark:text-slate-300">
+      Configure the default background behaviour for card, OG, and simple variants. You can still override each one with custom uploads.
+    </p>
 
-  <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Regenerate</h2>
-  <div class="grid gap-3 sm:grid-cols-2">
-    <div>
-      <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">Re-capture screenshots and optimize. No AI cost.</p>
-      <%= button_to "Re-capture Screenshots", regenerate_my_profile_path(username: @profile.login), method: :post, class: "w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600", data: { disable_with: "Queuing…" } %>
-    </div>
-    <div>
-      <% available = Time.current >= (@ai_regen_available_at || Time.at(0)) %>
-      <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">Run full pipeline (weekly limit)</p>
-      <%= button_to "Run Full Pipeline", regenerate_my_profile_ai_path(username: @profile.login), method: :post,
-        class: "w-full inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow-sm transition #{available ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600' : 'border-slate-300 bg-slate-100 text-slate-400 cursor-not-allowed dark:border-slate-600 dark:bg-slate-800'}",
-        disabled: !available, data: { disable_with: "Queuing…" } %>
-      <% unless available %>
-        <% remaining = (@ai_regen_available_at - Time.current).to_i %>
-        <% hrs = (remaining / 3600).floor %>
-        <% mins = ((remaining % 3600) / 60).floor %>
-        <p class="mt-1 text-xs text-slate-500">Try again in ~<%= hrs %>h <%= mins %>m (after <%= @ai_regen_available_at.strftime('%b %d, %Y %H:%M') %>)</p>
-      <% end %>
+    <form action="<%= update_my_profile_settings_path(username: profile.login) %>" method="post" class="space-y-4" data-controller="submit-form">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+
+      <label for="apply_everywhere" class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+        <input id="apply_everywhere" type="checkbox" name="apply_everywhere" value="1" class="<%= ui_checkbox_class %>">
+        <span>Apply these defaults across all backgrounds</span>
+      </label>
+
+      <div class="grid gap-3 sm:grid-cols-3">
+        <% card = profile.profile_card %>
+        <% [
+             { key: :card, label: "Card background" },
+             { key: :og, label: "OG background" },
+             { key: :simple, label: "Simple background" },
+           ].each do |variant| %>
+          <% choice_attr = :"bg_choice_#{variant[:key]}" %>
+          <% color_attr  = :"bg_color_#{variant[:key]}" %>
+          <% fx_attr     = :"bg_fx_#{variant[:key]}" %>
+          <% fy_attr     = :"bg_fy_#{variant[:key]}" %>
+          <% zoom_attr   = :"bg_zoom_#{variant[:key]}" %>
+          <% selected = card&.public_send(choice_attr) || "ai" %>
+
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
+            <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-slate-100"><%= variant[:label] %></label>
+            <select name="<%= choice_attr %>" class="<%= ui_select_class %>">
+              <option value="ai" <%= "selected" if selected == "ai" %>>AI (latest)</option>
+              <option value="default" <%= "selected" if selected == "default" %>>Default image</option>
+              <option value="color" <%= "selected" if selected == "color" %>>Solid colour</option>
+            </select>
+
+            <input
+              type="color"
+              name="<%= color_attr %>"
+              value="<%= card&.public_send(color_attr) || '#0f172a' %>"
+              class="mt-3 h-10 w-20 rounded border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900"
+              title="<%= variant[:label] %> colour">
+
+            <details class="mt-3 text-xs text-slate-600 dark:text-slate-400">
+              <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: crop &amp; zoom</summary>
+              <div class="mt-2 grid grid-cols-3 gap-2">
+                <div>
+                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Crop X</label>
+                  <input type="number" step="0.01" min="0" max="1" name="<%= fx_attr %>" value="<%= card&.public_send(fx_attr) || 0.5 %>" class="<%= ui_input_class %>">
+                </div>
+                <div>
+                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Crop Y</label>
+                  <input type="number" step="0.01" min="0" max="1" name="<%= fy_attr %>" value="<%= card&.public_send(fy_attr) || 0.5 %>" class="<%= ui_input_class %>">
+                </div>
+                <div>
+                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Zoom</label>
+                  <input type="number" step="0.01" min="0.5" max="3" name="<%= zoom_attr %>" value="<%= card&.public_send(zoom_attr) || 1.0 %>" class="<%= ui_input_class %>">
+                </div>
+              </div>
+            </details>
+          </div>
+        <% end %>
+      </div>
+
+      <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+        <span data-submit-form-target="spinner" class="hidden">
+          <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+          </svg>
+        </span>
+        <span data-submit-form-target="text">Save background defaults</span>
+      </button>
+    </form>
+  </div>
+
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-lg transition dark:border-slate-700 dark:bg-slate-900 md:p-6">
+    <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-slate-100">Regenerate</h2>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+        <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Re-capture screenshots and optimise assets. No AI usage.</p>
+        <%= button_to regenerate_my_profile_path(username: profile.login),
+              method: :post,
+              form: { data: { controller: "submit-form" } },
+              class: "#{ui_secondary_button_class} w-full" do %>
+          <span data-submit-form-target="spinner" class="hidden">
+            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+            </svg>
+          </span>
+          <span data-submit-form-target="text">Re-capture screenshots</span>
+        <% end %>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+        <% available = Time.current >= (@ai_regen_available_at || Time.at(0)) %>
+        <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Run the full AI pipeline (weekly limit).</p>
+        <%= button_to regenerate_my_profile_ai_path(username: profile.login),
+              method: :post,
+              disabled: !available,
+              form: { data: { controller: "submit-form" } },
+              class: "#{ui_primary_button_class} w-full #{'opacity-60 cursor-not-allowed' unless available}" do %>
+          <span data-submit-form-target="spinner" class="hidden">
+            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+            </svg>
+          </span>
+          <span data-submit-form-target="text"><%= available ? "Run full pipeline" : "Pipeline cooling down" %></span>
+        <% end %>
+        <% unless available %>
+          <% remaining = (@ai_regen_available_at - Time.current).to_i %>
+          <% hrs = (remaining / 3600).floor %>
+          <% mins = ((remaining % 3600) / 60).floor %>
+          <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            Available again in ~<%= hrs %>h <%= mins %>m (after <%= @ai_regen_available_at.strftime('%b %d, %Y %H:%M') %>)
+          </p>
+        <% end %>
+      </div>
     </div>
   </div>
-</div>
 </div>

@@ -1,6 +1,6 @@
 import { Controller } from '@hotwired/stimulus'
 
-// Adds loading/success/failure affordances to Turbo-driven form submissions.
+// Adds loading/success/failure affordances to Turbo-driven (and standard) form submissions.
 export default class extends Controller {
   static targets = ['button', 'text', 'spinner']
   static values = {
@@ -8,11 +8,16 @@ export default class extends Controller {
   }
 
   connect() {
-    this.handleSubmit = this.handleSubmit.bind(this)
+    this.startLoading = this.startLoading.bind(this)
     this.handleComplete = this.handleComplete.bind(this)
+    this.handleNativeSubmit = this.handleNativeSubmit.bind(this)
 
-    this.element.addEventListener('turbo:submit-start', this.handleSubmit)
+    this.element.addEventListener('turbo:submit-start', this.startLoading)
     this.element.addEventListener('turbo:submit-end', this.handleComplete)
+
+    if (this.usesNativeSubmit()) {
+      this.element.addEventListener('submit', this.handleNativeSubmit)
+    }
 
     if (!this.defaultTextValue && this.hasTextTarget) {
       this.defaultTextValue = this.textTarget.textContent
@@ -20,11 +25,25 @@ export default class extends Controller {
   }
 
   disconnect() {
-    this.element.removeEventListener('turbo:submit-start', this.handleSubmit)
+    this.element.removeEventListener('turbo:submit-start', this.startLoading)
     this.element.removeEventListener('turbo:submit-end', this.handleComplete)
+
+    if (this.usesNativeSubmit()) {
+      this.element.removeEventListener('submit', this.handleNativeSubmit)
+    }
   }
 
-  handleSubmit() {
+  usesNativeSubmit() {
+    const turboAttr = this.element.getAttribute('data-turbo')
+    return turboAttr === 'false'
+  }
+
+  handleNativeSubmit(event) {
+    if (event.defaultPrevented) return
+    this.startLoading()
+  }
+
+  startLoading() {
     if (this.hasButtonTarget) {
       this.buttonTarget.disabled = true
       this.buttonTarget.setAttribute('aria-busy', 'true')
