@@ -59,38 +59,92 @@
     <%# TABBED CONTENT SECTION %>
     <div class="mb-6" data-controller="tabs" data-tabs-default-value="profile">
       <%# Tab Navigation - Sticky, Centered with larger text/icons on desktop %>
-      <nav class="sticky top-[60px] z-40 -mb-px grid grid-cols-3 place-items-center md:flex md:justify-center lg:justify-around gap-2 sm:gap-3 md:gap-4 lg:gap-6 overflow-x-auto scrollbar-hide bg-slate-100/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-sm border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2" aria-label="Tabs">
-        <button data-tabs-target="tab" data-tab-name="profile" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm lg:text-base font-medium transition flex items-center gap-1 sm:gap-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">
+      <nav class="sticky top-[60px] z-40 -mb-px grid grid-cols-3 place-items-center gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-100/95 px-4 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 md:flex md:justify-center md:gap-4 lg:gap-6" role="tablist" aria-label="Profile sections">
+        <button
+          type="button"
+          id="tab-profile"
+          data-tabs-target="tab"
+          data-tabs-id="profile"
+          data-action="tabs#select"
+          class="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-panel-profile">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
           </svg>
           <span>Profile</span>
         </button>
-        <button data-tabs-target="tab" data-tab-name="overview" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm lg:text-base font-medium transition flex items-center gap-1 sm:gap-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">
+        <button
+          type="button"
+          id="tab-overview"
+          data-tabs-target="tab"
+          data-tabs-id="overview"
+          data-action="tabs#select"
+          class="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-panel-overview">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
           <span>Overview</span>
         </button>
-        <button data-tabs-target="tab" data-tab-name="cards" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm lg:text-base font-medium transition flex items-center gap-1 sm:gap-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">
+        <button
+          type="button"
+          id="tab-cards"
+          data-tabs-target="tab"
+          data-tabs-id="cards"
+          data-action="tabs#select"
+          class="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-panel-cards">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
           </svg>
           <span>Cards</span>
         </button>
-        <button data-tabs-target="tab" data-tab-name="repos" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm lg:text-base font-medium transition flex items-center gap-1 sm:gap-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">
+        <button
+          type="button"
+          id="tab-repos"
+          data-tabs-target="tab"
+          data-tabs-id="repos"
+          data-action="tabs#select"
+          class="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-panel-repos">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
           </svg>
           <span>Repositories</span>
         </button>
-        <button data-tabs-target="tab" data-tab-name="activity" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm lg:text-base font-medium transition flex items-center gap-1 sm:gap-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">
+        <button
+          type="button"
+          id="tab-activity"
+          data-tabs-target="tab"
+          data-tabs-id="activity"
+          data-action="tabs#select"
+          class="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-panel-activity">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
           <span>Activity</span>
         </button>
-        <button data-tabs-target="tab" data-tab-name="stats" data-action="click->tabs#change" class="cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm lg:text-base font-medium transition flex items-center gap-1 sm:gap-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300">
+        <button
+          type="button"
+          id="tab-stats"
+          data-tabs-target="tab"
+          data-tabs-id="stats"
+          data-action="tabs#select"
+          class="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-panel-stats">
           <svg class="h-4 w-4 lg:h-5 lg:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
@@ -101,53 +155,93 @@
       <%# Tab Content %>
       <div class="mt-6">
         <%# Profile Tab (Hero) - Default %>
-        <div data-tabs-target="panel" data-tab-panel="profile">
+        <section
+          id="tab-panel-profile"
+          data-tabs-target="panel"
+          data-tabs-id="profile"
+          role="tabpanel"
+          aria-labelledby="tab-profile">
           <%= render partial: 'profiles/tabs/hero', locals: { 
             profile: @profile
           } %>
-        </div>
+        </section>
 
         <%# Overview Tab %>
-        <div data-tabs-target="panel" data-tab-panel="overview" class="hidden">
+        <section
+          id="tab-panel-overview"
+          data-tabs-target="panel"
+          data-tabs-id="overview"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+          tabindex="0">
           <%= render partial: 'profiles/tabs/overview', locals: { 
             profile: @profile, 
             languages: @languages,
             social_accounts: @social_accounts,
             organizations: @organizations
           } %>
-        </div>
+        </section>
 
         <%# Cards Tab %>
-        <div data-tabs-target="panel" data-tab-panel="cards" class="hidden">
+        <section
+          id="tab-panel-cards"
+          data-tabs-target="panel"
+          data-tabs-id="cards"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-cards"
+          tabindex="0">
           <%= render partial: 'profiles/tabs/cards', locals: { 
             profile: @profile
           } %>
-        </div>
+        </section>
 
         <%# Repositories Tab %>
-        <div data-tabs-target="panel" data-tab-panel="repos" class="hidden">
+        <section
+          id="tab-panel-repos"
+          data-tabs-target="panel"
+          data-tabs-id="repos"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-repos"
+          tabindex="0">
           <%= render partial: 'profiles/tabs/repositories', locals: { 
             profile: @profile,
             pinned_repositories: @pinned_repositories,
             top_repositories: @top_repositories
           } %>
-        </div>
+        </section>
 
         <%# Activity Tab %>
-        <div data-tabs-target="panel" data-tab-panel="activity" class="hidden">
+        <section
+          id="tab-panel-activity"
+          data-tabs-target="panel"
+          data-tabs-id="activity"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-activity"
+          tabindex="0">
           <%= render partial: 'profiles/tabs/activity', locals: { 
             profile: @profile,
             recent_activity: @recent_activity,
             active_repositories: @active_repositories
           } %>
-        </div>
+        </section>
 
         <%# Stats & Traits Tab %>
-        <div data-tabs-target="panel" data-tab-panel="stats" class="hidden">
+        <section
+          id="tab-panel-stats"
+          data-tabs-target="panel"
+          data-tabs-id="stats"
+          class="hidden"
+          role="tabpanel"
+          aria-labelledby="tab-stats"
+          tabindex="0">
           <%= render partial: 'profiles/tabs/stats', locals: { 
             profile: @profile
           } %>
-        </div>
+        </section>
       </div>
     </div>
 

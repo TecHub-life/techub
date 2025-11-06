@@ -59,7 +59,322 @@ paths:
                         mime_type: { type: string }
                         width: { type: integer }
                         height: { type: integer }
-                        provider: { type: string }
-                        updated_at: { type: string, format: date-time }
+                      provider: { type: string }
+                      updated_at: { type: string, format: date-time }
         '404':
           description: Not found
+  /api/v1/profiles/{username}:
+    get:
+      summary: Fetch profile card and activity
+      description: Returns the TecHub trading card stats and recent activity for a single profile.
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+          description: GitHub username (case-insensitive)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      login: { type: string }
+                      name: { type: string, nullable: true }
+                      avatar_url: { type: string }
+                  card:
+                    type: object
+                    properties:
+                      archetype: { type: string }
+                      spirit_animal: { type: string }
+                      attack: { type: integer }
+                      defense: { type: integer }
+                      speed: { type: integer }
+                      vibe: { type: string, nullable: true }
+                      vibe_description: { type: string, nullable: true }
+                      special_move: { type: string, nullable: true }
+                      special_move_description: { type: string, nullable: true }
+                      buff: { type: string, nullable: true }
+                      buff_description: { type: string, nullable: true }
+                      weakness: { type: string, nullable: true }
+                      weakness_description: { type: string, nullable: true }
+                  activity:
+                    type: object
+                    nullable: true
+                    properties:
+                      score: { type: number }
+                      total_events: { type: integer }
+                      event_breakdown:
+                        type: object
+                        additionalProperties: { type: integer }
+                      recent_repos:
+                        type: array
+                        items: { type: string }
+                      last_active: { type: string, format: date-time }
+                      activity_metrics:
+                        type: object
+                      current_streak: { type: integer, nullable: true }
+                      longest_streak: { type: integer, nullable: true }
+        '404':
+          description: Profile not found or no card available
+  /api/v1/profiles/{username}/card:
+    get:
+      summary: Legacy profile card alias
+      description: Alias of `/api/v1/profiles/{username}` retained for backwards compatibility.
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          $ref: '#/paths/~1api~1v1~1profiles~1%7Busername%7D/get/responses/200'
+        '404':
+          $ref: '#/paths/~1api~1v1~1profiles~1%7Busername%7D/get/responses/404'
+  /api/v1/profiles/battle-ready:
+    get:
+      summary: List battle-ready profiles
+      description: Returns profiles that currently have generated cards, capped by the optional `limit` parameter.
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 500
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        profile:
+                          type: object
+                          properties:
+                            id: { type: integer }
+                            login: { type: string }
+                            name: { type: string, nullable: true }
+                            avatar_url: { type: string }
+                        card:
+                          type: object
+                          properties:
+                            archetype: { type: string }
+                            spirit_animal: { type: string }
+                            attack: { type: integer }
+                            defense: { type: integer }
+                            speed: { type: integer }
+                            vibe: { type: string, nullable: true }
+                            vibe_description: { type: string, nullable: true }
+                            special_move: { type: string, nullable: true }
+                            special_move_description: { type: string, nullable: true }
+                            buff: { type: string, nullable: true }
+                            buff_description: { type: string, nullable: true }
+                            weakness: { type: string, nullable: true }
+                            weakness_description: { type: string, nullable: true }
+                        activity:
+                          type: object
+                          nullable: true
+        '404':
+          description: Not found
+  /api/v1/battles/{username}:
+    get:
+      summary: Fetch battle-locked profile contract
+      description: Frozen output contract for TecHub Battles clients.
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    type: object
+                  card:
+                    type: object
+                  activity:
+                    type: object
+                    nullable: true
+        '404':
+          description: Profile missing or card not generated
+  /api/v1/battles/battle-ready:
+    get:
+      summary: List battle-ready profiles (frozen contract)
+      description: Same data contract as `/api/v1/battles/{username}` but for many profiles at once.
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 500
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        profile: { type: object }
+                        card: { type: object }
+                        activity:
+                          type: object
+                          nullable: true
+  /api/v1/leaderboards:
+    get:
+      summary: Fetch a leaderboard
+      description: Returns the top 100 leaderboard entries for the requested kind and window. Recomputes on-demand if the requested as_of snapshot is not cached.
+      parameters:
+        - in: query
+          name: kind
+          schema:
+            type: string
+            default: followers_total
+          required: false
+        - in: query
+          name: window
+          schema:
+            type: string
+            default: 30d
+          required: false
+        - in: query
+          name: as_of
+          schema:
+            type: string
+            format: date
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kind: { type: string }
+                  window: { type: string }
+                  as_of: { type: string, format: date }
+                  entries:
+                    type: array
+                    items:
+                      type: object
+        '404':
+          description: Leaderboard unavailable
+  /api/v1/leaderboards/podium:
+    get:
+      summary: Fetch top three for a leaderboard
+      description: Returns only the top three entries for lightweight podium displays.
+      parameters:
+        - in: query
+          name: kind
+          schema:
+            type: string
+            default: followers_gain_30d
+          required: false
+        - in: query
+          name: window
+          schema:
+            type: string
+            default: 30d
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kind: { type: string }
+                  window: { type: string }
+                  as_of: { type: string, format: date }
+                  podium:
+                    type: array
+                    items: { type: object }
+        '404':
+          description: Leaderboard unavailable
+  /api/v1/game-data/all:
+    get:
+      summary: Fetch entire battle data catalogue
+      description: Returns every archetype, spirit animal stat modifier, ability catalogue, and mechanics constants used by the battle simulator.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  archetypes:
+                    type: array
+                    items: { type: string }
+                  type_chart:
+                    type: object
+                  spirit_animals:
+                    type: object
+                  archetype_abilities:
+                    type: object
+                  mechanics:
+                    type: object
+  /api/v1/game-data/archetypes:
+    get:
+      summary: List archetypes
+      description: Returns the archetype roster and type chart.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  archetypes:
+                    type: array
+                    items: { type: string }
+                  type_chart:
+                    type: object
+  /api/v1/game-data/spirit-animals:
+    get:
+      summary: List spirit animals
+      description: Returns the spirit animal stat modifiers.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  spirit_animals:
+                    type: object

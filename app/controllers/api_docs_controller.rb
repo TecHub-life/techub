@@ -1,7 +1,7 @@
 class ApiDocsController < ApplicationController
   def show
-    # Path used by the HTML page to fetch the spec YAML
-    @spec_path = api_docs_spec_path
+    path = Rails.root.join("docs", "api", "openapi.yaml")
+    @spec = File.exist?(path) ? YAML.safe_load(File.read(path)) : {}
   end
 
   def spec

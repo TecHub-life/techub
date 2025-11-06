@@ -67,11 +67,30 @@ html {
 
 .animate-gradient {
   background-size: 200% 200%;
-  animation: gradient 8s ease infinite;
 }
 
-.animate-pulse-slow {
+.animate-pulse-slow,
+.motion-safe\:animate-pulse-slow {
   animation: pulseSlow 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-delayed,
+  .animate-gradient,
+  .animate-pulse-slow {
+    animation: none !important;
+  }
+
+  .motion-safe\:animate-pulse-slow {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-gradient {
+    animation: gradient 8s ease infinite;
+  }
 }
 
 /* Alpine.js x-cloak - hide elements until Alpine is ready */
@@ -86,6 +105,193 @@ html {
 }
 
 .scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area helpers */
+.safe-y {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.docs-content {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-width: 65ch;
+}
+
+.docs-content > * + * {
+  margin-top: 1.3em;
+}
+
+.docs-content h1,
+.docs-content h2,
+.docs-content h3,
+.docs-content h4 {
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 2.25em;
+}
+
+.docs-content h1 {
+  font-size: 2rem;
+  margin-bottom: 0.75em;
+}
+
+.docs-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5em;
+}
+
+.docs-content h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.4em;
+}
+
+.docs-content p {
+  margin: 0;
+}
+
+.docs-content hr {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 2rem 0;
+}
+
+.docs-content a {
+  color: #4338ca;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.docs-content a:hover {
+  text-decoration: underline;
+}
+
+.docs-content code {
+  background: #e2e8f0;
+  border-radius: 0.5rem;
+  color: #be123c;
+  font-size: 0.9em;
+  padding: 0.15rem 0.35rem;
+}
+
+.docs-content pre {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  padding: 1.25rem;
+}
+
+.docs-content ul,
+.docs-content ol {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.docs-content ul li {
+  list-style: disc;
+}
+
+.docs-content ol li {
+  list-style: decimal;
+}
+
+.docs-content table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.docs-content thead {
+  background-color: #e0e7ff;
+  color: #1f2937;
+}
+
+.docs-content thead th,
+.docs-content tbody td {
+  padding: 0.65rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.docs-content blockquote {
+  background: #f8fafc;
+  border-left: 3px solid #6366f1;
+  border-radius: 0.75rem;
+  color: #475569;
+  margin: 0;
+  padding: 1rem 1.5rem;
+}
+
+.docs-content img {
+  border-radius: 0.75rem;
+  margin: 1.5rem auto;
+  max-width: 100%;
+  display: block;
+}
+
+body.dark .docs-content {
+  color: #e2e8f0;
+}
+
+body.dark .docs-content h1,
+body.dark .docs-content h2,
+body.dark .docs-content h3,
+body.dark .docs-content h4 {
+  color: #f8fafc;
+}
+
+body.dark .docs-content a {
+  color: #38bdf8;
+}
+
+body.dark .docs-content code {
+  background: #1f2937;
+  color: #fcd34d;
+}
+
+body.dark .docs-content pre {
+  background: #020617;
+  border-color: #1f2937;
+  color: #e2e8f0;
+}
+
+body.dark .docs-content thead {
+  background-color: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
+body.dark .docs-content hr {
+  border-color: #1f2937;
+}
+
+body.dark .docs-content tbody td {
+  border-color: #1f2937;
+}
+
+body.dark .docs-content blockquote {
+  background: rgba(30, 41, 59, 0.6);
+  color: #cbd5f5;
+}
+
+.header-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.header-more summary::marker {
   display: none;
 }
 

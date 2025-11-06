@@ -207,11 +207,19 @@ class PagesController < ApplicationController
     rel = @path.presence_in(@docs_index) || "marketing-overview.md"
     target = root.join(rel)
     if File.exist?(target) && File.file?(target)
-      @doc_title = rel
+      @active_doc = rel
+      basename = rel.sub(/\.md\z/, "")
+      @doc_title = basename
+      @doc_heading = basename.split("/").last.to_s.tr("-_", " ").split.map(&:capitalize).join(" ")
+      @doc_updated_at = File.mtime(target)
       md = File.read(target)
       begin
         # Prefer the richer renderer used elsewhere for consistency
-        html = Commonmarker.to_html(md, plugins: { syntax_highlighter: nil }, options: { parse: { smart: true }, render: { unsafe: true } })
+        html = Commonmarker.to_html(
+          md,
+          options: { parse: { smart: true }, render: { unsafe: true } },
+          extensions: %i[table strikethrough autolink tasklist footnotes]
+        )
       rescue StandardError
         html = md
       end
@@ -219,8 +227,8 @@ class PagesController < ApplicationController
       # Matches src="something" where something does not start with http(s) or /
       rewritten = html.gsub(/src=\"(?!https?:)(?!\/)([^\"]+)\"/) { |m| "src=\"/docs/#{$1}\"" }
       # Sanitize the HTML to avoid XSS from embedded HTML in markdown
-      allowed_tags = %w[p br strong em b i u a img h1 h2 h3 h4 h5 h6 ul ol li blockquote pre code hr table thead tbody tr th td]
-      allowed_attrs = %w[href src alt title class]
+      allowed_tags = %w[p br strong em b i u a img h1 h2 h3 h4 h5 h6 ul ol li blockquote pre code hr table thead tbody tr th td figure figcaption dl dt dd sup]
+      allowed_attrs = %w[href src alt title class target rel id data-footnote-ref data-footnote-backref aria-label]
       @doc_html = helpers.sanitize(rewritten, tags: allowed_tags, attributes: allowed_attrs)
     end
   end

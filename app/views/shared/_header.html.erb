@@ -1,129 +1,105 @@
-<header class="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/70 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70">
-  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-    <%= link_to root_path, class: "flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100" do %>
-      <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white shadow-sm shadow-slate-900/30 dark:bg-slate-100 dark:text-slate-900">TH</span>
-      <span>TecHub</span>
+<header class="safe-y fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur-lg transition dark:border-slate-800 dark:bg-slate-950/85">
+  <div class="mx-auto flex max-w-screen-xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+    <%= link_to root_path, class: "flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100" do %>
+      <%= image_tag "/techub-icon.svg", alt: "TecHub", class: "h-8 w-8 flex-shrink-0 transition dark:invert" %>
+      <span class="hidden sm:inline">TecHub</span>
     <% end %>
 
-    <nav class="hidden lg:flex items-center gap-4 lg:gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
-      <%= link_to directory_path, class: "#{nav_link_class(directory_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(directory_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-folder-open text-[16px] leading-none align-middle"></i>
-        <span class="leading-none">Directory</span>
-      <% end %>
-      <%= link_to leaderboards_path, class: "#{nav_link_class(leaderboards_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(leaderboards_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-trophy text-[16px] leading-none align-middle"></i>
-        <span class="leading-none">Leaderboards</span>
-      <% end %>
-      <%= link_to analytics_path, class: "#{nav_link_class(analytics_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(analytics_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-chart-line text-[16px] leading-none align-middle"></i>
-        <span class="leading-none">Analytics</span>
-      <% end %>
-      <%= link_to faq_path, class: "#{nav_link_class(faq_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(faq_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-circle-question text-[16px] leading-none align-middle"></i>
-        <span class="leading-none">FAQ</span>
-      <% end %>
-      <%= link_to "https://github.com/loftwah/techub", target: "_blank", rel: "noopener", class: "flex items-center gap-2 transition-all duration-200 hover:text-slate-900 dark:hover:text-slate-100 hover:scale-105" do %>
-        <i class="fa-brands fa-github text-[16px] leading-none align-middle"></i>
-        <span class="leading-none">Open Source</span>
-      <% end %>
-      <%= link_to submit_path, data: { turbo: false }, class: "#{nav_link_class(submit_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(submit_path) ? 'page' : nil) } do %>
-        <i class="fa-solid fa-paper-plane text-[16px] leading-none align-middle"></i>
-        <span class="leading-none">Submit</span>
-      <% end %>
+    <nav class="hidden items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 lg:flex">
+      <%= nav_link_with_icon "Directory", directory_path, "fa-solid fa-folder-open" %>
+      <%= nav_link_with_icon "Leaderboards", leaderboards_path, "fa-solid fa-trophy" %>
+      <%= nav_link_with_icon "Analytics", analytics_path, "fa-solid fa-chart-line" %>
+      <%= nav_link_with_icon "FAQ", faq_path, "fa-solid fa-circle-question" %>
+      <%= nav_link_with_icon "Submit", submit_path, "fa-solid fa-paper-plane", data: { turbo: false } %>
       <% if current_user %>
-        <%= link_to my_profiles_path, class: "#{nav_link_class(my_profiles_path).sub('transition-colors', 'transition-all') + ' hover:scale-105'}", aria: { current: (current_page?(my_profiles_path) ? 'page' : nil) } do %>
-          <i class="fa-solid fa-id-badge text-[16px] leading-none align-middle"></i>
-          <span class="leading-none">My Profiles</span>
-        <% end %>
+        <%= nav_link_with_icon "My Profiles", my_profiles_path, "fa-solid fa-id-badge" %>
       <% end %>
+      <details class="group relative header-more">
+        <summary class="flex cursor-pointer items-center gap-2 rounded-full px-3 py-2 transition-colors duration-150 hover:text-slate-900 dark:hover:text-slate-100">
+          <i class="fa-solid fa-ellipsis text-base"></i>
+          <span>More</span>
+        </summary>
+        <div class="absolute right-0 mt-2 w-48 rounded-lg border border-slate-200 bg-white py-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          <%= nav_dropdown_link "Docs", docs_path, "fa-solid fa-book-open", active: request.path.start_with?(docs_path) %>
+          <%= nav_dropdown_link "API", api_docs_path, "fa-solid fa-code" %>
+          <%= nav_dropdown_link "GitHub", "https://github.com/loftwah/techub", "fa-brands fa-github", target: "_blank", rel: "noopener" %>
+        </div>
+      </details>
     </nav>
 
     <div class="flex items-center gap-2">
-      <!-- Mobile hamburger -->
       <button
         type="button"
-        class="inline-flex lg:hidden h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 lg:hidden"
         aria-controls="mobile-menu"
         aria-expanded="false"
         id="mobile-menu-button"
-        aria-label="Open main menu"
-      >
-        <i class="fa-solid fa-bars text-xl"></i>
+        aria-label="Toggle navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
 
       <button
-        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800"
         data-action="theme#toggle"
         data-theme-target="button"
-      >
+        type="button">
         <span data-theme-target="icon" aria-hidden="true">🌗</span>
         <span class="sr-only">Toggle theme</span>
       </button>
 
       <% if current_user %>
-        <%= button_to "Sign Out", session_path, method: :delete, class: "hidden lg:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
+        <%= link_to session_path, data: { turbo_method: :delete }, class: "hidden lg:inline-flex h-10 items-center justify-center gap-2 rounded-full border border-slate-200 px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800" do %>
+          <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+          <span>Sign out</span>
+        <% end %>
       <% else %>
-        <%= link_to "Login", login_path, class: "hidden lg:inline-flex h-10 px-3 py-2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 cursor-pointer" %>
+        <%= link_to login_path, class: "hidden lg:inline-flex h-10 items-center justify-center gap-2 rounded-full border border-slate-200 px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800" do %>
+          <i class="fa-solid fa-right-to-bracket text-base"></i>
+          <span>Login</span>
+        <% end %>
       <% end %>
     </div>
   </div>
 
-  <!-- Mobile menu -->
-  <div id="mobile-menu" class="lg:hidden hidden border-t border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
-    <div class="mx-auto max-w-6xl px-4 py-3">
-      <div class="flex flex-col gap-2 text-slate-700 dark:text-slate-200">
-        <%= link_to directory_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(directory_path) ? 'page' : nil) } do %>
-          <i class="fa-solid fa-folder-open text-[18px]"></i>
-          <span>Directory</span>
-        <% end %>
-        <%= link_to leaderboards_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(leaderboards_path) ? 'page' : nil) } do %>
-          <i class="fa-solid fa-trophy text-[18px]"></i>
-          <span>Leaderboards</span>
-        <% end %>
-        <%= link_to analytics_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(analytics_path) ? 'page' : nil) } do %>
-          <i class="fa-solid fa-chart-line text-[18px]"></i>
-          <span>Analytics</span>
-        <% end %>
-        <%= link_to faq_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(faq_path) ? 'page' : nil) } do %>
-          <i class="fa-solid fa-circle-question text-[18px]"></i>
-          <span>FAQ</span>
-        <% end %>
-        <%= link_to submit_path, data: { turbo: false }, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(submit_path) ? 'page' : nil) } do %>
-          <i class="fa-solid fa-paper-plane text-[18px]"></i>
-          <span>Submit</span>
-        <% end %>
-
-        <% if current_user %>
-          <%= link_to my_profiles_path, class: "flex w-full items-center gap-3 px-2 py-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800", aria: { current: (current_page?(my_profiles_path) ? 'page' : nil) } do %>
-            <i class="fa-solid fa-id-badge text-[18px]"></i>
-            <span>My Profiles</span>
-          <% end %>
-          <%= link_to current_user.login, current_user.github_profile_url, target: "_blank", rel: "noopener", class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
-          <%= button_to "Sign Out", session_path, method: :delete, form: { class: "w-full" }, class: "mt-2 w-full inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700" %>
-        <% else %>
-          <%= link_to "Login", login_path, class: "mt-2 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700" %>
-        <% end %>
+  <nav id="mobile-menu" class="hidden border-t border-slate-200 bg-white/95 px-4 pb-4 pt-3 text-sm font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-950/85 dark:text-slate-200 lg:hidden">
+    <div class="mx-auto flex max-w-screen-xl flex-col gap-1">
+      <%= mobile_nav_link "Directory", directory_path, icon: "fa-solid fa-folder-open" %>
+      <%= mobile_nav_link "Leaderboards", leaderboards_path, icon: "fa-solid fa-trophy" %>
+      <%= mobile_nav_link "Analytics", analytics_path, icon: "fa-solid fa-chart-line" %>
+      <%= mobile_nav_link "FAQ", faq_path, icon: "fa-solid fa-circle-question" %>
+      <%= mobile_nav_link "Submit", submit_path, icon: "fa-solid fa-paper-plane", data: { turbo: false } %>
+      <% if current_user %>
+        <%= mobile_nav_link "My Profiles", my_profiles_path, icon: "fa-solid fa-id-badge" %>
+        <%= mobile_nav_link "Sign out", session_path, icon: "fa-solid fa-arrow-right-from-bracket", data: { turbo_method: :delete } %>
+      <% else %>
+        <%= mobile_nav_link "Login", login_path, icon: "fa-solid fa-right-to-bracket" %>
+      <% end %>
+      <div class="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">More</p>
+        <%= mobile_nav_link "Docs", docs_path, icon: "fa-solid fa-book-open", active: request.path.start_with?(docs_path) %>
+        <%= mobile_nav_link "API", api_docs_path, icon: "fa-solid fa-code" %>
+        <%= mobile_nav_link "GitHub", "https://github.com/loftwah/techub", icon: "fa-brands fa-github", target: "_blank", rel: "noopener" %>
       </div>
     </div>
-  </div>
-
-  <style>
-    @media (min-width: 1024px) {
-      /* Ensure hamburger is hidden on lg and above regardless of utility order */
-      #mobile-menu-button { display: none !important; }
-    }
-  </style>
-
-  <script>
-    (function() {
-      const btn = document.getElementById('mobile-menu-button');
-      const menu = document.getElementById('mobile-menu');
-      if (!btn || !menu) return;
-      btn.addEventListener('click', function() {
-        const isOpen = btn.getAttribute('aria-expanded') === 'true';
-        btn.setAttribute('aria-expanded', String(!isOpen));
-        menu.classList.toggle('hidden');
-      });
-    })();
-  </script>
+  </nav>
 </header>
+
+<script>
+  ;(() => {
+    const button = document.getElementById('mobile-menu-button')
+    const menu = document.getElementById('mobile-menu')
+    if (!button || !menu) return
+
+    button.addEventListener('click', () => {
+      const expanded = button.getAttribute('aria-expanded') === 'true'
+      button.setAttribute('aria-expanded', String(!expanded))
+      menu.classList.toggle('hidden')
+    })
+
+    document.addEventListener('turbo:before-cache', () => {
+      button.setAttribute('aria-expanded', 'false')
+      menu.classList.add('hidden')
+    })
+  })()
+</script>

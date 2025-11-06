@@ -2,82 +2,76 @@ import { Controller } from '@hotwired/stimulus'
 
 export default class extends Controller {
   static targets = ['tab', 'panel']
-  static values = {
-    default: { type: String, default: 'profile' },
-    scrollToTop: { type: Boolean, default: true },
-  }
+  static values = { default: String }
 
   connect() {
-    console.log('Tabs controller connected, default tab:', this.defaultValue)
-    console.log('Found tab targets:', this.tabTargets.length)
-    console.log('Found panel targets:', this.panelTargets.length)
+    this.handleKeydown = this.handleKeydown.bind(this)
+    this.element.addEventListener('keydown', this.handleKeydown)
 
-    // Check URL for tab parameter
-    const urlParams = new URLSearchParams(window.location.search)
-    const tabFromUrl = urlParams.get('tab')
-    const initialTab = tabFromUrl || this.defaultValue
-
-    console.log('Initial tab from URL or default:', initialTab)
-    this.showTab(initialTab)
+    const fromQuery = new URLSearchParams(window.location.search).get('tab')
+    const fallback = this.defaultValue || this.tabTargets[0]?.dataset.tabsId
+    this.selectById(fromQuery || fallback, { focus: false, replace: true })
   }
 
-  change(event) {
-    const tabName = event.currentTarget.dataset.tabName
-    console.log('Tab clicked:', tabName)
-    this.showTab(tabName)
-
-    // Update URL with tab parameter
-    const url = new URL(window.location)
-    url.searchParams.set('tab', tabName)
-    window.history.pushState({}, '', url)
-
-    // Only scroll to top if scrollToTop is true (default behavior)
-    if (this.scrollToTopValue) {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+  disconnect() {
+    this.element.removeEventListener('keydown', this.handleKeydown)
   }
 
-  showTab(tabName) {
-    // Update tab buttons
+  select(event) {
+    const id = event.currentTarget.dataset.tabsId
+    this.selectById(id)
+  }
+
+  selectById(id, { focus = true, replace = false } = {}) {
+    if (!id) return
+
     this.tabTargets.forEach((tab) => {
-      const isActive = tab.dataset.tabName === tabName
-      if (isActive) {
-        tab.classList.remove(
-          'text-slate-500',
-          'dark:text-slate-400',
-          'hover:bg-slate-100',
-          'dark:hover:bg-slate-800'
-        )
-        tab.classList.add(
-          'bg-indigo-100',
-          'text-indigo-700',
-          'dark:bg-indigo-900/30',
-          'dark:text-indigo-300'
-        )
-      } else {
-        tab.classList.remove(
-          'bg-indigo-100',
-          'text-indigo-700',
-          'dark:bg-indigo-900/30',
-          'dark:text-indigo-300'
-        )
-        tab.classList.add(
-          'text-slate-500',
-          'dark:text-slate-400',
-          'hover:bg-slate-100',
-          'dark:hover:bg-slate-800'
-        )
-      }
+      const active = tab.dataset.tabsId === id
+      tab.setAttribute('aria-selected', String(active))
+      tab.tabIndex = active ? 0 : -1
+      tab.classList.toggle('bg-white', active)
+      tab.classList.toggle('text-slate-900', active)
+      tab.classList.toggle('dark:bg-slate-800', active)
+      tab.classList.toggle('dark:text-slate-100', active)
+      tab.classList.toggle('text-slate-500', !active)
+      tab.classList.toggle('dark:text-slate-400', !active)
+      if (active && focus) tab.focus()
     })
 
-    // Update panels
     this.panelTargets.forEach((panel) => {
-      const isActive = panel.dataset.tabPanel === tabName
-      if (isActive) {
-        panel.classList.remove('hidden')
-      } else {
-        panel.classList.add('hidden')
-      }
+      const active = panel.dataset.tabsId === id
+      panel.classList.toggle('hidden', !active)
+      panel.setAttribute('aria-hidden', String(!active))
+      panel.tabIndex = active ? 0 : -1
     })
+
+    this.updateUrl(id, replace)
+  }
+
+  handleKeydown(event) {
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+
+    const currentIndex = this.tabTargets.findIndex((tab) => tab.getAttribute('aria-selected') === 'true')
+    if (currentIndex === -1) return
+
+    let nextIndex = currentIndex
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % this.tabTargets.length
+    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + this.tabTargets.length) % this.tabTargets.length
+    if (event.key === 'Home') nextIndex = 0
+    if (event.key === 'End') nextIndex = this.tabTargets.length - 1
+
+    const nextTab = this.tabTargets[nextIndex]
+    this.selectById(nextTab.dataset.tabsId)
+  }
+
+  updateUrl(id, replace) {
+    const url = new URL(window.location)
+    url.searchParams.set('tab', id)
+    if (replace) {
+      window.history.replaceState({}, '', url)
+    } else {
+      window.history.pushState({}, '', url)
+    }
   }
 }
