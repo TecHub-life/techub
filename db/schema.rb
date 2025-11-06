@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_07_070000) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_07_104826) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -309,6 +309,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_070000) do
     t.text "last_sync_error"
     t.datetime "last_sync_error_at"
     t.datetime "last_synced_at"
+    t.boolean "listed", default: true, null: false
     t.string "location"
     t.string "login", null: false
     t.string "name"
@@ -319,6 +320,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_070000) do
     t.string "submitted_scrape_url"
     t.text "summary"
     t.string "twitter_username"
+    t.datetime "unlisted_at"
     t.datetime "updated_at", null: false
     t.index ["ai_art_opt_in"], name: "index_profiles_on_ai_art_opt_in"
     t.index ["followers"], name: "index_profiles_on_followers"
@@ -327,8 +329,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_070000) do
     t.index ["hireable_override"], name: "index_profiles_on_hireable_override"
     t.index ["last_ai_regenerated_at"], name: "index_profiles_on_last_ai_regenerated_at"
     t.index ["last_synced_at"], name: "index_profiles_on_last_synced_at"
+    t.index ["listed"], name: "index_profiles_on_listed"
     t.index ["login"], name: "index_profiles_on_login", unique: true
     t.index ["preferred_og_kind"], name: "index_profiles_on_preferred_og_kind"
+    t.index ["unlisted_at"], name: "index_profiles_on_unlisted_at"
   end
 
   create_table "repository_topics", force: :cascade do |t|

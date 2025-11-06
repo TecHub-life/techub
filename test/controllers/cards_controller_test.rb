@@ -70,4 +70,10 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
       strings.each { |s| assert_includes @response.body, s }
     end
   end
+
+  test "unlisted profile returns not found" do
+    @profile.update!(listed: false, unlisted_at: Time.current)
+    get card_og_path(login: @profile.login)
+    assert_response :not_found
+  end
 end

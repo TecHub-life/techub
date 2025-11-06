@@ -31,4 +31,10 @@ class OgControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "og_pro", response.headers["X-Techub-Og-Variant"]
   end
+
+  test "returns 404 for unlisted profile" do
+    @profile.update!(listed: false, unlisted_at: Time.current)
+    get og_image_path(login: @profile.login, format: :jpg)
+    assert_response :not_found
+  end
 end

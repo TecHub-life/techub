@@ -101,7 +101,7 @@ class CardsController < ApplicationController
 
   def load_profile
     login = params[:login].to_s.downcase
-    @profile = Profile.for_login(login).first
+    @profile = Profile.listed.for_login(login).first
     render plain: "Not found", status: :not_found unless @profile
   end
 end

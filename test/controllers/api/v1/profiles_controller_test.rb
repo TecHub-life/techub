@@ -155,6 +155,43 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert entry.key?("activity"), "battle_ready response should include activity"
   end
 
+  test "assets endpoint hides unlisted profiles" do
+    profile = Profile.create!(github_id: 4, login: "hidden", listed: false, unlisted_at: Time.current)
+    get "/api/v1/profiles/hidden/assets"
+    assert_response :not_found
+  end
+
+  test "battle_ready excludes unlisted profiles" do
+    profile = Profile.create!(github_id: 5, login: "shadow", listed: false, unlisted_at: Time.current)
+    ProfileCard.create!(
+      profile: profile,
+      title: "Shadow",
+      tagline: "Hidden",
+      short_bio: "Short",
+      long_bio: "Long bio that meets validations",
+      buff: "Stealth",
+      buff_description: "Hidden",
+      weakness: "Sun",
+      weakness_description: "Bright",
+      flavor_text: "Stay low",
+      tags: %w[tag-one tag-two tag-three tag-four tag-five tag-six],
+      attack: 10,
+      defense: 10,
+      speed: 10,
+      playing_card: "Ace of ♠",
+      spirit_animal: "Wolf",
+      archetype: "Rogue",
+      vibe: "Chill",
+      vibe_description: "Chill",
+      special_move: "Hide",
+      special_move_description: "Hide quick"
+    )
+    get "/api/v1/profiles/battle-ready"
+    assert_response :success
+    payload = JSON.parse(@response.body)
+    refute payload.fetch("profiles").any? { |p| p.dig("profile", "login") == "shadow" }
+  end
+
   private
 
   def assert_superset(actual_hash, required_keys)

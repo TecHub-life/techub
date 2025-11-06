@@ -3,8 +3,11 @@ require "test_helper"
 class MyProfilesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.create!(github_id: 8001, login: "loftwah")
-    @profile = Profile.create!(github_id: 9001, login: "jrh89")
-    ProfileOwnership.create!(user: @user, profile: @profile)
+    @owned_profile = Profile.create!(github_id: 9001, login: "jrh89")
+    ProfileOwnership.create!(user: @user, profile: @owned_profile, is_owner: true)
+
+    @linked_profile = Profile.create!(github_id: 9002, login: "linked")
+    ProfileOwnership.create!(user: @user, profile: @linked_profile, is_owner: false)
   end
 
   test "requires login" do
@@ -20,7 +23,7 @@ class MyProfilesControllerTest < ActionDispatch::IntegrationTest
       assert_equal 200, sess.response.status
 
       assert_difference -> { ProfileOwnership.count }, -1 do
-        sess.delete remove_my_profile_path(username: @profile.login), headers: { "X-Test-User-Id" => uid.to_s }
+        sess.delete remove_my_profile_path(username: @linked_profile.login), headers: { "X-Test-User-Id" => uid.to_s }
         assert_equal 302, sess.response.status
       end
     end
@@ -28,7 +31,7 @@ class MyProfilesControllerTest < ActionDispatch::IntegrationTest
 
   test "shows banner when link removed by rightful owner claim" do
     uid = @user.id
-    removed_profile = @profile
+    removed_profile = @owned_profile
     NotificationDelivery.create!(
       user_id: uid,
       event: "ownership_link_removed",
@@ -42,5 +45,17 @@ class MyProfilesControllerTest < ActionDispatch::IntegrationTest
       assert_equal 200, sess.response.status
       assert_includes sess.response.body, "Your link to @#{removed_profile.login} was removed when @#{removed_profile.login} claimed ownership."
     end
+  end
+
+  test "owner can unlist profile" do
+    uid = @user.id
+    open_session do |sess|
+      assert_difference -> { ProfileOwnership.count }, -1 do
+        sess.delete unlist_my_profile_path(username: @owned_profile.login), headers: { "X-Test-User-Id" => uid.to_s }
+        assert_equal 302, sess.response.status
+      end
+    end
+    assert_not @owned_profile.reload.listed
+    assert @owned_profile.unlisted_at.present?
   end
 end

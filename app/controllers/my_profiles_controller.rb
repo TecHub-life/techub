@@ -1,6 +1,6 @@
 class MyProfilesController < ApplicationController
   before_action :require_login
-  before_action :load_profile_and_authorize, only: [ :settings, :update_settings, :regenerate, :regenerate_ai, :upload_asset, :destroy ]
+  before_action :load_profile_and_authorize, only: [ :settings, :update_settings, :regenerate, :regenerate_ai, :upload_asset, :destroy, :unlist ]
 
   def index
     uid = current_user&.id || session[:current_user_id]
@@ -276,6 +276,18 @@ class MyProfilesController < ApplicationController
     end
     ownership.destroy!
     redirect_to my_profiles_path, notice: "Removed @#{@profile.login} from your profiles"
+  end
+
+  def unlist
+    ownership = ProfileOwnership.find_by(user_id: current_user.id, profile_id: @profile.id, is_owner: true)
+    return redirect_to my_profiles_path, alert: "Only owners can delete profiles" unless ownership
+
+    result = Profiles::UnlistService.call(profile: @profile, actor: current_user)
+    if result.success?
+      redirect_to my_profiles_path, notice: "Deleted @#{@profile.login}. You can re-add it anytime from Submit."
+    else
+      redirect_to_settings(alert: result.error&.message || "Could not delete @#{@profile.login}")
+    end
   end
 
   private

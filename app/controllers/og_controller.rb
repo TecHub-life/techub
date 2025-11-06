@@ -8,7 +8,7 @@ class OgController < ApplicationController
     format = params[:format].presence || "jpg"
     variant = normalize_variant(params[:variant])
 
-    profile = Profile.for_login(login).first
+    profile = Profile.listed.for_login(login).first
     return head :not_found unless profile
 
     # Prefer recorded asset row

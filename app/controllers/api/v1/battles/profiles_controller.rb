@@ -5,7 +5,7 @@ module Api
         # Frozen contract for TecHub Battles consumers.
         def show
           username = params[:username].to_s.downcase
-          profile = Profile.for_login(username).first
+          profile = Profile.listed.for_login(username).first
           return render json: { error: "not_found" }, status: :not_found unless profile
 
           card = profile.profile_card
@@ -20,7 +20,7 @@ module Api
 
         def battle_ready
           limit = (params[:limit] || 100).to_i
-          profiles = Profile.includes(:profile_card)
+          profiles = Profile.listed.includes(:profile_card)
                             .where.not(profile_cards: { id: nil })
                             .limit(limit)
 

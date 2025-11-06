@@ -79,6 +79,7 @@ Rails.application.routes.draw do
   # Ownership (My Profiles)
   get "/my/profiles", to: "my_profiles#index", as: :my_profiles
   delete "/my/profiles/:username", to: "my_profiles#destroy", as: :remove_my_profile
+  delete "/my/profiles/:username/unlist", to: "my_profiles#unlist", as: :unlist_my_profile
   get "/my/profiles/:username/settings", to: "my_profiles#settings", as: :my_profile_settings
   patch "/my/profiles/:username/settings", to: "my_profiles#update_settings", as: :update_my_profile_settings
   post "/my/profiles/:username/regenerate", to: "my_profiles#regenerate", as: :regenerate_my_profile

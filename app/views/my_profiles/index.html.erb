@@ -34,6 +34,7 @@
           </div>
           <div class="flex items-center gap-3">
             <%= link_to "Settings", my_profile_settings_path(username: profile.login), class: "text-sm text-slate-700 hover:text-blue-600 dark:text-slate-300" %>
+            <%= button_to "Delete", unlist_my_profile_path(username: profile.login), method: :delete, form: { class: "inline", data: { turbo_confirm: "Delete @#{profile.login}? This hides the profile until someone submits it again." } }, class: "text-sm text-red-600 hover:text-red-500 dark:text-red-400" %>
           </div>
         </div>
       <% end %>

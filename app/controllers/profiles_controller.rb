@@ -7,7 +7,7 @@ class ProfilesController < ApplicationController
   def show
     username = params[:username].downcase
 
-    @profile = Profile.find_by(login: username)
+    @profile = Profile.listed.find_by(login: username)
 
     if @profile.present?
       # Always serve cached data; enqueue background refresh if stale
@@ -120,7 +120,7 @@ class ProfilesController < ApplicationController
 
   def status
     username = params[:username].to_s.downcase
-    profile = Profile.for_login(username).first
+    profile = Profile.listed.for_login(username).first
     if profile.nil?
       return render json: { status: "missing" }, status: :ok
     end

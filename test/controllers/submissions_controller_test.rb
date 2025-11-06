@@ -1,8 +1,15 @@
 require "test_helper"
 
 class SubmissionsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     @user = User.create!(github_id: 1001, login: "loftwah")
+    clear_enqueued_jobs
+  end
+
+  teardown do
+    clear_enqueued_jobs
   end
 
   test "requires login" do
@@ -13,7 +20,7 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
 
   test "loftwah submits @loftwah: becomes owner, stores manual inputs" do
     # Manual inputs are always on
-    Profiles::SyncFromGithub.stub :call, ServiceResult.success(Profile.create!(github_id: 2002, login: "loftwah")) do
+    Profiles::SyncFromGithub.stub :call, ->(*) { ServiceResult.success(Profile.create!(github_id: 2002, login: "loftwah")) } do
       uid = User.find_by(login: "loftwah").id
       open_session do |sess|
         sess.post create_submission_path, params: {
@@ -68,7 +75,7 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
   test "non-rightful submit allowed when no owner exists (becomes owner)" do
     # Someone (not matching profile login) submits a brand new profile; first submitter becomes owner
     actor = @user # loftwah
-    Profiles::SyncFromGithub.stub :call, ServiceResult.success(Profile.create!(github_id: 4004, login: "freshuser")) do
+    Profiles::SyncFromGithub.stub :call, ->(*) { ServiceResult.success(Profile.create!(github_id: 4004, login: "freshuser")) } do
       open_session do |sess|
         sess.post create_submission_path, params: { login: "freshuser" }, headers: { "X-Test-User-Id" => actor.id.to_s }
         assert_equal 302, sess.response.status
@@ -97,5 +104,24 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
         refute ProfileOwnership.exists?(user_id: @user.id, profile_id: profile.id)
       end
     end
+  end
+
+  test "resubmitting unlisted profile relists without running pipeline" do
+    profile = Profile.create!(github_id: 7007, login: "ghosted", listed: false, unlisted_at: Time.current)
+    actor = @user
+
+    Profiles::SyncFromGithub.stub :call, ->(*) { flunk "Should not sync for relist" } do
+      assert_no_enqueued_jobs do
+        open_session do |sess|
+          sess.post create_submission_path, params: { login: profile.login }, headers: { "X-Test-User-Id" => actor.id.to_s }
+          assert_equal 302, sess.response.status
+        end
+      end
+    end
+
+    profile.reload
+    assert profile.listed
+    assert_nil profile.unlisted_at
+    assert ProfileOwnership.exists?(user_id: actor.id, profile_id: profile.id, is_owner: true)
   end
 end

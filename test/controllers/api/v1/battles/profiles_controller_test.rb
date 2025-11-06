@@ -106,4 +106,18 @@ class Api::V1::Battles::ProfilesControllerTest < ActionDispatch::IntegrationTest
     ], entry.fetch("card").keys.sort
     assert entry.key?("activity"), "battle-ready payload should include activity"
   end
+
+  test "returns not_found for unlisted profile" do
+    @profile.update!(listed: false, unlisted_at: Time.current)
+    get "/api/v1/battles/battleuser"
+    assert_response :not_found
+  end
+
+  test "battle_ready omits unlisted profiles" do
+    @profile.update!(listed: false, unlisted_at: Time.current)
+    get "/api/v1/battles/battle-ready"
+    assert_response :success
+    payload = JSON.parse(@response.body)
+    refute payload.fetch("profiles").any? { |p| p.dig("profile", "login") == @profile.login }
+  end
 end

@@ -26,6 +26,8 @@ class Profile < ApplicationRecord
 
   # Scopes
   scope :for_login, ->(login) { where(login: login.downcase) }
+  scope :listed, -> { where(listed: true) }
+  scope :unlisted, -> { where(listed: false) }
   scope :hireable, -> { where(hireable: true) }
   scope :recently_active, -> { joins(:profile_activity).where("profile_activities.last_active > ?", 1.week.ago) }
 
@@ -167,5 +169,16 @@ class Profile < ApplicationRecord
 
     existing = profile_assets.where(kind: kinds).pluck(:kind)
     kinds - existing
+  end
+  def unlisted?
+    !listed
+  end
+
+  def mark_unlisted!(timestamp: Time.current)
+    update!(listed: false, unlisted_at: timestamp)
+  end
+
+  def mark_listed!
+    update!(listed: true, unlisted_at: nil)
   end
 end
