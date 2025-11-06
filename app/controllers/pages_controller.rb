@@ -100,11 +100,12 @@ class PagesController < ApplicationController
     rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.archetype")
     counts = Hash.new(0)
     rows.each { |arch| counts[arch] += 1 if arch.present? }
+    archetype_records = motif_records_for("archetype")
 
     # Build catalog from Motifs::Catalog with counts and DB records
     all_archetypes = Motifs::Catalog.archetypes.map do |name, desc|
       slug = Motifs::Catalog.to_slug(name)
-      rec = Motif.find_by(kind: "archetype", theme: "core", slug: slug)
+      rec = archetype_records[slug]
       {
         name: name,
         description: desc,
@@ -139,11 +140,12 @@ class PagesController < ApplicationController
     rows = Profile.joins(:profile_card).where(last_pipeline_status: "success").pluck("profile_cards.spirit_animal")
     counts = Hash.new(0)
     rows.each { |spirit| counts[spirit] += 1 if spirit.present? }
+    spirit_records = motif_records_for("spirit_animal")
 
     # Build catalog from Motifs::Catalog with counts and DB records
     all_spirit_animals = Motifs::Catalog.spirit_animals.map do |name, desc|
       slug = Motifs::Catalog.to_slug(name)
-      rec = Motif.find_by(kind: "spirit_animal", theme: "core", slug: slug)
+      rec = spirit_records[slug]
       {
         name: name,
         description: desc,
@@ -205,5 +207,12 @@ class PagesController < ApplicationController
     end
 
     render json: { results: results }
+  end
+
+  private
+
+  def motif_records_for(kind)
+    @motif_lookup ||= {}
+    @motif_lookup[kind] ||= Motif.where(kind: kind, theme: "core").index_by(&:slug)
   end
 end
