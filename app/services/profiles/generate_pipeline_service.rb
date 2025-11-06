@@ -36,7 +36,7 @@ module Profiles
       end
     end
 
-    CORE_VARIANTS = %w[og card simple banner].freeze
+    CORE_VARIANTS = %w[og og_pro card card_pro simple banner].freeze
     SOCIAL_VARIANTS = Screenshots::CaptureCardService::SOCIAL_VARIANTS.freeze
     SCREENSHOT_VARIANTS = (CORE_VARIANTS + SOCIAL_VARIANTS).uniq.freeze
 

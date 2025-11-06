@@ -4,7 +4,8 @@
   desc_text = @profile&.bio.presence || "GitHub profile insights and AI trading card"
   content_for :title, "#{title_text} – TecHub"
   content_for :description, desc_text
-  og_url = @profile ? profile_asset_url(@profile, "og", fallback_basename: "og", absolute: true) : nil
+  og_kind = @profile&.preferred_og_kind || "og"
+  og_url = @profile ? profile_asset_url(@profile, og_kind, fallback_basename: og_kind, absolute: true) : nil
   if og_url.present?
     content_for :og_image, og_url
     content_for :twitter_image, og_url

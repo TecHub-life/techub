@@ -1,7 +1,9 @@
 module ProfilesHelper
   PROFILE_CARD_VARIANT_CONFIG = [
     { kind: "card", label: "Main Card", dims: "1280×720", aspect: "16/9", usage: "Social posts", fallback: "card" },
+    { kind: "card_pro", label: "Professional Card", dims: "1280×720", aspect: "16/9", usage: "Resumes & decks", fallback: "card_pro" },
     { kind: "og", label: "Open Graph", dims: "1200×630", aspect: "1200/630", usage: "Portfolio link previews", fallback: "og" },
+    { kind: "og_pro", label: "Professional OG", dims: "1200×630", aspect: "1200/630", usage: "Professional link previews", fallback: "og_pro" },
     { kind: "simple", label: "Simple", dims: "1280×720", aspect: "16/9", usage: "Profiles & CVs", fallback: "simple" },
     { kind: "banner", label: "Banner", dims: "1500×500", aspect: "3/1", usage: "Header/banner", fallback: "banner" },
     { kind: "x_profile_400", label: "X Profile", dims: "400×400", aspect: "1/1", usage: "X avatar", fallback: "x_profile_400" },
@@ -16,11 +18,15 @@ module ProfilesHelper
   ].freeze
 
   def profile_card_variants(profile)
+    preferred = profile.preferred_og_kind
     PROFILE_CARD_VARIANT_CONFIG.map do |variant|
       url = profile_asset_url(profile, variant[:kind], fallback_basename: variant[:fallback])
+      og_variant = Profile::OG_VARIANT_KINDS.include?(variant[:kind])
       variant.merge(
         url: url,
-        absolute_url: profile_asset_url(profile, variant[:kind], fallback_basename: variant[:fallback], absolute: true)
+        absolute_url: profile_asset_url(profile, variant[:kind], fallback_basename: variant[:fallback], absolute: true),
+        og_variant: og_variant,
+        selected: og_variant && preferred == variant[:kind]
       )
     end
   end
@@ -174,8 +180,10 @@ module ProfilesHelper
 
     # As a last resort for directory previews, use the OG endpoint which
     # will serve or trigger generation server-side if missing.
-    if fallback_basename.to_s == "og"
-      return "/og/#{profile.login}.jpg"
+    fallback = fallback_basename.to_s
+    if fallback == "og" || Profile::OG_VARIANT_KINDS.include?(fallback)
+      variant_param = (fallback == "og") ? "" : "?variant=#{fallback}"
+      return "/og/#{profile.login}.jpg#{variant_param}"
     end
 
     nil

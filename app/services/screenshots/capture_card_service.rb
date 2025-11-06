@@ -18,8 +18,10 @@ module Screenshots
       # Card and simple variants
       "og" => 1200,
       "card" => 1280,
+      "card_pro" => 1280,
       "simple" => 1280,
       "banner" => 1500,
+      "og_pro" => 1200,
       # Social targets
       "x_profile_400" => 400,
       "x_header_1500x500" => 1500,
@@ -36,7 +38,9 @@ module Screenshots
     DEFAULT_HEIGHTS = {
       # Card and simple variants
       "og" => 630,
+      "og_pro" => 630,
       "card" => 720,
+      "card_pro" => 720,
       "simple" => 720,
       "banner" => 500,
       # Social targets

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_06_090123) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_07_070000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -312,6 +312,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_090123) do
     t.string "location"
     t.string "login", null: false
     t.string "name"
+    t.string "preferred_og_kind", default: "og", null: false
     t.integer "public_gists", default: 0
     t.integer "public_repos", default: 0
     t.datetime "submitted_at"
@@ -327,6 +328,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_090123) do
     t.index ["last_ai_regenerated_at"], name: "index_profiles_on_last_ai_regenerated_at"
     t.index ["last_synced_at"], name: "index_profiles_on_last_synced_at"
     t.index ["login"], name: "index_profiles_on_login", unique: true
+    t.index ["preferred_og_kind"], name: "index_profiles_on_preferred_og_kind"
   end
 
   create_table "repository_topics", force: :cascade do |t|

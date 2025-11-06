@@ -55,7 +55,9 @@ Rails.application.routes.draw do
   # Leaderboard OG (static) must be defined BEFORE dynamic :login routes to avoid clashes
   get "/cards/leaderboard/og", to: "cards#leaderboard_og", as: :leaderboard_og
   get "/cards/:login/og", to: "cards#og", as: :card_og
+  get "/cards/:login/og_pro", to: "cards#og_pro"
   get "/cards/:login/card", to: "cards#card", as: :card_preview
+  get "/cards/:login/card_pro", to: "cards#card_pro"
   get "/cards/:login/simple", to: "cards#simple", as: :card_simple
   get "/cards/:login/banner", to: "cards#banner", as: :card_banner
   # Social-target routes

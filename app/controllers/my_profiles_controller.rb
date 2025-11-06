@@ -61,9 +61,12 @@ class MyProfilesController < ApplicationController
 
     puts "✅ Profile loaded successfully: #{@profile.login}"
 
-    assets = @profile.profile_assets.where(kind: %w[og card simple]).index_by(&:kind)
+    asset_kinds = %w[og og_pro card card_pro simple]
+    assets = @profile.profile_assets.where(kind: asset_kinds).index_by(&:kind)
     @asset_og = assets["og"]
+    @asset_og_pro = assets["og_pro"]
     @asset_card = assets["card"]
+    @asset_card_pro = assets["card_pro"]
     @asset_simple = assets["simple"]
 
     # Targets for social previews (used in assets tab)
@@ -93,6 +96,7 @@ class MyProfilesController < ApplicationController
       :bg_fx_card, :bg_fy_card, :bg_zoom_card, :bg_fx_og, :bg_fy_og, :bg_zoom_og, :bg_fx_simple, :bg_fy_simple, :bg_zoom_simple, :ai_art_opt_in,
       :hireable_override)
     attrs = permitted.to_h
+    preferred_kind_param = params[:preferred_og_kind].to_s.presence
 
     # Update profile-level flags
     if permitted.key?(:ai_art_opt_in)
@@ -136,19 +140,27 @@ class MyProfilesController < ApplicationController
       attrs["avatar_choice"] = (choice == "ai") ? "ai" : "real"
     end
 
-    record.assign_attributes(attrs)
-    if record.save
-      # Structured log for observability
-      StructuredLogger.info(
-        message: "settings_updated",
-        controller: self.class.name,
-        login: @profile.login,
-        apply_everywhere: apply_everywhere,
-        avatar_choice: record.avatar_choice,
-        bg_choice_card: record.bg_choice_card,
-        bg_choice_og: record.bg_choice_og,
-        bg_choice_simple: record.bg_choice_simple
-      ) if defined?(StructuredLogger)
+    preference_updated = apply_preferred_og_kind(preferred_kind_param)
+
+    card_saved = true
+    if attrs.present?
+      record.assign_attributes(attrs)
+      card_saved = record.save
+    end
+
+    if card_saved && preference_updated
+      if attrs.present? && defined?(StructuredLogger)
+        StructuredLogger.info(
+          message: "settings_updated",
+          controller: self.class.name,
+          login: @profile.login,
+          apply_everywhere: apply_everywhere,
+          avatar_choice: record.avatar_choice,
+          bg_choice_card: record.bg_choice_card,
+          bg_choice_og: record.bg_choice_og,
+          bg_choice_simple: record.bg_choice_simple
+        )
+      end
       redirect_to my_profile_settings_path(username: @profile.login), notice: "Settings updated"
     else
       redirect_to my_profile_settings_path(username: @profile.login), alert: "Could not save settings"
@@ -194,7 +206,7 @@ class MyProfilesController < ApplicationController
   def upload_asset
     kind = params[:kind].to_s
     file = params[:file]
-    allowed = %w[og card simple avatar_3x1 avatar_1x1]
+    allowed = %w[og og_pro card card_pro simple avatar_3x1 avatar_1x1]
     unless allowed.include?(kind)
       return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
     end
@@ -252,7 +264,7 @@ class MyProfilesController < ApplicationController
     kind = params[:kind].to_s
     source_url = params[:public_url].to_s
     source_path = params[:local_path].to_s
-    unless %w[og card simple avatar_3x1 avatar_16x9 avatar_1x1].include?(kind)
+    unless %w[og og_pro card card_pro simple avatar_3x1 avatar_16x9 avatar_1x1].include?(kind)
       return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
     end
 
@@ -281,6 +293,17 @@ class MyProfilesController < ApplicationController
   end
 
   private
+
+  def apply_preferred_og_kind(raw_kind)
+    return true if raw_kind.blank?
+    kind = raw_kind.to_s
+    return false unless Profile::OG_VARIANT_KINDS.include?(kind)
+    return true if @profile.preferred_og_kind == kind
+    @profile.update_columns(preferred_og_kind: kind)
+    true
+  rescue StandardError
+    false
+  end
 
   def require_login
     @current_user ||= User.find_by(id: session[:current_user_id]) if @current_user.nil? && session[:current_user_id].present?

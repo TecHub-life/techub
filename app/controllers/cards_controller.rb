@@ -10,9 +10,23 @@ class CardsController < ApplicationController
     render :og
   end
 
+  # 1200x630 — Professional OpenGraph preview
+  def og_pro
+    @canvas_w = 1200
+    @canvas_h = 630
+    render :og_pro
+  end
+
   # 1280x720 — TecHub card preview (16:9)
   def card
     render :card
+  end
+
+  # 1280x720 — Professional (non-game) card
+  def card_pro
+    @canvas_w = 1280
+    @canvas_h = 720
+    render :card_pro
   end
 
   # 1280x720 — simplified variant

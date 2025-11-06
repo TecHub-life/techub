@@ -14,6 +14,8 @@ class Profile < ApplicationRecord
   has_many :profile_ownerships, dependent: :destroy
   has_many :owners, through: :profile_ownerships, source: :user
 
+  OG_VARIANT_KINDS = %w[og og_pro].freeze
+
   # Validations
   validates :github_id, presence: true, uniqueness: true
   validates :login, presence: true, uniqueness: { case_sensitive: false }
@@ -117,6 +119,11 @@ class Profile < ApplicationRecord
   # Utility methods
   def github_profile_url
     html_url || "https://github.com/#{login}"
+  end
+
+  def preferred_og_kind
+    kind = self[:preferred_og_kind].presence || "og"
+    OG_VARIANT_KINDS.include?(kind) ? kind : "og"
   end
 
   def display_name
