@@ -1,6 +1,16 @@
 <section class="mx-auto max-w-4xl space-y-6 px-4 py-12">
   <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">@<%= @profile.login %></h1>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">@<%= @profile.login %></h1>
+      <% if @profile.unlisted? %>
+        <span class="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-200">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 5c-.77-1.33-2.69-1.33-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3z"/>
+          </svg>
+          Unlisted
+        </span>
+      <% end %>
+    </div>
     <div class="flex gap-2">
       <%= button_to "Re-roll Profile", ops_retry_profile_path(username: @profile.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
       <%= button_to "Refresh GitHub Data", ops_reroll_github_profile_path(username: @profile.login), method: :post, class: "rounded bg-slate-700 px-3 py-1 text-white" %>

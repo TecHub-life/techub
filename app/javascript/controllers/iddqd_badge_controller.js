@@ -5,14 +5,14 @@ export default class extends Controller {
   static targets = ['badge']
   static values = {
     code: String,
-    param: { type: String, default: 'iddqd' }
+    param: { type: String, default: 'iddqd' },
   }
 
-  connect () {
+  connect() {
     this.revealIfUnlocked()
   }
 
-  revealIfUnlocked () {
+  revealIfUnlocked() {
     const code = this.codeValue || '42069'
     const paramName = this.paramValue || 'iddqd'
 
@@ -32,12 +32,12 @@ export default class extends Controller {
     }
   }
 
-  showBadge () {
+  showBadge() {
     if (!this.hasBadgeTarget) return
     this.badgeTarget.classList.remove('hidden')
   }
 
-  persistUnlock (code) {
+  persistUnlock(code) {
     try {
       window.localStorage.setItem(this.storageKey, code)
     } catch (error) {
@@ -45,7 +45,7 @@ export default class extends Controller {
     }
   }
 
-  get storedCode () {
+  get storedCode() {
     try {
       return window.localStorage.getItem(this.storageKey)
     } catch (error) {
@@ -53,7 +53,7 @@ export default class extends Controller {
     }
   }
 
-  get storageKey () {
+  get storageKey() {
     return `techub-${this.paramValue || 'iddqd'}-unlock`
   }
 }
