@@ -35,6 +35,8 @@ module Profiles
       def apply_attributes(record)
         record.title = attributes[:title]
         record.description = normalize_blank(attributes[:description])
+        record.url = normalize_blank(attributes[:url])
+        record.fa_icon = normalize_blank(attributes[:fa_icon])
         record.timezone = normalize_blank(attributes[:timezone]) || record.timezone
         record.date_display_mode = normalize_blank(attributes[:date_display_mode]) || record.date_display_mode
         record.pin_surface = normalize_blank(attributes[:pin_surface]) || record.pin_surface || "spotlight"

@@ -17,7 +17,7 @@
   "showcase-analytics-profile-value": profile.login
 }.compact %>
 <% data_attrs[:hidden_item] = true if hidden %>
-<% clickable = item.is_a?(ProfileLink) && item.url.present? %>
+<% clickable = ((item.is_a?(ProfileLink) || item.is_a?(ProfileAchievement)) && item.url.present?) %>
 <% tag_name = clickable ? :a : :div %>
 <% tag_options = { class: classes.join(' '), data: data_attrs } %>
 <% if clickable %>

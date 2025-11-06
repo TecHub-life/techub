@@ -7,16 +7,31 @@
 <% primary_button_classes = "inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400" %>
 <% danger_button_classes = "inline-flex items-center justify-center rounded-lg border border-red-500 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-400" %>
 <% default_timezone = (preference.metadata || {}).fetch("timezone", "Australia/Melbourne") rescue "Australia/Melbourne" %>
+<% pin_limit = preference&.pin_limit || profile.showcase_pin_limit %>
+<% pins_used = profile.pinned_showcase_items.count %>
 
 <div class="space-y-10">
   <!-- Links -->
   <section class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div>
         <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Links</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400">Add Linktree-style entries with optional icons, pins, and hidden modes.</p>
       </div>
-      <span class="text-xs uppercase tracking-wide text-slate-400">Manual order via the Position field</span>
+      <div class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="font-semibold text-slate-700 dark:text-slate-200">Pins: <%= pins_used %> / <%= pin_limit %> slots in use</p>
+        <p>Manual order is zero-indexed (0 renders first, 99 renders last). Leave blank to append.</p>
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+      <p class="font-semibold text-slate-900 dark:text-slate-100">No-magic guide for ordering, pins, and console codes</p>
+      <ul class="mt-3 space-y-1.5">
+        <li><span class="font-semibold text-slate-800 dark:text-slate-100">Ordering:</span> lower numbers float to the top of the list. Leave the field blank to let us assign the next slot automatically.</li>
+        <li><span class="font-semibold text-slate-800 dark:text-slate-100">Pins:</span> pinned items sit on hero, spotlight, shelf, or timeline surfaces and ignore the grid order. We enforce your pin limit (<%= pin_limit %>) so nothing silently disappears.</li>
+        <li><span class="font-semibold text-slate-800 dark:text-slate-100">Manual sort switch:</span> the Position and Pin Position fields only apply when that surface’s sort mode (Styles tab → Default styling & ordering) is set to <em>manual</em>. If you pick alphabetical/newest there, we ignore your numbers.</li>
+        <li><span class="font-semibold text-slate-800 dark:text-slate-100">Secret console code:</span> an optional label we show next to the link so you remember which clue you shared. Pair it with the console helpers <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-[0.7rem] text-white">techub.revealHidden()</code>, <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-[0.7rem] text-white">techub.hiddenCount()</code>, or <code class="rounded bg-slate-900/80 px-1.5 py-0.5 text-[0.7rem] text-white">techub.iddqd()</code> when you tell people how to unlock a hidden link.</li>
+      </ul>
     </div>
 
     <div class="mt-6 grid gap-6 md:grid-cols-2">
@@ -57,6 +72,7 @@
             <div>
               <%= f.label :secret_code, "Secret console code", class: label_classes %>
               <%= f.text_field :secret_code, placeholder: "optional", class: input_classes %>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Use a short handle you can reference when telling visitors to run the <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white">techub.*</code> console helpers.</p>
             </div>
           </div>
           <div class="grid gap-3 md:grid-cols-3">
@@ -91,10 +107,17 @@
         <% end %>
       </div>
 
-      <div class="space-y-4">
+      <div class="space-y-4" data-controller="details-list">
         <% if links.any? %>
+          <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+            <span class="font-semibold text-slate-800 dark:text-slate-200">Existing links (<%= links.size %>)</span>
+            <div class="flex gap-2">
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 font-semibold text-slate-600 hover:bg-white dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" data-action="details-list#expandAll">Expand all</button>
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-1 font-semibold text-slate-600 hover:bg-white dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" data-action="details-list#collapseAll">Collapse all</button>
+            </div>
+          </div>
           <% links.each do |link| %>
-            <details class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70" <%= "open" if link == links.first %>>
+            <details class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70" data-details-list-target="item">
               <summary class="flex cursor-pointer items-center justify-between gap-3">
                 <div>
                   <p class="font-semibold text-slate-900 dark:text-slate-100"><%= link.label %></p>
@@ -102,7 +125,8 @@
                     <p class="text-xs text-slate-500"><%= link.url %></p>
                   <% end %>
                 </div>
-                <div class="flex flex-wrap gap-2 text-xs">
+                <div class="flex flex-col items-end gap-2 text-right text-xs text-slate-500 dark:text-slate-400">
+                  <div class="flex flex-wrap justify-end gap-2">
                   <% unless link.active? %>
                     <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-red-200 text-red-600 bg-white/80 dark:bg-slate-900/40">Inactive</span>
                   <% end %>
@@ -112,6 +136,16 @@
                   <% if link.pinned? %>
                     <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-indigo-200 text-indigo-600 bg-white/80 dark:bg-slate-900/40">Pinned</span>
                   <% end %>
+                  </div>
+                  <div class="flex flex-wrap justify-end gap-3 text-[0.7rem]">
+                    <span>Pos: <%= link.position.presence || "auto" %></span>
+                    <% if link.pinned? %>
+                      <span>Pin: <%= link.pin_surface.titleize %> · <%= link.pin_position.presence || "auto" %></span>
+                    <% end %>
+                    <% if link.secret_code.present? %>
+                      <span>Code: <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white"><%= link.secret_code %></code></span>
+                    <% end %>
+                  </div>
                 </div>
               </summary>
               <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
@@ -150,6 +184,7 @@
                     <div>
                       <%= f.label :secret_code, "Secret code", class: label_classes %>
                       <%= f.text_field :secret_code, value: link.secret_code, class: input_classes %>
+                      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Only visible in this dashboard; use it as the clue you mention when pointing to the <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white">techub</code> console helpers.</p>
                     </div>
                   </div>
                   <div class="grid gap-3 md:grid-cols-3">
@@ -201,6 +236,7 @@
       <div>
         <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Achievements</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400">Celebrate launches, awards, and milestones. Dates respect profile preferences.</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Everything else (icons, links, pins, manual position) matches the Links section—the date/time controls are the only extra knobs.</p>
       </div>
     </div>
     <div class="mt-6 grid gap-6 md:grid-cols-2">
@@ -214,6 +250,18 @@
           <div>
             <%= f.label :description, "Description", class: label_classes %>
             <%= f.text_area :description, rows: 3, class: input_classes %>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <%= f.label :url, "URL", class: label_classes %>
+              <%= f.url_field :url, placeholder: "https://", class: input_classes %>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Adds a click-through target; leave blank for static cards.</p>
+            </div>
+            <div>
+              <%= f.label :fa_icon, "Font Awesome icon", class: label_classes %>
+              <%= f.text_field :fa_icon, placeholder: "fa-solid fa-trophy", class: input_classes %>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Use any Font Awesome utility class stack (e.g. <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white">fa-solid fa-medal</code>).</p>
+            </div>
           </div>
           <div class="grid gap-3 md:grid-cols-2">
             <div>
@@ -292,16 +340,36 @@
                     <p class="text-xs text-slate-500">Occurred <%= achievement.occurred_on.to_s %></p>
                   <% end %>
                 </div>
-                <div class="flex flex-wrap gap-2 text-xs">
-                  <% unless achievement.active? %>
-                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-red-200 text-red-600 bg-white/80 dark:bg-slate-900/40">Inactive</span>
-                  <% end %>
-                  <% if achievement.hidden? %>
-                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-amber-200 text-amber-600 bg-white/80 dark:bg-slate-900/40">Hidden</span>
-                  <% end %>
-                  <% if achievement.pinned? %>
-                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-indigo-200 text-indigo-600 bg-white/80 dark:bg-slate-900/40">Pinned</span>
-                  <% end %>
+                <div class="flex flex-col items-end gap-2 text-right text-xs text-slate-500 dark:text-slate-400">
+                  <div class="flex flex-wrap justify-end gap-2">
+                    <% unless achievement.active? %>
+                      <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-red-200 text-red-600 bg-white/80 dark:bg-slate-900/40">Inactive</span>
+                    <% end %>
+                    <% if achievement.hidden? %>
+                      <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-amber-200 text-amber-600 bg-white/80 dark:bg-slate-900/40">Hidden</span>
+                    <% end %>
+                    <% if achievement.pinned? %>
+                      <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-indigo-200 text-indigo-600 bg-white/80 dark:bg-slate-900/40">Pinned</span>
+                    <% end %>
+                  </div>
+                  <div class="flex flex-wrap justify-end gap-3 text-[0.7rem]">
+                    <span>Pos: <%= achievement.position.presence || "auto" %></span>
+                    <% if achievement.pinned? %>
+                      <span>Pin: <%= achievement.pin_surface.titleize %> · <%= achievement.pin_position.presence || "auto" %></span>
+                    <% end %>
+                    <% url_host = begin
+                      host = URI.parse(achievement.url).host
+                      host&.sub(/^www\./, "")
+                    rescue URI::InvalidURIError, URI::InvalidComponentError, TypeError
+                      nil
+                    end %>
+                    <% if url_host.present? %>
+                      <span>URL: <%= url_host %></span>
+                    <% end %>
+                    <% if achievement.fa_icon.present? %>
+                      <span>Icon: <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white"><%= achievement.fa_icon %></code></span>
+                    <% end %>
+                  </div>
                 </div>
               </summary>
               <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
@@ -313,6 +381,18 @@
                   <div>
                     <%= f.label :description, "Description", class: label_classes %>
                     <%= f.text_area :description, value: achievement.description, rows: 3, class: input_classes %>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :url, "URL", class: label_classes %>
+                      <%= f.url_field :url, value: achievement.url, class: input_classes %>
+                      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">If present, the card renders as a link with an external arrow.</p>
+                    </div>
+                    <div>
+                      <%= f.label :fa_icon, "Font Awesome icon", class: label_classes %>
+                      <%= f.text_field :fa_icon, value: achievement.fa_icon, class: input_classes %>
+                      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Matches the syntax you already use for links (e.g. <code class="rounded bg-slate-900/80 px-1 py-0.5 text-[0.65rem] text-white">fa-solid fa-award</code>).</p>
+                    </div>
                   </div>
                   <div class="grid gap-3 md:grid-cols-2">
                     <div>

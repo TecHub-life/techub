@@ -65,7 +65,9 @@ module ProfileShowcaseHelper
       lines = []
       formatted = formatted_achievement_date(item, preferences)
       lines << formatted if formatted.present?
-      lines.concat(achievement_time_lines(item, preferences))
+      lines.concat(achievement_timestamp_lines(item, preferences))
+      host = link_host(item.url)
+      lines << host if host.present?
       lines
     when ProfileExperience
       lines = []
@@ -145,6 +147,8 @@ module ProfileShowcaseHelper
       return content_tag(:i, "", class: classes, aria: { hidden: true }) if classes.present?
       content_tag(:span, "🔗", aria: { hidden: true })
     elsif item.is_a?(ProfileAchievement)
+      classes = safe_icon_classes(item.fa_icon)
+      return content_tag(:i, "", class: classes, aria: { hidden: true }) if classes.present?
       content_tag(:span, "🏅", aria: { hidden: true })
     elsif item.is_a?(ProfileExperience)
       content_tag(:span, "🧭", aria: { hidden: true })

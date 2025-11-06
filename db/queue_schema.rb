@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_07_110100) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_07_110200) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -129,6 +129,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_110100) do
     t.datetime "created_at", null: false
     t.string "date_display_mode", default: "profile_default", null: false
     t.text "description"
+    t.string "fa_icon"
     t.boolean "hidden", default: false, null: false
     t.datetime "occurred_at"
     t.date "occurred_on"
@@ -144,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_110100) do
     t.string "timezone", default: "Australia/Melbourne", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.string "url"
     t.index ["occurred_at"], name: "index_profile_achievements_on_occurred_at"
     t.index ["profile_id", "pinned"], name: "idx_profile_achievements_pins"
     t.index ["profile_id", "position"], name: "idx_profile_achievements_order"

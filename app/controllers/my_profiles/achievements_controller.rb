@@ -31,6 +31,8 @@ module MyProfiles
       params.require(:achievement).permit(
         :title,
         :description,
+        :url,
+        :fa_icon,
         :occurred_at,
         :occurred_on,
         :timezone,

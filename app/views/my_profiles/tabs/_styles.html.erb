@@ -1,6 +1,7 @@
 <% sort_modes = ProfilePreference::SORT_MODES %>
 <% date_formats = ProfilePreference::DATE_FORMATS %>
 <% time_modes = ProfilePreference::TIME_DISPLAY %>
+<% time_mode_options = time_modes.map { |mode| [mode == "utc" ? "UTC" : mode.titleize, mode] } %>
 <% style_variants = ProfileShowcaseItem::STYLE_VARIANTS %>
 <% style_accents = ProfileShowcaseItem::STYLE_ACCENTS %>
 <% style_shapes = ProfileShowcaseItem::STYLE_SHAPES %>
@@ -51,7 +52,7 @@
         </div>
         <div>
           <%= f.label :achievements_time_display, "Time display", class: label_classes %>
-          <%= f.select :achievements_time_display, time_modes.map { |mode| [mode.titleize, mode] }, { selected: preference.achievements_time_display }, class: input_classes %>
+          <%= f.select :achievements_time_display, time_mode_options, { selected: preference.achievements_time_display }, class: input_classes %>
         </div>
         <div>
           <%= f.label :achievements_dual_time, "Show local + UTC", class: label_classes %>

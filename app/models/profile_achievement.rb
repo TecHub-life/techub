@@ -5,6 +5,8 @@ class ProfileAchievement < ApplicationRecord
   validates :description, length: { maximum: 2000 }, allow_blank: true
   validates :timezone, length: { maximum: 100 }, allow_blank: true
   validates :date_display_mode, inclusion: { in: %w[profile_default yyyy_mm_dd dd_mm_yyyy relative] }
+  validates :url, length: { maximum: 2048 }, allow_blank: true
+  validates :fa_icon, length: { maximum: 80 }, allow_blank: true
 
   before_validation :sync_occurred_on
 

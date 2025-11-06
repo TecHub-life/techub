@@ -25,18 +25,42 @@ const techub = {
   hiddenVisible: false,
   revealHidden() {
     this.hiddenVisible = !this.hiddenVisible
+    const count = this._hiddenCountValue()
     document.dispatchEvent(
       new CustomEvent('techub:hidden:toggle', { detail: { visible: this.hiddenVisible } })
     )
     if (this.hiddenVisible) {
-      sendAnalytics('hidden_items_revealed', { hidden_count: this.hiddenCount() })
+      sendAnalytics('hidden_items_revealed', { hidden_count: count })
+    }
+    if (count === 0) {
+      this._celebrateNoSecrets()
+    } else {
+      const state = this.hiddenVisible ? 'revealed' : 'hidden'
+      console.info(`Hidden items ${state}: ${count} secret${count === 1 ? '' : 's'} loaded.`)
     }
     return this.hiddenVisible
   },
   hiddenCount() {
-    const count = parseInt(hiddenHost()?.dataset?.hiddenItemsHiddenCountValue || '0', 10)
-    console.info(`Hidden items: ${count}`)
+    const count = this._hiddenCountValue()
+    if (count === 0) {
+      this._celebrateNoSecrets()
+    } else {
+      console.info(`Hidden items: ${count}`)
+    }
     return count
+  },
+  _hiddenCountValue() {
+    return parseInt(hiddenHost()?.dataset?.hiddenItemsHiddenCountValue || '0', 10) || 0
+  },
+  _celebrateNoSecrets() {
+    console.log(
+      '%cNO SECRETS (YET) • TEC HUB',
+      'background: #0f172a; color: #38bdf8; padding: 4px 8px; border-radius: 4px; font-weight: bold;'
+    )
+    console.log(
+      "You've unlocked the console even without hidden items. Add a hidden link in settings to turn this into a scavenger hunt."
+    )
+    console.log('Tip: toggle the “Hidden” checkbox + share a secret code to guide visitors.')
   },
   iddqd() {
     console.log(
