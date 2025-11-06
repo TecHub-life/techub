@@ -1,5 +1,4 @@
 class AnalyticsController < ApplicationController
-
   def showcase
     payload = showcase_params.to_h.symbolize_keys
     Analytics::ProfileShowcaseTracker.call(
