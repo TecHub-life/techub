@@ -273,6 +273,9 @@
               <%= f.datetime_local_field :occurred_at, class: input_classes %>
             </div>
           </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            The Date field is the minimum needed for cards. Add Date & time (plus a timezone) when you want the timeline to show exact moments—if you only fill the time, we’ll copy its date automatically.
+          </p>
           <div class="grid gap-3 md:grid-cols-2">
             <div>
               <%= f.label :timezone, "Timezone", class: label_classes %>
@@ -404,6 +407,9 @@
                       <%= f.datetime_local_field :occurred_at, value: achievement.occurred_at&.strftime("%Y-%m-%dT%H:%M"), class: input_classes %>
                     </div>
                   </div>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    You can stick to Date for simple milestones. Adding Date & time (and a timezone) unlocks relative/dual time displays; leaving Date blank while setting Date & time auto-derives the day.
+                  </p>
                   <div class="grid gap-3 md:grid-cols-2">
                     <div>
                       <%= f.label :timezone, "Timezone", class: label_classes %>

@@ -66,13 +66,8 @@ module ProfileShowcaseHelper
       host = link_host(item.url)
       host ? [ host ] : []
     when ProfileAchievement
-      lines = []
-      formatted = formatted_achievement_date(item, preferences)
-      lines << formatted if formatted.present?
-      lines.concat(achievement_timestamp_lines(item, preferences))
       host = link_host(item.url)
-      lines << host if host.present?
-      lines
+      host ? [ host ] : []
     when ProfileExperience
       lines = []
       range = experience_range(item)
