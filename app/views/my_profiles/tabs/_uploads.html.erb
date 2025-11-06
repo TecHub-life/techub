@@ -18,24 +18,36 @@
 
       <% if gallery.any? %>
         <div class="grid gap-3 sm:grid-cols-3">
-          <% gallery.first(12).each do |path| %>
+          <% gallery.first(12).each_with_index do |path, index| %>
             <% fname = File.basename(path) %>
             <div class="rounded border border-slate-200 p-2 dark:border-slate-700">
               <img src="<%= "/generated/#{safe_login}/#{fname}" %>" alt="<%= fname %>" class="h-24 w-full object-cover rounded">
               <div class="mt-2 flex items-center justify-between gap-2 text-xs">
                 <span class="truncate" title="<%= fname %>"><%= fname %></span>
-                <form action="<%= select_my_profile_asset_path(username: @profile.login) %>" method="post" class="flex items-center gap-1">
-                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <form action="<%= select_my_profile_asset_path(username: @profile.login) %>" method="post" class="flex flex-col gap-2 sm:flex-row sm:items-center" data-controller="submit-form">
+                  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
                   <input type="hidden" name="local_path" value="<%= path %>">
-                  <select name="kind" class="rounded border border-slate-300 bg-white px-1 py-0.5 dark:border-slate-700 dark:bg-slate-900">
-                    <option value="og">OG</option>
-                    <option value="card">Card</option>
-                    <option value="simple">Simple</option>
-                    <option value="avatar_3x1">Banner 3×1</option>
-                    <option value="avatar_16x9">16×9</option>
-                    <option value="avatar_1x1">1×1</option>
-                  </select>
-                  <button class="rounded border px-2 py-0.5 dark:border-slate-700">Use</button>
+                  <%= select_tag "kind",
+                    options_for_select([
+                      ['OG', 'og'],
+                      ['Card', 'card'],
+                      ['Simple', 'simple'],
+                      ['Banner 3×1', 'avatar_3x1'],
+                      ['16×9', 'avatar_16x9'],
+                      ['1×1', 'avatar_1x1']
+                    ]),
+                    id: "upload-kind-#{index}",
+                    aria: { label: "Asset type" },
+                    class: "#{ui_select_class} sm:w-44" %>
+                  <button type="submit" class="<%= ui_secondary_button_class %> sm:w-auto" data-submit-form-target="button">
+                    <span data-submit-form-target="spinner" class="hidden">
+                      <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3z"></path>
+                      </svg>
+                    </span>
+                    <span data-submit-form-target="text">Use</span>
+                  </button>
                 </form>
               </div>
             </div>

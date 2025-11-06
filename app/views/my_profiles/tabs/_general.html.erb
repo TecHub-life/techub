@@ -126,40 +126,48 @@
 
   <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
     <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Privacy & Sharing</h2>
-    <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-4">
-      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    <form action="<%= update_my_profile_settings_path(username: profile.login) %>" method="post" class="space-y-4" data-controller="submit-form">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
       <input type="hidden" name="_method" value="patch">
-      <label class="inline-flex items-center gap-3 text-sm md:text-base cursor-pointer">
+      <label class="inline-flex items-center gap-3 text-sm md:text-base cursor-pointer text-slate-700 dark:text-slate-300">
         <input type="hidden" name="ai_art_opt_in" value="0">
-        <input type="checkbox" name="ai_art_opt_in" value="1" <%= 'checked' if @profile.ai_art_opt_in %> class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600">
-        <span class="text-slate-700 dark:text-slate-300">Allow my AI artwork to be featured publicly (gallery & promos)</span>
+        <input type="checkbox" name="ai_art_opt_in" value="1" <%= 'checked' if profile.ai_art_opt_in %> class="<%= ui_checkbox_class %>">
+        <span>Allow my AI artwork to be featured publicly (gallery & promos)</span>
       </label>
 
       <div class="pt-2">
         <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">Available for hire badge</p>
         <div class="flex items-center gap-3">
-          <label class="inline-flex items-center gap-2 cursor-pointer">
+          <label class="inline-flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300">
             <input type="hidden" name="hireable_override" value="0">
-            <input type="checkbox" name="hireable_override" value="1" <%= 'checked' if @profile.hireable_display? %> class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600">
-            <span class="text-slate-700 dark:text-slate-300">Show the “Available for hire” badge on my profile</span>
+            <input type="checkbox" name="hireable_override" value="1" <%= 'checked' if profile.hireable_display? %> class="<%= ui_checkbox_class %>">
+            <span>Show the “Available for hire” badge on my profile</span>
           </label>
         </div>
         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">You control this here. Toggle on/off anytime.</p>
       </div>
       <div class="flex items-center gap-3">
-        <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600" data-disable-with="Saving…">Save Changes</button>
-        <a href="/gallery" target="_blank" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">View public gallery →</a>
+        <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+          <span data-submit-form-target="spinner" class="hidden">
+            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+            </svg>
+          </span>
+          <span data-submit-form-target="text">Save changes</span>
+        </button>
+        <a href="/gallery" target="_blank" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">View public gallery →</a>
       </div>
     </form>
   </div>
 
   <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
     <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Avatar Selection</h2>
-    <form action="<%= update_my_profile_settings_path(username: @profile.login) %>" method="post" class="space-y-4">
-      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    <form action="<%= update_my_profile_settings_path(username: profile.login) %>" method="post" class="space-y-4" data-controller="submit-form">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
       <input type="hidden" name="_method" value="patch">
-      <% choice = @profile.profile_card&.avatar_choice || 'real' %>
-      <% base = Rails.root.join('public','generated', @profile.login) %>
+      <% choice = profile.profile_card&.avatar_choice || 'real' %>
+      <% base = Rails.root.join('public','generated', profile.login) %>
       <% ai_opts = [] %>
       <% if Dir.exist?(base) %>
         <% ai_opts = Dir[base.join('avatar-1x1*.{jpg,jpeg,png}').to_s].first(3) %>
@@ -174,9 +182,9 @@
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
         <label class="cursor-pointer">
           <input type="radio" name="avatar_choice" value="real" <%= 'checked' if choice == 'real' %> class="peer sr-only">
-          <div class="rounded border-2 border-slate-300 p-2 peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 dark:border-slate-700 dark:peer-checked:ring-indigo-900 transition">
+          <div class="rounded border-2 border-slate-300 p-2 transition peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-400 peer-focus-visible:outline-none dark:border-slate-700 dark:peer-checked:ring-indigo-900 dark:peer-focus-visible:ring-sky-500">
             <div class="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
-              <img src="<%= avatar_image_url_for(@profile) %>" alt="GitHub avatar" class="h-full w-full object-cover" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
+              <img src="<%= avatar_image_url_for(profile) %>" alt="GitHub avatar" class="h-full w-full object-cover" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
             </div>
             <div class="mt-1.5 text-center text-xs font-medium text-slate-700 dark:text-slate-300">GitHub</div>
           </div>
@@ -185,30 +193,44 @@
         <% ai_opts.each_with_index do |path, idx| %>
           <label class="cursor-pointer">
             <input type="radio" name="avatar_choice" value="ai" <%= 'checked' if choice == 'ai' %> class="peer sr-only">
-            <div class="rounded border-2 border-slate-300 p-2 peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 dark:border-slate-700 dark:peer-checked:ring-indigo-900 transition">
+            <div class="rounded border-2 border-slate-300 p-2 transition peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-400 peer-focus-visible:outline-none dark:border-slate-700 dark:peer-checked:ring-indigo-900 dark:peer-focus-visible:ring-sky-500">
               <div class="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-900">
-                <img src="<%= "/generated/#{@profile.login}/#{File.basename(path)}" %>" alt="AI avatar <%= idx+1 %>" class="h-full w-full object-cover">
+                <img src="<%= "/generated/#{profile.login}/#{File.basename(path)}" %>" alt="AI avatar <%= idx+1 %>" class="h-full w-full object-cover">
               </div>
               <div class="mt-1.5 text-center text-xs font-medium text-slate-700 dark:text-slate-300">AI <%= idx+1 %></div>
             </div>
           </label>
         <% end %>
       </div>
-      <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600" data-disable-with="Saving…">Save Avatar Choice</button>
+      <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+        <span data-submit-form-target="spinner" class="hidden">
+          <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+          </svg>
+        </span>
+        <span data-submit-form-target="text">Save avatar choice</span>
+      </button>
     </form>
 
     <% uploads_enabled = defined?(Storage::ActiveStorageUploadService) %>
     <div class="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-800">
       <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Upload Custom Avatar</h3>
-      <form action="<%= upload_my_profile_asset_path(username: @profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-3">
-        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <form action="<%= upload_my_profile_asset_path(username: profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-4" data-controller="submit-form">
+        <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
         <input type="hidden" name="kind" value="avatar_1x1">
-        <input type="file" name="file" accept="image/*" class="block w-full text-sm text-slate-700 dark:text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-slate-700 dark:file:text-slate-300" <%= "disabled" unless uploads_enabled %>>
-        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600 <%= "opacity-50 cursor-not-allowed" unless uploads_enabled %>" <%= "disabled" unless uploads_enabled %>>
+        <input type="file" name="file" accept="image/*" class="<%= ui_file_input_class %> <%= 'opacity-60 cursor-not-allowed' unless uploads_enabled %>" <%= "disabled" unless uploads_enabled %>>
+        <button type="submit" class="<%= ui_secondary_button_class %> w-full <%= 'opacity-60 cursor-not-allowed' unless uploads_enabled %>" <%= "disabled" unless uploads_enabled %> data-submit-form-target="button">
+          <span data-submit-form-target="spinner" class="hidden">
+            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+            </svg>
+          </span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
           </svg>
-          Upload Avatar
+          <span data-submit-form-target="text">Upload avatar</span>
         </button>
       </form>
       <p class="mt-2 text-xs text-slate-500">Upload your own avatar image. Recommended: square image, at least 400x400px.</p>

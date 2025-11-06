@@ -4,9 +4,11 @@
     <div class="rounded-xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Have an invite code?</span>
-        <form action="<%= login_path %>" method="get" data-turbo-frame="_top" class="flex flex-col sm:flex-row gap-2 items-stretch sm:ml-auto">
-          <input type="text" name="invite_code" placeholder="Invite code (optional)" class="rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-          <button type="submit" class="inline-flex items-center justify-center gap-2 rounded bg-gradient-to-r from-slate-700 to-slate-900 px-4 py-2 text-sm font-semibold text-white hover:from-slate-600 hover:to-slate-800 dark:from-slate-600 dark:to-slate-800">
+        <form action="<%= login_path %>" method="get" data-turbo-frame="_top" class="flex flex-col items-stretch gap-2 sm:ml-auto sm:flex-row">
+          <%= text_field_tag :invite_code, nil,
+            placeholder: "Invite code (optional)",
+            class: "#{ui_input_class} sm:w-64" %>
+          <button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-slate-700 to-slate-900 px-5 text-sm font-semibold text-white shadow-sm transition hover:from-slate-600 hover:to-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:from-slate-600 dark:to-slate-800">
             Sign in with GitHub
           </button>
         </form>
@@ -30,7 +32,7 @@
       <div class="space-y-3 sm:space-y-5 lg:space-y-6 animate-fade-in text-center lg:text-left">
         <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-all hover:shadow-md hover:scale-105 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300">
           <span class="relative flex h-2 w-2">
-            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+            <span class="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 motion-safe:animate-ping"></span>
             <span class="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
           </span>
           <span class="bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent dark:from-slate-200 dark:to-slate-400">TecHub • GitHub Profiles & Insights</span>
@@ -104,7 +106,7 @@
       <!-- Right: Logo/Visual (md and up) -->
       <div class="hidden md:flex items-center justify-center mt-4 lg:mt-0 animate-fade-in-delayed">
         <div class="relative group">
-          <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 rounded-3xl blur-2xl opacity-30 group-hover:opacity-50 transition duration-500 animate-pulse-slow"></div>
+          <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 rounded-3xl blur-2xl opacity-30 transition duration-500 motion-safe:animate-pulse-slow group-hover:opacity-50"></div>
           <div class="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 bg-white dark:bg-slate-900 transform transition-transform duration-500 group-hover:scale-105">
             <%= image_tag "android-chrome-512x512.jpg", alt: "TecHub Logo", class: "relative block w-full max-w-md h-auto" %>
           </div>
@@ -438,7 +440,7 @@
           <span>Sign in with GitHub</span>
         <% end %>
       <% end %>
-      <%= link_to docs_path, class: "group inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-200 bg-white px-8 py-4 text-lg font-semibold text-slate-900 transition-all duration-300 hover:bg-slate-50 hover:border-slate-300 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:border-slate-600" do %>
+      <%= link_to api_docs_path, class: "group inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-200 bg-white px-8 py-4 text-lg font-semibold text-slate-900 transition-all duration-300 hover:bg-slate-50 hover:border-slate-300 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:border-slate-600" do %>
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>

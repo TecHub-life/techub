@@ -73,11 +73,11 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="min-h-screen bg-slate-50 text-slate-900 antialiased transition dark:bg-slate-950 dark:text-slate-100">
+  <body class="min-h-dvh overflow-x-hidden bg-slate-50 text-slate-900 antialiased transition dark:bg-slate-950 dark:text-slate-100">
     <%= render "shared/header" %>
     
     <!-- Toast notifications container -->
-    <div id="flash-root" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md space-y-2 flex flex-col items-center">
+    <div id="flash-root" class="fixed top-20 left-1/2 z-50 flex w-full max-w-md -translate-x-1/2 flex-col items-center space-y-2" role="status" aria-live="polite">
       <% flash.each do |key, value| %>
         <% 
           # Determine styling based on flash type
@@ -129,6 +129,12 @@
       }
       .animate-fade-out {
         animation: fade-out 0.3s ease-out forwards;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .animate-slide-down,
+        .animate-fade-out {
+          animation: none !important;
+        }
       }
     </style>
 

@@ -28,9 +28,11 @@ export default class extends Controller {
 
   setTheme(theme, { persist = true } = {}) {
     document.documentElement.classList.toggle('dark', theme === 'dark')
+    document.documentElement.dataset.theme = theme
     if (persist) {
       window.localStorage.setItem(STORAGE_KEY, theme)
     }
+    window.dispatchEvent(new CustomEvent('techub:theme-change', { detail: { theme } }))
     this.updateIcon(theme)
   }
 

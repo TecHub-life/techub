@@ -59,9 +59,12 @@
               </ul>
             </div>
             <div class="flex flex-wrap gap-2">
-              <form action="<%= ops_bulk_retry_all_path %>" method="post" onsubmit="return confirm('Apply latest version for ALL profiles?');">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll All</button>
+              <form action="<%= ops_bulk_retry_all_path %>" method="post" data-controller="submit-form" onsubmit="return confirm('Apply latest version for ALL profiles?');">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                  <span data-submit-form-target="text">Re-roll all profiles</span>
+                </button>
               </form>
             </div>
           </div>
@@ -146,7 +149,14 @@
                       <td class="py-2 pr-4"><%= p.last_ai_regenerated_at&.strftime('%Y-%m-%d %H:%M') || '—' %></td>
                       <td class="py-2">
                         <div class="flex flex-wrap gap-2">
-                          <%= button_to "Re-roll Profile", ops_retry_profile_path(username: p.login), method: :post, class: "rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900" %>
+                          <%= button_to ops_retry_profile_path(username: p.login),
+                                method: :post,
+                                form: { data: { controller: "submit-form" } },
+                                class: "#{ui_secondary_button_class} px-4",
+                                data: { submit_form_target: "button" } do %>
+                            <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon(classes: "h-3.5 w-3.5") %></span>
+                            <span data-submit-form-target="text">Re-roll profile</span>
+                          <% end %>
                         </div>
                       </td>
                     </tr>
@@ -167,35 +177,44 @@
           <div class="mb-3 grid gap-3 sm:grid-cols-2">
             <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
               <h3 class="text-sm font-semibold mb-2">Re-roll (Selected)</h3>
-              <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <label class="text-xs text-slate-500">Select profiles</label>
-                <select name="logins[]" multiple size="8" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+              <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2" data-controller="submit-form">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Select profiles</label>
+                <select name="logins[]" multiple size="8" class="<%= "#{ui_select_class} h-auto min-h-[12rem]" %>">
                   <% Profile.order(:login).limit(500).pluck(:login).each do |login| %>
                     <option value="<%= login %>">@<%= login %></option>
                   <% end %>
                 </select>
-                <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll</button>
+                <button type="submit" class="<%= ui_primary_button_class %> w-full" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                  <span data-submit-form-target="text">Re-roll selected profiles</span>
+                </button>
               </form>
             </div>
             <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
               <h3 class="text-sm font-semibold mb-2">Advanced Re-roll (Single Profile)</h3>
-              <form action="<%= ops_retry_profile_path(username: '') %>" method="post" onsubmit="this.action=this.action.replace(/\/$/, '') + '/' + encodeURIComponent(this.querySelector('[name=login]').value) + '/retry';">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <div class="mb-2">
-                  <label class="text-xs text-slate-500">GitHub username</label>
-                  <input type="text" name="login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" placeholder="loftwah" required>
+              <form action="<%= ops_retry_profile_path(username: '') %>" method="post" data-controller="submit-form" onsubmit="this.action=this.action.replace(/\/$/, '') + '/' + encodeURIComponent(this.querySelector('[name=login]').value) + '/retry';">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <div class="mb-2 space-y-1.5">
+                  <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">GitHub username</label>
+                  <input type="text" name="login" class="<%= ui_input_class %>" placeholder="loftwah" required>
                 </div>
-                <p class="text-xs text-slate-500 mb-2">Runs the full pipeline as if freshly submitted. More granular controls coming soon.</p>
-                <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll Full</button>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Runs the full pipeline as if freshly submitted. More granular controls coming soon.</p>
+                <button type="submit" class="<%= ui_primary_button_class %> w-full" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                  <span data-submit-form-target="text">Re-roll profile</span>
+                </button>
               </form>
             </div>
           </div>
 
           <div class="mb-3 flex items-center gap-2">
-            <form action="<%= ops_bulk_retry_all_path %>" method="post">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Re-roll ALL Profiles</button>
+            <form action="<%= ops_bulk_retry_all_path %>" method="post" data-controller="submit-form">
+              <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+              <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                <span data-submit-form-target="text">Re-roll all profiles</span>
+              </button>
             </form>
           </div>
           <% if @failed_profiles.present? %>
@@ -334,29 +353,33 @@
 
           <div class="mt-4">
             <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Toggle AI Modules</h3>
-            <form action="<%= update_ai_caps_ops_admin_index_path %>" method="post" class="space-y-2">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <label class="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" name="ai_images" value="1" <%= 'checked' if @ai_caps[:image_generation] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                <span class="text-slate-700 dark:text-slate-300">Enable AI Image Generation</span>
+            <form action="<%= update_ai_caps_ops_admin_index_path %>" method="post" class="space-y-3" data-controller="submit-form">
+              <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+              <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <input type="hidden" name="ai_images" value="0">
+                <input type="checkbox" name="ai_images" value="1" <%= 'checked' if @ai_caps[:image_generation] %> class="<%= ui_checkbox_class %>">
+                <span>Enable AI Image Generation</span>
               </label>
-              <br>
-              <label class="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" name="ai_image_descriptions" value="1" <%= 'checked' if @ai_caps[:image_descriptions] %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                <span class="text-slate-700 dark:text-slate-300">Enable AI Image Descriptions</span>
+              <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <input type="hidden" name="ai_image_descriptions" value="0">
+                <input type="checkbox" name="ai_image_descriptions" value="1" <%= 'checked' if @ai_caps[:image_descriptions] %> class="<%= ui_checkbox_class %>">
+                <span>Enable AI Image Descriptions</span>
               </label>
-              <br>
-              <label class="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" name="ai_text" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_text) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                <span class="text-slate-700 dark:text-slate-300">Enable AI Text (Traits)</span>
+              <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <input type="hidden" name="ai_text" value="0">
+                <input type="checkbox" name="ai_text" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_text) %> class="<%= ui_checkbox_class %>">
+                <span>Enable AI Text (Traits)</span>
               </label>
-              <br>
-              <label class="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" name="ai_structured_output" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_structured_output) %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                <span class="text-slate-700 dark:text-slate-300">Enable AI Structured Output</span>
+              <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <input type="hidden" name="ai_structured_output" value="0">
+                <input type="checkbox" name="ai_structured_output" value="1" <%= 'checked' if FeatureFlags.enabled?(:ai_structured_output) %> class="<%= ui_checkbox_class %>">
+                <span>Enable AI Structured Output</span>
               </label>
-              <div>
-                <button class="mt-2 rounded border px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800">Save</button>
+              <div class="pt-2">
+                <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                  <span data-submit-form-target="text">Save AI settings</span>
+                </button>
               </div>
             </form>
           </div>
@@ -431,78 +454,85 @@
             <div class="grid gap-3 md:grid-cols-2">
               <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
                 <h4 class="text-sm font-semibold mb-2">StructuredLogger</h4>
-                <form action="<%= ops_axiom_log_test_path %>" method="post" class="space-y-2">
-                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-xs text-slate-500">Level</label>
-                      <select name="level" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                <form action="<%= ops_axiom_log_test_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Level</label>
+                      <select name="level" class="<%= "#{ui_select_class} h-auto" %>">
                         <option>info</option>
                         <option>warn</option>
                         <option>error</option>
                         <option>debug</option>
                       </select>
                     </div>
-                    <div>
-                      <label class="block text-xs text-slate-500">Force send</label>
-                      <select name="force" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Force send</label>
+                      <select name="force" class="<%= "#{ui_select_class} h-auto" %>">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label class="block text-xs text-slate-500">Message</label>
-                    <input type="text" name="message" placeholder="custom message" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Message</label>
+                    <input type="text" name="message" placeholder="custom message" class="<%= ui_input_class %>">
                   </div>
-                  <div>
-                    <label class="block text-xs text-slate-500">Payload (JSON)</label>
-                    <textarea name="payload" rows="3" class="w-full rounded border px-2 py-1 text-sm font-mono dark:border-slate-700" placeholder='{"kind":"test","code":123}'></textarea>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Payload (JSON)</label>
+                    <textarea name="payload" rows="3" class="<%= "#{ui_textarea_class} font-mono" %>" placeholder='{"kind":"test","code":123}'></textarea>
                   </div>
-                  <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Send</button>
+                  <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                    <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                    <span data-submit-form-target="text">Send structured log</span>
+                  </button>
                 </form>
               </div>
 
               <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
                 <h4 class="text-sm font-semibold mb-2">Direct Ingest</h4>
-                <form action="<%= ops_axiom_direct_ingest_path %>" method="post" class="space-y-2">
-                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-xs text-slate-500">Dataset</label>
-                      <input type="text" name="dataset" placeholder="<%= (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV['AXIOM_DATASET'] || 'techub' %>" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
-                    </div>
+                <form action="<%= ops_axiom_direct_ingest_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dataset</label>
+                    <input type="text" name="dataset" placeholder="<%= (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV['AXIOM_DATASET'] || 'techub' %>" class="<%= ui_input_class %>">
                   </div>
-                  <div>
-                    <label class="block text-xs text-slate-500">Body (JSON array or object)</label>
-                    <textarea name="body" rows="4" class="w-full rounded border px-2 py-1 text-sm font-mono dark:border-slate-700" placeholder='[{"ts":"<%= Time.now.utc.iso8601 %>","level":"INFO","message":"ops_direct","env":"<%= Rails.env %>"}]'></textarea>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Body (JSON array or object)</label>
+                    <textarea name="body" rows="4" class="<%= "#{ui_textarea_class} font-mono" %>" placeholder='[{"ts":"<%= Time.now.utc.iso8601 %>","level":"INFO","message":"ops_direct","env":"<%= Rails.env %>"}]'></textarea>
                   </div>
-                  <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Ingest</button>
+                  <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                    <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                    <span data-submit-form-target="text">Ingest payload</span>
+                  </button>
                 </form>
               </div>
 
               <div class="rounded border border-slate-200 p-3 dark:border-slate-700 md:col-span-2">
                 <h4 class="text-sm font-semibold mb-2">OpenTelemetry Span</h4>
-                <form action="<%= ops_axiom_otel_smoke_path %>" method="post" class="space-y-2">
-                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                  <div class="grid grid-cols-3 gap-2">
-                    <div>
-                      <label class="block text-xs text-slate-500">Name</label>
-                      <input type="text" name="name" placeholder="ops_otel_smoke" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                <form action="<%= ops_axiom_otel_smoke_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                  <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Name</label>
+                      <input type="text" name="name" placeholder="ops_otel_smoke" class="<%= ui_input_class %>">
                     </div>
-                    <div>
-                      <label class="block text-xs text-slate-500">Mark error</label>
-                      <select name="error" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mark error</label>
+                      <select name="error" class="<%= "#{ui_select_class} h-auto" %>">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label class="block text-xs text-slate-500">Attributes (JSON object)</label>
-                    <textarea name="attributes" rows="3" class="w-full rounded border px-2 py-1 text-sm font-mono dark:border-slate-700" placeholder='{"smoke":true,"env":"<%= Rails.env %>"}'></textarea>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Attributes (JSON object)</label>
+                    <textarea name="attributes" rows="3" class="<%= "#{ui_textarea_class} font-mono" %>" placeholder='{"smoke":true,"env":"<%= Rails.env %>"}'></textarea>
                   </div>
-                  <button class="rounded bg-purple-600 px-3 py-1 text-white hover:bg-purple-700">Emit Span</button>
+                  <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                    <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                    <span data-submit-form-target="text">Emit OTEL span</span>
+                  </button>
                 </form>
               </div>
             </div>
@@ -545,13 +575,13 @@
             </div>
             <form action="<%= ops_admin_path %>" method="get" class="flex items-center gap-2">
               <input type="hidden" name="tab" value="pipeline">
-              <label class="text-sm text-slate-600 dark:text-slate-300" for="pipeline_login_select">Login</label>
-              <select id="pipeline_login_select" name="pipeline_login" class="rounded border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+              <label class="text-sm font-medium text-slate-600 dark:text-slate-300" for="pipeline_login_select">Login</label>
+              <select id="pipeline_login_select" name="pipeline_login" class="<%= "#{ui_select_class} h-auto w-48" %>">
                 <% @pipeline_snapshot_logins.each do |login| %>
                   <option value="<%= login %>" <%= "selected" if login == @pipeline_snapshot_login %>>@<%= login %></option>
                 <% end %>
               </select>
-              <button class="rounded bg-indigo-600 px-3 py-1 text-sm font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600">Load</button>
+              <button type="submit" class="<%= ui_secondary_button_class %>">Load</button>
             </form>
           </div>
 
@@ -737,26 +767,29 @@
         <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Pipeline Doctor</h2>
           <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Run an end-to-end readiness check for a GitHub login. This fetches GitHub data, syncs a profile, generates traits, and captures screenshots for selected variants.</p>
-          <form action="<%= ops_pipeline_doctor_path %>" method="post" class="grid gap-3 sm:grid-cols-2">
-            <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300">GitHub login</label>
-              <input type="text" name="login" placeholder="loftwah" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+          <form action="<%= ops_pipeline_doctor_path %>" method="post" class="grid gap-3 sm:grid-cols-2" data-controller="submit-form">
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">GitHub login</label>
+              <input type="text" name="login" placeholder="loftwah" class="<%= ui_input_class %>" required />
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300">Host (optional)</label>
-              <input type="text" name="host" placeholder="http://127.0.0.1:3000" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Host (optional)</label>
+              <input type="text" name="host" placeholder="http://127.0.0.1:3000" class="<%= ui_input_class %>" />
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300">Email results to (optional)</label>
-              <input type="email" name="email" placeholder="ops@example.com" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Email results to (optional)</label>
+              <input type="email" name="email" placeholder="ops@example.com" class="<%= ui_input_class %>" />
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300">Variants (comma/space separated)</label>
-              <input type="text" name="variants" placeholder="og, card, simple, banner" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Variants (comma/space separated)</label>
+              <input type="text" name="variants" placeholder="og, card, simple, banner" class="<%= ui_input_class %>" />
             </div>
             <div class="sm:col-span-2">
-              <button class="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700">Run Doctor</button>
+              <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                <span data-submit-form-target="text">Run pipeline doctor</span>
+              </button>
             </div>
           </form>
           <% if flash[:doctor_json].present? %>
@@ -783,43 +816,50 @@
         <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Access Control</h2>
           <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">Gate sign-in to approved GitHub accounts until launch. Toggle open access to let anyone sign in. Settings persist in the database.</p>
-          <form action="<%= update_access_ops_admin_index_path %>" method="post" class="space-y-3">
-            <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="open_access" name="open_access" value="1" <%= 'checked' if @open_access %> class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-              <label for="open_access" class="text-slate-800 dark:text-slate-200">Open access (allow all accounts)</label>
+          <form action="<%= update_access_ops_admin_index_path %>" method="post" class="space-y-4" data-controller="submit-form">
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+            <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-800 dark:text-slate-200">
+              <input type="hidden" name="open_access" value="0">
+              <input type="checkbox" id="open_access" name="open_access" value="1" <%= 'checked' if @open_access %> class="<%= ui_checkbox_class %>">
+              <span>Open access (allow all accounts)</span>
+            </label>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300" for="allowed_logins">Allowed GitHub logins (comma or space separated)</label>
+              <textarea id="allowed_logins" name="allowed_logins" rows="3" class="<%= ui_textarea_class %>" placeholder="loftwah, jrh89"><%= h @allowed_logins %></textarea>
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Allowed GitHub logins (comma or space separated)</label>
-              <input type="text" name="allowed_logins" value="<%= h @allowed_logins %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="loftwah, jrh89">
-            </div>
-            <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Access Settings</button>
+            <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+              <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+              <span data-submit-form-target="text">Save access settings</span>
+            </button>
           </form>
         </div>
 
         <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Invite Settings</h2>
           <p class="text-sm text-slate-700 dark:text-slate-300 mb-3">Control invite usage cap and optionally override the invite codes list (stored in credentials by default). Overrides persist in <code>AppSetting</code>.</p>
-          <form action="<%= update_invites_ops_admin_index_path %>" method="post" class="space-y-3">
-            <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+          <form action="<%= update_invites_ops_admin_index_path %>" method="post" class="space-y-4" data-controller="submit-form">
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
             <div class="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Invite Cap Limit</label>
-                <input type="number" min="0" step="1" name="invite_cap_limit" value="<%= @invite_cap_limit %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Total successful invite sign-ins allowed before invites close.</p>
+              <div class="space-y-1.5">
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Invite cap limit</label>
+                <input type="number" min="0" step="1" name="invite_cap_limit" value="<%= @invite_cap_limit %>" class="<%= ui_input_class %>">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Total successful invite sign-ins allowed before invites close.</p>
               </div>
-              <div>
-                <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Invite Cap Used</label>
-                <input type="number" min="0" step="1" name="invite_cap_used" value="<%= @invite_cap_used %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Adjust for manual corrections; incremented automatically when an invite grants access.</p>
+              <div class="space-y-1.5">
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Invite cap used</label>
+                <input type="number" min="0" step="1" name="invite_cap_used" value="<%= @invite_cap_used %>" class="<%= ui_input_class %>">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Adjust for manual corrections; incremented automatically when an invite grants access.</p>
               </div>
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300 mb-1">Invite Codes Override (comma/space separated)</label>
-              <input type="text" name="invite_codes_override" value="<%= h @invite_codes_override %>" class="w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="code1, code2, code3">
-              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Leave blank to clear the override and fall back to encrypted credentials.</p>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Invite codes override (comma/space separated)</label>
+              <textarea name="invite_codes_override" rows="3" class="<%= ui_textarea_class %>" placeholder="code1, code2, code3"><%= h @invite_codes_override %></textarea>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Leave blank to clear the override and fall back to encrypted credentials.</p>
             </div>
-            <button class="rounded bg-slate-900 px-4 py-2 text-white dark:bg-slate-100 dark:text-slate-900">Save Invite Settings</button>
+            <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+              <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+              <span data-submit-form-target="text">Save invite settings</span>
+            </button>
             <div class="text-xs text-slate-500 dark:text-slate-400">Current: used <%= @invite_cap_used %> of <%= @invite_cap_limit %>. <%= Access::InviteCodes.exhausted? ? 'Exhausted' : 'Open' %>.</div>
           </form>
         </div>
@@ -834,22 +874,34 @@
             <div class="text-sm text-slate-500 dark:text-slate-400">Database Backups</div>
             <div class="mt-1 text-slate-700 dark:text-slate-300 text-sm">Upload SQLite files in <code>storage/</code> to object storage and prune old backups. Configure <code>BACKUP_BUCKET</code> (or <code>DO_SPACES_BUCKET</code>) and optional <code>BACKUP_PREFIX</code>.</div>
             <div class="mt-3 flex flex-wrap gap-2">
-              <form action="<%= backups_create_ops_admin_index_path %>" method="post" onsubmit="return confirm('Create a new backup now?');">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <button class="rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Create Backup</button>
+              <form action="<%= backups_create_ops_admin_index_path %>" method="post" data-controller="submit-form" onsubmit="return confirm('Create a new backup now?');">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <button type="submit" class="<%= ui_primary_button_class %> px-4" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon(classes: "h-3.5 w-3.5") %></span>
+                  <span data-submit-form-target="text">Create backup</span>
+                </button>
               </form>
-              <form action="<%= backups_prune_ops_admin_index_path %>" method="post" onsubmit="return confirm('Prune old backups now?');">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <button class="rounded bg-amber-600 px-3 py-1 text-white hover:bg-amber-700">Prune Old</button>
+              <form action="<%= backups_prune_ops_admin_index_path %>" method="post" data-controller="submit-form" onsubmit="return confirm('Prune old backups now?');">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <button type="submit" class="<%= ui_secondary_button_class %> px-4" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon(classes: "h-3.5 w-3.5") %></span>
+                  <span data-submit-form-target="text">Prune old</span>
+                </button>
               </form>
-              <form action="<%= backups_doctor_ops_admin_index_path %>" method="post">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <button class="rounded bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700">Check Status</button>
+              <form action="<%= backups_doctor_ops_admin_index_path %>" method="post" data-controller="submit-form">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <button type="submit" class="<%= ui_secondary_button_class %> px-4" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon(classes: "h-3.5 w-3.5") %></span>
+                  <span data-submit-form-target="text">Check status</span>
+                </button>
               </form>
-              <form action="<%= backups_doctor_write_ops_admin_index_path %>" method="post" onsubmit="return confirm('Perform write+delete probe?');">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+              <form action="<%= backups_doctor_write_ops_admin_index_path %>" method="post" data-controller="submit-form" onsubmit="return confirm('Perform write+delete probe?');">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
                 <input type="hidden" name="confirm" value="YES" />
-                <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Write Probe</button>
+                <button type="submit" class="<%= ui_secondary_button_class %> px-4" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon(classes: "h-3.5 w-3.5") %></span>
+                  <span data-submit-form-target="text">Write probe</span>
+                </button>
               </form>
             </div>
             <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">Retention via env: <code>BACKUP_RETENTION_DAYS</code> (default 14), <code>BACKUP_KEEP_MIN</code> (default 7). Scheduled daily via recurring.yml.</div>
@@ -888,13 +940,19 @@
         <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h2 class="text-lg font-semibold mb-2">Leaderboards</h2>
           <div class="flex flex-wrap gap-2">
-            <form action="<%= rebuild_leaderboards_ops_admin_index_path %>" method="post">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <button class="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Rebuild All</button>
+            <form action="<%= rebuild_leaderboards_ops_admin_index_path %>" method="post" data-controller="submit-form">
+              <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+              <button type="submit" class="<%= ui_primary_button_class %> px-4" data-submit-form-target="button">
+                <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon(classes: "h-3.5 w-3.5") %></span>
+                <span data-submit-form-target="text">Rebuild all</span>
+              </button>
             </form>
-            <form action="<%= capture_leaderboard_og_ops_admin_index_path %>" method="post">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-              <button class="rounded bg-slate-700 px-3 py-1 text-white hover:bg-slate-800">Capture OG</button>
+            <form action="<%= capture_leaderboard_og_ops_admin_index_path %>" method="post" data-controller="submit-form">
+              <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+              <button type="submit" class="<%= ui_secondary_button_class %> px-4" data-submit-form-target="button">
+                <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon(classes: "h-3.5 w-3.5") %></span>
+                <span data-submit-form-target="text">Capture OG</span>
+              </button>
             </form>
           </div>
         </div>
@@ -910,16 +968,19 @@
         <!-- Email Smoke Test -->
         <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Email Smoke Test</h2>
-          <%= form_with url: ops_send_test_email_path, method: :post, local: true, class: "space-y-3" do |f| %>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300">To (email)</label>
-              <%= text_field_tag :to, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+          <%= form_with url: ops_send_test_email_path, method: :post, local: true, html: { class: "space-y-4", data: { controller: "submit-form" } } do |f| %>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">To (email)</label>
+              <%= f.email_field :to, class: ui_input_class %>
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-300">Message (optional)</label>
-              <%= text_field_tag :message, nil, class: "w-full rounded border border-slate-300 bg-white p-2 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Message (optional)</label>
+              <%= f.text_field :message, class: ui_input_class %>
             </div>
-            <%= submit_tag "Send test email", class: "rounded bg-blue-600 px-4 py-2 text-white" %>
+            <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+              <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+              <span data-submit-form-target="text">Send test email</span>
+            </button>
           <% end %>
         </div>
 
@@ -941,36 +1002,42 @@
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
               <h3 class="text-sm font-semibold mb-2">Set Owner (orphaned only)</h3>
-              <form action="<%= ops_set_owner_ownership_path %>" method="post" class="space-y-2">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-                  <label class="block text-xs text-slate-500">Profile login</label>
-                  <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+              <form action="<%= ops_set_owner_ownership_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative space-y-1.5">
+                  <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Profile login</label>
+                  <input type="text" name="profile_login" placeholder="@login" class="<%= ui_input_class %>" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
                   <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
                 </div>
-                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-                  <label class="block text-xs text-slate-500">Target user login</label>
-                  <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative space-y-1.5">
+                  <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Target user login</label>
+                  <input type="text" name="target_login" placeholder="@user" class="<%= ui_input_class %>" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
                   <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
                 </div>
-                <button class="w-full rounded bg-slate-900 px-3 py-1 text-white dark:bg-slate-100 dark:text-slate-900">Set Owner</button>
+                <button type="submit" class="<%= ui_primary_button_class %> w-full" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                  <span data-submit-form-target="text">Set owner</span>
+                </button>
               </form>
             </div>
             <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
               <h3 class="text-sm font-semibold mb-2">Transfer Owner</h3>
-              <form action="<%= ops_transfer_by_profile_ownership_path %>" method="post" class="space-y-2">
-                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
-                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-                  <label class="block text-xs text-slate-500">Profile login</label>
-                  <input type="text" name="profile_login" placeholder="@login" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+              <form action="<%= ops_transfer_by_profile_ownership_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/profiles/search" data-action="click@window->ops-autocomplete#hide" class="relative space-y-1.5">
+                  <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Profile login</label>
+                  <input type="text" name="profile_login" placeholder="@login" class="<%= ui_input_class %>" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
                   <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
                 </div>
-                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative">
-                  <label class="block text-xs text-slate-500">New owner (user login)</label>
-                  <input type="text" name="target_login" placeholder="@user" class="w-full rounded border px-2 py-1 text-sm dark:border-slate-700" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
+                <div data-controller="ops-autocomplete" data-ops-autocomplete-endpoint-value="/ops/users/search" data-action="click@window->ops-autocomplete#hide" class="relative space-y-1.5">
+                  <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">New owner (user login)</label>
+                  <input type="text" name="target_login" placeholder="@user" class="<%= ui_input_class %>" data-ops-autocomplete-target="input" data-action="input->ops-autocomplete#search" />
                   <div data-ops-autocomplete-target="results" class="hidden absolute z-50 mt-1 w-full rounded border border-slate-200 bg-white shadow dark:border-slate-700 dark:bg-slate-800"></div>
                 </div>
-                <button class="w-full rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Transfer</button>
+                <button type="submit" class="<%= ui_secondary_button_class %> w-full" data-submit-form-target="button">
+                  <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                  <span data-submit-form-target="text">Transfer owner</span>
+                </button>
               </form>
             </div>
           </div>

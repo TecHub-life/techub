@@ -16,9 +16,8 @@ Rails.application.routes.draw do
   post "/submit", to: "submissions#create", as: :create_submission
   get "/faq", to: "pages#faq"
   get "/analytics", to: "pages#analytics"
-  get "/docs", to: "pages#docs"
-  # Serve docs and embedded assets under /docs/*path
-  get "/docs/*path", to: "pages#docs"
+  get "/docs", to: redirect("/api-docs")
+  get "/docs/*path", to: redirect("/api-docs")
   get "/gallery", to: "pages#gallery"
   get "/api-docs", to: "api_docs#show"
   get "/api-docs/spec.yaml", to: "api_docs#spec", as: :api_docs_spec

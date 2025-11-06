@@ -67,11 +67,30 @@ html {
 
 .animate-gradient {
   background-size: 200% 200%;
-  animation: gradient 8s ease infinite;
 }
 
-.animate-pulse-slow {
+.animate-pulse-slow,
+.motion-safe\:animate-pulse-slow {
   animation: pulseSlow 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-delayed,
+  .animate-gradient,
+  .animate-pulse-slow {
+    animation: none !important;
+  }
+
+  .motion-safe\:animate-pulse-slow {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-gradient {
+    animation: gradient 8s ease infinite;
+  }
 }
 
 /* Alpine.js x-cloak - hide elements until Alpine is ready */
@@ -86,6 +105,25 @@ html {
 }
 
 .scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area helpers */
+.safe-y {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.header-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.header-more summary::marker {
   display: none;
 }
 
