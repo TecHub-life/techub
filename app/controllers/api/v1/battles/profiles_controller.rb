@@ -3,7 +3,7 @@ module Api
     module Battles
       class ProfilesController < ApplicationController
         # Frozen contract for TecHub Battles consumers.
-        def card
+        def show
           username = params[:username].to_s.downcase
           profile = Profile.for_login(username).first
           return render json: { error: "not_found" }, status: :not_found unless profile
@@ -12,27 +12,8 @@ module Api
           return render json: { error: "no_card" }, status: :not_found unless card
 
           render json: {
-            profile: {
-              id: profile.id,
-              login: profile.login,
-              name: profile.name,
-              avatar_url: profile.avatar_url
-            },
-            card: {
-              archetype: card.archetype,
-              spirit_animal: card.spirit_animal,
-              attack: card.attack,
-              defense: card.defense,
-              speed: card.speed,
-              vibe: card.vibe,
-              vibe_description: card.vibe_description,
-              special_move: card.special_move,
-              special_move_description: card.special_move_description,
-              buff: card.buff,
-              buff_description: card.buff_description,
-              weakness: card.weakness,
-              weakness_description: card.weakness_description
-            },
+            profile: profile_summary(profile),
+            card: card_stats(card),
             activity: serialize_activity(profile.profile_activity)
           }
         end
@@ -49,27 +30,8 @@ module Api
               next unless card
 
               {
-                profile: {
-                  id: profile.id,
-                  login: profile.login,
-                  name: profile.name,
-                  avatar_url: profile.avatar_url || "https://github.com/#{profile.login}.png"
-                },
-                card: {
-                  archetype: card.archetype,
-                  spirit_animal: card.spirit_animal,
-                  attack: card.attack || 50,
-                  defense: card.defense || 50,
-                  speed: card.speed || 50,
-                  vibe: card.vibe,
-                  vibe_description: card.vibe_description,
-                  special_move: card.special_move,
-                  special_move_description: card.special_move_description,
-                  buff: card.buff,
-                  buff_description: card.buff_description,
-                  weakness: card.weakness,
-                  weakness_description: card.weakness_description
-                },
+                profile: profile_summary(profile),
+                card: card_stats(card, fallback: true),
                 activity: serialize_activity(profile.profile_activity)
               }
             end
@@ -77,6 +39,33 @@ module Api
         end
 
         private
+
+        def profile_summary(profile)
+          {
+            id: profile.id,
+            login: profile.login,
+            name: profile.name,
+            avatar_url: profile.avatar_url || "https://github.com/#{profile.login}.png"
+          }
+        end
+
+        def card_stats(card, fallback: false)
+          {
+            archetype: card.archetype,
+            spirit_animal: card.spirit_animal,
+            attack: fallback ? (card.attack || 50) : card.attack,
+            defense: fallback ? (card.defense || 50) : card.defense,
+            speed: fallback ? (card.speed || 50) : card.speed,
+            vibe: card.vibe,
+            vibe_description: card.vibe_description,
+            special_move: card.special_move,
+            special_move_description: card.special_move_description,
+            buff: card.buff,
+            buff_description: card.buff_description,
+            weakness: card.weakness,
+            weakness_description: card.weakness_description
+          }
+        end
 
         def serialize_activity(activity)
           return nil unless activity

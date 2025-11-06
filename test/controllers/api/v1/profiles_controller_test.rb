@@ -61,7 +61,7 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
       }
     )
 
-    get "/api/v1/profiles/schemauser/card"
+    get "/api/v1/profiles/schemauser"
     assert_response :success
     json = JSON.parse(@response.body)
 
@@ -91,6 +91,9 @@ class Api::V1::ProfilesControllerTest < ActionDispatch::IntegrationTest
       score
       total_events
     ]
+
+    get "/api/v1/profiles/schemauser/card"
+    assert_response :success
   end
 
   test "battle_ready endpoint preserves profile and card shape" do

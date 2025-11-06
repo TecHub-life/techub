@@ -18,8 +18,8 @@ To guarantee backwards compatibility, the TecHub Battles client should consume t
 under `/api/v1/battles/...`:
 
 ```http
-GET /api/v1/battles/profiles/:username/card
-GET /api/v1/battles/profiles/battle-ready
+GET /api/v1/battles/:username
+GET /api/v1/battles/battle-ready
 ```
 
 These responses are frozen—any schema changes in the main `/api/v1/profiles/...` routes will only
@@ -171,10 +171,10 @@ const damage = Math.max(5, baseDamage * randomFactor * typeMultiplier)
 
 ## Profile Battle Stats
 
-Use the existing profile endpoint to get battle-ready stats:
+Use the frozen Battles endpoint to get battle-ready stats:
 
 ```http
-GET /api/v1/profiles/:username/card
+GET /api/v1/battles/:username
 ```
 
 **Response includes:**
@@ -218,7 +218,7 @@ export async function fetchGameData() {
 ```typescript
 // lib/techub-api.ts
 export async function fetchFighter(username: string) {
-  const res = await fetch(`https://techub.life/api/v1/profiles/${username}/card`)
+  const res = await fetch(`https://techub.life/api/v1/battles/${username}`)
   return res.json()
 }
 ```
@@ -258,7 +258,7 @@ export function simulateBattle(challenger, opponent, gameData) {
 curl https://techub.life/api/v1/game-data/all
 
 # Get fighter stats
-curl https://techub.life/api/v1/profiles/loftwah/card
+curl https://techub.life/api/v1/battles/loftwah
 curl https://techub.life/api/v1/profiles/GameDevJared89/card
 
 # Battle happens in Next.js (no Rails API call needed!)

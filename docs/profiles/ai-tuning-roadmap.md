@@ -15,7 +15,7 @@ guardrails we just added so future tweaks do not break the public JSON consumed 
 - Gemini-powered traits: `Profiles::SynthesizeAiProfileService` asks Gemini 2.5 Flash for the full
   JSON bundle, then clamps/normalises values before saving to `ProfileCard`
   (`app/services/profiles/synthesize_ai_profile_service.rb`).
-- API surface: `/api/v1/profiles/:username/card`, `/api/v1/profiles/battle-ready`, and
+- API surface: `/api/v1/profiles/:username`, `/api/v1/profiles/battle-ready`, and
   `/api/v1/profiles/:username/assets` (`app/controllers/api/v1/profiles_controller.rb`).
 
 ---

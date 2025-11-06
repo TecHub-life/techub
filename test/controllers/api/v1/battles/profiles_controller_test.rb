@@ -48,7 +48,7 @@ class Api::V1::Battles::ProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "card endpoint stays frozen for battles consumers" do
-    get "/api/v1/battles/profiles/battleuser/card"
+    get "/api/v1/battles/battleuser"
     assert_response :success
 
     json = JSON.parse(@response.body)
@@ -81,7 +81,7 @@ class Api::V1::Battles::ProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "battle_ready endpoint stays frozen for battles consumers" do
-    get "/api/v1/battles/profiles/battle-ready"
+    get "/api/v1/battles/battle-ready"
     assert_response :success
 
     payload = JSON.parse(@response.body)

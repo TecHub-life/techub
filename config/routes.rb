@@ -92,12 +92,11 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "/profiles/:username/assets", to: "profiles#assets", defaults: { format: :json }
-      get "/profiles/:username/card", to: "profiles#card", defaults: { format: :json }
       get "/profiles/battle-ready", to: "profiles#battle_ready", defaults: { format: :json }
-      namespace :battles do
-        get "/profiles/:username/card", to: "profiles#card", defaults: { format: :json }
-        get "/profiles/battle-ready", to: "profiles#battle_ready", defaults: { format: :json }
-      end
+      get "/profiles/:username", to: "profiles#show", defaults: { format: :json }
+      get "/profiles/:username/card", to: "profiles#show", defaults: { format: :json } # legacy alias
+      get "/battles/battle-ready", to: "battles/profiles#battle_ready", defaults: { format: :json }
+      get "/battles/:username", to: "battles/profiles#show", defaults: { format: :json }
       get "/leaderboards", to: "leaderboards#index", defaults: { format: :json }
       get "/leaderboards/podium", to: "leaderboards#podium", defaults: { format: :json }
 
@@ -107,7 +106,7 @@ Rails.application.routes.draw do
       get "/game-data/all", to: "game_data#all", defaults: { format: :json }
 
       # Battle Results Recording (optional - for leaderboards)
-      resources :battles, only: [ :index, :show, :create ], defaults: { format: :json }
+      # (Placeholder routes removed to avoid conflicts with frozen battle profile endpoints)
     end
   end
 
