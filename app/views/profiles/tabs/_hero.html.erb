@@ -163,6 +163,20 @@
           <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Gists</p>
         </a>
       </div>
+
+      <% if pinned_items.present? %>
+        <div class="mt-6 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Featured Pins</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Spotlighted across hero and previews</p>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <% pinned_items.each do |item| %>
+              <%= render partial: "profiles/showcase/card", locals: { item: item, profile: profile, preferences: preferences, compact: true } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>

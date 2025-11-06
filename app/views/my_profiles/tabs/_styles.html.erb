@@ -1,0 +1,97 @@
+<% sort_modes = ProfilePreference::SORT_MODES %>
+<% date_formats = ProfilePreference::DATE_FORMATS %>
+<% time_modes = ProfilePreference::TIME_DISPLAY %>
+<% style_variants = ProfileShowcaseItem::STYLE_VARIANTS %>
+<% style_accents = ProfileShowcaseItem::STYLE_ACCENTS %>
+<% style_shapes = ProfileShowcaseItem::STYLE_SHAPES %>
+<% label_classes = "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" %>
+<% input_classes = "w-full rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+<% primary_button_classes = "inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400" %>
+
+<section class="space-y-8">
+  <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+    <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Default styling & ordering</h2>
+    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Control the default style palette and ordering logic for all showcase items.</p>
+
+    <%= form_with url: my_profile_preference_path(username: profile.login), method: :patch, class: "mt-6 space-y-6" do |f| %>
+      <div class="grid gap-4 md:grid-cols-3">
+        <div>
+          <%= f.label :links_sort_mode, "Links sort", class: label_classes %>
+          <%= f.select :links_sort_mode, sort_modes.map { |mode| [mode.titleize, mode] }, { selected: preference.links_sort_mode }, class: input_classes %>
+        </div>
+        <div>
+          <%= f.label :achievements_sort_mode, "Achievements sort", class: label_classes %>
+          <%= f.select :achievements_sort_mode, sort_modes.map { |mode| [mode.titleize, mode] }, { selected: preference.achievements_sort_mode }, class: input_classes %>
+        </div>
+        <div>
+          <%= f.label :experiences_sort_mode, "Experience sort", class: label_classes %>
+          <%= f.select :experiences_sort_mode, sort_modes.map { |mode| [mode.titleize, mode] }, { selected: preference.experiences_sort_mode }, class: input_classes %>
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div>
+          <%= f.label :default_style_variant, "Default variant", class: label_classes %>
+          <%= f.select :default_style_variant, style_variants.map { |variant| [variant.titleize, variant] }, { selected: preference.default_style_variant }, class: input_classes %>
+        </div>
+        <div>
+          <%= f.label :default_style_accent, "Accent", class: label_classes %>
+          <%= f.select :default_style_accent, style_accents.map { |accent| [accent.titleize, accent] }, { selected: preference.default_style_accent }, class: input_classes %>
+        </div>
+        <div>
+          <%= f.label :default_style_shape, "Shape", class: label_classes %>
+          <%= f.select :default_style_shape, style_shapes.map { |shape| [shape.titleize, shape] }, { selected: preference.default_style_shape }, class: input_classes %>
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div>
+          <%= f.label :achievements_date_format, "Achievement date format", class: label_classes %>
+          <%= f.select :achievements_date_format, date_formats.map { |fmt| [fmt.upcase.gsub("_", "/"), fmt] }, { selected: preference.achievements_date_format }, class: input_classes %>
+        </div>
+        <div>
+          <%= f.label :achievements_time_display, "Time display", class: label_classes %>
+          <%= f.select :achievements_time_display, time_modes.map { |mode| [mode.titleize, mode] }, { selected: preference.achievements_time_display }, class: input_classes %>
+        </div>
+        <div>
+          <%= f.label :achievements_dual_time, "Show local + UTC", class: label_classes %>
+          <div class="mt-2 flex items-center gap-3">
+            <%= f.check_box :achievements_dual_time, { checked: preference.achievements_dual_time? }, true, false %>
+            <span class="text-sm text-slate-600 dark:text-slate-300">Display both timezones when possible</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div>
+          <%= f.label :pin_limit, "Pin limit" , class: label_classes %>
+          <%= f.number_field :pin_limit, min: 1, max: 12, value: preference.pin_limit, class: input_classes %>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <%= f.submit "Save preferences", class: primary_button_classes %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
+    <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Pin overview</h3>
+    <% total_pins = profile.pinned_showcase_items.count %>
+    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <%= total_pins %> / <%= preference.pin_limit %> pins in use across links, achievements, and experience entries.
+    </p>
+    <% if total_pins.positive? %>
+      <div class="mt-4 grid gap-3 md:grid-cols-2">
+        <% profile.pinned_showcase_items.each do |item| %>
+          <div class="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 text-sm shadow-sm dark:border-indigo-900/30 dark:bg-indigo-900/10">
+            <p class="font-semibold text-indigo-700 dark:text-indigo-300"><%= item.try(:label) || item.try(:title) || item.try(:organization) %></p>
+            <p class="text-xs text-slate-500">Surface: <%= item.pin_surface.to_s.titleize %> · Position: <%= item.pin_position || item.position %></p>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="mt-4 text-sm text-slate-500">No pinned items yet. Toggle “Pin” on any showcase entry to feature it.</p>
+    <% end %>
+  </div>
+</section>

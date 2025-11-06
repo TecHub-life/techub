@@ -126,6 +126,48 @@
     <% end %>
   </div>
 
+  <% if links.present? %>
+    <section class="rounded-2xl border border-slate-200 bg-white/90 p-4 md:p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Links & Buttons</h3>
+        <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Manual order respected</span>
+      </div>
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <% links.each do |link| %>
+          <%= render partial: "profiles/showcase/card", locals: { item: link, profile: profile, preferences: preferences } %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if achievements.present? %>
+    <section class="rounded-2xl border border-slate-200 bg-white/95 p-4 md:p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Achievements</h3>
+        <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Sorted <%= preferences.achievements_sort_mode.titleize %></span>
+      </div>
+      <div class="mt-4 grid gap-4">
+        <% achievements.each do |achievement| %>
+          <%= render partial: "profiles/showcase/card", locals: { item: achievement, profile: profile, preferences: preferences } %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if experiences.present? %>
+    <section class="rounded-2xl border border-slate-200 bg-white/95 p-4 md:p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/85">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Experience</h3>
+        <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Sorted <%= preferences.experiences_sort_mode.titleize %></span>
+      </div>
+      <div class="mt-4 grid gap-4">
+        <% experiences.each do |experience| %>
+          <%= render partial: "profiles/showcase/card", locals: { item: experience, profile: profile, preferences: preferences } %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
   <%# Owner Actions %>
   <% if current_user && (current_user.profile_ownerships.exists?(profile_id: profile.id) rescue false) %>
     <div class="bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-950/20 dark:to-sky-950/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
@@ -144,6 +186,15 @@
           <span>Run Full Pipeline</span>
         <% end %>
       </div>
+    </div>
+  <% end %>
+
+  <% if hidden_count.to_i.positive? %>
+    <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+      <p>
+        Pro tip: this profile hides <%= hidden_count %> secret <%= "item".pluralize(hidden_count) %>. Open the browser console and run
+        <code class="rounded bg-slate-900/80 px-2 py-0.5 text-xs text-white">techub.revealHidden()</code> to toggle them.
+      </p>
     </div>
   <% end %>
 </div>

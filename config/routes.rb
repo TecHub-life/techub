@@ -87,6 +87,15 @@ Rails.application.routes.draw do
   post "/my/profiles/:username/upload_asset", to: "my_profiles#upload_asset", as: :upload_my_profile_asset
   post "/my/profiles/:username/select_asset", to: "my_profiles#select_asset", as: :select_my_profile_asset
 
+  scope "/my/profiles/:username", module: :my_profiles, as: :my_profile do
+    resources :links, only: [ :create, :update, :destroy ]
+    resources :achievements, only: [ :create, :update, :destroy ]
+    resources :experiences, only: [ :create, :update, :destroy ]
+    resource :preference, only: :update, controller: :preferences
+  end
+
+  post "/analytics/showcase", to: "analytics#showcase", defaults: { format: :json }, as: :analytics_showcase
+
   # Direct OG image route (serves/redirects image; enqueues generation if missing)
   get "/og/:login(.:format)", to: "og#show", as: :og_image, defaults: { format: :jpg }
 

@@ -7,12 +7,16 @@ class Profile < ApplicationRecord
   has_one :profile_activity, dependent: :destroy
   has_one :profile_readme, dependent: :destroy
   has_one :profile_card, dependent: :destroy
+  has_one :profile_preference, dependent: :destroy
   has_many :profile_assets, dependent: :destroy
   has_many :profile_scrapes, dependent: :destroy
   has_many :profile_stats, dependent: :destroy
   has_many :profile_pipeline_events, dependent: :destroy
   has_many :profile_ownerships, dependent: :destroy
   has_many :owners, through: :profile_ownerships, source: :user
+  has_many :profile_links, -> { order(:position, :created_at) }, dependent: :destroy
+  has_many :profile_achievements, -> { order(:position, :created_at) }, dependent: :destroy
+  has_many :profile_experiences, -> { order(:position, :created_at) }, dependent: :destroy
 
   OG_VARIANT_KINDS = %w[og og_pro].freeze
 
@@ -23,6 +27,8 @@ class Profile < ApplicationRecord
   before_validation do
     self.login = login.to_s.downcase
   end
+
+  after_create :ensure_profile_preference_record
 
   # Scopes
   scope :for_login, ->(login) { where(login: login.downcase) }
@@ -105,6 +111,56 @@ class Profile < ApplicationRecord
     profile_organizations.pluck(:login)
   end
 
+  # Preferences / showcase helpers
+  def preferences
+    profile_preference || build_profile_preference
+  end
+
+  def preference_default(field, fallback)
+    record = preferences
+    return fallback unless record.respond_to?(field)
+
+    value = record.public_send(field)
+    value.nil? ? fallback : value
+  rescue StandardError
+    fallback
+  end
+
+  def showcase_pin_limit
+    preference_default(:pin_limit, 5)
+  end
+
+  def ordered_links(include_hidden: false)
+    scope = include_hidden ? profile_links.active : profile_links.visible
+    sort_mode = preferences.sort_mode_for(:links)
+    sort_links(scope, sort_mode)
+  end
+
+  def ordered_achievements(include_hidden: false)
+    scope = include_hidden ? profile_achievements.active : profile_achievements.visible
+    sort_mode = preferences.sort_mode_for(:achievements)
+    sort_achievements(scope, sort_mode)
+  end
+
+  def ordered_experiences(include_hidden: false)
+    scope = include_hidden ? profile_experiences.active : profile_experiences.visible
+    sort_mode = preferences.sort_mode_for(:experiences)
+    sort_experiences(scope, sort_mode)
+  end
+
+  def pinned_showcase_items
+    links = profile_links.pinned
+    achievements = profile_achievements.pinned
+    experiences = profile_experiences.pinned
+    (links + achievements + experiences).sort_by do |item|
+      [ item.pin_position || 0, item.created_at.to_i ]
+    end.take(showcase_pin_limit)
+  end
+
+  def hidden_showcase_count
+    profile_links.hidden_only.count + profile_achievements.hidden_only.count + profile_experiences.hidden_only.count
+  end
+
   # Social account methods
   def social_accounts_by_provider
     profile_social_accounts.group_by(&:provider)
@@ -180,5 +236,51 @@ class Profile < ApplicationRecord
 
   def mark_listed!
     update!(listed: true, unlisted_at: nil)
+  end
+
+  private
+
+  def ensure_profile_preference_record
+    profile_preference || create_profile_preference!
+  rescue ActiveRecord::RecordNotUnique
+    reload
+    profile_preference
+  end
+
+  def sort_links(scope, mode)
+    case mode
+    when "alphabetical"
+      scope.reorder(Arel.sql("LOWER(label) ASC"))
+    when "newest"
+      scope.reorder(created_at: :desc)
+    when "oldest"
+      scope.reorder(created_at: :asc)
+    else
+      scope.reorder(:position, :created_at)
+    end
+  end
+
+  def sort_achievements(scope, mode)
+    coalesce = Arel.sql("COALESCE(occurred_at, occurred_on)")
+    case mode
+    when "newest"
+      scope.reorder(coalesce.desc, :created_at)
+    when "oldest"
+      scope.reorder(coalesce.asc, :created_at)
+    else
+      scope.reorder(:position, coalesce.asc, :created_at)
+    end
+  end
+
+  def sort_experiences(scope, mode)
+    coalesce = Arel.sql("COALESCE(started_on, '1900-01-01')")
+    case mode
+    when "newest"
+      scope.reorder(coalesce.desc, :created_at)
+    when "oldest"
+      scope.reorder(coalesce.asc, :created_at)
+    else
+      scope.reorder(:position, coalesce.asc, :created_at)
+    end
   end
 end

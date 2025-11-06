@@ -48,6 +48,12 @@ class ProfilesController < ApplicationController
     @languages = @profile.profile_languages.order(count: :desc)
     @recent_activity = @profile.profile_activity
     @profile_readme = @profile.profile_readme
+    @profile_preferences = @profile.preferences
+    @profile_links = @profile.ordered_links(include_hidden: true)
+    @profile_achievements = @profile.ordered_achievements(include_hidden: true)
+    @profile_experiences = @profile.ordered_experiences(include_hidden: true)
+    @pinned_showcase_items = @profile.pinned_showcase_items
+    @hidden_showcase_count = @profile.hidden_showcase_count
   end
 
   def refresh_and_load_profile(username)

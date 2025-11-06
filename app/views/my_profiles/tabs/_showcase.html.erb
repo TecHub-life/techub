@@ -1,0 +1,647 @@
+<% style_variants = ProfileShowcaseItem::STYLE_VARIANTS %>
+<% style_accents = ProfileShowcaseItem::STYLE_ACCENTS %>
+<% style_shapes = ProfileShowcaseItem::STYLE_SHAPES %>
+<% pin_surfaces = ProfileShowcaseItem::PIN_SURFACES %>
+<% label_classes = "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" %>
+<% input_classes = "w-full rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" %>
+<% primary_button_classes = "inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400" %>
+<% danger_button_classes = "inline-flex items-center justify-center rounded-lg border border-red-500 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-400" %>
+<% default_timezone = (preference.metadata || {}).fetch("timezone", "Australia/Melbourne") rescue "Australia/Melbourne" %>
+
+<div class="space-y-10">
+  <!-- Links -->
+  <section class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Links</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Add Linktree-style entries with optional icons, pins, and hidden modes.</p>
+      </div>
+      <span class="text-xs uppercase tracking-wide text-slate-400">Manual order via the Position field</span>
+    </div>
+
+    <div class="mt-6 grid gap-6 md:grid-cols-2">
+      <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 shadow-inner dark:border-indigo-900/40 dark:bg-indigo-900/20">
+        <h3 class="mb-3 text-sm font-semibold text-indigo-700 dark:text-indigo-300">Add a new link</h3>
+        <%= form_with scope: :link, url: my_profile_links_path(username: profile.login), method: :post, class: "space-y-3" do |f| %>
+          <div>
+            <%= f.label :label, "Label", class: label_classes %>
+            <%= f.text_field :label, required: true, class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :subtitle, "Subtitle", class: label_classes %>
+            <%= f.text_field :subtitle, class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :url, "URL", class: label_classes %>
+            <%= f.url_field :url, placeholder: "https://", class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :fa_icon, "Font Awesome icon", class: label_classes %>
+            <%= f.text_field :fa_icon, placeholder: "fa-brands fa-github", class: input_classes %>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <%= f.label :position, "Position", class: label_classes %>
+              <%= f.number_field :position, min: 0, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :pin_position, "Pin position", class: label_classes %>
+              <%= f.number_field :pin_position, min: 0, class: input_classes %>
+            </div>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <%= f.label :pin_surface, "Pin surface", class: label_classes %>
+              <%= f.select :pin_surface, pin_surfaces.map { |surface| [surface.titleize, surface] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :secret_code, "Secret console code", class: label_classes %>
+              <%= f.text_field :secret_code, placeholder: "optional", class: input_classes %>
+            </div>
+          </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <div>
+              <%= f.label :style_variant, "Variant", class: label_classes %>
+              <%= f.select :style_variant, [["Profile default", ""]] + style_variants.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :style_accent, "Accent", class: label_classes %>
+              <%= f.select :style_accent, [["Profile default", ""]] + style_accents.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :style_shape, "Shape", class: label_classes %>
+              <%= f.select :style_shape, [["Profile default", ""]] + style_shapes.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-4 text-sm">
+            <label class="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300">
+              <%= f.check_box :active, { checked: true }, true, false %>
+              Active
+            </label>
+            <label class="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300">
+              <%= f.check_box :pinned, {}, true, false %>
+              Pin
+            </label>
+            <label class="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300">
+              <%= f.check_box :hidden, {}, true, false %>
+              Hidden
+            </label>
+          </div>
+          <%= f.submit "Add link", class: "#{primary_button_classes} w-full" %>
+        <% end %>
+      </div>
+
+      <div class="space-y-4">
+        <% if links.any? %>
+          <% links.each do |link| %>
+            <details class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70" <%= "open" if link == links.first %>>
+              <summary class="flex cursor-pointer items-center justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-slate-900 dark:text-slate-100"><%= link.label %></p>
+                  <% if link.url.present? %>
+                    <p class="text-xs text-slate-500"><%= link.url %></p>
+                  <% end %>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <% unless link.active? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-red-200 text-red-600 bg-white/80 dark:bg-slate-900/40">Inactive</span>
+                  <% end %>
+                  <% if link.hidden? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-amber-200 text-amber-600 bg-white/80 dark:bg-slate-900/40">Hidden</span>
+                  <% end %>
+                  <% if link.pinned? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-indigo-200 text-indigo-600 bg-white/80 dark:bg-slate-900/40">Pinned</span>
+                  <% end %>
+                </div>
+              </summary>
+              <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <%= form_with scope: :link, url: my_profile_link_path(username: profile.login, id: link.id), method: :patch, class: "space-y-3" do |f| %>
+                  <div>
+                    <%= f.label :label, "Label", class: label_classes %>
+                    <%= f.text_field :label, value: link.label, class: input_classes %>
+                  </div>
+                  <div>
+                    <%= f.label :subtitle, "Subtitle", class: label_classes %>
+                    <%= f.text_field :subtitle, value: link.subtitle, class: input_classes %>
+                  </div>
+                  <div>
+                    <%= f.label :url, "URL", class: label_classes %>
+                    <%= f.url_field :url, value: link.url, class: input_classes %>
+                  </div>
+                  <div>
+                    <%= f.label :fa_icon, "Font Awesome icon", class: label_classes %>
+                    <%= f.text_field :fa_icon, value: link.fa_icon, class: input_classes %>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :position, "Position", class: label_classes %>
+                      <%= f.number_field :position, value: link.position, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :pin_position, "Pin position", class: label_classes %>
+                      <%= f.number_field :pin_position, value: link.pin_position, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :pin_surface, "Pin surface", class: label_classes %>
+                      <%= f.select :pin_surface, pin_surfaces.map { |surface| [surface.titleize, surface] }, { selected: link.pin_surface }, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :secret_code, "Secret code", class: label_classes %>
+                      <%= f.text_field :secret_code, value: link.secret_code, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <%= f.label :style_variant, "Variant", class: label_classes %>
+                      <%= f.select :style_variant, [["Profile default", ""]] + style_variants.map { |v| [v.titleize, v] }, { selected: link.style_variant }, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :style_accent, "Accent", class: label_classes %>
+                      <%= f.select :style_accent, [["Profile default", ""]] + style_accents.map { |v| [v.titleize, v] }, { selected: link.style_accent }, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :style_shape, "Shape", class: label_classes %>
+                      <%= f.select :style_shape, [["Profile default", ""]] + style_shapes.map { |v| [v.titleize, v] }, { selected: link.style_shape }, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-4 text-sm">
+                    <label class="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :active, { checked: link.active? }, true, false %>
+                      Active
+                    </label>
+                    <label class="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :pinned, { checked: link.pinned? }, true, false %>
+                      Pin
+                    </label>
+                    <label class="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :hidden, { checked: link.hidden? }, true, false %>
+                      Hidden
+                    </label>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <%= f.submit "Save", class: primary_button_classes %>
+                    <%= button_to "Delete", my_profile_link_path(username: profile.login, id: link.id), method: :delete, data: { turbo_confirm: "Remove this link?" }, class: danger_button_classes %>
+                  </div>
+                <% end %>
+              </div>
+            </details>
+          <% end %>
+        <% else %>
+          <p class="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">No links yet. Use the form to add your first highlight.</p>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <!-- Achievements -->
+  <section class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Achievements</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Celebrate launches, awards, and milestones. Dates respect profile preferences.</p>
+      </div>
+    </div>
+    <div class="mt-6 grid gap-6 md:grid-cols-2">
+      <div class="rounded-xl border border-violet-100 bg-violet-50/70 p-4 shadow-inner dark:border-violet-900/30 dark:bg-violet-900/20">
+        <h3 class="mb-3 text-sm font-semibold text-violet-700 dark:text-violet-300">Add achievement</h3>
+        <%= form_with scope: :achievement, url: my_profile_achievements_path(username: profile.login), method: :post, class: "space-y-3" do |f| %>
+          <div>
+            <%= f.label :title, "Title", class: label_classes %>
+            <%= f.text_field :title, required: true, class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :description, "Description", class: label_classes %>
+            <%= f.text_area :description, rows: 3, class: input_classes %>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <%= f.label :occurred_on, "Date", class: label_classes %>
+              <%= f.date_field :occurred_on, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :occurred_at, "Date & time", class: label_classes %>
+              <%= f.datetime_local_field :occurred_at, class: input_classes %>
+            </div>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <%= f.label :timezone, "Timezone", class: label_classes %>
+              <%= f.text_field :timezone, value: default_timezone, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :date_display_mode, "Display", class: label_classes %>
+              <%= f.select :date_display_mode, [["Profile default", "profile_default"], ["YYYY/MM/DD", "yyyy_mm_dd"], ["DD/MM/YYYY", "dd_mm_yyyy"], ["Relative", "relative"]], {}, class: input_classes %>
+            </div>
+          </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <div>
+              <%= f.label :position, "Position", class: label_classes %>
+              <%= f.number_field :position, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :pin_position, "Pin position", class: label_classes %>
+              <%= f.number_field :pin_position, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :pin_surface, "Pin surface", class: label_classes %>
+              <%= f.select :pin_surface, pin_surfaces.map { |surface| [surface.titleize, surface] }, {}, class: input_classes %>
+            </div>
+          </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <div>
+              <%= f.label :style_variant, "Variant", class: label_classes %>
+              <%= f.select :style_variant, [["Profile default", ""]] + style_variants.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :style_accent, "Accent", class: label_classes %>
+              <%= f.select :style_accent, [["Profile default", ""]] + style_accents.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :style_shape, "Shape", class: label_classes %>
+              <%= f.select :style_shape, [["Profile default", ""]] + style_shapes.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-4 text-sm">
+            <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <%= f.check_box :active, { checked: true }, true, false %>
+              Active
+            </label>
+            <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <%= f.check_box :pinned, {}, true, false %>
+              Pin
+            </label>
+            <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <%= f.check_box :hidden, {}, true, false %>
+              Hidden
+            </label>
+          </div>
+          <%= f.submit "Add achievement", class: "#{primary_button_classes} w-full" %>
+        <% end %>
+      </div>
+
+      <div class="space-y-4">
+        <% if achievements.any? %>
+          <% achievements.each do |achievement| %>
+            <details class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+              <summary class="flex w-full items-center justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-slate-900 dark:text-slate-100"><%= achievement.title %></p>
+                  <% if achievement.occurred_on.present? %>
+                    <p class="text-xs text-slate-500">Occurred <%= achievement.occurred_on.to_s %></p>
+                  <% end %>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <% unless achievement.active? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-red-200 text-red-600 bg-white/80 dark:bg-slate-900/40">Inactive</span>
+                  <% end %>
+                  <% if achievement.hidden? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-amber-200 text-amber-600 bg-white/80 dark:bg-slate-900/40">Hidden</span>
+                  <% end %>
+                  <% if achievement.pinned? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-indigo-200 text-indigo-600 bg-white/80 dark:bg-slate-900/40">Pinned</span>
+                  <% end %>
+                </div>
+              </summary>
+              <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <%= form_with scope: :achievement, url: my_profile_achievement_path(username: profile.login, id: achievement.id), method: :patch, class: "space-y-3" do |f| %>
+                  <div>
+                    <%= f.label :title, "Title", class: label_classes %>
+                    <%= f.text_field :title, value: achievement.title, class: input_classes %>
+                  </div>
+                  <div>
+                    <%= f.label :description, "Description", class: label_classes %>
+                    <%= f.text_area :description, value: achievement.description, rows: 3, class: input_classes %>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :occurred_on, "Date", class: label_classes %>
+                      <%= f.date_field :occurred_on, value: achievement.occurred_on, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :occurred_at, "Date & time", class: label_classes %>
+                      <%= f.datetime_local_field :occurred_at, value: achievement.occurred_at&.strftime("%Y-%m-%dT%H:%M"), class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :timezone, "Timezone", class: label_classes %>
+                      <%= f.text_field :timezone, value: achievement.timezone, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :date_display_mode, "Display", class: label_classes %>
+                      <%= f.select :date_display_mode, [["Profile default", "profile_default"], ["YYYY/MM/DD", "yyyy_mm_dd"], ["DD/MM/YYYY", "dd_mm_yyyy"], ["Relative", "relative"]], { selected: achievement.date_display_mode }, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <%= f.label :position, "Position", class: label_classes %>
+                      <%= f.number_field :position, value: achievement.position, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :pin_position, "Pin position", class: label_classes %>
+                      <%= f.number_field :pin_position, value: achievement.pin_position, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :pin_surface, "Pin surface", class: label_classes %>
+                      <%= f.select :pin_surface, pin_surfaces.map { |surface| [surface.titleize, surface] }, { selected: achievement.pin_surface }, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <%= f.label :style_variant, "Variant", class: label_classes %>
+                      <%= f.select :style_variant, [["Profile default", ""]] + style_variants.map { |v| [v.titleize, v] }, { selected: achievement.style_variant }, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :style_accent, "Accent", class: label_classes %>
+                      <%= f.select :style_accent, [["Profile default", ""]] + style_accents.map { |v| [v.titleize, v] }, { selected: achievement.style_accent }, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :style_shape, "Shape", class: label_classes %>
+                      <%= f.select :style_shape, [["Profile default", ""]] + style_shapes.map { |v| [v.titleize, v] }, { selected: achievement.style_shape }, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-4 text-sm">
+                    <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :active, { checked: achievement.active? }, true, false %>
+                      Active
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :pinned, { checked: achievement.pinned? }, true, false %>
+                      Pin
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :hidden, { checked: achievement.hidden? }, true, false %>
+                      Hidden
+                    </label>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <%= f.submit "Save", class: primary_button_classes %>
+                    <%= button_to "Delete", my_profile_achievement_path(username: profile.login, id: achievement.id), method: :delete, data: { turbo_confirm: "Remove this achievement?" }, class: danger_button_classes %>
+                  </div>
+                <% end %>
+              </div>
+            </details>
+          <% end %>
+        <% else %>
+          <p class="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">No achievements yet. Document your wins!</p>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience -->
+  <section class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Experience</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">LinkedIn-style entries with skills, employment type, and pin support.</p>
+      </div>
+    </div>
+    <div class="mt-6 grid gap-6 md:grid-cols-2">
+      <div class="rounded-xl border border-blue-100 bg-blue-50/70 p-4 shadow-inner dark:border-blue-900/30 dark:bg-blue-900/10">
+        <h3 class="mb-3 text-sm font-semibold text-blue-700 dark:text-blue-300">Add role</h3>
+        <%= form_with scope: :experience, url: my_profile_experiences_path(username: profile.login), method: :post, class: "space-y-3" do |f| %>
+          <div>
+            <%= f.label :title, "Title", class: label_classes %>
+            <%= f.text_field :title, required: true, class: input_classes %>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <%= f.label :employment_type, "Employment type", class: label_classes %>
+              <%= f.select :employment_type, [["Select", ""]] + ProfileExperience::EMPLOYMENT_TYPES.map { |t| [t.titleize, t] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :current_role, "Current", class: label_classes %>
+              <div class="mt-2">
+              <%= f.check_box :current_role, {}, true, false %>
+                <span class="ml-2 text-sm text-slate-600">I currently work here</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <%= f.label :organization, "Company or org", class: label_classes %>
+            <%= f.text_field :organization, class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :organization_url, "Company URL", class: label_classes %>
+            <%= f.url_field :organization_url, class: input_classes %>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <%= f.label :started_on, "Start", class: label_classes %>
+              <%= f.month_field :started_on, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :ended_on, "End", class: label_classes %>
+              <%= f.month_field :ended_on, class: input_classes %>
+            </div>
+          </div>
+        <div class="grid gap-3 md:grid-cols-2">
+          <div>
+            <%= f.label :location, "Location", class: label_classes %>
+            <%= f.text_field :location, class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :location_type, "Location type", class: label_classes %>
+            <%= f.select :location_type, [["Select", ""]] + ProfileExperience::LOCATION_TYPES.map { |t| [t.titleize, t] }, {}, class: input_classes %>
+          </div>
+        </div>
+        <div>
+          <%= f.label :location_timezone, "Timezone", class: label_classes %>
+          <%= f.text_field :location_timezone, placeholder: "Australia/Melbourne", class: input_classes %>
+        </div>
+          <div>
+            <%= f.label :description, "Description", class: label_classes %>
+            <%= f.text_area :description, rows: 4, class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :skills_text, "Skills (comma separated)", class: label_classes %>
+            <%= f.text_area :skills_text, rows: 2, placeholder: "AWS, Terraform, GitHub Actions", class: input_classes %>
+          </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <div>
+              <%= f.label :position, "Position", class: label_classes %>
+              <%= f.number_field :position, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :pin_position, "Pin position", class: label_classes %>
+              <%= f.number_field :pin_position, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :pin_surface, "Pin surface", class: label_classes %>
+              <%= f.select :pin_surface, pin_surfaces.map { |surface| [surface.titleize, surface] }, {}, class: input_classes %>
+            </div>
+          </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <div>
+              <%= f.label :style_variant, "Variant", class: label_classes %>
+              <%= f.select :style_variant, [["Profile default", ""]] + style_variants.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :style_accent, "Accent", class: label_classes %>
+              <%= f.select :style_accent, [["Profile default", ""]] + style_accents.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+            <div>
+              <%= f.label :style_shape, "Shape", class: label_classes %>
+              <%= f.select :style_shape, [["Profile default", ""]] + style_shapes.map { |v| [v.titleize, v] }, {}, class: input_classes %>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-4 text-sm">
+            <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <%= f.check_box :active, { checked: true }, true, false %>
+              Active
+            </label>
+            <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <%= f.check_box :pinned, {}, true, false %>
+              Pin
+            </label>
+            <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <%= f.check_box :hidden, {}, true, false %>
+              Hidden
+            </label>
+          </div>
+          <%= f.submit "Add experience", class: "#{primary_button_classes} w-full" %>
+        <% end %>
+      </div>
+
+      <div class="space-y-4">
+        <% if experiences.any? %>
+          <% experiences.each do |experience| %>
+            <details class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+              <summary class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p class="font-semibold text-slate-900 dark:text-slate-100"><%= experience.title %></p>
+                  <p class="text-xs text-slate-500"><%= [experience.organization, experience.location].compact.join(" · ") %></p>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <% unless experience.active? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-red-200 text-red-600 bg-white/80 dark:bg-slate-900/40">Inactive</span>
+                  <% end %>
+                  <% if experience.hidden? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-amber-200 text-amber-600 bg-white/80 dark:bg-slate-900/40">Hidden</span>
+                  <% end %>
+                  <% if experience.pinned? %>
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-indigo-200 text-indigo-600 bg-white/80 dark:bg-slate-900/40">Pinned</span>
+                  <% end %>
+                </div>
+              </summary>
+              <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <%= form_with scope: :experience, url: my_profile_experience_path(username: profile.login, id: experience.id), method: :patch, class: "space-y-3" do |f| %>
+                  <div>
+                    <%= f.label :title, "Title", class: label_classes %>
+                    <%= f.text_field :title, value: experience.title, class: input_classes %>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :employment_type, "Employment type", class: label_classes %>
+                      <%= f.select :employment_type, [["Select", ""]] + ProfileExperience::EMPLOYMENT_TYPES.map { |t| [t.titleize, t] }, { selected: experience.employment_type }, class: input_classes %>
+                    </div>
+                    <div>
+                      <label class="<%= label_classes %>">Current role</label>
+                      <div class="mt-2">
+                        <%= f.check_box :current_role, { checked: experience.current_role? }, true, false %>
+                        <span class="ml-2 text-sm text-slate-600">Present</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :organization, "Company", class: label_classes %>
+                      <%= f.text_field :organization, value: experience.organization, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :organization_url, "Company URL", class: label_classes %>
+                      <%= f.url_field :organization_url, value: experience.organization_url, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <%= f.label :started_on, "Start", class: label_classes %>
+                      <%= f.month_field :started_on, value: experience.started_on&.strftime("%Y-%m"), class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :ended_on, "End", class: label_classes %>
+                      <%= f.month_field :ended_on, value: experience.ended_on&.strftime("%Y-%m"), class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+              <div>
+                <%= f.label :location, "Location", class: label_classes %>
+                <%= f.text_field :location, value: experience.location, class: input_classes %>
+              </div>
+              <div>
+                <%= f.label :location_type, "Location type", class: label_classes %>
+                <%= f.select :location_type, [["Select", ""]] + ProfileExperience::LOCATION_TYPES.map { |t| [t.titleize, t] }, { selected: experience.location_type }, class: input_classes %>
+              </div>
+            </div>
+            <div>
+              <%= f.label :location_timezone, "Timezone", class: label_classes %>
+              <%= f.text_field :location_timezone, value: experience.location_timezone, class: input_classes %>
+            </div>
+                  <div>
+                    <%= f.label :description, "Description", class: label_classes %>
+                    <%= f.text_area :description, value: experience.description, rows: 4, class: input_classes %>
+                  </div>
+                  <div>
+                    <%= f.label :skills_text, "Skills", class: label_classes %>
+                    <%= f.text_area :skills_text, value: experience.profile_experience_skills.map(&:name).join(", "), rows: 2, class: input_classes %>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <%= f.label :position, "Position", class: label_classes %>
+                      <%= f.number_field :position, value: experience.position, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :pin_position, "Pin position", class: label_classes %>
+                      <%= f.number_field :pin_position, value: experience.pin_position, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :pin_surface, "Pin surface", class: label_classes %>
+                      <%= f.select :pin_surface, pin_surfaces.map { |surface| [surface.titleize, surface] }, { selected: experience.pin_surface }, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <%= f.label :style_variant, "Variant", class: label_classes %>
+                      <%= f.select :style_variant, [["Profile default", ""]] + style_variants.map { |v| [v.titleize, v] }, { selected: experience.style_variant }, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :style_accent, "Accent", class: label_classes %>
+                      <%= f.select :style_accent, [["Profile default", ""]] + style_accents.map { |v| [v.titleize, v] }, { selected: experience.style_accent }, class: input_classes %>
+                    </div>
+                    <div>
+                      <%= f.label :style_shape, "Shape", class: label_classes %>
+                      <%= f.select :style_shape, [["Profile default", ""]] + style_shapes.map { |v| [v.titleize, v] }, { selected: experience.style_shape }, class: input_classes %>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-4 text-sm">
+                    <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :active, { checked: experience.active? }, true, false %>
+                      Active
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :pinned, { checked: experience.pinned? }, true, false %>
+                      Pin
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <%= f.check_box :hidden, { checked: experience.hidden? }, true, false %>
+                      Hidden
+                    </label>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <%= f.submit "Save", class: primary_button_classes %>
+                    <%= button_to "Delete", my_profile_experience_path(username: profile.login, id: experience.id), method: :delete, data: { turbo_confirm: "Remove this experience?" }, class: danger_button_classes %>
+                  </div>
+                <% end %>
+              </div>
+            </details>
+          <% end %>
+        <% else %>
+          <p class="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">No experience entries yet. Add roles to complete your story.</p>
+        <% end %>
+      </div>
+    </div>
+  </section>
+</div>
