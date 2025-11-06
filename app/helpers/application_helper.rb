@@ -44,7 +44,7 @@ module ApplicationHelper
   end
 
   def ui_file_input_class
-    "block w-full text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-5 file:py-2.5 file:text-sm file:font-semibold file:text-white transition hover:file:bg-slate-800 dark:text-slate-300 dark:file:bg-slate-200 dark:file:text-slate-900"
+    "block w-full text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-5 file:py-2.5 file:text-sm file:font-semibold file:text-white transition hover:file:bg-slate-800 dark:text-slate-300 dark:file:bg-slate-200 dark:file:text-slate-900 dark:hover:file:bg-slate-100 dark:hover:file:text-slate-900"
   end
 
   def ui_spinner_icon(classes: "h-4 w-4")

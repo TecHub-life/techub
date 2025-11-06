@@ -69,20 +69,6 @@ class MyProfilesController < ApplicationController
     @asset_card_pro = assets["card_pro"]
     @asset_simple = assets["simple"]
 
-    # Targets for social previews (used in assets tab)
-    # Canonical, deduped social targets (avoid duplicates for same dimensions)
-    @social_targets = [
-      { kind: "x_profile_400", label: "X Profile (Avatar)", aspect: "1/1" },
-      { kind: "x_header_1500x500", label: "X Header", aspect: "3/1" },
-      { kind: "x_feed_1600x900", label: "X Feed", aspect: "16/9" },
-      { kind: "ig_portrait_1080x1350", label: "Instagram Portrait", aspect: "4/5" },
-      { kind: "ig_landscape_1080x566", label: "Instagram Landscape", aspect: "540/283" },
-      { kind: "fb_post_1080", label: "Facebook Post", aspect: "1/1" },
-      { kind: "fb_cover_851x315", label: "Facebook Cover", aspect: "851/315" },
-      { kind: "linkedin_cover_1584x396", label: "LinkedIn Cover", aspect: "4/1" },
-      { kind: "youtube_cover_2560x1440", label: "YouTube Cover", aspect: "16/9" }
-    ]
-
     # For UI: compute AI regen availability
     @ai_regen_available_at = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
 
@@ -161,9 +147,9 @@ class MyProfilesController < ApplicationController
           bg_choice_simple: record.bg_choice_simple
         )
       end
-      redirect_to my_profile_settings_path(username: @profile.login), notice: "Settings updated"
+      redirect_to_settings(notice: "Settings updated")
     else
-      redirect_to my_profile_settings_path(username: @profile.login), alert: "Could not save settings"
+      redirect_to_settings(alert: "Could not save settings")
     end
   end
 
@@ -172,7 +158,7 @@ class MyProfilesController < ApplicationController
     recent = ProfilePipelineEvent.where(profile_id: @profile.id, stage: "screenshots").order(created_at: :desc).limit(1).pluck(:created_at).first rescue nil
     if recent && recent > 10.minutes.ago
       wait_m = ((recent + 10.minutes - Time.current) / 60.0).ceil
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Please wait ~#{wait_m}m before re-capturing screenshots again"
+      return redirect_to_settings(alert: "Please wait ~#{wait_m}m before re-capturing screenshots again")
     end
 
     Profiles::GeneratePipelineJob.perform_later(
@@ -184,7 +170,7 @@ class MyProfilesController < ApplicationController
       }
     )
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "Pipeline queued for @#{@profile.login}"
+    redirect_to_settings(notice: "Pipeline queued for @#{@profile.login}")
   end
 
   def regenerate_ai
@@ -192,7 +178,7 @@ class MyProfilesController < ApplicationController
     next_allowed = (@profile.last_ai_regenerated_at || Time.at(0)) + 7.days
     if Time.current < next_allowed
       wait_h = ((next_allowed - Time.current) / 3600.0).ceil
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "AI regeneration available in ~#{wait_h}h"
+      return redirect_to_settings(alert: "AI regeneration available in ~#{wait_h}h")
     end
 
     Profiles::GeneratePipelineJob.perform_later(
@@ -200,7 +186,7 @@ class MyProfilesController < ApplicationController
       trigger_source: "my_profiles#regenerate_ai"
     )
     @profile.update_columns(last_pipeline_status: "queued", last_pipeline_error: nil, last_ai_regenerated_at: Time.current)
-    redirect_to my_profile_settings_path(username: @profile.login), notice: "Full regeneration queued for @#{@profile.login} (weekly limit in effect)"
+    redirect_to_settings(notice: "Full regeneration queued for @#{@profile.login} (weekly limit in effect)")
   end
 
   def upload_asset
@@ -208,21 +194,21 @@ class MyProfilesController < ApplicationController
     file = params[:file]
     allowed = %w[og og_pro card card_pro simple avatar_3x1 avatar_1x1]
     unless allowed.include?(kind)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
+      return redirect_to_settings(alert: "Unsupported kind")
     end
     unless file.respond_to?(:path)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "No file uploaded"
+      return redirect_to_settings(alert: "No file uploaded")
     end
 
     begin
       # Upload to Active Storage / Spaces if enabled
       content_type = file.content_type.presence || "application/octet-stream"
       unless content_type.start_with?("image/")
-        return redirect_to my_profile_settings_path(username: @profile.login), alert: "Only image uploads are allowed"
+        return redirect_to_settings(alert: "Only image uploads are allowed")
       end
       filename = "#{@profile.login}-#{kind}-custom#{File.extname(file.original_filename.to_s)}"
       up = Storage::ActiveStorageUploadService.call(path: file.path, content_type: content_type, filename: filename)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: (up.error&.message || "Upload failed") if up.failure?
+      return redirect_to_settings(alert: (up.error&.message || "Upload failed")) if up.failure?
 
       public_url = up.value[:public_url]
 
@@ -249,12 +235,12 @@ class MyProfilesController < ApplicationController
         provider: "upload"
       )
       if rec.failure?
-        return redirect_to my_profile_settings_path(username: @profile.login), alert: (rec.error&.message || "Save failed")
+        return redirect_to_settings(alert: (rec.error&.message || "Save failed"))
       end
 
-      redirect_to my_profile_settings_path(username: @profile.login), notice: "Updated #{kind.humanize} image"
+      redirect_to_settings(notice: "Updated #{kind.humanize} image")
     rescue StandardError => e
-      redirect_to my_profile_settings_path(username: @profile.login), alert: e.message
+      redirect_to_settings(alert: e.message)
     end
   end
 
@@ -265,7 +251,7 @@ class MyProfilesController < ApplicationController
     source_url = params[:public_url].to_s
     source_path = params[:local_path].to_s
     unless %w[og og_pro card card_pro simple avatar_3x1 avatar_16x9 avatar_1x1].include?(kind)
-      return redirect_to my_profile_settings_path(username: @profile.login), alert: "Unsupported kind"
+      return redirect_to_settings(alert: "Unsupported kind")
     end
 
     begin
@@ -276,9 +262,9 @@ class MyProfilesController < ApplicationController
       rec.provider = rec.provider.presence || "user_select"
       rec.generated_at = Time.current
       rec.save!
-      redirect_to my_profile_settings_path(username: @profile.login), notice: "Selected #{kind.humanize} image"
+      redirect_to_settings(notice: "Selected #{kind.humanize} image")
     rescue StandardError => e
-      redirect_to my_profile_settings_path(username: @profile.login), alert: e.message
+      redirect_to_settings(alert: e.message)
     end
   end
 
@@ -318,5 +304,21 @@ class MyProfilesController < ApplicationController
     unless ProfileOwnership.exists?(user_id: owner_id, profile_id: @profile.id)
       redirect_to my_profiles_path, alert: "You do not own this profile"
     end
+  end
+
+  def redirect_to_settings(notice: nil, alert: nil)
+    flash_opts = {}
+    flash_opts[:notice] = notice if notice.present?
+    flash_opts[:alert] = alert if alert.present?
+    target_path = settings_path_with_tab
+    return redirect_to(target_path) if flash_opts.empty?
+    redirect_to(target_path, flash_opts)
+  end
+
+  def settings_path_with_tab
+    tab = params[:tab].presence
+    path_args = { username: @profile.login }
+    path_args[:tab] = tab if tab
+    my_profile_settings_path(path_args)
   end
 end

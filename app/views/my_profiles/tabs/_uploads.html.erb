@@ -26,6 +26,7 @@
                 <span class="truncate" title="<%= fname %>"><%= fname %></span>
                 <form action="<%= select_my_profile_asset_path(username: @profile.login) %>" method="post" class="flex flex-col gap-2 sm:flex-row sm:items-center" data-controller="submit-form">
                   <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                  <%= hidden_field_tag :tab, "uploads" %>
                   <input type="hidden" name="local_path" value="<%= path %>">
                   <%= select_tag "kind",
                     options_for_select([
