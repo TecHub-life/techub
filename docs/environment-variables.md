@@ -41,8 +41,10 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
 - Axiom/OTEL:
   - `AXIOM_TOKEN` — required for OTEL export and dataset ingest (maps from credentials)
   - `AXIOM_DATASET` — logs/events dataset name (maps from credentials). Keep this for JSON logs.
-  - `AXIOM_METRICS_DATASET` — default dataset for OTEL traces + metrics (falls back to `AXIOM_DATASET` if unset). Use this to keep within the two-dataset free tier.
-  - `AXIOM_TRACES_DATASET` — optional traces dataset override (falls back to `AXIOM_METRICS_DATASET`, then `AXIOM_DATASET`)
+  - `AXIOM_METRICS_DATASET` — default dataset for OTEL traces + metrics (falls back to
+    `AXIOM_DATASET` if unset). Use this to keep within the two-dataset free tier.
+  - `AXIOM_TRACES_DATASET` — optional traces dataset override (falls back to
+    `AXIOM_METRICS_DATASET`, then `AXIOM_DATASET`)
   - `AXIOM_ORG` — Axiom org slug (for Ops UI deep-links only; optional)
   - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU:
     `https://api.eu.axiom.co`

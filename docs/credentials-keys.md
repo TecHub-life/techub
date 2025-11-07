@@ -14,8 +14,10 @@ features.
 
 Notes:
 
-- On the free plan, keep `axiom.dataset` for logs and set `axiom.metrics_dataset` for OTEL so you stay within the two-dataset allowance.
-- If `axiom.traces_dataset` is absent, OTEL traces follow `axiom.metrics_dataset`, falling back to `axiom.dataset` only when necessary.
+- On the free plan, keep `axiom.dataset` for logs and set `axiom.metrics_dataset` for OTEL so you
+  stay within the two-dataset allowance.
+- If `axiom.traces_dataset` is absent, OTEL traces follow `axiom.metrics_dataset`, falling back to
+  `axiom.dataset` only when necessary.
 
 References: `config/initializers/axiom.rb`, `config/initializers/structured_logging.rb`. Guide:
 https://axiom.co/docs/guides/send-logs-from-ruby-on-rails
