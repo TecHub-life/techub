@@ -61,6 +61,10 @@ run!("fontawesome assets present") do
   system("./bin/check-fontawesome")
 end
 
+run!("importmap integrity") do
+  system("ruby bin/check-importmap")
+end
+
 run!("db:prepare") { system("bin/rails db:prepare") }
 run!("db:setup:queue") { system("bin/rails db:setup:queue") }
 run!("rubocop") { system("bin/rubocop -A && bin/rubocop") }
@@ -86,6 +90,7 @@ puts <<~MSG unless SILENT
 
 MSG
 run!("test") { system("bin/rails test") }
+run!("system test") { system("bin/rails test:system") }
 
 # Optional: display Docker disk usage in CI environments that have Docker
 if !SILENT && system("command -v docker >/dev/null")
