@@ -29,7 +29,7 @@
           <% if repos.any? %>
             <div class="mt-5 flex flex-wrap items-center justify-center sm:justify-start gap-3">
               <% repos.each do |(rn, stars)| %>
-                <span class="px-4 py-2 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 text-lg max-w-[360px] truncate">
+                <span class="px-4 py-2 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 text-lg max-w-[360px] break-words">
                   <%= rn %>
                   <% if stars > 0 %><span class="ml-1 text-base text-amber-300">★ <%= stars %></span><% end %>
                 </span>

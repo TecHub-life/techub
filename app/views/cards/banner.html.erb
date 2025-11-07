@@ -34,16 +34,16 @@
       <% name = @profile.display_name %>
       <% handle = @profile.login %>
       <% name_size = name.to_s.length > 22 ? "text-3xl" : "text-4xl" %>
-      <div class="<%= name_size %> font-extrabold text-white drop-shadow tracking-wide leading-tight truncate"><%= name %></div>
+      <div class="<%= name_size %> font-extrabold text-white drop-shadow tracking-wide leading-tight break-words"><%= name %></div>
       <div class="mt-0.5 text-white/90">@<%= handle %></div>
       <% if card&.tagline.present? %>
-        <div class="mt-1 text-slate-200 text-sm max-w-[640px] truncate"><%= card.tagline %></div>
+        <div class="mt-1 text-slate-200 text-sm max-w-[640px] break-words"><%= card.tagline %></div>
       <% end %>
       <% repos = Array(@profile.top_repositories).first(3).map { |r| [r.name.to_s, r.stargazers_count.to_i] } %>
       <% if repos.any? %>
         <div class="mt-2 flex flex-wrap items-center gap-2">
           <% repos.each do |(rn, stars)| %>
-            <span class="px-2 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs max-w-[320px] truncate">
+            <span class="px-2 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs max-w-[320px] break-words">
               <%= rn %>
               <% if stars > 0 %><span class="ml-1 text-[10px] text-amber-300">★ <%= stars %></span><% end %>
             </span>

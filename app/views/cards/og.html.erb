@@ -31,7 +31,7 @@
         <% card = @profile.profile_card %>
         <% og_tagline = card&.flavor_text.presence || card&.short_bio.presence %>
         <% if og_tagline.present? %>
-          <p class="text-gray-200 text-base leading-tight line-clamp-1">"<%= og_tagline %>"</p>
+          <p class="text-gray-200 text-base leading-tight break-words">"<%= og_tagline %>"</p>
         <% end %>
 
         <div class="flex gap-3 text-gray-300 text-base flex-wrap">
@@ -54,7 +54,7 @@
         <% if repos.any? %>
           <div class="-mt-1 mb-1 flex flex-wrap items-center gap-2">
             <% repos.each do |(rn, stars)| %>
-              <span class="px-3 py-1.5 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 max-w-[260px] truncate">
+              <span class="px-3 py-1.5 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 max-w-[260px] break-words">
                 <%= rn %>
                 <% if stars > 0 %>
                   <span class="ml-1 text-xs text-amber-300">★ <%= stars %></span>
