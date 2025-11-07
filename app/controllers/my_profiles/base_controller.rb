@@ -35,7 +35,9 @@ module MyProfiles
     def settings_path_with_tab(tab)
       tab_name = tab.presence || params[:tab].presence
       path_args = { username: @profile.login }
-      path_args[:tab] = tab_name if tab_name
+      path_args[:tab] = tab_name if tab_name.present?
+      anchor = tab_name.present? ? "tab-#{tab_name}" : nil
+      path_args[:anchor] = anchor if anchor
       my_profile_settings_path(path_args)
     end
   end

@@ -86,9 +86,7 @@ class MyProfilesController < MyProfiles::BaseController
 
   def update_settings
     record = @profile.profile_card || @profile.build_profile_card
-    avatar_param_keys = AVATAR_VARIANTS.flat_map do |variant|
-      [ :"avatar_#{variant}_source", :"avatar_#{variant}_library_path" ]
-    end
+    avatar_param_keys = [ :avatar_default_source, :avatar_default_library_path, :avatar_clear_variants ]
 
     # Allow: ai | default | color
     permitted = params.permit(:bg_choice_card, :bg_color_card, :bg_choice_og, :bg_color_og, :bg_choice_simple, :bg_color_simple,
@@ -120,7 +118,8 @@ class MyProfilesController < MyProfiles::BaseController
 
     # If user chose "Use these background settings for all card types",
     # propagate Card choices to OG and Simple before saving.
-    apply_everywhere = ActiveModel::Type::Boolean.new.cast(params[:apply_everywhere])
+    apply_everywhere_param = params.key?(:apply_everywhere) ? params[:apply_everywhere] : (params[:tab].to_s == "backgrounds" ? "1" : nil)
+    apply_everywhere = ActiveModel::Type::Boolean.new.cast(apply_everywhere_param)
     if apply_everywhere
       if attrs.key?("bg_choice_card")
         attrs["bg_choice_og"] = attrs["bg_choice_card"]
@@ -147,7 +146,7 @@ class MyProfilesController < MyProfiles::BaseController
       record.avatar_sources = sources
     end
 
-    bg_library_payload = params[:tab].to_s == "backgrounds" ? build_bg_library_payload : nil
+    bg_library_payload = params[:tab].to_s == "backgrounds" ? build_bg_library_payload(apply_everywhere: apply_everywhere) : nil
     if bg_library_payload
       bg_sources = record.bg_sources_hash
       bg_library_payload[:clear].each do |variant|
@@ -180,9 +179,9 @@ class MyProfilesController < MyProfiles::BaseController
           bg_choice_simple: record.bg_choice_simple
         )
       end
-      redirect_to_settings(notice: "Settings updated")
+      redirect_to_settings(notice: "Settings updated", tab: params[:tab])
     else
-      redirect_to_settings(alert: "Could not save settings")
+      redirect_to_settings(alert: "Could not save settings", tab: params[:tab])
     end
   end
 
@@ -331,33 +330,20 @@ class MyProfilesController < MyProfiles::BaseController
   private
 
   def build_avatar_sources_payload
-    touched = params.key?(:avatar_default_source)
-    touched ||= AVATAR_VARIANTS.any? { |variant| params.key?(:"avatar_#{variant}_source") }
+    touched = params.key?(:avatar_default_source) || params.key?(:avatar_default_library_path)
+    touched ||= ActiveModel::Type::Boolean.new.cast(params[:avatar_clear_variants])
     return nil unless touched
 
     set = {}
     clear = []
 
-    AVATAR_VARIANTS.each do |variant|
-      source_key = :"avatar_#{variant}_source"
-      path_key = :"avatar_#{variant}_library_path"
-      raw_source = params[source_key].to_s
-      raw_path = params[path_key].to_s
+    default_source = params[:avatar_default_source].presence || "github"
+    default_path = params[:avatar_default_library_path].to_s
+    default_id = avatar_id_from_inputs(source: default_source, path: default_path)
+    set["default"] = { "id" => (default_id.presence || "github") }
 
-      if variant != "default" && (raw_source.blank? || raw_source == "inherit")
-        clear << variant
-        next
-      end
-
-      id = avatar_id_from_inputs(source: raw_source, path: raw_path)
-
-      if variant == "default"
-        set["default"] = { "id" => (id.presence || "github") }
-      elsif id.present?
-        set[variant] = { "id" => id }
-      else
-        clear << variant
-      end
+    if ActiveModel::Type::Boolean.new.cast(params[:avatar_clear_variants])
+      (AVATAR_VARIANTS - %w[default]).each { |variant| clear << variant }
     end
 
     { set: set, clear: clear }
@@ -379,7 +365,7 @@ class MyProfilesController < MyProfiles::BaseController
     end
   end
 
-  def build_bg_library_payload
+  def build_bg_library_payload(apply_everywhere:)
     variants = %w[card og simple]
     touched = variants.any? { |variant| params.key?(:"bg_library_#{variant}") }
     return nil unless touched
@@ -391,10 +377,16 @@ class MyProfilesController < MyProfiles::BaseController
       key = :"bg_library_#{variant}"
       next unless params.key?(key)
       path = params[key].to_s
-      if allowlisted_supporting_art_path?(path)
-        set[variant] = { "path" => path }
+      target_variants = if apply_everywhere && variant == "card"
+        variants
       else
-        clear << variant
+        [ variant ]
+      end
+
+      if allowlisted_supporting_art_path?(path)
+        target_variants.each { |target| set[target] = { "path" => path } }
+      else
+        clear |= target_variants
       end
     end
 

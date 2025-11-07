@@ -1,36 +1,54 @@
 <% uploads_enabled = defined?(Storage::ActiveStorageUploadService) %>
 <% default_avatar_mode = avatar_mode_for(profile, :default) %>
 <% default_avatar_library = avatar_library_path_for(profile, :default) %>
-<% avatar_variants = {
-  profile: "Profile hero",
-  card: "Trading card screenshot",
-  og: "Open Graph / link preview",
-  simple: "Simple card",
-  square: "Square crops (X profile)",
-  banner: "3×1 banner screenshot"
-} %>
 <% banner_choice = profile.banner_choice %>
 <% banner_library_path = profile.banner_library_path %>
 <% banner_preview = banner_image_url_for(profile) %>
+<% banner_status = banner_source_label(profile) %>
+<% live_avatar_preview = avatar_image_url_for(profile) %>
+<% saved_avatar_preview = saved_avatar_preview_url(profile) %>
 
 <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900 space-y-8">
   <div>
     <section class="space-y-5">
       <div>
         <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Avatars</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-400">Used across your TecHub hero, screenshots, and embeds. Override individual variants when you need a different vibe.</p>
+        <p class="text-sm text-slate-600 dark:text-slate-400">One avatar drives your hero, screenshots, and embeds. Save it here, then let the screenshot jobs (or the regenerate buttons) pick up the change.</p>
       </div>
-      <div class="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
-        <img src="<%= avatar_image_url_for(profile) %>" alt="<%= profile.login %> avatar preview" class="h-16 w-16 rounded-full border-2 border-white shadow dark:border-slate-900" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
-        <div>
-          <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Current preview</p>
-          <p class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= avatar_source_label(profile) %></p>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+          <img src="<%= live_avatar_preview %>" alt="<%= profile.login %> live avatar" class="h-16 w-16 rounded-full border-2 border-white shadow dark:border-slate-900" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Live in cards right now</p>
+            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= avatar_source_label(profile) %></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Queued captures or "Re-capture screenshots" update this preview.</p>
+          </div>
         </div>
+        <div class="flex items-center gap-4 rounded-lg border border-indigo-100 bg-indigo-50/70 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/40">
+          <img src="<%= saved_avatar_preview %>" alt="<%= profile.login %> saved avatar" class="h-16 w-16 rounded-full border-2 border-white shadow dark:border-slate-900" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Saved selection</p>
+            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <% if default_avatar_mode == "library" && default_avatar_library.present? %>
+                TecHub library · <%= appearance_library_label_for(default_avatar_library) %>
+              <% elsif default_avatar_mode == "upload" %>
+                Custom upload
+              <% else %>
+                GitHub avatar
+              <% end %>
+            </p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Cards refresh automatically every ~3 hours or immediately after you click "Re-capture screenshots".</p>
+          </div>
+        </div>
+      </div>
+      <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-400/40 dark:bg-amber-900/30 dark:text-amber-100">
+        Saved avatars are captured by the Refresh Stale job roughly every three hours. Use the "Re-capture screenshots" button if you need the change instantly.
       </div>
       <form action="<%= update_my_profile_settings_path(username: profile.login) %>" method="post" class="space-y-5" data-controller="submit-form">
         <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
         <%= hidden_field_tag :tab, "general" %>
         <input type="hidden" name="_method" value="patch">
+        <%= hidden_field_tag :avatar_clear_variants, "1" %>
 
         <fieldset class="space-y-3">
           <legend class="text-sm font-semibold text-slate-800 dark:text-slate-200">Default avatar</legend>
@@ -74,42 +92,12 @@
           </div>
           <details class="rounded-lg border border-dashed border-slate-300 bg-white p-3 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
             <summary class="cursor-pointer font-medium text-slate-700 dark:text-slate-200">Browse library avatars</summary>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Select when “TecHub library” is active. We’ll remember your choice for future sessions.</p>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Select when "TecHub library" is active. We'll remember your choice for future sessions.</p>
             <div class="mt-3">
               <%= library_picker(options: @avatar_library_options, name: "avatar_default_library_path", selected: (default_avatar_mode == "library" ? default_avatar_library : nil)) %>
             </div>
           </details>
         </fieldset>
-
-        <details class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-          <summary class="cursor-pointer font-semibold text-slate-800 dark:text-slate-100">Advanced: per-screenshot overrides</summary>
-          <div class="mt-3 space-y-4">
-            <% avatar_variants.each do |variant, label| %>
-              <% current_mode = avatar_mode_for(profile, variant) %>
-              <% current_library = avatar_library_path_for(profile, variant) %>
-              <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                <div class="flex items-center justify-between gap-2">
-                  <p class="text-sm font-semibold text-slate-800 dark:text-slate-100"><%= label %></p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400"><%= avatar_source_label(profile, variant) %></p>
-                </div>
-                <select name="avatar_<%= variant %>_source" class="<%= ui_select_class %> mt-3">
-                  <% unless variant == :default %>
-                    <option value="inherit" <%= "selected" if current_mode == "inherit" %>>Inherit default</option>
-                  <% end %>
-                  <option value="github" <%= "selected" if current_mode == "github" %>>GitHub avatar</option>
-                  <option value="upload" <%= "selected" if current_mode == "upload" %>>Custom upload</option>
-                  <option value="library" <%= "selected" if current_mode == "library" %>>TecHub library</option>
-                </select>
-                <details class="mt-2 rounded border border-dashed border-slate-300 bg-slate-50 p-2 text-xs text-slate-500 dark:border-slate-600 dark:bg-slate-900">
-                  <summary class="cursor-pointer font-semibold text-slate-700 dark:text-slate-200">Choose a library avatar</summary>
-                  <div class="mt-2">
-                    <%= library_picker(options: @avatar_library_options, name: "avatar_#{variant}_library_path", selected: (current_mode == "library" ? current_library : nil)) %>
-                  </div>
-                </details>
-              </div>
-            <% end %>
-          </div>
-        </details>
 
         <button type="submit" class="<%= ui_primary_button_class %> w-full" data-submit-form-target="button">
           <span data-submit-form-target="spinner" class="hidden">
@@ -200,7 +188,11 @@
           </div>
         </details>
 
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900 space-y-2">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Current banner</p>
+            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= banner_status %></p>
+          </div>
           <% if banner_choice == "none" %>
             <p class="text-sm text-slate-600 dark:text-slate-400">Your hero layout will display without a banner.</p>
           <% elsif banner_preview.present? %>

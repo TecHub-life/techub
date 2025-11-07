@@ -31,10 +31,50 @@ module MyProfilesHelper
     when :upload
       "Custom upload"
     when :library
-      "Library · #{library_label_for(payload)}"
+      "Library · #{appearance_library_label_for(payload)}"
     else
       provider.to_s.titleize
     end
+  end
+
+  def banner_source_label(profile)
+    case profile.banner_choice.to_s
+    when "library"
+      "TecHub library · #{appearance_library_label_for(profile.banner_library_path)}"
+    when "upload"
+      "Custom upload"
+    else
+      "Hidden / none"
+    end
+  end
+
+  def supporting_art_source_label(profile, variant)
+    card = profile.profile_card
+    choice_attr = :"bg_choice_#{variant}"
+    color_attr = :"bg_color_#{variant}"
+    choice = card&.public_send(choice_attr).presence || "library"
+
+    case choice
+    when "upload"
+      "Custom upload · shared across cards"
+    when "color"
+      color = card&.public_send(color_attr).presence || "#0f172a"
+      "Solid colour · #{color.upcase}"
+    else
+      path = bg_library_path_for(profile, variant)
+      "TecHub library · #{appearance_library_label_for(path)}"
+    end
+  rescue StandardError
+    "TecHub library"
+  end
+
+  def appearance_library_label_for(path)
+    return "TecHub rotation" if path.to_s.blank?
+    folder = path.to_s.split("/").first.to_s.titleize
+    name = File.basename(path, File.extname(path)).tr("_-", " ").titleize
+    "#{folder} / #{name}"
+  rescue StandardError
+    "TecHub rotation"
   end
 
   def bg_library_path_for(profile, variant)
@@ -53,6 +93,21 @@ module MyProfilesHelper
     asset = profile.profile_assets.find_by(kind: kind)
     return asset.public_url if asset&.public_url.present?
     generated_asset_url(profile, kind)
+  end
+
+  def saved_avatar_preview_url(profile)
+    mode = avatar_mode_for(profile, :default)
+    case mode
+    when "library"
+      library = avatar_library_path_for(profile, :default)
+      library.present? ? asset_path(library) : asset_path("android-chrome-512x512.jpg")
+    when "upload"
+      profile_uploaded_asset_url(profile, "avatar_1x1") || asset_path("android-chrome-512x512.jpg")
+    else
+      profile.avatar_url.presence || asset_path("android-chrome-512x512.jpg")
+    end
+  rescue StandardError
+    asset_path("android-chrome-512x512.jpg")
   end
 
   def library_picker(options:, name:, selected:, image_ratio: "aspect-square", columns: "grid-cols-2 sm:grid-cols-4 lg:grid-cols-5")
@@ -78,13 +133,6 @@ module MyProfilesHelper
     card = profile.profile_card
     return nil unless card
     card.avatar_source_id_for(variant.to_s, fallback: false)
-  end
-
-  def library_label_for(path)
-    return "TecHub placeholder" if path.blank?
-    folder = path.split("/").first.to_s.titleize
-    name = File.basename(path, File.extname(path)).tr("_-", " ").titleize
-    "#{folder} / #{name}"
   end
 
   def generated_asset_url(profile, kind)
