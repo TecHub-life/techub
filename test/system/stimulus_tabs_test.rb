@@ -33,8 +33,8 @@ class StimulusTabsTest < ApplicationSystemTestCase
     # Verify page loaded by checking title (more reliable than gradient text)
     assert_equal "Test User – TecHub", page.title
 
-    # Verify we're on the correct profile page by checking URL
-    assert_current_path profile_path("testuser")
+    # Verify we're on the correct profile page (ignore query params added by tabs controller)
+    assert_current_path profile_path("testuser"), ignore_query: true
 
     # Verify tabs controller is present
     assert_selector "[data-controller='tabs']"
@@ -81,7 +81,7 @@ class StimulusTabsTest < ApplicationSystemTestCase
 
     # Verify page loaded
     assert_equal "Tab User – TecHub", page.title
-    assert_current_path profile_path("tabuser")
+    assert_current_path profile_path("tabuser"), ignore_query: true
 
     # Verify tabs have correct data attributes for Stimulus
     cards_tab = find("#tab-cards")
@@ -123,7 +123,7 @@ class StimulusTabsTest < ApplicationSystemTestCase
 
     # Verify page loaded
     assert_equal "Content User – TecHub", page.title
-    assert_current_path profile_path("contentuser")
+    assert_current_path profile_path("contentuser"), ignore_query: true
 
     # Tab navigation should be present in the DOM
     assert_selector "[data-controller='tabs']"
