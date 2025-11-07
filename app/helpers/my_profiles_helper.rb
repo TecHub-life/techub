@@ -1,7 +1,7 @@
 module MyProfilesHelper
   def avatar_mode_for(profile, variant)
     normalized = variant.to_s
-    id = avatar_source_id(profile, variant)
+    id = avatar_source_id(profile, normalized)
     return "inherit" if id.nil? && normalized != "default"
 
     provider, = AvatarSources.parse(id || "github")
@@ -15,7 +15,26 @@ module MyProfilesHelper
   def avatar_library_path_for(profile, variant)
     id = avatar_source_id(profile, variant)
     return nil unless id.to_s.start_with?("library:")
-    id.sub(/\Alibrary:/, "")
+    id.split(":", 2).last
+  end
+
+  def avatar_source_label(profile, variant = :default)
+    normalized = variant.to_s
+    id = avatar_source_id(profile, normalized)
+    return "Inherits default avatar" if id.nil? && normalized != "default"
+    id ||= "github"
+
+    provider, payload = AvatarSources.parse(id)
+    case provider
+    when :github
+      "GitHub avatar"
+    when :upload
+      "Custom upload"
+    when :library
+      "Library · #{library_label_for(payload)}"
+    else
+      provider.to_s.titleize
+    end
   end
 
   def bg_library_path_for(profile, variant)
@@ -36,20 +55,36 @@ module MyProfilesHelper
     generated_asset_url(profile, kind)
   end
 
+  def library_picker(options:, name:, selected:, image_ratio: "aspect-square", columns: "grid-cols-2 sm:grid-cols-4 lg:grid-cols-5")
+    content_tag(:div, class: "max-h-64 overflow-y-auto #{columns} grid gap-3 pr-1") do
+      options.map do |opt|
+        label = truncate(opt[:label], length: 42)
+        content_tag(:label, class: "cursor-pointer block") do
+          tag.input(type: "radio", name: name, value: opt[:path], class: "peer sr-only", checked: selected.present? && selected == opt[:path]) +
+          content_tag(:div, class: "rounded-lg border border-slate-200 bg-white p-1 shadow-sm transition peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 dark:border-slate-600 dark:bg-slate-900/80 dark:peer-checked:ring-indigo-900") do
+            content_tag(:div, class: "#{image_ratio} w-full overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800") do
+              image_tag(opt[:path], class: "h-full w-full object-cover")
+            end +
+            content_tag(:p, label, class: "mt-1 text-[11px] font-medium text-slate-700 dark:text-slate-200")
+          end
+        end
+      end.join.html_safe
+    end
+  end
+
   private
 
   def avatar_source_id(profile, variant)
     card = profile.profile_card
     return nil unless card
-    key = variant.to_s
-    id = card.avatar_source_id_for(key, fallback: false)
-    return id if id.present?
+    card.avatar_source_id_for(variant.to_s, fallback: false)
+  end
 
-    if key != "default"
-      nil
-    else
-      card.avatar_source_id_for("default")
-    end
+  def library_label_for(path)
+    return "TecHub placeholder" if path.blank?
+    folder = path.split("/").first.to_s.titleize
+    name = File.basename(path, File.extname(path)).tr("_-", " ").titleize
+    "#{folder} / #{name}"
   end
 
   def generated_asset_url(profile, kind)

@@ -54,10 +54,15 @@ module CardsHelper
     if choice == "upload"
       asset_kind = SUPPORTING_ART_ASSET_KINDS[variant] || SUPPORTING_ART_ASSET_KINDS["card"]
       asset = profile.profile_assets.find_by(kind: asset_kind)
+      asset ||= profile.profile_assets.find_by(kind: "support_art_card") unless asset_kind == "support_art_card"
       url = asset_public_or_local_url(profile, asset)
       return url if url.present?
       url = generated_upload_url(profile, asset_kind)
       return url if url.present?
+      if asset_kind != "support_art_card"
+        url = generated_upload_url(profile, "support_art_card")
+        return url if url.present?
+      end
     end
 
     path = background_library_path(profile, variant)

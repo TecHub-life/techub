@@ -1,4 +1,6 @@
 class MyProfilesController < MyProfiles::BaseController
+  AVATAR_VARIANTS = %w[default profile card og simple square banner].freeze
+
   before_action :load_profile_and_authorize, only: [ :settings, :update_settings, :regenerate, :regenerate_ai, :upload_asset, :destroy, :unlist ]
 
   def index
@@ -84,17 +86,15 @@ class MyProfilesController < MyProfiles::BaseController
 
   def update_settings
     record = @profile.profile_card || @profile.build_profile_card
+    avatar_param_keys = AVATAR_VARIANTS.flat_map do |variant|
+      [ :"avatar_#{variant}_source", :"avatar_#{variant}_library_path" ]
+    end
+
     # Allow: ai | default | color
     permitted = params.permit(:bg_choice_card, :bg_color_card, :bg_choice_og, :bg_color_og, :bg_choice_simple, :bg_color_simple,
       :bg_fx_card, :bg_fy_card, :bg_zoom_card, :bg_fx_og, :bg_fy_og, :bg_zoom_og, :bg_fx_simple, :bg_fy_simple, :bg_zoom_simple, :ai_art_opt_in,
       :hireable_override, :banner_choice, :banner_library_path,
-      :avatar_default_mode, :avatar_default_path,
-      :avatar_profile_mode, :avatar_profile_path,
-      :avatar_card_mode, :avatar_card_path,
-      :avatar_og_mode, :avatar_og_path,
-      :avatar_simple_mode, :avatar_simple_path,
-      :avatar_square_mode, :avatar_square_path,
-      :avatar_banner_mode, :avatar_banner_path,
+      *avatar_param_keys,
       :bg_library_card, :bg_library_og, :bg_library_simple)
     attrs = permitted.to_h
     preferred_kind_param = params[:preferred_og_kind].to_s.presence
@@ -327,28 +327,30 @@ class MyProfilesController < MyProfiles::BaseController
   private
 
   def build_avatar_sources_payload
-    return nil unless params.key?(:avatar_default_mode)
-    variants = %w[default profile card og simple square banner]
+    touched = params.key?(:avatar_default_source)
+    touched ||= AVATAR_VARIANTS.any? { |variant| params.key?(:"avatar_#{variant}_source") }
+    return nil unless touched
+
     set = {}
     clear = []
 
-    variants.each do |variant|
-      mode_key = :"avatar_#{variant}_mode"
-      path_key = :"avatar_#{variant}_path"
-      next unless variant == "default" || params.key?(mode_key)
-      raw_mode = params[mode_key].to_s
-      raw_path = params[path_key]
+    AVATAR_VARIANTS.each do |variant|
+      source_key = :"avatar_#{variant}_source"
+      path_key = :"avatar_#{variant}_library_path"
+      raw_source = params[source_key].to_s
+      raw_path = params[path_key].to_s
 
-      if variant != "default" && (raw_mode.blank? || raw_mode == "inherit")
+      if variant != "default" && (raw_source.blank? || raw_source == "inherit")
         clear << variant
         next
       end
 
-      entry = normalize_avatar_entry(raw_mode, raw_path)
+      id = avatar_id_from_inputs(source: raw_source, path: raw_path)
+
       if variant == "default"
-        set["default"] = entry || { "id" => "github" }
-      elsif entry
-        set[variant] = entry
+        set["default"] = { "id" => (id.presence || "github") }
+      elsif id.present?
+        set[variant] = { "id" => id }
       else
         clear << variant
       end
@@ -357,14 +359,20 @@ class MyProfilesController < MyProfiles::BaseController
     { set: set, clear: clear }
   end
 
-  def normalize_avatar_entry(mode, path_value)
-    mode = mode.to_s
-    return nil unless %w[github upload library].include?(mode)
-    path = path_value.to_s if mode == "library"
-    return nil if mode == "library" && !allowlisted_avatar_path?(path)
-    id = AvatarSources.normalize_id(mode: mode, path: path)
-    return nil if id.blank?
-    { "id" => id }
+  def avatar_id_from_inputs(source:, path:)
+    case source.to_s
+    when "github"
+      "github"
+    when "upload"
+      "upload:avatar_1x1"
+    when "library"
+      return nil unless allowlisted_avatar_path?(path)
+      "library:#{path}"
+    when "placeholder"
+      "library:avatars-1x1/avatar-placeholder.jpg"
+    else
+      nil
+    end
   end
 
   def build_bg_library_payload
