@@ -4,73 +4,95 @@ class PagesController < ApplicationController
   end
 
   def directory
-    @layout = params[:layout].presence_in(%w[compact comfortable single]) || "comfortable"
-    @q = params[:q].to_s.strip
-    # Support multiple tags via `tags` (CSV or array) or legacy `tag`
-    raw_tags = params[:tags]
-    if raw_tags.is_a?(Array)
-      @tags = raw_tags.map { |t| t.to_s.downcase.strip }.reject(&:blank?).uniq
-    else
-      csv = raw_tags.presence || params[:tag].to_s
-      @tags = csv.to_s.split(/[,\s]+/).map { |t| t.downcase.strip }.reject(&:blank?).uniq
-    end
-    @language = params[:language].to_s.strip.downcase
-    @hireable = ActiveModel::Type::Boolean.new.cast(params[:hireable])
-    @mine = ActiveModel::Type::Boolean.new.cast(params[:mine])
-    @min_followers = params[:min_followers].to_i if params[:min_followers].present?
-    @active = ActiveModel::Type::Boolean.new.cast(params[:active])
-    @archetype = params[:archetype].to_s.strip
-    @spirit = params[:spirit].to_s.strip
-    @page = params[:page].to_i
-    @page = 1 if @page < 1
-    default_per = case @layout
-    when "single" then 8
-    when "comfortable" then 16
-    else 24
-    end
-    @per_page = (params[:per_page] || default_per).to_i.clamp(1, 60)
-    offset = (@page - 1) * @per_page
+    Observability::Tracing.with_span("pages.directory", attributes: directory_trace_attributes, tracer_key: :controller, kind: :server) do |span|
+      @layout = params[:layout].presence_in(%w[compact comfortable single]) || "comfortable"
+      @q = params[:q].to_s.strip
+      # Support multiple tags via `tags` (CSV or array) or legacy `tag`
+      raw_tags = params[:tags]
+      if raw_tags.is_a?(Array)
+        @tags = raw_tags.map { |t| t.to_s.downcase.strip }.reject(&:blank?).uniq
+      else
+        csv = raw_tags.presence || params[:tag].to_s
+        @tags = csv.to_s.split(/[,\s]+/).map { |t| t.downcase.strip }.reject(&:blank?).uniq
+      end
+      @language = params[:language].to_s.strip.downcase
+      @hireable = ActiveModel::Type::Boolean.new.cast(params[:hireable])
+      @mine = ActiveModel::Type::Boolean.new.cast(params[:mine])
+      @min_followers = params[:min_followers].to_i if params[:min_followers].present?
+      @active = ActiveModel::Type::Boolean.new.cast(params[:active])
+      @archetype = params[:archetype].to_s.strip
+      @spirit = params[:spirit].to_s.strip
+      @page = params[:page].to_i
+      @page = 1 if @page < 1
+      default_per = case @layout
+      when "single" then 8
+      when "comfortable" then 16
+      else 24
+      end
+      @per_page = (params[:per_page] || default_per).to_i.clamp(1, 60)
+      offset = (@page - 1) * @per_page
 
-    scope = Profile.listed.where(last_pipeline_status: [ "success", "partial_success" ]).includes(:profile_assets, :profile_card)
-    if @q.present?
-      scope = scope.where("profiles.login LIKE :q OR profiles.name LIKE :q", q: "%#{@q}%")
-    end
-    if @tags.any?
-      likes = @tags.map { |_| "lower(profile_cards.tags) LIKE ?" }.join(" OR ")
-      vals = @tags.map { |t| "%\"#{t}\"%" }
-      scope = scope.joins(:profile_card).where(likes, *vals)
-    end
-    if @archetype.present?
-      scope = scope.joins(:profile_card).where("profile_cards.archetype = ?", @archetype)
-    end
-    if @spirit.present?
-      scope = scope.joins(:profile_card).where("profile_cards.spirit_animal = ?", @spirit)
-    end
-    if @language.present?
-      scope = scope.joins(:profile_languages).where("lower(profile_languages.name) = ?", @language)
-    end
-    if @hireable
-      scope = scope.where(hireable: true)
-    end
-    if @min_followers && @min_followers > 0
-      scope = scope.where("followers >= ?", @min_followers)
-    end
-    if @active
-      scope = scope.joins(:profile_activity).where("profile_activities.last_active > ?", 30.days.ago)
-    end
-    if @mine
-      uid = current_user&.id || session[:current_user_id]
-      scope = scope.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }) if uid.present?
-    end
-    # Build tag cloud (from current successful profiles only)
-    cloud_source = Profile.listed.joins(:profile_card).where(last_pipeline_status: [ "success", "partial_success" ]).pluck("profile_cards.tags")
-    @tag_cloud = cloud_source.flatten.map { |t| t.to_s.downcase.strip }.reject(&:blank?).tally.sort_by { |(_t, c)| -c }.first(40)
+      scope = Profile.listed.where(last_pipeline_status: [ "success", "partial_success" ]).includes(:profile_assets, :profile_card)
+      if @q.present?
+        scope = scope.where("profiles.login LIKE :q OR profiles.name LIKE :q", q: "%#{@q}%")
+      end
+      if @tags.any?
+        likes = @tags.map { |_| "lower(profile_cards.tags) LIKE ?" }.join(" OR ")
+        vals = @tags.map { |t| "%\"#{t}\"%" }
+        scope = scope.joins(:profile_card).where(likes, *vals)
+      end
+      if @archetype.present?
+        scope = scope.joins(:profile_card).where("profile_cards.archetype = ?", @archetype)
+      end
+      if @spirit.present?
+        scope = scope.joins(:profile_card).where("profile_cards.spirit_animal = ?", @spirit)
+      end
+      if @language.present?
+        scope = scope.joins(:profile_languages).where("lower(profile_languages.name) = ?", @language)
+      end
+      if @hireable
+        scope = scope.where(hireable: true)
+      end
+      if @min_followers && @min_followers > 0
+        scope = scope.where("followers >= ?", @min_followers)
+      end
+      if @active
+        scope = scope.joins(:profile_activity).where("profile_activities.last_active > ?", 30.days.ago)
+      end
+      if @mine
+        uid = current_user&.id || session[:current_user_id]
+        scope = scope.joins(:profile_ownerships).where(profile_ownerships: { user_id: uid }) if uid.present?
+      end
 
-    @total = scope.count
-    @profiles = scope.order(updated_at: :desc).limit(@per_page).offset(offset)
+      Observability::Tracing.with_span("pages.directory.tag_cloud", tracer_key: :controller) do |tag_span|
+        cloud_source = Profile.listed.joins(:profile_card).where(last_pipeline_status: [ "success", "partial_success" ]).pluck("profile_cards.tags")
+        @tag_cloud = cloud_source.flatten.map { |t| t.to_s.downcase.strip }.reject(&:blank?).tally.sort_by { |(_t, c)| -c }.first(40)
+        tag_span&.set_attribute("directory.tag_cloud.count", @tag_cloud.length)
+        tag_span&.set_attribute("directory.tag_cloud.source_rows", cloud_source.length)
+      end
 
-    @has_next = (@page * @per_page) < @total
-    @has_prev = @page > 1
+      Observability::Tracing.with_span("pages.directory.query", attributes: { page: @page, per_page: @per_page }, tracer_key: :controller) do |query_span|
+        @total = scope.count
+        @profiles = scope.order(updated_at: :desc).limit(@per_page).offset(offset)
+        @has_next = (@page * @per_page) < @total
+        @has_prev = @page > 1
+        query_span&.set_attribute("directory.total", @total)
+        query_span&.set_attribute("directory.returned", @profiles.length)
+      end
+
+      span&.set_attribute("directory.filters.tags", @tags.length)
+      span&.set_attribute("directory.filters.language", @language.presence || "any")
+      span&.set_attribute("directory.total", @total.to_i)
+    end
+  end
+
+  private def directory_trace_attributes
+    {
+      "http.route" => "/directory",
+      "http.method" => request.request_method,
+      "directory.layout" => params[:layout].presence || "comfortable",
+      "directory.filter.q_present" => params[:q].present?
+    }
   end
 
   def gallery

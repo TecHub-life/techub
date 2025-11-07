@@ -1,6 +1,6 @@
 <%# 1080x1350 – Instagram portrait. Hard-centered, dense layout; background de-emphasized. %>
 <div class="relative h-[1350px] w-[1080px] overflow-hidden bg-slate-900">
-  <% bg_url = @profile.ai_art_opt_in ? nil : supporting_art_url_for(login: @profile.login, aspect: :card) %>
+  <% bg_url = @profile.ai_art_opt_in ? nil : supporting_art_url_for(profile: @profile, aspect: :card) %>
   <% if bg_url.blank? %>
     <% gen = Rails.root.join('public','generated', @profile.login) %>
     <% local = Dir[gen.join('avatar-16x9*.{jpg,jpeg,png}').to_s].first || Dir[gen.join('avatar-3x1*.{jpg,jpeg,png}').to_s].first || Dir[gen.join('card*.{jpg,jpeg,png}').to_s].first || Dir[gen.join('og*.{jpg,jpeg,png}').to_s].first %>
@@ -29,7 +29,7 @@
           <% if repos.any? %>
             <div class="mt-5 flex flex-wrap items-center justify-center sm:justify-start gap-3">
               <% repos.each do |(rn, stars)| %>
-                <span class="px-4 py-2 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 text-lg max-w-[380px] truncate">
+                <span class="px-4 py-2 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 text-lg max-w-[380px] break-words">
                   <%= rn %>
                   <% if stars > 0 %><span class="ml-1 text-base text-amber-300">★ <%= stars %></span><% end %>
                 </span>
@@ -40,7 +40,7 @@
         <div class="flex-shrink-0">
           <div class="w-48 h-48 rounded-full p-2 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
             <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-              <img src="<%= avatar_image_url_for(@profile) %>" alt="avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
+              <img src="<%= avatar_image_url_for(@profile, variant: :card) %>" alt="avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
             </div>
           </div>
         </div>
@@ -58,4 +58,3 @@
     </div>
   </div>
 </div>
-

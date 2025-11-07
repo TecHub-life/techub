@@ -1,28 +1,32 @@
 require "test_helper"
+require "fileutils"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
-  driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
+  include SystemTest::ProfileHelpers
+
+  LOG_PATH = Rails.root.join("tmp/system_tests/selenium.log")
+  FileUtils.mkdir_p(LOG_PATH.dirname)
+  Selenium::WebDriver.logger.level = :info
+  Selenium::WebDriver.logger.output = LOG_PATH
+
+  Capybara.register_driver :selenium_headless do |app|
+    chrome_opts = Selenium::WebDriver::Chrome::Options.new
+    chrome_opts.binary = ENV["SELENIUM_CHROME_BINARY"] if ENV["SELENIUM_CHROME_BINARY"].present?
+    chrome_opts.add_argument("--disable-gpu")
+    chrome_opts.add_argument("--no-sandbox")
+    chrome_opts.add_argument("--disable-dev-shm-usage")
+    chrome_opts.add_argument("--remote-debugging-port=9222")
+    chrome_opts.add_argument("--headless=new") unless ENV["HEADLESS"] == "false"
+    Capybara::Selenium::Driver.new(app, browser: :chrome, options: chrome_opts)
+  end
+
+  driven_by :selenium_headless, screen_size: [ 1400, 1400 ]
 
   private
 
-  def sign_in_as(user)
-    # For system tests, we need to manipulate the session via a controller request
-    # This is a workaround since Selenium can't set custom headers
+  def sign_in_as(user, redirect_to: root_path)
+    raise ArgumentError, "user required" unless user
 
-    # Create a temporary session by visiting a page
-    visit root_path
-
-    # Use execute_script to set a cookie that the app can read
-    # The app checks session[:current_user_id] so we need to set that
-    page.execute_script("document.cookie = 'test_user_id=#{user.id}; path=/'")
-
-    # Alternative: Use Capybara's built-in session manipulation
-    # This works by adding a cookie that Rails will read
-    Capybara.current_session.driver.browser.manage.add_cookie(
-      name: "_techub_session",
-      value: CGI.escape(ActionDispatch::Session::SessionRestoreError.new.to_s),
-      path: "/",
-      domain: "127.0.0.1"
-    )
+    visit test_sign_in_path(user_id: user.id, redirect_to: redirect_to)
   end
 end

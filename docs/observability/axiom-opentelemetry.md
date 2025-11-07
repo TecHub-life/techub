@@ -14,7 +14,11 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
   - `AXIOM_TOKEN`: Axiom personal or ingest token (sensitive)
   - `AXIOM_ORG`: your org slug (e.g., `echosight-7xtu`) — non‑sensitive
   - `AXIOM_DATASET`: logs/events dataset (e.g., `techub`) — non‑sensitive
-  - `AXIOM_METRICS_DATASET`: metrics dataset (e.g., `techub-metrics`) — non‑sensitive
+  - `AXIOM_TRACES_DATASET`: optional traces dataset override (defaults to the metrics dataset, then
+    `AXIOM_DATASET`) — non‑sensitive
+  - `AXIOM_METRICS_DATASET`: metrics dataset (e.g., `techub-metrics`). On the free plan, this also
+    serves as the default destination for all OTEL traffic so logs and traces stay within the
+    two‑dataset limit.
   - `AXIOM_BASE_URL`: region base URL (`https://api.axiom.co` US default, EU:
     `https://api.eu.axiom.co`)
   - `OTEL_EXPORTER_OTLP_ENDPOINT`: traces endpoint (defaults to `https://api.axiom.co/v1/traces`;
@@ -102,6 +106,24 @@ Forwarding controls
 We recommend enabling OTEL for Rails, ActiveRecord, and HTTP clients, exporting to Axiom’s OTEL
 endpoint via OTLP/HTTP.
 
+### Built-in span helpers
+
+- `app/lib/observability/tracing.rb` exposes `Observability::Tracing.with_span` and helpers for
+  recording notification spans or span events without littering controllers/jobs with OTEL API
+  calls. It no-ops when OTEL is disabled, so you can safely wrap hot paths.
+- Controllers should wrap expensive actions (e.g., `/directory`, `/submit`) with `with_span`,
+  setting `tracer_key: :controller` and meaningful attributes (`http.route`, filters, pagination).
+- Jobs automatically emit `job.perform` spans through `ApplicationJob`’s around hook. Each span
+  carries `job.class`, `job.queue`, `job.id`, provider IDs, argument counts, and duration. Failures
+  record exceptions and mark span status.
+- SolidQueue lifecycle events (`enqueue_recurring_task`, `dispatch_scheduled`, `polling`, `claim`,
+  `release_claimed`) are translated into spans via `config/initializers/solid_queue_tracing.rb`,
+  letting you see scheduler bottlenecks without custom code.
+- Recurring tasks now log and emit a `solid_queue.recurring.already_recorded` span event whenever a
+  duplicate insert occurs. Pair this with the DB unique index migration
+  (`db/migrate/20251015091500_add_unique_index_to_solid_queue_recurring_executions.rb`) to keep the
+  noise out of error dashboards.
+
 ### Setup
 
 1. Add gems:
@@ -125,22 +147,27 @@ base = ENV["OTEL_EXPORTER_OTLP_ENDPOINT"].presence || "https://api.axiom.co/v1/t
 base = base.sub(%r{/v1/(traces|metrics|logs)$}, "")
 traces = base + "/v1/traces"
 metrics = base + "/v1/metrics"
+base_headers = { "Authorization" => "Bearer #{ENV["AXIOM_TOKEN"]}" }
+traces_headers = base_headers.dup
+metrics_headers = base_headers.dup
+base_dataset = ENV["AXIOM_DATASET"]
+metrics_dataset = ENV["AXIOM_METRICS_DATASET"].presence || base_dataset
+traces_dataset = ENV["AXIOM_TRACES_DATASET"].presence || metrics_dataset || base_dataset
+traces_headers["X-Axiom-Dataset"] = traces_dataset if traces_dataset.present?
+metrics_headers["X-Axiom-Dataset"] = metrics_dataset if metrics_dataset.present?
 
 OpenTelemetry::SDK.configure do |c|
   c.service_name = "techub"
   c.use_all()
   c.add_span_processor(
     OpenTelemetry::SDK::Trace::Export::BatchSpanProcessor.new(
-      OpenTelemetry::Exporter::OTLP::Exporter.new(
-        endpoint: traces,
-        headers: { "Authorization" => "Bearer #{ENV["AXIOM_TOKEN"]}" }
-      )
+      OpenTelemetry::Exporter::OTLP::Exporter.new(endpoint: traces, headers: traces_headers)
     )
   )
   reader = OpenTelemetry::SDK::Metrics::Export::PeriodicExportingMetricReader.new(
     exporter: OpenTelemetry::Exporter::OTLP::MetricExporter.new(
       endpoint: metrics,
-      headers: { "Authorization" => "Bearer #{ENV["AXIOM_TOKEN"]}" }
+      headers: metrics_headers
     ),
     interval: (ENV["OTEL_METRICS_EXPORT_INTERVAL_MS"].presence || 60000).to_i
   )
@@ -151,6 +178,17 @@ end
 3. Env vars:
 
 - `AXIOM_TOKEN`: token with tracing ingest permissions
+- `AXIOM_DATASET`: base dataset used for logs (required for Axiom ingest). Also the fallback if you
+  do not provide a separate metrics dataset.
+- `AXIOM_METRICS_DATASET`: metrics/OTEL dataset. OTEL traces and metrics use this by default (to
+  keep logs and traces within the two‑dataset free plan limit).
+  - `AXIOM_TRACES_DATASET`: optional override for traces; falls back to `AXIOM_METRICS_DATASET`,
+    then `AXIOM_DATASET`
+
+  > **Plan note:** The free Axiom tier only includes two datasets. Keep `AXIOM_DATASET` for JSON
+  > logs/direct ingest and point OTEL (traces + metrics) at `AXIOM_METRICS_DATASET` so everything
+  > fits without buying more capacity.
+
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: optional; default above (US). EU:
   `https://api.eu.axiom.co/v1/traces`
 - `OTEL_METRICS_EXPORT_INTERVAL_MS`: optional; metrics export interval (default 60000)
@@ -159,6 +197,8 @@ end
 
 - Traces: `rake axiom:otel_smoke` then open Ops → Axiom → OTEL Traces (service=techub)
 - Metrics: `rake axiom:otel_metrics_smoke` or wait 1–2 min for `app_heartbeat_total`
+- Missing the `X-Axiom-Dataset` header results in HTTP 200 responses with no stored data, so
+  double-check the dataset env vars above if nothing appears in Axiom.
 
 ### Notes
 
@@ -166,6 +206,20 @@ end
 - Sampling: default is always-on; reduce via `OTEL_TRACES_SAMPLER=parentbased_traceidratio` and
   `OTEL_TRACES_SAMPLER_ARG=0.2` for ~20% sampling.
 - Privacy: avoid putting secrets in attributes; scrub PII.
+
+### Span naming cheatsheet
+
+| Span                                 | Source                         | Key attributes                                      |
+| ------------------------------------ | ------------------------------ | --------------------------------------------------- |
+| `pages.directory`                    | `PagesController#directory`    | `http.route=/directory`, filters counts, pagination |
+| `pages.directory.tag_cloud`          | same                           | `directory.tag_cloud.count`, `...source_rows`       |
+| `pages.directory.query`              | same                           | `directory.total`, `directory.returned`             |
+| `submissions.create`                 | `SubmissionsController#create` | submission status, actor/user, enqueue_mode         |
+| `job.perform`                        | `ApplicationJob` hook          | job ids, queue, duration, exception info            |
+| `solid_queue.recurring.enqueue` etc. | SolidQueue notifications       | `task`, `at`, scheduler metadata                    |
+
+Use these names when building dashboards or alerts (e.g., alert when `job.perform` P95 exceeds
+300 ms for `Profiles::RefreshTagsJob`, or when `pages.directory` >700 ms).
 
 ## Dashboards & queries
 

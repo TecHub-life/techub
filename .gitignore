@@ -9,6 +9,8 @@
 .cursorignore
 .vscode/
 
+chrome/
+
 # Dependencies
 /.bundle
 !/vendor/javascript

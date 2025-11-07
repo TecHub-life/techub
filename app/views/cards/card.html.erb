@@ -1,10 +1,10 @@
-<% gen_dir = Rails.root.join('public','generated', @profile.login) %>
 <% card_prefs = @profile.profile_card %>
-<% choice = card_prefs&.bg_choice_card || 'default' %>
+<% choice = card_prefs&.bg_choice_card || 'library' %>
+<% choice = 'library' if choice == 'default' || choice == 'ai' %>
 <% color_hex = (card_prefs&.bg_color_card || '#0f172a') %>
 
 <% # Use supporting art library for background %>
-<% bg_url = supporting_art_url_for(login: @profile.login, aspect: :card) %>
+<% bg_url = supporting_art_url_for(profile: @profile, aspect: :card) %>
 <div class="w-[1280px] h-[720px] bg-gray-900 overflow-hidden relative grid grid-rows-[216px_504px]">
   <div class="relative row-start-1 h-[216px] overflow-hidden z-10">
     <% if choice == 'color' %>
@@ -26,7 +26,7 @@
   <div class="absolute left-12 top-[216px] -translate-y-12 transform z-40">
     <div class="w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-[0_10px_40px_rgba(59,130,246,0.45)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-        <% avatar_src = avatar_image_url_for(@profile) %>
+        <% avatar_src = avatar_image_url_for(@profile, variant: :card) %>
         <% if avatar_src.present? %>
           <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
         <% else %>

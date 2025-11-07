@@ -2,57 +2,10 @@ require "thread"
 require "concurrent/atomic/atomic_fixnum"
 require "concurrent/atomic/atomic_reference"
 
-Rails.application.configure do
-  logger = ActiveSupport::Logger.new(STDOUT)
-  logger.formatter = proc do |severity, time, _progname, msg|
-    payload = case msg
-    when String then { message: msg }
-    when Hash then msg
-    else
-      { message: msg.inspect }
-    end
-
-    trace_id = nil
-    span_id = nil
-    begin
-      require "opentelemetry-api"
-      span = OpenTelemetry::Trace.current_span
-      ctx = span&.context
-      if ctx && ctx.valid?
-        trace_id = ctx.trace_id.unpack1("H*") rescue nil
-        span_id = ctx.span_id.unpack1("H*") rescue nil
-      end
-    rescue LoadError
-      # OTEL not installed; skip correlation fields
-    rescue StandardError
-    end
-
-    base = {
-      ts: time.utc.iso8601(3),
-      level: severity,
-      request_id: Current.request_id,
-      job_id: Current.job_id,
-      app_version: AppConfig.app_version,
-      user_id: Current.user_id,
-      ip: Current.ip,
-      ua: Current.user_agent,
-      user_agent: Current.user_agent,
-      path: Current.path,
-      method: Current.method,
-      trace_id: trace_id,
-      span_id: span_id,
-      _time: time.utc.iso8601(3)
-    }
-
-    base.merge(payload).to_json + "\n"
-  end
-
-  config.logger = ActiveSupport::TaggedLogging.new(logger)
-  config.log_tags = [ :request_id ]
-end
-
 module StructuredLogger
   extend self
+
+  AXIOM_FORWARD_SKIP_KEY = :_axiom_forward_skip
 
   unless defined?(AXIOM_FORWARD_QUEUE)
     AXIOM_FORWARD_QUEUE = Queue.new
@@ -114,9 +67,12 @@ module StructuredLogger
       actor_hint: actor_hint
     )
 
+    payload[AXIOM_FORWARD_SKIP_KEY] = true
     Rails.logger.public_send(level, payload)
     forward_to_axiom(payload, force_axiom: force_axiom)
     payload
+  ensure
+    payload.delete(AXIOM_FORWARD_SKIP_KEY) if payload.is_a?(Hash)
   end
 
   def forwarding_stats
@@ -136,6 +92,10 @@ module StructuredLogger
 
   def describe_error(error)
     format_error(error)
+  end
+
+  def forward_from_logger(payload, force_axiom: false)
+    forward_to_axiom(payload, force_axiom: force_axiom)
   end
 
   private
@@ -159,12 +119,15 @@ module StructuredLogger
       request_id: Current.request_id,
       job_id: Current.job_id,
       app_version: AppConfig.app_version,
+      rails_env: Rails.env,
+      app_env: AppConfig.environment,
+      deployment_environment: deployment_environment,
       user_id: Current.user_id,
       ip: Current.ip,
       ua: Current.user_agent,
       path: Current.path,
       method: Current.method
-    }
+    }.merge(ci_metadata)
   end
 
   def ops_context_for(payload, component_hint:, precedence_hint:, event_hint:, ops_context_override:, ops_details:, actor_hint:)
@@ -238,4 +201,93 @@ module StructuredLogger
       error.to_s
     end
   end
+
+  def deployment_environment
+    env = ENV["OTEL_DEPLOYMENT_ENV"].presence || Rails.env
+    ci_run = ActiveModel::Type::Boolean.new.cast(ENV["CI"])
+    return "ci" if ci_run || ENV["GITHUB_ACTIONS"] == "true"
+    env
+  end
+
+  def ci_metadata
+    ci_run = ActiveModel::Type::Boolean.new.cast(ENV["CI"])
+    github_actions = ENV["GITHUB_ACTIONS"] == "true"
+    metadata = {}
+
+    if ci_run || github_actions
+      metadata[:ci] = true
+      metadata[:deployment_environment] = "ci"
+    end
+
+    if github_actions
+      metadata[:ci_system] = "github_actions"
+      metadata[:ci_pipeline_id] = ENV["GITHUB_RUN_ID"]
+      metadata[:ci_pipeline_name] = ENV["GITHUB_WORKFLOW"]
+      metadata[:ci_pipeline_number] = ENV["GITHUB_RUN_NUMBER"]
+      metadata[:ci_job_name] = ENV["GITHUB_JOB"]
+      metadata[:ci_repo] = ENV["GITHUB_REPOSITORY"]
+      metadata[:ci_ref] = ENV["GITHUB_REF"]
+      metadata[:ci_sha] = ENV["GITHUB_SHA"]
+      metadata[:ci_actor] = ENV["GITHUB_ACTOR"]
+      metadata[:ci_run_attempt] = ENV["GITHUB_RUN_ATTEMPT"]
+      metadata[:ci_run_url] = if ENV["GITHUB_SERVER_URL"].present? && ENV["GITHUB_REPOSITORY"].present? && ENV["GITHUB_RUN_ID"].present?
+        "#{ENV["GITHUB_SERVER_URL"]}/#{ENV["GITHUB_REPOSITORY"]}/actions/runs/#{ENV["GITHUB_RUN_ID"]}"
+      end
+    end
+
+    metadata.compact
+  end
+end
+
+Rails.application.configure do
+  logger = ActiveSupport::Logger.new(STDOUT)
+  logger.formatter = proc do |severity, time, _progname, msg|
+    payload = case msg
+    when String then { message: msg }
+    when Hash then msg
+    else
+      { message: msg.inspect }
+    end
+
+    skip_forward = payload.delete(StructuredLogger::AXIOM_FORWARD_SKIP_KEY) if payload.is_a?(Hash)
+
+    trace_id = nil
+    span_id = nil
+    begin
+      require "opentelemetry-api"
+      span = OpenTelemetry::Trace.current_span
+      ctx = span&.context
+      if ctx && ctx.valid?
+        trace_id = ctx.trace_id.unpack1("H*") rescue nil
+        span_id = ctx.span_id.unpack1("H*") rescue nil
+      end
+    rescue LoadError
+      # OTEL not installed; skip correlation fields
+    rescue StandardError
+    end
+
+    base = {
+      ts: time.utc.iso8601(3),
+      level: severity,
+      request_id: Current.request_id,
+      job_id: Current.job_id,
+      app_version: AppConfig.app_version,
+      user_id: Current.user_id,
+      ip: Current.ip,
+      ua: Current.user_agent,
+      user_agent: Current.user_agent,
+      path: Current.path,
+      method: Current.method,
+      trace_id: trace_id,
+      span_id: span_id,
+      _time: time.utc.iso8601(3)
+    }
+
+    enriched = base.merge(payload)
+    # Plain Rails logs now stay on STDOUT; StructuredLogger handles Axiom forwarding explicitly.
+    enriched.to_json + "\n"
+  end
+
+  config.logger = ActiveSupport::TaggedLogging.new(logger)
+  config.log_tags = [ :request_id ]
 end

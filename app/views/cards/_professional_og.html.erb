@@ -3,29 +3,14 @@
 <% suffix = "og" %>
 <% card = @profile.profile_card %>
 <% card_prefs = card %>
-<% choice = card_prefs&.public_send("bg_choice_#{suffix}") || "default" %>
+<% choice = card_prefs&.public_send("bg_choice_#{suffix}") || "library" %>
+<% choice = "library" if choice == "default" || choice == "ai" %>
 <% color_hex = card_prefs&.public_send("bg_color_#{suffix}") || "#0f172a" %>
 <% fx = card_prefs&.public_send("bg_fx_#{suffix}") || 0.5 %>
 <% fy = card_prefs&.public_send("bg_fy_#{suffix}") || 0.5 %>
 <% zoom = card_prefs&.public_send("bg_zoom_#{suffix}") || 1.0 %>
 <% aspect = :og %>
-<% gen_dir = Rails.root.join("public", "generated", @profile.login) %>
-<% bg_url = nil %>
-<% if choice == "ai" && @profile.ai_art_opt_in %>
-  <% asset_bg16 = @profile.profile_assets.find_by(kind: "avatar_16x9") %>
-  <% asset_card = @profile.profile_assets.find_by(kind: "card") %>
-  <% if asset_bg16&.public_url.present? %>
-    <% bg_url = asset_bg16.public_url %>
-  <% elsif asset_card&.public_url.present? %>
-    <% bg_url = asset_card.public_url %>
-  <% elsif Dir.exist?(gen_dir) %>
-    <% file = Dir[gen_dir.join("avatar-16x9*.jpg").to_s].first || Dir[gen_dir.join("avatar-16x9*.png").to_s].first || Dir[gen_dir.join("card-bg-16x9*.jpg").to_s].first || Dir[gen_dir.join("card-bg-16x9*.png").to_s].first %>
-    <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
-  <% end %>
-  <% bg_url ||= supporting_art_url_for(login: @profile.login, aspect: aspect) %>
-<% elsif choice == "default" || (choice == "ai" && !@profile.ai_art_opt_in) %>
-  <% bg_url = supporting_art_url_for(login: @profile.login, aspect: aspect) %>
-<% end %>
+<% bg_url = (choice == "color") ? nil : supporting_art_url_for(profile: @profile, aspect: aspect) %>
 
 <% name = @profile.display_name %>
 <% handle = @profile.login %>
@@ -72,7 +57,7 @@
           <div class="rounded-full bg-gradient-to-r from-sky-500 via-cyan-400 to-indigo-500 p-[6px] shadow-[0_18px_48px_rgba(15,23,42,0.55)]">
             <div class="rounded-full border-4 border-slate-900/70 bg-slate-900 p-1">
               <div class="h-40 w-40 overflow-hidden rounded-full bg-slate-800 md:h-44 md:w-44">
-                <% avatar_src = avatar_image_url_for(@profile) %>
+                <% avatar_src = avatar_image_url_for(@profile, variant: :og) %>
                 <% if avatar_src.present? %>
                   <img src="<%= avatar_src %>" alt="<%= name %> avatar" class="h-full w-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
                 <% else %>

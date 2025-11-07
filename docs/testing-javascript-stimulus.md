@@ -151,6 +151,55 @@ This ensures:
 - Increase wait times if needed: `assert_selector "...", wait: 5`
 - Run with visible browser: `HEADLESS=false bin/rails test:system`
 
+### Chrome/Chromedriver missing locally
+
+1. Download browser & driver the same way CI does:
+   ```bash
+   npx @puppeteer/browsers install chrome@stable
+   npx @puppeteer/browsers install chromedriver@stable
+   ```
+   Puppeteer nests the driver under the browser folder; note both paths from the CLI output.
+2. Export them in your shell (e.g. `~/.zshrc`):
+   ```bash
+   export SELENIUM_CHROME_BINARY="$HOME/gits/techub/chrome/linux-142.0.7444.61/chrome-linux64/chrome"
+   export CHROMEDRIVER_PATH="$HOME/gits/techub/chrome/linux-142.0.7444.61/chrome-linux64/chromedriver/linux-142.0.7444.61/chromedriver-linux64/chromedriver"
+   export WEBDRIVER_CHROME_DRIVER="$CHROMEDRIVER_PATH"
+   export PATH="$PATH:$(dirname "$CHROMEDRIVER_PATH")"
+   ```
+   Adjust the versioned folder if Puppeteer installs a newer build.
+3. Reload your shell (`source ~/.zshrc`) and verify:
+   ```bash
+   "$SELENIUM_CHROME_BINARY" --version
+   chromedriver --version
+   ```
+   Once both commands work, rerun `bin/rails test:system …`.
+
+### Rails still can’t see Chrome
+
+If `bin/rails test:system` hangs on “Running…” even after the binaries exist, Capybara is still
+trying to use `/usr/bin/google-chrome`. We ship a custom driver
+(`test/application_system_test_case.rb`) that:
+
+```ruby
+Selenium::WebDriver.logger.output = Rails.root.join("tmp/system_tests/selenium.log")
+Capybara.register_driver :selenium_headless do |app|
+  chrome_opts = Selenium::WebDriver::Chrome::Options.new
+  chrome_opts.binary = ENV["SELENIUM_CHROME_BINARY"]
+  chrome_opts.add_argument("--headless=new") unless ENV["HEADLESS"] == "false"
+  chrome_opts.add_argument("--disable-gpu")
+  chrome_opts.add_argument("--no-sandbox")
+  chrome_opts.add_argument("--disable-dev-shm-usage")
+  chrome_opts.add_argument("--remote-debugging-port=9222")
+  Capybara::Selenium::Driver.new(app, browser: :chrome, options: chrome_opts)
+end
+driven_by :selenium_headless, screen_size: [1400, 1400]
+```
+
+Make sure you have the latest `test/application_system_test_case.rb`; it will automatically wire
+Capybara to your downloaded Chromium and drop detailed logs to `tmp/system_tests/selenium.log`. Tail
+that file (`tail -f tmp/system_tests/selenium.log`) while the suite runs to see every browser
+command.
+
 ### Importmap check fails:
 
 - Run `bin/importmap json` to see the full importmap

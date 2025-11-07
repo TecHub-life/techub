@@ -84,19 +84,19 @@
       <!-- Tab Panels -->
       <div class="mt-2">
         <!-- General Tab (Default) -->
-        <div data-tabs-target="panel" data-tab-panel="general">
+        <div data-tabs-target="panel" data-tab-panel="general" id="tab-general">
           <%= render partial: 'my_profiles/tabs/general', locals: {
             profile: @profile
           } %>
         </div>
 
         <!-- Backgrounds Tab -->
-        <div data-tabs-target="panel" data-tab-panel="backgrounds" class="hidden">
+        <div data-tabs-target="panel" data-tab-panel="backgrounds" class="hidden" id="tab-backgrounds">
           <%= render partial: 'my_profiles/tabs/backgrounds', locals: {
             profile: @profile
           } %>
         </div>
-        <div data-tabs-target="panel" data-tab-panel="assets" class="hidden">
+        <div data-tabs-target="panel" data-tab-panel="assets" class="hidden" id="tab-assets">
           <%= render partial: 'my_profiles/tabs/assets', locals: {
             profile: @profile,
             asset_card: @asset_card,
@@ -107,7 +107,7 @@
           } %>
         </div>
 
-        <div data-tabs-target="panel" data-tab-panel="showcase" class="hidden">
+        <div data-tabs-target="panel" data-tab-panel="showcase" class="hidden" id="tab-showcase">
           <%= render partial: 'my_profiles/tabs/showcase', locals: {
             profile: @profile,
             links: @profile_links,
@@ -117,14 +117,14 @@
           } %>
         </div>
 
-        <div data-tabs-target="panel" data-tab-panel="styles" class="hidden">
+        <div data-tabs-target="panel" data-tab-panel="styles" class="hidden" id="tab-styles">
           <%= render partial: 'my_profiles/tabs/styles', locals: {
             profile: @profile,
             preference: @profile_preferences
           } %>
         </div>
 
-        <div data-tabs-target="panel" data-tab-panel="secrets" class="hidden">
+        <div data-tabs-target="panel" data-tab-panel="secrets" class="hidden" id="tab-secrets">
           <%= render partial: 'my_profiles/tabs/secrets', locals: {
             profile: @profile,
             links: @profile_links,
@@ -134,7 +134,7 @@
         </div>
 
         <!-- Uploads Tab -->
-        <div data-tabs-target="panel" data-tab-panel="uploads" class="hidden">
+        <div data-tabs-target="panel" data-tab-panel="uploads" class="hidden" id="tab-uploads">
           <%= render partial: 'my_profiles/tabs/uploads', locals: {
             profile: @profile
           } %>

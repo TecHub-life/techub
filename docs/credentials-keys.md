@@ -7,9 +7,17 @@ features.
 
 - axiom.token: Ingest token → maps to ENV AXIOM_TOKEN
 - axiom.dataset: Dataset name → maps to ENV AXIOM_DATASET
+- axiom.traces_dataset: Optional traces dataset override → maps to ENV AXIOM_TRACES_DATASET
 - axiom.metrics_dataset: Metrics dataset name (optional) → maps to ENV AXIOM_METRICS_DATASET
 - otel.endpoint: OTLP/HTTP endpoint for traces (e.g., https://api.axiom.co/v1/traces) → maps to ENV
   OTEL_EXPORTER_OTLP_ENDPOINT
+
+Notes:
+
+- On the free plan, keep `axiom.dataset` for logs and set `axiom.metrics_dataset` for OTEL so you
+  stay within the two-dataset allowance.
+- If `axiom.traces_dataset` is absent, OTEL traces follow `axiom.metrics_dataset`, falling back to
+  `axiom.dataset` only when necessary.
 
 References: `config/initializers/axiom.rb`, `config/initializers/structured_logging.rb`. Guide:
 https://axiom.co/docs/guides/send-logs-from-ruby-on-rails

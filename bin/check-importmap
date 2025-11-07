@@ -1,118 +1,43 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Validates importmap integrity:
-# 1. Ensures all imports in application.js are pinned in importmap.rb
-# 2. Verifies all controller files are accessible via importmap
-# 3. Checks that critical dependencies are present
+require "bundler/setup"
+require_relative "../config/environment"
 
-require "pathname"
-
-def error(msg)
-  warn "❌ #{msg}"
-  exit 1
-end
-
-def success(msg)
-  puts "✅ #{msg}"
-end
-
-# Parse importmap.rb to extract pins
-importmap_rb_path = Pathname.new("config/importmap.rb")
-unless importmap_rb_path.exist?
-  error "config/importmap.rb not found"
-end
-
-importmap_content = importmap_rb_path.read
-pins = {}
-
-# Extract pin statements
-importmap_content.scan(/^pin\s+"([^"]+)"/) do |match|
-  pins[match[0]] = true
-end
-
-# Extract pin_all_from statements
-pin_all_from_patterns = []
-importmap_content.scan(/^pin_all_from\s+"([^"]+)"(?:,\s*under:\s+"([^"]+)")?/) do |match|
-  dir = match[0]
-  under = match[1] || ""
-  pin_all_from_patterns << { dir: dir, under: under }
-end
-
-# Check 1: Verify all imports from application.js are pinned
-app_js_path = Pathname.new("app/javascript/application.js")
-unless app_js_path.exist?
-  error "app/javascript/application.js not found"
-end
-
-app_js_content = app_js_path.read
-app_js_imports = app_js_content.scan(/^import\s+(?:'([^']+)'|"([^"]+)")/).flatten.compact
-
-puts "\n📦 Checking imports from application.js..."
-app_js_imports.each do |import_name|
-  # Check if it's a direct pin
-  is_pinned = pins.key?(import_name)
-  
-  # Check if it's covered by pin_all_from (e.g., "controllers" is covered by pin_all_from with under: "controllers")
-  unless is_pinned
-    is_pinned = pin_all_from_patterns.any? { |p| p[:under] == import_name }
+def emoji_for(status)
+  case status.to_s
+  when "ok"
+    "✅"
+  when "degraded"
+    "⚠️ "
+  else
+    "❌"
   end
-  
-  unless is_pinned
-    error "Import '#{import_name}' from application.js is not pinned in importmap.rb"
-  end
-  success "Import '#{import_name}' is pinned"
 end
 
-# Check 2: Verify all controller files are accessible
-puts "\n🎮 Checking Stimulus controllers..."
-controllers_dir = Pathname.new("app/javascript/controllers")
-if controllers_dir.exist?
-  controller_files = controllers_dir.glob("**/*_controller.js")
-  
-  # Check if pin_all_from covers controllers
-  has_controllers_pin = pin_all_from_patterns.any? { |p| p[:dir] == "app/javascript/controllers" && p[:under] == "controllers" }
-  
-  unless has_controllers_pin
-    error "Missing 'pin_all_from \"app/javascript/controllers\", under: \"controllers\"' in importmap.rb"
+def print_step(step)
+  status = step[:status] || "ok"
+  label = step[:label] || step[:id]
+  puts "#{emoji_for(status)} #{label} (#{step[:id]})"
+  puts "    #{step[:message]}" if step[:message].present?
+  metadata = step[:metadata] || {}
+  metadata.each do |key, value|
+    next if value.nil? || (value.respond_to?(:empty?) && value.empty?)
+    puts "    - #{key}: #{value.inspect}"
   end
-  
-  success "All #{controller_files.size} Stimulus controllers are accessible via pin_all_from"
+end
+
+result = Importmap::DoctorService.call
+
+puts "\n== Importmap Doctor =="
+Array(result.metadata[:steps]).each { |step| print_step(step) }
+
+if result.degraded?
+  warn "\nImportmap doctor finished with warnings (status: degraded)"
+elsif result.failure?
+  warn "\nImportmap doctor failed"
 else
-  warn "⚠️  No controllers directory found at app/javascript/controllers"
+  puts "\nImportmap doctor passed"
 end
 
-# Check 3: Verify critical dependencies are present
-puts "\n🔧 Checking critical dependencies..."
-critical_deps = [
-  "@hotwired/turbo-rails",
-  "@hotwired/stimulus",
-  "@hotwired/stimulus-loading"
-]
-
-critical_deps.each do |dep|
-  unless pins.key?(dep)
-    error "Critical dependency '#{dep}' is missing from importmap.rb"
-  end
-  success "Critical dependency '#{dep}' is present"
-end
-
-# Check 4: Verify techub_console.js is pinned
-puts "\n🎯 Checking custom modules..."
-custom_modules = ["techub_console"]
-
-custom_modules.each do |mod|
-  unless pins.key?(mod)
-    error "Custom module '#{mod}' is not pinned in importmap.rb"
-  end
-  
-  # Verify the file exists
-  mod_path = Pathname.new("app/javascript/#{mod}.js")
-  unless mod_path.exist?
-    error "Custom module file '#{mod_path}' does not exist"
-  end
-  
-  success "Custom module '#{mod}' is pinned and file exists"
-end
-
-puts "\n✨ Importmap validation passed! All imports are properly configured."
+exit(result.failure? ? 1 : 0)

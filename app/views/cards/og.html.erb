@@ -1,29 +1,9 @@
-<% gen_dir = Rails.root.join('public','generated', @profile.login) %>
 <% card_prefs = @profile.profile_card %>
-<% choice = card_prefs&.bg_choice_og || 'default' %>
+<% choice = card_prefs&.bg_choice_og || 'library' %>
+<% choice = 'library' if choice == 'default' || choice == 'ai' %>
 <% color_hex = (card_prefs&.bg_color_og || '#0f172a') %>
 
-<% bg_url = nil %>
-<%# Respect ai_art_opt_in flag: only try AI images if user opted in %>
-<% if choice == 'ai' && @profile.ai_art_opt_in %>
-  <% asset_bg16 = @profile.profile_assets.find_by(kind: 'avatar_16x9') %>
-  <% asset_card = @profile.profile_assets.find_by(kind: 'card') %>
-  <% if asset_bg16&.public_url.present? %>
-    <% bg_url = asset_bg16.public_url %>
-  <% elsif asset_card&.public_url.present? %>
-    <% bg_url = asset_card.public_url %>
-  <% elsif Dir.exist?(gen_dir) %>
-    <% file = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first || Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
-    <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
-  <% end %>
-  <%# Fallback to supporting art if no AI images found %>
-  <% if bg_url.nil? %>
-    <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :og) %>
-  <% end %>
-<% elsif choice == 'default' || (choice == 'ai' && !@profile.ai_art_opt_in) %>
-  <%# Use supporting art library when choice is 'default' or AI is chosen but not opted in %>
-  <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :og) %>
-<% end %>
+<% bg_url = (choice == 'color') ? nil : supporting_art_url_for(profile: @profile, aspect: :og) %>
 <div class="w-[<%= (@canvas_w || 1200).to_i %>px] h-[<%= (@canvas_h || 630).to_i %>px] bg-gray-900 overflow-hidden relative flex flex-col">
   <% if choice == 'color' %>
     <div class="absolute inset-0" style="background:<%= color_hex %>"></div>
@@ -51,7 +31,7 @@
         <% card = @profile.profile_card %>
         <% og_tagline = card&.flavor_text.presence || card&.short_bio.presence %>
         <% if og_tagline.present? %>
-          <p class="text-gray-200 text-base leading-tight line-clamp-1">"<%= og_tagline %>"</p>
+          <p class="text-gray-200 text-base leading-tight break-words">"<%= og_tagline %>"</p>
         <% end %>
 
         <div class="flex gap-3 text-gray-300 text-base flex-wrap">
@@ -74,7 +54,7 @@
         <% if repos.any? %>
           <div class="-mt-1 mb-1 flex flex-wrap items-center gap-2">
             <% repos.each do |(rn, stars)| %>
-              <span class="px-3 py-1.5 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 max-w-[260px] truncate">
+              <span class="px-3 py-1.5 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 max-w-[260px] break-words">
                 <%= rn %>
                 <% if stars > 0 %>
                   <span class="ml-1 text-xs text-amber-300">★ <%= stars %></span>
@@ -126,7 +106,7 @@
       <div class="flex-shrink-0 -ml-8">
         <div class="w-80 h-80 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
           <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-            <img src="<%= avatar_image_url_for(@profile) %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
+            <img src="<%= avatar_image_url_for(@profile, variant: :og) %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
           </div>
         </div>
       </div>
