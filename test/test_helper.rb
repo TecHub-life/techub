@@ -3,6 +3,7 @@ require "securerandom"
 
 ENV["RAILS_ENV"] ||= "test"
 # Disable OpenTelemetry in tests to prevent hanging on external requests
+ENV["OTEL_DISABLED"] = "true"
 ENV["OTEL_SDK_DISABLED"] = "true"
 ENV["OTEL_TRACES_EXPORTER"] = "none"
 ENV["OTEL_METRICS_EXPORTER"] = "none"
