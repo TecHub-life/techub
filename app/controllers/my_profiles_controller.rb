@@ -113,6 +113,10 @@ class MyProfilesController < MyProfiles::BaseController
     # Remove profile-level fields from card attributes
     attrs.delete("ai_art_opt_in")
     attrs.delete("hireable_override")
+    # Avatar + background-library selection is persisted via JSON blobs, not columns
+    cleanup_keys = avatar_param_keys.map(&:to_s)
+    cleanup_keys += %w[bg_library_card bg_library_og bg_library_simple banner_choice banner_library_path]
+    cleanup_keys.each { |key| attrs.delete(key) }
 
     # If user chose "Use these background settings for all card types",
     # propagate Card choices to OG and Simple before saving.
