@@ -245,7 +245,7 @@ Rails.application.configure do
     }
 
     enriched = base.merge(payload)
-    StructuredLogger.forward_from_logger(enriched) unless skip_forward
+    # Plain Rails logs now stay on STDOUT; StructuredLogger handles Axiom forwarding explicitly.
     enriched.to_json + "\n"
   end
 
