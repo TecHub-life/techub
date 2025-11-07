@@ -15,7 +15,7 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
   - `AXIOM_ORG`: your org slug (e.g., `echosight-7xtu`) — non‑sensitive
   - `AXIOM_DATASET`: logs/events dataset (e.g., `techub`) — non‑sensitive
   - `AXIOM_TRACES_DATASET`: optional traces dataset override (defaults to the metrics dataset, then `AXIOM_DATASET`) — non‑sensitive
-  - `AXIOM_METRICS_DATASET`: metrics dataset (e.g., `techub-metrics`) — non‑sensitive; also the default for traces when set
+  - `AXIOM_METRICS_DATASET`: metrics dataset (e.g., `techub-metrics`). On the free plan, this also serves as the default destination for all OTEL traffic so logs and traces stay within the two‑dataset limit.
   - `AXIOM_BASE_URL`: region base URL (`https://api.axiom.co` US default, EU:
     `https://api.eu.axiom.co`)
   - `OTEL_EXPORTER_OTLP_ENDPOINT`: traces endpoint (defaults to `https://api.axiom.co/v1/traces`;
@@ -131,7 +131,7 @@ traces_headers = base_headers.dup
 metrics_headers = base_headers.dup
 base_dataset = ENV["AXIOM_DATASET"]
 metrics_dataset = ENV["AXIOM_METRICS_DATASET"].presence || base_dataset
-traces_dataset = ENV["AXIOM_TRACES_DATASET"].presence || metrics_dataset
+traces_dataset = ENV["AXIOM_TRACES_DATASET"].presence || metrics_dataset || base_dataset
 traces_headers["X-Axiom-Dataset"] = traces_dataset if traces_dataset.present?
 metrics_headers["X-Axiom-Dataset"] = metrics_dataset if metrics_dataset.present?
 
@@ -157,9 +157,11 @@ end
 3. Env vars:
 
 - `AXIOM_TOKEN`: token with tracing ingest permissions
-- `AXIOM_DATASET`: base dataset used for logs and as a final fallback for OTEL (required for Axiom ingest)
-- `AXIOM_METRICS_DATASET`: optional override for OTEL metrics (and the default traces target when set)
-- `AXIOM_TRACES_DATASET`: optional override for traces; falls back to `AXIOM_METRICS_DATASET`, then `AXIOM_DATASET`
+- `AXIOM_DATASET`: base dataset used for logs (required for Axiom ingest). Also the fallback if you do not provide a separate metrics dataset.
+- `AXIOM_METRICS_DATASET`: metrics/OTEL dataset. OTEL traces and metrics use this by default (to keep logs and traces within the two‑dataset free plan limit).
+  - `AXIOM_TRACES_DATASET`: optional override for traces; falls back to `AXIOM_METRICS_DATASET`, then `AXIOM_DATASET`
+
+  > **Plan note:** The free Axiom tier only includes two datasets. Keep `AXIOM_DATASET` for JSON logs/direct ingest and point OTEL (traces + metrics) at `AXIOM_METRICS_DATASET` so everything fits without buying more capacity.
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: optional; default above (US). EU:
   `https://api.eu.axiom.co/v1/traces`
 - `OTEL_METRICS_EXPORT_INTERVAL_MS`: optional; metrics export interval (default 60000)
@@ -168,7 +170,8 @@ end
 
 - Traces: `rake axiom:otel_smoke` then open Ops → Axiom → OTEL Traces (service=techub)
 - Metrics: `rake axiom:otel_metrics_smoke` or wait 1–2 min for `app_heartbeat_total`
-- Missing the `X-Axiom-Dataset` header results in HTTP 200 responses with no stored data, so double-check the dataset env vars above if nothing appears in Axiom.
+- Missing the `X-Axiom-Dataset` header results in HTTP 200 responses with no stored data, so
+  double-check the dataset env vars above if nothing appears in Axiom.
 
 ### Notes
 

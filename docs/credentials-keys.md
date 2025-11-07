@@ -13,7 +13,9 @@ features.
   OTEL_EXPORTER_OTLP_ENDPOINT
 
 Notes:
-- If `axiom.traces_dataset` is absent, traces automatically fall back to `axiom.metrics_dataset`, then `axiom.dataset`.
+
+- On the free plan, keep `axiom.dataset` for logs and set `axiom.metrics_dataset` for OTEL so you stay within the two-dataset allowance.
+- If `axiom.traces_dataset` is absent, OTEL traces follow `axiom.metrics_dataset`, falling back to `axiom.dataset` only when necessary.
 
 References: `config/initializers/axiom.rb`, `config/initializers/structured_logging.rb`. Guide:
 https://axiom.co/docs/guides/send-logs-from-ruby-on-rails
