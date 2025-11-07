@@ -1,17 +1,16 @@
 require "webmock/minitest"
 require "securerandom"
-WebMock.disable_net_connect!(allow_localhost: true)
+
 ENV["RAILS_ENV"] ||= "test"
 # Disable OpenTelemetry in tests to prevent hanging on external requests
-ENV["OTEL_TRACES_EXPORTER"] ||= "none"
-ENV["OTEL_METRICS_EXPORTER"] ||= "none"
-ENV["OTEL_LOGS_EXPORTER"] ||= "none"
+ENV["OTEL_SDK_DISABLED"] = "true"
+ENV["OTEL_TRACES_EXPORTER"] = "none"
+ENV["OTEL_METRICS_EXPORTER"] = "none"
+ENV["OTEL_LOGS_EXPORTER"] = "none"
 
-# Completely disable OpenTelemetry in tests
-require "opentelemetry/sdk"
-OpenTelemetry::SDK.configure do |c|
-  c.disabled = true
-end
+# Stub OpenTelemetry before it loads
+WebMock.disable_net_connect!(allow_localhost: true)
+WebMock.stub_request(:post, /api.honeycomb.io/).to_return(status: 200, body: "", headers: {})
 
 require_relative "../config/environment"
 require "rails/test_help"
