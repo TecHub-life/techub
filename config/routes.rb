@@ -197,4 +197,11 @@ Rails.application.routes.draw do
       get "/jobs", to: "jobs#index"
     end
   end
+
+  if Rails.env.test?
+    namespace :test do
+      get "/sign_in/:user_id", to: "sessions#create", as: :sign_in
+      delete "/sign_out", to: "sessions#destroy", as: :sign_out
+    end
+  end
 end

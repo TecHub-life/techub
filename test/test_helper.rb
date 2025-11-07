@@ -8,31 +8,19 @@ ENV["OTEL_TRACES_EXPORTER"] = "none"
 ENV["OTEL_METRICS_EXPORTER"] = "none"
 ENV["OTEL_LOGS_EXPORTER"] = "none"
 
-# Disable external HTTP requests except localhost
 WebMock.disable_net_connect!(allow_localhost: true)
 
 require_relative "../config/environment"
 require "rails/test_help"
 require "minitest/mock"
-require "webmock/minitest"
+
+Dir[Rails.root.join("test/support/**/*.rb")].sort.each { |path| require path }
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel unless explicitly disabled (helps in sandboxed envs)
-    unless ENV["DISABLE_PARALLEL_TESTS"] == "1"
-      parallelize(workers: :number_of_processors, threshold: 10)
-    end
-
-    # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
+    parallelize(workers: :number_of_processors, threshold: 10) unless ENV["DISABLE_PARALLEL_TESTS"] == "1"
     fixtures :all
-
-    # Use transactional fixtures for faster database operations
     self.use_transactional_tests = true
-
-    # Disable all external HTTP requests in tests by default
-    WebMock.disable_net_connect!(allow_localhost: true)
-
-    # Add more helper methods to be used by all tests here...
 
     private
 
@@ -46,5 +34,4 @@ module ActiveSupport
   end
 end
 
-# Provide default HTTP Basic for Ops in test environment
 ENV["MISSION_CONTROL_JOBS_HTTP_BASIC"] ||= "techub:hunter2"
