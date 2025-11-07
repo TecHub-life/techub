@@ -10,7 +10,7 @@ ENV["OTEL_LOGS_EXPORTER"] = "none"
 
 # Stub OpenTelemetry before it loads
 WebMock.disable_net_connect!(allow_localhost: true)
-WebMock.stub_request(:post, /api.honeycomb.io/).to_return(status: 200, body: "", headers: {})
+WebMock.stub_request(:post, /api\.honeycomb\.io/).to_return(status: 200, body: "", headers: {})
 
 require_relative "../config/environment"
 require "rails/test_help"
