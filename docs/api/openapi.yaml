@@ -49,8 +49,8 @@ paths:
                       avatar_source_id:
                         type: string
                         description: >
-                          Identifier for the selected avatar source
-                          (e.g. "github", "upload:avatar_1x1", "library:avatars-1x1/avatar-cat.jpg").
+                          Identifier for the selected avatar source (e.g. "github",
+                          "upload:avatar_1x1", "library:avatars-1x1/avatar-cat.jpg").
                       bg_choices:
                         type: object
                         properties:
