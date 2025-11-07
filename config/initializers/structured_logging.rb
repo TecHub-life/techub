@@ -119,12 +119,15 @@ module StructuredLogger
       request_id: Current.request_id,
       job_id: Current.job_id,
       app_version: AppConfig.app_version,
+      rails_env: Rails.env,
+      app_env: AppConfig.environment,
+      deployment_environment: deployment_environment,
       user_id: Current.user_id,
       ip: Current.ip,
       ua: Current.user_agent,
       path: Current.path,
       method: Current.method
-    }
+    }.merge(ci_metadata)
   end
 
   def ops_context_for(payload, component_hint:, precedence_hint:, event_hint:, ops_context_override:, ops_details:, actor_hint:)
@@ -197,6 +200,42 @@ module StructuredLogger
     else
       error.to_s
     end
+  end
+
+  def deployment_environment
+    env = ENV["OTEL_DEPLOYMENT_ENV"].presence || Rails.env
+    ci_run = ActiveModel::Type::Boolean.new.cast(ENV["CI"])
+    return "ci" if ci_run || ENV["GITHUB_ACTIONS"] == "true"
+    env
+  end
+
+  def ci_metadata
+    ci_run = ActiveModel::Type::Boolean.new.cast(ENV["CI"])
+    github_actions = ENV["GITHUB_ACTIONS"] == "true"
+    metadata = {}
+
+    if ci_run || github_actions
+      metadata[:ci] = true
+      metadata[:deployment_environment] = "ci"
+    end
+
+    if github_actions
+      metadata[:ci_system] = "github_actions"
+      metadata[:ci_pipeline_id] = ENV["GITHUB_RUN_ID"]
+      metadata[:ci_pipeline_name] = ENV["GITHUB_WORKFLOW"]
+      metadata[:ci_pipeline_number] = ENV["GITHUB_RUN_NUMBER"]
+      metadata[:ci_job_name] = ENV["GITHUB_JOB"]
+      metadata[:ci_repo] = ENV["GITHUB_REPOSITORY"]
+      metadata[:ci_ref] = ENV["GITHUB_REF"]
+      metadata[:ci_sha] = ENV["GITHUB_SHA"]
+      metadata[:ci_actor] = ENV["GITHUB_ACTOR"]
+      metadata[:ci_run_attempt] = ENV["GITHUB_RUN_ATTEMPT"]
+      metadata[:ci_run_url] = if ENV["GITHUB_SERVER_URL"].present? && ENV["GITHUB_REPOSITORY"].present? && ENV["GITHUB_RUN_ID"].present?
+        "#{ENV["GITHUB_SERVER_URL"]}/#{ENV["GITHUB_REPOSITORY"]}/actions/runs/#{ENV["GITHUB_RUN_ID"]}"
+      end
+    end
+
+    metadata.compact
   end
 end
 
