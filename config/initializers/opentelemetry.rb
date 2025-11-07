@@ -18,10 +18,17 @@ begin
 
   endpoint = ENV["OTEL_EXPORTER_OTLP_ENDPOINT"].presence || (Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || "https://api.axiom.co/v1/traces"
   token = (Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]
+  base_dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
+  metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"] || base_dataset
+  traces_dataset = (Rails.application.credentials.dig(:axiom, :traces_dataset) rescue nil) || ENV["AXIOM_TRACES_DATASET"] || metrics_dataset || base_dataset
 
   # If we lack endpoint or token, skip configuring OTEL entirely to avoid noisy warnings
   if endpoint.present? && token.present?
-    headers = { "Authorization" => "Bearer #{token}" }
+    base_headers = { "Authorization" => "Bearer #{token}" }
+    traces_headers = base_headers.dup
+    metrics_headers = base_headers.dup
+    traces_headers["X-Axiom-Dataset"] = traces_dataset if traces_dataset.present?
+    metrics_headers["X-Axiom-Dataset"] = metrics_dataset if metrics_dataset.present?
     base = endpoint.to_s.sub(%r{/v1/(traces|metrics|logs)$}, "")
     traces_endpoint = URI.join(base + "/", "v1/traces").to_s
     metrics_endpoint = URI.join(base + "/", "v1/metrics").to_s
@@ -31,12 +38,12 @@ begin
       c.use_all
       c.add_span_processor(
         OpenTelemetry::SDK::Trace::Export::BatchSpanProcessor.new(
-          OpenTelemetry::Exporter::OTLP::Exporter.new(endpoint: traces_endpoint, headers: headers)
+          OpenTelemetry::Exporter::OTLP::Exporter.new(endpoint: traces_endpoint, headers: traces_headers)
         )
       )
       begin
         reader = OpenTelemetry::SDK::Metrics::Export::PeriodicExportingMetricReader.new(
-          exporter: OpenTelemetry::Exporter::OTLP::MetricExporter.new(endpoint: metrics_endpoint, headers: headers),
+          exporter: OpenTelemetry::Exporter::OTLP::MetricExporter.new(endpoint: metrics_endpoint, headers: metrics_headers),
           interval: (ENV["OTEL_METRICS_EXPORT_INTERVAL_MS"].presence || 60_000).to_i
         )
         c.add_metric_reader(reader)

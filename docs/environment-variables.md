@@ -40,8 +40,9 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - Home: credentials under `:resend`.
 - Axiom/OTEL:
   - `AXIOM_TOKEN` — required for OTEL export and dataset ingest (maps from credentials)
-  - `AXIOM_DATASET` — logs/events dataset name (maps from credentials)
-  - `AXIOM_METRICS_DATASET` — metrics/events dataset name (maps from credentials)
+  - `AXIOM_DATASET` — logs/events dataset name (maps from credentials) and global fallback
+  - `AXIOM_METRICS_DATASET` — optional metrics dataset (also becomes the default traces target when set)
+  - `AXIOM_TRACES_DATASET` — optional traces dataset override (falls back to `AXIOM_METRICS_DATASET`, then `AXIOM_DATASET`)
   - `AXIOM_ORG` — Axiom org slug (for Ops UI deep-links only; optional)
   - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU:
     `https://api.eu.axiom.co`
