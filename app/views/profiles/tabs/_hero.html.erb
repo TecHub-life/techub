@@ -2,6 +2,12 @@
 <div class="space-y-6">
   <% card = profile.profile_card %>
   <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <% banner_url = (profile.banner_choice == "none" ? nil : banner_image_url_for(profile)) %>
+    <% if banner_url.present? %>
+      <div class="mb-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+        <img src="<%= banner_url %>" alt="<%= profile.login %> banner" class="w-full h-32 object-cover md:h-44">
+      </div>
+    <% end %>
     <div class="flex flex-col gap-4">
       <div class="flex items-center gap-4">
         <% avatar_src = avatar_image_url_for(profile) %>

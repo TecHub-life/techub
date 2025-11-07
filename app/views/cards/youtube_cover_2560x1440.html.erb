@@ -1,7 +1,7 @@
 <%# 2560x1440 — YouTube channel art. Include 1546×423 safe area box centered for mobile/web.
     Composition: background image softened, centered identity within safe area, avoid text outside. %>
 <div class="relative w-[2560px] h-[1440px] overflow-hidden bg-slate-900">
-  <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :og) %>
+<% bg_url = supporting_art_url_for(profile: @profile, aspect: :og) %>
   <img src="<%= bg_url %>" alt="background" class="absolute inset-0 h-full w-full object-cover opacity-30">
   <div class="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/45"></div>
 
@@ -27,7 +27,7 @@
         <div class="flex-shrink-0">
           <div class="w-28 h-28 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-xl">
             <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-              <img src="<%= avatar_image_url_for(@profile) %>" alt="avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
+              <img src="<%= avatar_image_url_for(@profile, variant: :og) %>" alt="avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
             </div>
           </div>
         </div>
@@ -35,5 +35,3 @@
     </div>
   </div>
 </div>
-
-

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_07_110200) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_08_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -187,9 +187,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_110200) do
     t.integer "attack", default: 0
     t.string "avatar_choice", default: "real", null: false
     t.text "avatar_description"
-    t.string "bg_choice_card", default: "ai", null: false
-    t.string "bg_choice_og", default: "ai", null: false
-    t.string "bg_choice_simple", default: "ai", null: false
+    t.json "avatar_sources", default: {}, null: false
+    t.string "bg_choice_card", default: "library", null: false
+    t.string "bg_choice_og", default: "library", null: false
+    t.string "bg_choice_simple", default: "library", null: false
     t.string "bg_color_card"
     t.string "bg_color_og"
     t.string "bg_color_simple"
@@ -199,6 +200,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_110200) do
     t.float "bg_fy_card"
     t.float "bg_fy_og"
     t.float "bg_fy_simple"
+    t.json "bg_sources", default: {}, null: false
     t.float "bg_zoom_card"
     t.float "bg_zoom_og"
     t.float "bg_zoom_simple"
@@ -437,6 +439,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_07_110200) do
   create_table "profiles", force: :cascade do |t|
     t.boolean "ai_art_opt_in", default: false, null: false
     t.string "avatar_url"
+    t.string "banner_choice", default: "none", null: false
+    t.string "banner_library_path"
     t.text "bio"
     t.string "blog"
     t.string "company"

@@ -24,7 +24,8 @@ GET /api/v1/profiles/:username/assets
     "archetype": "architect",
     "spirit_animal": "falcon",
     "avatar_choice": "ai",
-    "bg_choices": { "card": "ai", "og": "ai", "simple": "default" }
+    "avatar_source_id": "upload:avatar_1x1",
+    "bg_choices": { "card": "library", "og": "library", "simple": "color" }
   },
   "assets": [
     {
@@ -54,3 +55,4 @@ GET /api/v1/profiles/:username/assets
 
 - Responses are cache-friendly; assets themselves should be long-lived.
 - For HTML OG usage, prefer the image route `/og/:login.jpg` which generates on-demand if missing.
+- `avatar_choice` remains for backward compatibility; prefer using `avatar_source_id`.

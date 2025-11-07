@@ -1,26 +1,9 @@
 <% card_prefs = @profile.profile_card %>
-<% choice = card_prefs&.bg_choice_simple || 'default' %>
+<% choice = card_prefs&.bg_choice_simple || 'library' %>
+<% choice = 'library' if choice == 'default' || choice == 'ai' %>
 <% color_hex = (card_prefs&.bg_color_simple || '#0f172a') %>
 
-<% gen_dir = Rails.root.join('public','generated', @profile.login) %>
-<% asset_bg16 = @profile.profile_assets.find_by(kind: 'avatar_16x9') %>
-<% asset_card = @profile.profile_assets.find_by(kind: 'card') %>
-<% bg_url = nil %>
-<% if choice == 'ai' %>
-  <% if asset_bg16&.public_url.present? %>
-    <% bg_url = asset_bg16.public_url %>
-  <% elsif asset_card&.public_url.present? %>
-    <% bg_url = asset_card.public_url %>
-  <% elsif Dir.exist?(gen_dir) %>
-    <% file = Dir[gen_dir.join('avatar-16x9*.jpg').to_s].first || Dir[gen_dir.join('avatar-16x9*.png').to_s].first || Dir[gen_dir.join('card-bg-16x9*.jpg').to_s].first || Dir[gen_dir.join('card-bg-16x9*.png').to_s].first %>
-    <% bg_url = "/generated/#{@profile.login}/#{File.basename(file)}" if file %>
-  <% end %>
-  <% if bg_url.nil? %>
-    <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :simple) %>
-  <% end %>
-<% elsif choice == 'default' %>
-  <% bg_url = supporting_art_url_for(login: @profile.login, aspect: :simple) %>
-<% end %>
+<% bg_url = (choice == 'color') ? nil : supporting_art_url_for(profile: @profile, aspect: :simple) %>
 
 
 <div class="w-[1280px] h-[720px] overflow-hidden relative flex items-center justify-center" style="background:<%= choice == 'color' ? color_hex : '#0b1220' %>">
@@ -35,9 +18,7 @@
     <%# Avatar with subtle ring %>
     <div class="relative z-20 mx-auto w-44 h-44 rounded-full p-1.5 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-[0_8px_28px_rgba(59,130,246,0.35)]">
       <div class="w-full h-full rounded-full overflow-hidden bg-gray-900">
-        <% avatar_choice = @profile.profile_card&.avatar_choice || 'real' %>
-        <% ai_avatar = @profile.profile_assets.find_by(kind: 'avatar_1x1') %>
-        <% avatar_src = avatar_image_url_for(@profile) %>
+        <% avatar_src = avatar_image_url_for(@profile, variant: :simple) %>
         <% if avatar_src.present? %>
           <img src="<%= avatar_src %>" alt="<%= @profile.display_name %> avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
         <% else %>

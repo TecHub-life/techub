@@ -22,7 +22,8 @@ module Api
             tags: card.tags,
             archetype: card.archetype,
             spirit_animal: card.spirit_animal,
-            avatar_choice: card.avatar_choice,
+            avatar_choice: legacy_avatar_choice(card),
+            avatar_source_id: card.avatar_source_id_for("default"),
             bg_choices: {
               card: card.bg_choice_card,
               og: card.bg_choice_og,
@@ -130,6 +131,13 @@ module Api
           weakness: card.weakness,
           weakness_description: card.weakness_description
         }
+      end
+
+      def legacy_avatar_choice(card)
+        id = card.avatar_source_id_for("default").to_s
+        id.start_with?("upload:") ? "ai" : "real"
+      rescue StandardError
+        "real"
       end
     end
   end

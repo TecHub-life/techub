@@ -14,6 +14,49 @@ class ProfileCard < ApplicationRecord
 
   before_validation :normalize_tags
 
+  def avatar_sources_hash
+    normalize_hash(self[:avatar_sources])
+  end
+
+  def bg_sources_hash
+    normalize_hash(self[:bg_sources])
+  end
+
+  def avatar_source_for(variant)
+    data = avatar_sources_hash
+    data[variant.to_s] || data["default"]
+  end
+
+  def avatar_source_id_for(variant, fallback: true)
+    key = variant.to_s
+    entry = avatar_sources_hash[key]
+    id = extract_source_id(entry)
+    return id if id.present?
+
+    legacy_entry_id = legacy_id_from(entry)
+    return legacy_entry_id if legacy_entry_id.present?
+
+    if fallback && key != "default"
+      inherited = avatar_source_id_for("default", fallback: false)
+      return inherited if inherited.present?
+    end
+
+    return legacy_id_from_choice if key == "default"
+    fallback ? legacy_id_from_choice : nil
+  end
+
+  def bg_source_for(variant)
+    bg_sources_hash[variant.to_s]
+  end
+
+  def update_avatar_source!(variant, payload)
+    write_json_field(:avatar_sources, variant, payload)
+  end
+
+  def update_bg_source!(variant, payload)
+    write_json_field(:bg_sources, variant, payload)
+  end
+
   def tags_array
     Array(tags)
   end
@@ -46,5 +89,46 @@ class ProfileCard < ApplicationRecord
 
   def normalize_tags
     self.tags = Array(tags).map { |t| t.to_s.downcase.strip.gsub(/[^a-z0-9\s-]/, "").gsub(/\s+/, "-") }.reject(&:blank?).uniq if self.tags_changed?
+  end
+
+  def normalize_hash(value)
+    return {} unless value.is_a?(Hash)
+    value.deep_stringify_keys
+  rescue StandardError
+    {}
+  end
+
+  def write_json_field(column, variant, payload)
+    data = normalize_hash(self[column])
+    key = variant.to_s
+    if payload.present?
+      data[key] = payload.deep_stringify_keys
+    else
+      data.delete(key)
+    end
+    self[column] = data
+  end
+
+  def extract_source_id(entry)
+    entry = entry.deep_stringify_keys if entry.respond_to?(:deep_stringify_keys)
+    id = entry.to_h["id"] if entry
+    return id if id.present?
+    legacy_mode = entry.to_h["mode"]
+    legacy_path = entry.to_h["path"]
+    AvatarSources.normalize_id(mode: legacy_mode, path: legacy_path)
+  rescue StandardError
+    nil
+  end
+
+  def legacy_id_from(entry)
+    extract_source_id(entry)
+  end
+
+  def legacy_id_from_choice
+    if avatar_choice.to_s == "ai"
+      "upload:avatar_1x1"
+    else
+      "github"
+    end
   end
 end

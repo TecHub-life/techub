@@ -27,13 +27,14 @@
           <% fx_attr     = :"bg_fx_#{variant[:key]}" %>
           <% fy_attr     = :"bg_fy_#{variant[:key]}" %>
           <% zoom_attr   = :"bg_zoom_#{variant[:key]}" %>
-          <% selected = card&.public_send(choice_attr) || "ai" %>
+          <% library_value = bg_library_path_for(profile, variant[:key]) %>
+          <% selected = card&.public_send(choice_attr) || "library" %>
 
           <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
             <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-slate-100"><%= variant[:label] %></label>
             <select name="<%= choice_attr %>" class="<%= ui_select_class %>">
-              <option value="ai" <%= "selected" if selected == "ai" %>>AI (latest)</option>
-              <option value="default" <%= "selected" if selected == "default" %>>Default image</option>
+              <option value="library" <%= "selected" if selected == "library" %>>Library supporting art</option>
+              <option value="upload" <%= "selected" if selected == "upload" %>>Custom upload</option>
               <option value="color" <%= "selected" if selected == "color" %>>Solid colour</option>
             </select>
 
@@ -43,6 +44,14 @@
               value="<%= card&.public_send(color_attr) || '#0f172a' %>"
               class="mt-3 h-10 w-20 rounded border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900"
               title="<%= variant[:label] %> colour">
+
+            <label class="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Library art (used when Library is selected)</label>
+            <select name="bg_library_<%= variant[:key] %>" class="<%= ui_select_class %>">
+              <option value="">Automatic TecHub rotation</option>
+              <% @supporting_art_options.each do |opt| %>
+                <option value="<%= opt[:path] %>" <%= "selected" if opt[:path] == library_value %>><%= opt[:label] %></option>
+              <% end %>
+            </select>
 
             <details class="mt-3 text-xs text-slate-600 dark:text-slate-400">
               <summary class="cursor-pointer select-none text-slate-700 dark:text-slate-300">Advanced: crop &amp; zoom</summary>
@@ -75,6 +84,40 @@
         <span data-submit-form-target="text">Save background defaults</span>
       </button>
     </form>
+  </div>
+
+  <% uploads_enabled = defined?(Storage::ActiveStorageUploadService) %>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-lg transition dark:border-slate-700 dark:bg-slate-900 md:p-6">
+    <h2 class="mb-2 text-xl font-bold text-slate-900 dark:text-slate-100">Upload Supporting Art</h2>
+    <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">Provide custom artwork for your cards. Use square art for cards/OG/simple, or upload a square piece for social crops.</p>
+    <form action="<%= upload_my_profile_asset_path(username: profile.login) %>" method="post" enctype="multipart/form-data" class="space-y-3" data-controller="submit-form">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      <%= hidden_field_tag :tab, "backgrounds" %>
+      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Target</label>
+      <select name="kind" class="<%= ui_select_class %>">
+        <option value="support_art_card">Card (16:9)</option>
+        <option value="support_art_og">OG / Link previews (16:9)</option>
+        <option value="support_art_simple">Simple cards (16:9)</option>
+        <option value="support_art_square">Square crops (1:1)</option>
+      </select>
+      <input type="file" name="file" accept="image/*" class="<%= ui_file_input_class %> <%= 'opacity-60 cursor-not-allowed' unless uploads_enabled %>" <%= "disabled" unless uploads_enabled %>>
+      <button type="submit" class="<%= ui_secondary_button_class %> w-full <%= 'opacity-60 cursor-not-allowed' unless uploads_enabled %>" <%= "disabled" unless uploads_enabled %> data-submit-form-target="button">
+        <span data-submit-form-target="spinner" class="hidden">
+          <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 1 6.373 1 12h3zm2 5.291A7.962 7.962 0 014 12H1c0 3.042 1.135 5.824 3 7.938l2-2.647z"></path>
+          </svg>
+        </span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        <span data-submit-form-target="text">Upload supporting art</span>
+      </button>
+    </form>
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Recommended: JPG/PNG at least 1280×1280 for square art. 16:9 variants crop automatically.</p>
+    <% unless uploads_enabled %>
+      <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">Uploads are disabled in this environment.</p>
+    <% end %>
   </div>
 
   <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-lg transition dark:border-slate-700 dark:bg-slate-900 md:p-6">

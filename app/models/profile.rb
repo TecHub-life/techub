@@ -19,13 +19,16 @@ class Profile < ApplicationRecord
   has_many :profile_experiences, -> { order(:position, :created_at) }, dependent: :destroy
 
   OG_VARIANT_KINDS = %w[og og_pro].freeze
+  BANNER_CHOICES = %w[none library upload].freeze
 
   # Validations
   validates :github_id, presence: true, uniqueness: true
   validates :login, presence: true, uniqueness: { case_sensitive: false }
+  validates :banner_choice, inclusion: { in: BANNER_CHOICES }
 
   before_validation do
     self.login = login.to_s.downcase
+    self.banner_choice = normalize_banner_choice(banner_choice)
   end
 
   after_create :ensure_profile_preference_record
@@ -282,5 +285,11 @@ class Profile < ApplicationRecord
     else
       scope.reorder(:position, coalesce.asc, :created_at)
     end
+  end
+
+  def normalize_banner_choice(value)
+    choice = value.to_s
+    choice = "none" if choice.blank?
+    BANNER_CHOICES.include?(choice) ? choice : "none"
   end
 end

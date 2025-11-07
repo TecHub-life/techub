@@ -22,7 +22,7 @@ module Importmap
     end
 
     def test_failure_when_import_missing
-      with_temp_structure(modify_imports: ["missing_module"]) do |paths|
+      with_temp_structure(modify_imports: [ "missing_module" ]) do |paths|
         result = Importmap::DoctorService.new(
           importmap_path: paths[:importmap],
           application_js_path: paths[:application_js],
@@ -62,7 +62,7 @@ module Importmap
         RUBY
 
         imports = [
-          '@hotwired/turbo-rails',
+          "@hotwired/turbo-rails",
           "controllers",
           "techub_console"
         ]
