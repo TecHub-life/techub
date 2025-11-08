@@ -21,9 +21,9 @@ module Profiles
         recent_activity: nil
       }
 
-      Github::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
+      GithubProfile::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
         # Avoid real HTTP for avatar download during test
-        Github::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/loftwah.png") do
+        GithubProfile::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/loftwah.png") do
         result = Profiles::SyncFromGithub.call(login: "loftwah")
 
         assert result.success?

@@ -1,6 +1,6 @@
 require "test_helper"
 
-module Github
+module GithubProfile
   class ProfileSummaryServiceTest < ActiveSupport::TestCase
     test "builds summary payload from client data" do
       user_payload = {
@@ -79,7 +79,7 @@ module Github
         end
       end.new(user_payload, repositories)
 
-      result = Github::ProfileSummaryService.call(login: "loftwah", client: client)
+      result = GithubProfile::ProfileSummaryService.call(login: "loftwah", client: client)
 
       assert result.success?
       payload = result.value

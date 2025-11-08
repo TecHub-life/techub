@@ -28,35 +28,15 @@ module Profiles
     end
 
     test "returns a micro story for existing profile" do
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          [
-            200,
-            { "content-type" => "application/json" },
-            {
-              "candidates" => [
-                {
-                  "content" => {
-                    "parts" => [
-                      { "text" => { story: "Lofty Wah rewired a midnight incident into a celebratory shipping sprint across the Astro seas. Paragraph two celebrates their DevOps beats and collaborative repos. Paragraph three teases a future quantum fleet with friends.", tagline: "Build brilliant, build together" }.to_json }
-                    ]
-                  },
-                  "finishReason" => "STOP"
-                }
-              ]
-            }
-          ]
-        end
-      end
+      payload = { "story" => long_story("Lofty Wah rewired a midnight incident into a celebratory sprint."), "tagline" => "Build brilliant, build together" }
+      metadata = { provider: "ai_studio", finish_reason: "STOP", http_status: 200, raw_text: payload.to_json }
 
-      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
-        f.request :json
-        f.response :json
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        Gemini::StructuredOutputService.stub :call, ->(**kwargs) do
+          assert_equal "ai_studio", kwargs[:provider]
+          assert kwargs[:max_output_tokens]
+          ServiceResult.success(payload, metadata: metadata)
+        end do
           result = Profiles::StoryFromProfile.call(login: "loftwah", profile: @profile)
 
           assert result.success?
@@ -66,124 +46,51 @@ module Profiles
           assert_match(/Build brilliant, build together/, result.value)
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
     test "retries with higher token limit when truncated" do
-      call_count = 0
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          call_count += 1
-          if call_count == 1
-            [
-              200,
-              { "content-type" => "application/json" },
-              {
-                "candidates" => [
-                  {
-                    "content" => {
-                      "parts" => [
-                        { "text" => { story: "Lofty Wah leads a hackathon cliffhanger", tagline: "Code the tide" }.to_json }
-                      ]
-                    },
-                    "finishReason" => "MAX_TOKENS"
-                  }
-                ]
-              }
-            ]
-          else
-            [
-              200,
-              { "content-type" => "application/json" },
-              {
-                "candidates" => [
-                  {
-                    "content" => {
-                      "parts" => [
-                        { "text" => { story: "Lofty Wah rebooted a midnight outage into a cooperative maker-festival crescendo over three paragraphs, looping in Ruby rigs and Astro charts. Their collaborators cheer as EddieHub waves crackle with TypeScript arcs. The crew plots the next voyage past SchoolInnovationsAndAchievement, hoisting the linkarooie signal.", tagline: "Keep shipping, keep shining" }.to_json }
-                      ]
-                    },
-                    "finishReason" => "STOP"
-                  }
-                ]
-              }
-            ]
-          end
-        end
-      end
+      calls = []
+      responses = [
+        ServiceResult.success(
+          { "story" => "", "tagline" => "Code the tide" },
+          metadata: { provider: "ai_studio", finish_reason: "MAX_TOKENS", http_status: 200, raw_text: "{}" }
+        ),
+        ServiceResult.success(
+          { "story" => long_story("Lofty Wah rebooted a midnight outage into a cooperative maker-festival."), "tagline" => "Keep shipping, keep shining" },
+          metadata: { provider: "ai_studio", finish_reason: "STOP", http_status: 200, raw_text: "{}" }
+        )
+      ]
 
-      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
-        f.request :json
-        f.response :json
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        Gemini::StructuredOutputService.stub :call, ->(**kwargs) do
+          calls << kwargs[:max_output_tokens]
+          responses.shift || raise("no stubbed response")
+        end do
           result = Profiles::StoryFromProfile.call(login: "loftwah", profile: @profile)
 
           assert result.success?
           assert_includes result.value, "midnight outage"
           assert_equal "STOP", result.metadata[:finish_reason]
           assert_operator result.metadata[:attempts].size, :>=, 2
+          assert calls.first < calls.last, "expected progressive token limits"
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
     test "recovers when structured output JSON is truncated" do
-      call_count = 0
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          call_count += 1
-          if call_count == 1
-            [
-              200,
-              { "content-type" => "application/json" },
-              {
-                "candidates" => [
-                  {
-                    "content" => {
-                      "parts" => [
-                        { "text" => "{\n  \"story\": \"From the earliest whispers of open source to the rhythmic beats of music production, Dean" }
-                      ]
-                    },
-                    "finishReason" => "MAX_TOKENS"
-                  }
-                ]
-              }
-            ]
-          else
-            [
-              200,
-              { "content-type" => "application/json" },
-              {
-                "candidates" => [
-                  {
-                    "content" => {
-                      "parts" => [
-                        { "text" => { story: "Dean charts a vibrant course across open source archipelagos, remixing DevRel tales with technicolor grooves over three friendly paragraphs.", tagline: "Ship brightly, friends" }.to_json }
-                      ]
-                    },
-                    "finishReason" => "STOP"
-                  }
-                ]
-              }
-            ]
-          end
-        end
-      end
+      responses = [
+        ServiceResult.success(
+          { "story" => nil, "tagline" => nil },
+          metadata: { provider: "ai_studio", finish_reason: "MAX_TOKENS", http_status: 200, raw_text: "{\"story\": \"Dean" }
+        ),
+        ServiceResult.success(
+          { "story" => long_story("Dean charts a vibrant course across open source archipelagos, remixing DevRel tales with technicolor grooves over three friendly paragraphs."), "tagline" => "Ship brightly, friends" },
+          metadata: { provider: "ai_studio", finish_reason: "STOP", http_status: 200, raw_text: "{}" }
+        )
+      ]
 
-      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
-        f.request :json
-        f.response :json
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        Gemini::StructuredOutputService.stub :call, ->(**_kwargs) { responses.shift || raise("no stubbed response") } do
           result = Profiles::StoryFromProfile.call(login: "loftwah", profile: @profile)
 
           assert result.success?
@@ -192,99 +99,48 @@ module Profiles
           assert_equal true, result.metadata[:attempts].first[:partial]
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
-    test "uses vertex endpoint when provider is vertex" do
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1/projects/test-proj/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent") do |_env|
-          [
-            200,
-            { "content-type" => "application/json" },
-            {
-              "candidates" => [
-                {
-                  "content" => {
-                    "parts" => [
-                      { "text" => { story: "Dean Lofts orchestrates cloud fleets with hummingbird precision across three celebratory paragraphs.", tagline: "Keep shipping loud" }.to_json }
-                    ]
-                  },
-                  "finishReason" => "STOP"
-                }
-              ]
-            }
-          ]
+    test "uses vertex provider when configured" do
+      providers = []
+
+      Gemini::Configuration.stub :provider, "vertex" do
+        Gemini::StructuredOutputService.stub :call, ->(**kwargs) do
+          providers << kwargs[:provider]
+          ServiceResult.success(
+            { "story" => long_story("Dean Lofts orchestrates cloud fleets with hummingbird precision across three celebratory paragraphs."), "tagline" => "Keep shipping loud" },
+            metadata: { provider: kwargs[:provider], finish_reason: "STOP", http_status: 200, raw_text: "{}" }
+          )
+        end do
+          result = Profiles::StoryFromProfile.call(login: "loftwah", profile: @profile)
+
+          assert result.success?
+          assert_equal [ "vertex" ], providers
+          assert_equal "vertex", result.metadata[:provider]
+          assert_includes result.value, "Dean Lofts orchestrates cloud fleets"
         end
       end
-
-      dummy_conn = Faraday.new(url: "https://us-central1-aiplatform.googleapis.com") do |f|
-        f.request :json
-        f.response :json
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "vertex" do
-          Gemini::Configuration.stub :project_id, "test-proj" do
-            Gemini::Configuration.stub :location, "us-central1" do
-              result = Profiles::StoryFromProfile.call(login: "loftwah", profile: @profile)
-
-              assert result.success?
-              assert_equal "vertex", result.metadata[:provider]
-              assert_includes result.value, "Dean Lofts orchestrates cloud fleets"
-            end
-          end
-        end
-      end
-
-      stubs.verify_stubbed_calls
     end
 
     test "prefers explicit provider override" do
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          [
-            200,
-            { "content-type" => "application/json" },
-            {
-              "candidates" => [
-                {
-                  "content" => {
-                    "parts" => [
-                      { "text" => { story: "Override provider story for Lofty Wah.", tagline: "Override rules" }.to_json }
-                    ]
-                  },
-                  "finishReason" => "STOP"
-                }
-              ]
-            }
-          ]
-        end
-      end
+      providers = []
 
-      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
-        f.request :json
-        f.response :json
-        f.adapter :test, stubs
-      end
-
-      calls = []
-      Gemini::ClientService.stub :call, ->(**kwargs) do
-        calls << kwargs[:provider]
-        ServiceResult.success(dummy_conn)
-      end do
-        Gemini::Configuration.stub :provider, "vertex" do
+      Gemini::Configuration.stub :provider, "vertex" do
+        Gemini::StructuredOutputService.stub :call, ->(**kwargs) do
+          providers << kwargs[:provider]
+          ServiceResult.success(
+            { "story" => long_story("Override provider story for Lofty Wah."), "tagline" => "Override rules" },
+            metadata: { provider: kwargs[:provider], finish_reason: "STOP", http_status: 200, raw_text: "{}" }
+          )
+        end do
           result = Profiles::StoryFromProfile.call(login: "loftwah", profile: @profile, provider: "ai_studio")
 
           assert result.success?
-          assert_equal [ "ai_studio" ], calls
+          assert_equal [ "ai_studio" ], providers
           assert_equal "ai_studio", result.metadata[:provider]
           assert_includes result.value, "Override provider story"
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
     test "fails when profile missing" do
@@ -295,6 +151,12 @@ module Profiles
           assert_match(/Profile not found/, result.error.message)
         end
       end
+    end
+
+    private
+
+    def long_story(prefix)
+      [ prefix, Array.new(140) { |i| "word#{i}" }.join(" ") ].join(" ")
     end
   end
 end

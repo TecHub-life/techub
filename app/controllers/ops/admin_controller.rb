@@ -125,6 +125,7 @@ module Ops
         @axiom = {
           dataset_url: axiom_cfg[:dataset_url],
           metrics_dataset_url: axiom_cfg[:metrics_dataset_url],
+          traces_dataset_url: axiom_cfg[:traces_dataset_url],
           traces_url: traces_url
         }
 
@@ -142,7 +143,7 @@ module Ops
           queue: queue_stats
         }
       rescue StandardError
-        @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
+        @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
         @axiom_status = {
           env: AppConfig.environment,
           forwarding_allowed: false,

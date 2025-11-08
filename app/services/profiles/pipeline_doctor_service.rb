@@ -123,7 +123,7 @@ module Profiles
     end
 
     def check_github_profile_fetch
-      result = Github::ProfileSummaryService.call(login: login)
+      result = GithubProfile::ProfileSummaryService.call(login: login)
       return ok("github_profile_fetch", have: (result.value || {}).keys) if result.success?
       fail_check("github_profile_fetch", result.error || "unknown")
     end

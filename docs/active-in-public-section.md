@@ -69,7 +69,7 @@ Active repositories are stored in the `profile_repositories` table with:
 
 ### Service Logic
 
-The `Github::ProfileSummaryService` class handles fetching active repositories:
+The `GithubProfile::ProfileSummaryService` class handles fetching active repositories:
 
 ```ruby
 def fetch_active_repo_details(github_client, recent_activity)

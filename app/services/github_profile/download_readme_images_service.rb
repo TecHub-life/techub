@@ -1,7 +1,7 @@
 require "open-uri"
 require "digest"
 
-module Github
+module GithubProfile
   class DownloadReadmeImagesService < ApplicationService
     def initialize(readme_content:, login:)
       @readme_content = readme_content

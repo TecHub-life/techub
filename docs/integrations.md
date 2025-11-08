@@ -170,7 +170,9 @@ Purpose: Centralized logs/metrics/traces.
 
 Requirements:
 
-- `axiom.token`, `axiom.dataset` in credentials (or env), and `otel.endpoint` as needed.
+- `axiom.token` in credentials. Non-secret defaults (datasets, org, OTEL endpoint) live in
+  `AppConfig.axiom` and can be overridden with `AXIOM_*` env vars if you need something other than
+  `otel-logs`/`otel-traces`.
 
 Behavior if Missing:
 
@@ -307,7 +309,8 @@ Purpose: Centralized logs/metrics/traces.
 
 Requirements:
 
-- `axiom.token`, `axiom.dataset` and optional `otel.endpoint` in credentials or env.
+- `axiom.token` in credentials. Override dataset/org/endpoint via env if you need non-default
+  values.
 
 Behavior if Missing:
 

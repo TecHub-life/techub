@@ -74,7 +74,7 @@ Verify in console:
 ```ruby
 Gemini::Configuration.provider
 Gemini::ImageGenerationHealthcheckService.call
-Gemini::AvatarImageSuiteService.call(login: "loftwah")
+Avatars::AvatarImageSuiteService.call(login: "loftwah")
 ```
 
 ## Pipelines

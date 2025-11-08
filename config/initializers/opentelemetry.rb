@@ -16,11 +16,12 @@ begin
   OpenTelemetry.logger ||= Logger.new($stderr)
   OpenTelemetry.logger.level = ENV["OTEL_DEBUG"] == "1" ? Logger::WARN : Logger::FATAL
 
-  endpoint = ENV["OTEL_EXPORTER_OTLP_ENDPOINT"].presence || (Rails.application.credentials.dig(:otel, :endpoint) rescue nil) || "https://api.axiom.co/v1/traces"
-  token = (Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]
-  base_dataset = (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV["AXIOM_DATASET"]
-  metrics_dataset = (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) || ENV["AXIOM_METRICS_DATASET"]
-  traces_dataset = (Rails.application.credentials.dig(:axiom, :traces_dataset) rescue nil) || ENV["AXIOM_TRACES_DATASET"] || metrics_dataset.presence || base_dataset
+  axiom_cfg = AppConfig.axiom
+  endpoint = axiom_cfg[:otel_endpoint]
+  token = axiom_cfg[:token] || ENV["AXIOM_TOKEN"]
+  base_dataset = axiom_cfg[:dataset]
+  metrics_dataset = axiom_cfg[:metrics_dataset]
+  traces_dataset = axiom_cfg[:traces_dataset].presence || metrics_dataset.presence || base_dataset
 
   # If we lack endpoint or token, skip configuring OTEL entirely to avoid noisy warnings
   if endpoint.present? && token.present?

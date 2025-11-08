@@ -7,7 +7,23 @@ namespace :axiom do
     puts "Axiom doctor"
     puts "  env: #{AppConfig.environment}"
     puts "  dataset: #{cfg[:dataset] || '(nil)'}"
+    dataset_source =
+      if ENV["AXIOM_DATASET"].present?
+        "env[AXIOM_DATASET]"
+      else
+        "AppConfig default (#{AppConfig::DEFAULT_AXIOM_LOGS_DATASET})"
+      end
+    puts "  dataset_source: #{dataset_source}"
     puts "  metrics_dataset: #{cfg[:metrics_dataset] || '(nil)'}"
+    metrics_source =
+      if ENV["AXIOM_TRACES_DATASET"].present?
+        "env[AXIOM_TRACES_DATASET]"
+      elsif ENV["AXIOM_METRICS_DATASET"].present?
+        "env[AXIOM_METRICS_DATASET]"
+      else
+        "AppConfig default (#{AppConfig::DEFAULT_AXIOM_TRACES_DATASET})"
+      end
+    puts "  metrics_source: #{metrics_source}"
     puts "  token_present: #{forwarding[:token_present]}"
     puts "  forwarding_allowed: #{forwarding[:allowed]} (reason=#{forwarding[:reason]})"
     puts "  base_url: #{cfg[:base_url]}"
@@ -195,6 +211,10 @@ namespace :axiom do
   task otel_metrics_smoke: :environment do
     begin
       require "opentelemetry/sdk"
+      unless OpenTelemetry.respond_to?(:meter_provider)
+        warn "OTEL metrics smoke skipped: current opentelemetry gem does not expose meter APIs. Upgrade opentelemetry-api/sdk >= 1.2 to test metrics."
+        exit 0
+      end
       meter = OpenTelemetry.meter_provider.meter("techub.metrics", "1.0")
       counter = meter.create_counter("otel_smoke_metric_total", unit: "1", description: "OTEL metrics smoke counter")
       counter.add(1, attributes: { env: Rails.env })
@@ -247,4 +267,7 @@ namespace :axiom do
 
     puts "Done. Check your dataset and traces UI."
   end
+
+  desc "Primary smoke: structured log + OTEL span + direct ingest (alias for axiom:self_test)"
+  task smoke_all: :self_test
 end

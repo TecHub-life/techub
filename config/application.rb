@@ -15,6 +15,10 @@ module Techub
     config.assets.paths << Rails.root.join("node_modules")
     config.assets.paths << Rails.root.join("node_modules", "@fortawesome", "fontawesome-free")
 
+    # Ensure integration wrappers autoload cleanly
+    config.autoload_paths << Rails.root.join("app", "integrations")
+    config.eager_load_paths << Rails.root.join("app", "integrations")
+
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
@@ -34,6 +38,11 @@ end
 require "cgi"
 
 module AppConfig
+  DEFAULT_AXIOM_BASE_URL = "https://api.axiom.co".freeze
+  DEFAULT_AXIOM_ORG = "echosight-7xtu".freeze
+  DEFAULT_AXIOM_LOGS_DATASET = "otel-logs".freeze
+  DEFAULT_AXIOM_TRACES_DATASET = "otel-traces".freeze
+
   module_function
 
   def reload!
@@ -66,21 +75,21 @@ module AppConfig
 
   def axiom
     @axiom ||= begin
-      creds = (Rails.application.credentials.dig(:axiom) rescue {}) || {}
-      otel = (Rails.application.credentials.dig(:otel) rescue {}) || {}
-
-      token = creds[:token].presence || ENV["AXIOM_TOKEN"]
-      dataset = creds[:dataset].presence || ENV["AXIOM_DATASET"]
-      metrics_dataset = creds[:metrics_dataset].presence || ENV["AXIOM_METRICS_DATASET"]
-      org = creds[:org].presence || ENV["AXIOM_ORG"]
-      base_url = creds[:base_url].presence || ENV["AXIOM_BASE_URL"] || "https://api.axiom.co"
-      dataset_url = creds[:dataset_url].presence || ENV["AXIOM_DATASET_URL"]
-      metrics_dataset_url = creds[:metrics_dataset_url].presence || ENV["AXIOM_METRICS_DATASET_URL"]
-      traces_url = creds[:traces_url].presence || ENV["AXIOM_TRACES_URL"]
-      otel_endpoint = otel[:endpoint].presence || ENV["OTEL_EXPORTER_OTLP_ENDPOINT"]
+      token = (Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]
+      dataset = ENV["AXIOM_DATASET"].presence || DEFAULT_AXIOM_LOGS_DATASET
+      org = ENV["AXIOM_ORG"].presence || DEFAULT_AXIOM_ORG
+      base_url = ENV["AXIOM_BASE_URL"].presence || DEFAULT_AXIOM_BASE_URL
+      traces_dataset = ENV["AXIOM_TRACES_DATASET"].presence || DEFAULT_AXIOM_TRACES_DATASET
+      metrics_dataset = ENV["AXIOM_METRICS_DATASET"].presence || traces_dataset
+      otel_endpoint = ENV["OTEL_EXPORTER_OTLP_ENDPOINT"].presence || "#{base_url}/v1/traces"
+      dataset_url = ENV["AXIOM_DATASET_URL"]
+      metrics_dataset_url = ENV["AXIOM_METRICS_DATASET_URL"]
+      traces_dataset_url = ENV["AXIOM_TRACES_DATASET_URL"]
+      traces_url = ENV["AXIOM_TRACES_URL"]
 
       dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{dataset}" if org.present? && dataset.present?
       metrics_dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{metrics_dataset}" if org.present? && metrics_dataset.present?
+      traces_dataset_url ||= "https://app.axiom.co/#{org}/datasets/#{traces_dataset}" if org.present? && traces_dataset.present?
       traces_url ||= org.present? ? "https://app.axiom.co/#{org}/traces" : "https://app.axiom.co/traces"
       traces_url = "#{traces_url}?service=#{CGI.escape(app[:name])}" if traces_url && app[:name].present?
 
@@ -101,10 +110,12 @@ module AppConfig
         token: token,
         dataset: dataset,
         metrics_dataset: metrics_dataset,
+        traces_dataset: traces_dataset,
         org: org,
         base_url: base_url,
         dataset_url: dataset_url,
         metrics_dataset_url: metrics_dataset_url,
+        traces_dataset_url: traces_dataset_url,
         traces_url: traces_url,
         otel_endpoint: otel_endpoint,
         auto_forward: auto_forward,

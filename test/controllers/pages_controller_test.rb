@@ -2,14 +2,14 @@ require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
   test "home loads successfully" do
-    Github::ProfileSummaryService.stub :call, ServiceResult.failure(StandardError.new("oops")) do
+    GithubProfile::ProfileSummaryService.stub :call, ServiceResult.failure(StandardError.new("oops")) do
       get root_path
       assert_response :success
     end
   end
 
   test "login link is present for signed-out users" do
-    Github::ProfileSummaryService.stub :call, ServiceResult.failure(StandardError.new("oops")) do
+    GithubProfile::ProfileSummaryService.stub :call, ServiceResult.failure(StandardError.new("oops")) do
       get root_path
       assert_response :success
       assert_match /Sign in/, @response.body

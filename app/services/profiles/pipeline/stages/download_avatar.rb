@@ -18,7 +18,7 @@ module Profiles
           end
 
           trace(:started, avatar_url: avatar_url)
-          download = Github::DownloadAvatarService.call(avatar_url: avatar_url, login: login)
+          download = GithubProfile::DownloadAvatarService.call(avatar_url: avatar_url, login: login)
 
           if download.success?
             relative_path = download.value

@@ -6,6 +6,7 @@ module Profiles
     def perform(limit: nil, date: Date.today)
       scope = Profile.all
       scope = scope.limit(limit.to_i) if limit.present?
+      metrics_dataset = AppConfig.axiom[:metrics_dataset]
 
       scope.find_each do |p|
         begin
@@ -27,12 +28,6 @@ module Profiles
           StructuredLogger.info(event) if defined?(StructuredLogger)
 
           # Optional: send to a dedicated Axiom dataset for metrics
-          metrics_dataset = (
-            (Rails.application.credentials.dig(:axiom, :metrics_dataset) rescue nil) ||
-            ENV["AXIOM_METRICS_DATASET"] ||
-            (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) ||
-            ENV["AXIOM_DATASET"]
-          )
           if metrics_dataset.present?
             begin
               Axiom::IngestService.call(dataset: metrics_dataset, events: [ event.merge(ts: Time.current.utc.iso8601, level: "INFO", kind: "profile_stats") ])

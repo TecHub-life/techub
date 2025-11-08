@@ -1,4 +1,4 @@
-module Gemini
+module Avatars
   class AvatarPromptService < ApplicationService
     DEFAULT_STYLE_PROFILE = "cinematic tech illustration with abstract motifs; tasteful, modern, and legible without overbearing faces".freeze
 

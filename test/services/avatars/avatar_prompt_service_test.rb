@@ -1,6 +1,6 @@
 require "test_helper"
 
-module Gemini
+module Avatars
   class AvatarPromptServiceTest < ActiveSupport::TestCase
     test "returns combined description and prompt" do
       structured = {
@@ -17,7 +17,7 @@ module Gemini
       )
 
       Gemini::ImageDescriptionService.stub :call, description_result do
-        result = Gemini::AvatarPromptService.call(avatar_path: "public/avatars/demo.png")
+        result = Avatars::AvatarPromptService.call(avatar_path: "public/avatars/demo.png")
 
         assert result.success?
         assert_equal "A playful avatar with teal gradients.", result.value[:avatar_description]
@@ -49,7 +49,7 @@ module Gemini
       failure = ServiceResult.failure(StandardError.new("nope"))
 
       Gemini::ImageDescriptionService.stub :call, failure do
-        result = Gemini::AvatarPromptService.call(avatar_path: "public/avatars/demo.png")
+        result = Avatars::AvatarPromptService.call(avatar_path: "public/avatars/demo.png")
 
         assert result.failure?
         assert_equal "nope", result.error.message
@@ -62,7 +62,7 @@ module Gemini
         calls << kwargs
         ServiceResult.failure(StandardError.new("forced stop"))
       end do
-        Gemini::AvatarPromptService.call(avatar_path: "public/avatars/demo.png", provider: "ai_studio")
+        Avatars::AvatarPromptService.call(avatar_path: "public/avatars/demo.png", provider: "ai_studio")
       end
 
       assert_equal 1, calls.size

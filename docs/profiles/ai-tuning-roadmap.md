@@ -8,7 +8,7 @@ guardrails we just added so future tweaks do not break the public JSON consumed 
 ## Current data flow (code refs)
 
 - GitHub ingest: `Profiles::GeneratePipelineService` orchestrates stages that call
-  `Github::ProfileSummaryService` and persist results
+  `GithubProfile::ProfileSummaryService` and persist results
   (`app/services/profiles/generate_pipeline_service.rb`).
 - Heuristic card synthesis: `Profiles::SynthesizeCardService` computes base stats using followers,
   repo stars, organisations, and activity (`app/services/profiles/synthesize_card_service.rb`).

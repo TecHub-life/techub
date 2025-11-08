@@ -39,21 +39,19 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
 - Resend: `RESEND_API_KEY`
   - Home: credentials under `:resend`.
 - Axiom/OTEL:
-  - `AXIOM_TOKEN` — required for OTEL export and dataset ingest (maps from credentials)
-  - `AXIOM_DATASET` — logs/events dataset name (maps from credentials). Keep this for JSON logs.
-  - `AXIOM_METRICS_DATASET` — default dataset for OTEL traces + metrics (falls back to
-    `AXIOM_DATASET` if unset). Use this to keep within the two-dataset free tier.
-  - `AXIOM_TRACES_DATASET` — optional traces dataset override (falls back to
-    `AXIOM_METRICS_DATASET`, then `AXIOM_DATASET`)
-  - `AXIOM_ORG` — Axiom org slug (for Ops UI deep-links only; optional)
-  - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU:
-    `https://api.eu.axiom.co`
-  - `AXIOM_ENABLED` — optional override. Default: production forwards automatically when token +
-    dataset are present; other environments stay off unless this flag is set to `1`.
-  - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTEL base endpoint (default US traces endpoint)
-    - US: `https://api.axiom.co/v1/traces`
-    - EU: `https://api.eu.axiom.co/v1/traces`
-  - `OTEL_METRICS_EXPORT_INTERVAL_MS` — metrics export interval (default 60000) for dev forcing.
+  - Secret: `AXIOM_TOKEN` — required for OTEL export and dataset ingest (set via credentials or CI
+    secrets).
+  - Non-secret overrides (defaults live in `AppConfig.axiom` as `otel-logs`/`otel-traces`):
+    - `AXIOM_DATASET` — structured logs dataset (default `otel-logs`)
+    - `AXIOM_TRACES_DATASET` — OTEL traces dataset (default `otel-traces`)
+    - `AXIOM_METRICS_DATASET` — optional metrics override (defaults to traces dataset)
+    - `AXIOM_ORG` — org slug for Ops deep-links (default `echosight-7xtu`)
+    - `AXIOM_BASE_URL` — region base URL. Default US `https://api.axiom.co`; EU:
+      `https://api.eu.axiom.co`
+    - `AXIOM_ENABLED` — optional override. Production forwards automatically when the token is
+      present; other environments stay off unless this flag is set to `1`.
+    - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTLP base endpoint (defaults to `<base_url>/v1/traces`)
+    - `OTEL_METRICS_EXPORT_INTERVAL_MS` — metrics export interval (default 60000) for dev forcing.
   - Refs: config/initializers/structured_logging.rb, config/initializers/axiom.rb,
     config/initializers/opentelemetry.rb, app/services/axiom/ingest_service.rb,
     .github/workflows/ci.yml, .github/workflows/kamal-deploy.yml.

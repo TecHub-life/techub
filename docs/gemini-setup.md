@@ -67,7 +67,7 @@ PROVIDER=ai_studio bundle exec rake "gemini:avatar_prompt[loftwah]"
 > **zsh tip**: wrap the task name in quotes (or escape the brackets) so the shell doesn't treat `[]`
 > specially, e.g. `bundle exec rake "gemini:avatar_prompt[loftwah]"`.
 
-The task composes `Gemini::ImageDescriptionService` and `Gemini::AvatarPromptService`, printing the
+The task composes `Gemini::ImageDescriptionService` and `Avatars::AvatarPromptService`, printing the
 avatar description and four ratio-ready prompts (1×1, 16×9, 3×1, 9×16). Failures include debug
 metadata so you can inspect Gemini responses quickly. Prompts simply restate the avatar description
 plus structured traits, giving image models a grounded brief without extra UI instructions.
@@ -84,7 +84,7 @@ bundle exec rake "gemini:avatar_generate:verify"
 bundle exec rake "gemini:avatar_generate[loftwah,Neon anime hero energy,public/avatars/loftwah.png,public/generated]"
 ```
 
-This drives `Gemini::AvatarImageSuiteService`, generating PNGs for the four aspect ratios via
+This drives `Avatars::AvatarImageSuiteService`, generating PNGs for the four aspect ratios via
 `Gemini::ImageGenerationService` and writing them to `public/generated/<login>/`. When both
 providers are used together (verify task), files are suffixed by provider to avoid overwrites, e.g.
 `avatar-1x1-ai_studio.png` and `avatar-1x1-vertex.png`. The command prints paths for easy preview

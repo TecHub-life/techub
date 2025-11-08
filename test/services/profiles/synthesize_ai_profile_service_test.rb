@@ -30,21 +30,8 @@ module Profiles
         archetype: Motifs::Catalog.archetype_names.first
       }
 
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          body = { candidates: [ { content: { parts: [ { text: payload.to_json } ] }, finishReason: "STOP" } ] }
-          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
-        end
-      end
-
-      dummy_conn = Faraday.new do |f|
-        f.request :json
-        f.response :json, content_type: /json/
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        with_structured_responses([ structured_success(payload) ]) do |_calls|
           result = Profiles::SynthesizeAiProfileService.call(profile: @profile)
           assert result.success?, "expected success, got: #{result.error&.message}"
           card = @profile.reload.profile_card
@@ -54,8 +41,6 @@ module Profiles
           assert_match(/\A(Ace|[2-9]|10|Jack|Queen|King) of [♣♦♥♠]\z/, card.playing_card)
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
     test "fills missing tags without introducing duplicates" do
@@ -82,21 +67,8 @@ module Profiles
         archetype: Motifs::Catalog.archetype_names.first
       }
 
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          body = { candidates: [ { content: { parts: [ { text: payload.to_json } ] }, finishReason: "STOP" } ] }
-          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
-        end
-      end
-
-      dummy_conn = Faraday.new do |f|
-        f.request :json
-        f.response :json, content_type: /json/
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        with_structured_responses([ structured_success(payload) ]) do
           result = Profiles::SynthesizeAiProfileService.call(profile: @profile)
           assert result.success?, "expected success, got: #{result.error&.message}"
           card = @profile.reload.profile_card
@@ -104,8 +76,6 @@ module Profiles
           assert_equal Array(card.tags).uniq.length, Array(card.tags).length
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
     test "strict re-ask fixes invalid output (tags count)" do
@@ -142,27 +112,13 @@ module Profiles
         playing_card: "Ace of ♣"
       )
 
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        # First attempt returns invalid JSON content
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          body = { candidates: [ { content: { parts: [ { text: bad.to_json } ] }, finishReason: "STOP" } ] }
-          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
-        end
-        # Second attempt (strict) returns valid content
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          body = { candidates: [ { content: { parts: [ { text: good.to_json } ] }, finishReason: "STOP" } ] }
-          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
-        end
-      end
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        responses = [
+          structured_success(bad),
+          structured_success(good)
+        ]
 
-      dummy_conn = Faraday.new do |f|
-        f.request :json
-        f.response :json, content_type: /json/
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+        with_structured_responses(responses) do
           res = Profiles::SynthesizeAiProfileService.call(profile: @profile)
           assert res.success?
           card = @profile.reload.profile_card
@@ -170,8 +126,6 @@ module Profiles
           assert_match(/\A(Ace|[2-9]|10|Jack|Queen|King) of [♣♦♥♠]\z/, card.playing_card)
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
     test "overrides enforce Loftwah choices" do
@@ -199,21 +153,8 @@ module Profiles
         archetype: Motifs::Catalog.archetype_names.first
       }
 
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          body = { candidates: [ { content: { parts: [ { text: payload.to_json } ] }, finishReason: "STOP" } ] }
-          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
-        end
-      end
-
-      dummy_conn = Faraday.new do |f|
-        f.request :json
-        f.response :json, content_type: /json/
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        with_structured_responses([ structured_success(payload) ]) do
           result = Profiles::SynthesizeAiProfileService.call(profile: prof)
           assert result.success?
           card = prof.reload.profile_card
@@ -222,8 +163,6 @@ module Profiles
           assert_equal "The Hero", card.archetype
         end
       end
-
-      stubs.verify_stubbed_calls
     end
 
     test "empty first attempt records preview metadata" do
@@ -250,34 +189,47 @@ module Profiles
         archetype: Motifs::Catalog.archetype_names.first
       }
 
-      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          empty_body = { candidates: [ { content: { parts: [ { text: "Content filtered by safety." } ] }, finishReason: "SAFETY" } ] }
-          [ 200, { "Content-Type" => "application/json" }, empty_body.to_json ]
-        end
-        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do |_env|
-          body = { candidates: [ { content: { parts: [ { text: good_payload.to_json } ] }, finishReason: "STOP" } ] }
-          [ 200, { "Content-Type" => "application/json" }, body.to_json ]
-        end
-      end
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        responses = [
+          ServiceResult.success(
+            {},
+            metadata: { provider: "ai_studio", finish_reason: "SAFETY", http_status: 200, raw_text: "Content filtered by safety." }
+          ),
+          structured_success(good_payload)
+        ]
 
-      dummy_conn = Faraday.new do |f|
-        f.request :json
-        f.response :json, content_type: /json/
-        f.adapter :test, stubs
-      end
-
-      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
-        Gemini::Configuration.stub :provider, "ai_studio" do
+        with_structured_responses(responses) do
           result = Profiles::SynthesizeAiProfileService.call(profile: @profile)
           assert result.success?
           attempts = result.metadata[:attempts]
-          assert_equal true, attempts.first[:empty]
+          assert_equal "SAFETY", attempts.first[:finish_reason]
           assert_equal "Content filtered by safety.", attempts.first[:preview]
         end
       end
+    end
+    private
 
-      stubs.verify_stubbed_calls
+    def structured_success(payload, finish_reason: "STOP", provider: "ai_studio", raw_text: nil)
+      ServiceResult.success(
+        payload.transform_keys(&:to_s),
+        metadata: {
+          provider: provider,
+          finish_reason: finish_reason,
+          http_status: 200,
+          raw_text: raw_text || payload.to_json
+        }
+      )
+    end
+
+    def with_structured_responses(responses)
+      calls = []
+      Gemini::StructuredOutputService.stub :call, ->(**kwargs) do
+        calls << kwargs
+        raise "no stubbed response" if responses.empty?
+        responses.shift
+      end do
+        yield calls
+      end
     end
   end
 end
