@@ -1,6 +1,6 @@
 require "test_helper"
 
-module Github
+module GithubProfile
   class DownloadReadmeImagesServiceTest < ActiveSupport::TestCase
     setup do
       @login = "testuser-#{SecureRandom.hex(4)}"

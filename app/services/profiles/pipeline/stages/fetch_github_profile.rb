@@ -6,7 +6,7 @@ module Profiles
 
         def call
           trace(:started)
-          result = Github::ProfileSummaryService.call(login: login, client: user_octokit_client)
+          result = GithubProfile::ProfileSummaryService.call(login: login, client: user_octokit_client)
 
           if result.failure? && user_octokit_client.present?
             StructuredLogger.warn(
@@ -15,7 +15,7 @@ module Profiles
               error: result.error&.message
             ) if defined?(StructuredLogger)
             trace(:fallback, via: :app_client, error: result.error&.message)
-            result = Github::ProfileSummaryService.call(login: login)
+            result = GithubProfile::ProfileSummaryService.call(login: login)
           end
 
           if result.failure?

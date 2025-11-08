@@ -1,6 +1,6 @@
 require "open-uri"
 
-module Github
+module GithubProfileProfile
   class DownloadAvatarService < ApplicationService
     def initialize(avatar_url:, login:)
       @avatar_url = avatar_url

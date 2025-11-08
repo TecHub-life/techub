@@ -1,4 +1,4 @@
-module Github
+module GithubProfile
   class FetchPinnedReposService < ApplicationService
     def initialize(login:, client: nil)
       @login = login

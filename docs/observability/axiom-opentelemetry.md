@@ -6,28 +6,34 @@ This guide explains how to wire TecHub logs and traces to Axiom using JSON logs 
 ## Logs → Axiom
 
 - Current logging is JSON to STDOUT via `config/initializers/structured_logging.rb`.
-- `AppConfig.axiom` centralises token, dataset, region, and trace URLs; the logger and ops panel
-  read through it so runtime and doctor output stay consistent.
-- If tokens/datasets are present, logs are forwarded to Axiom (best-effort) when
-  `AppConfig.axiom_forwarding(force: false)[:allowed]` resolves to `true`.
-- Configure (env or Rails credentials):
-  - `AXIOM_TOKEN`: Axiom personal or ingest token (sensitive)
-  - `AXIOM_ORG`: your org slug (e.g., `echosight-7xtu`) — non‑sensitive
-  - `AXIOM_DATASET`: logs/events dataset (e.g., `techub`) — non‑sensitive
-  - `AXIOM_TRACES_DATASET`: optional traces dataset override (defaults to the metrics dataset, then
-    `AXIOM_DATASET`) — non‑sensitive
-  - `AXIOM_METRICS_DATASET`: metrics dataset (e.g., `techub-metrics`). On the free plan, this also
-    serves as the default destination for all OTEL traffic so logs and traces stay within the
-    two‑dataset limit.
-  - `AXIOM_BASE_URL`: region base URL (`https://api.axiom.co` US default, EU:
-    `https://api.eu.axiom.co`)
-  - `OTEL_EXPORTER_OTLP_ENDPOINT`: traces endpoint (defaults to `https://api.axiom.co/v1/traces`;
-    use EU endpoint if applicable)
-  - `OTEL_SERVICE_NAME`: service name for traces (defaults to `techub`)
-  - Optional UI links (override): `AXIOM_DATASET_URL`, `AXIOM_METRICS_DATASET_URL`,
-    `AXIOM_TRACES_URL`
+- `AppConfig.axiom` centralises token, dataset, region, and trace URLs; the logger and Ops panel read
+  through it so runtime and doctor output stay consistent.
+- The only Axiom secret is the ingest token. It lives in Rails credentials (`axiom.token`) and is
+  copied to `AXIOM_TOKEN` at boot. All other values are non‑secret defaults baked into
+  `AppConfig.axiom` and can be overridden with env vars when needed.
+- Dataset layout (keeps us within the two-dataset allowance on Axiom’s free tier):
+  - `otel-logs`: StructuredLogger output, CI/deploy events, and any structured JSON we push directly.
+    Override via `AXIOM_DATASET`.
+  - `otel-traces`: OpenTelemetry traces today and metrics once Axiom enables OTEL metrics. Override
+    via `AXIOM_TRACES_DATASET` (and optionally `AXIOM_METRICS_DATASET`, which defaults to the same
+    value).
+- Additional non-secret knobs:
+  - `AXIOM_ORG`: org slug for Ops deep links (default `echosight-7xtu`)
+  - `AXIOM_BASE_URL`: region base URL (`https://api.axiom.co` US default, EU `https://api.eu.axiom.co`)
+  - `OTEL_EXPORTER_OTLP_ENDPOINT`: OTLP base endpoint (defaults to `<base_url>/v1/traces`)
+  - Optional UI overrides: `AXIOM_DATASET_URL`, `AXIOM_METRICS_DATASET_URL`,
+    `AXIOM_TRACES_DATASET_URL`, `AXIOM_TRACES_URL`
+- If `AXIOM_TOKEN` is present, `AppConfig.axiom_forwarding(force: false)` automatically enables
+  forwarding in production; other environments can opt in via `AXIOM_ENABLED=1`.
 
-  In production, deploy with these variables to enable forwarding.
+### Why exactly two datasets?
+
+- Axiom’s free tier includes two datasets. Using `otel-logs` for everything JSON and `otel-traces`
+  for OTEL lets us stay within that allowance without sacrificing signal.
+- When Axiom enables OTEL metrics, they’ll piggyback on `otel-traces` so we still occupy two
+  datasets.
+- If you need additional segmentation later, flip the env vars (`AXIOM_DATASET`, `AXIOM_TRACES_DATASET`)
+  without touching credentials.
 
 Quick doctor
 
@@ -58,6 +64,16 @@ bin/rails 'axiom:smoke[hello_world]'
 - Payload: arbitrary keys depending on call site
 - Emit programmatically via `StructuredLogger.info/warn/error/debug(hash_or_message, extra: ...)`.
 
+### Structured logs vs. OTEL logs
+
+- StructuredLogger pushes curated JSON events (CI, deploys, ops actions, job lifecycle) straight
+  into `otel-logs`. Each entry contains high-signal fields and can be enriched with domain-specific
+  metadata.
+- OTEL logs are part of the OTLP spec, but Axiom already receives our high-value logs via the
+  structured channel. We keep OTEL logs disabled to avoid redundant ingest and stay within dataset
+  quotas. If we ever need OTEL logs (for automatic log correlation from agents), they can target the
+  same `otel-logs` dataset without touching credentials.
+
 Release correlation
 
 - Set `APP_VERSION` (preferred) or `GIT_SHA` in the environment to annotate every log with
@@ -71,15 +87,18 @@ Job correlation
 
 Forwarding controls
 
-- Set `AXIOM_TOKEN` and `AXIOM_DATASET` (usually via credentials). Forwarding runs automatically in
-  production when both are present. In other environments, opt in with `AXIOM_ENABLED=1`.
+- Set `AXIOM_TOKEN` in credentials. Logs default to the `otel-logs` dataset, so no extra config is
+  required unless you want different dataset names. Override via `AXIOM_DATASET`, `AXIOM_TRACES_DATASET`, or
+  `AXIOM_METRICS_DATASET` env vars when needed.
+- Forwarding runs automatically in production when the token is present. In other environments, opt
+  in with `AXIOM_ENABLED=1`.
 - You can force a one-off send with `StructuredLogger.info(..., force_axiom: true)` (used by the
   runtime doctor task).
 
 ### CI and Deploy Telemetry
 
-- GitHub Actions emits deployment and CI events to Axiom when `AXIOM_TOKEN` and `AXIOM_DATASET` are
-  present as repository secrets.
+- GitHub Actions emits deployment and CI events to Axiom when `AXIOM_TOKEN` is provided (secret) and
+  `AXIOM_DATASET` is set (can be a non-secret Actions variable, defaults to `otel-logs` locally).
   - Optional: `AXIOM_BASE_URL` secret to target EU region, otherwise defaults to US.
 - CI emits:
   - `ci_start`, `ci_success`, `ci_failed` for the test job
@@ -91,7 +110,9 @@ Forwarding controls
 - Locations:
   - CI workflow: `.github/workflows/ci.yml`
   - Deploy workflow: `.github/workflows/kamal-deploy.yml`
-- Secrets required: `AXIOM_TOKEN`, `AXIOM_DATASET`
+- Secrets required: `AXIOM_TOKEN`
+- Non-secrets (can be Actions variables): `AXIOM_DATASET` (usually `otel-logs`),
+  `AXIOM_BASE_URL` (if not US)
 - Optional:
   - Email on deploy failure via Resend (`RESEND_API_KEY`, `TO_EMAIL`)
 
@@ -104,7 +125,10 @@ Forwarding controls
 ## Traces & Metrics (OpenTelemetry)
 
 We recommend enabling OTEL for Rails, ActiveRecord, and HTTP clients, exporting to Axiom’s OTEL
-endpoint via OTLP/HTTP.
+endpoint via OTLP/HTTP. Axiom currently ingests OTEL traces (and standard logs) — metrics are “coming
+soon” per their docs. We still keep the OTEL metrics exporter wired up so nothing changes when Axiom
+flips the switch; until then, metric export attempts simply no-op. Metrics will share the
+`otel-traces` dataset by default so we remain within the two-dataset allowance.
 
 ### Built-in span helpers
 
@@ -175,19 +199,16 @@ OpenTelemetry::SDK.configure do |c|
 end
 ```
 
-3. Env vars:
+3. Env vars (override only if you need non-default names):
 
-- `AXIOM_TOKEN`: token with tracing ingest permissions
-- `AXIOM_DATASET`: base dataset used for logs (required for Axiom ingest). Also the fallback if you
-  do not provide a separate metrics dataset.
-- `AXIOM_METRICS_DATASET`: metrics/OTEL dataset. OTEL traces and metrics use this by default (to
-  keep logs and traces within the two‑dataset free plan limit).
-  - `AXIOM_TRACES_DATASET`: optional override for traces; falls back to `AXIOM_METRICS_DATASET`,
-    then `AXIOM_DATASET`
+- `AXIOM_TOKEN`: token with tracing ingest permissions (secret; set in credentials/secrets)
+- `AXIOM_DATASET`: structured logs dataset (defaults to `otel-logs` via `AppConfig.axiom`)
+- `AXIOM_TRACES_DATASET`: traces dataset (defaults to `otel-traces`)
+- `AXIOM_METRICS_DATASET`: optional metrics dataset override; defaults to `AXIOM_TRACES_DATASET`
 
-  > **Plan note:** The free Axiom tier only includes two datasets. Keep `AXIOM_DATASET` for JSON
-  > logs/direct ingest and point OTEL (traces + metrics) at `AXIOM_METRICS_DATASET` so everything
-  > fits without buying more capacity.
+  > **Plan note:** We deliberately stick to two datasets (`otel-logs` and `otel-traces`) to stay on
+  > the free tier. OTEL traces (and future metrics) share `otel-traces`; JSON logs, CI/deploy events,
+  > and direct ingest use `otel-logs`.
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: optional; default above (US). EU:
   `https://api.eu.axiom.co/v1/traces`
@@ -225,9 +246,11 @@ Use these names when building dashboards or alerts (e.g., alert when `job.perfor
 
 - In Axiom, create views for error rates, request latency, queue times, and generation failures.
 - Ops panel links (auto-constructed when `AXIOM_ORG` and datasets are set):
-  - Logs dataset: `https://app.axiom.co/${AXIOM_ORG}/datasets/${AXIOM_DATASET}`
-  - Metrics dataset: `https://app.axiom.co/${AXIOM_ORG}/datasets/${AXIOM_METRICS_DATASET}`
-  - Traces: `https://app.axiom.co/${AXIOM_ORG}/traces?service=${OTEL_SERVICE_NAME}`
+  - Logs dataset: `https://app.axiom.co/${AXIOM_ORG}/datasets/${AXIOM_DATASET}` (defaults to
+    `otel-logs`)
+  - Traces dataset: `https://app.axiom.co/${AXIOM_ORG}/datasets/${AXIOM_METRICS_DATASET}`
+    (defaults to `otel-traces`; doubles as the metrics landing spot once Axiom enables OTEL metrics)
+  - Traces UI: `https://app.axiom.co/${AXIOM_ORG}/traces?service=${OTEL_SERVICE_NAME}`
 
 ## Local dev
 

@@ -1,7 +1,7 @@
 module Profiles
   class SynthesizeCardService < ApplicationService
-    DEFAULT_STYLE = if defined?(Gemini::AvatarPromptService) && Gemini::AvatarPromptService.const_defined?(:DEFAULT_STYLE_PROFILE)
-      Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
+    DEFAULT_STYLE = if defined?(Avatars::AvatarPromptService) && Avatars::AvatarPromptService.const_defined?(:DEFAULT_STYLE_PROFILE)
+      Avatars::AvatarPromptService::DEFAULT_STYLE_PROFILE
     else
       "neon-lit anime portrait"
     end

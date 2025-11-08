@@ -19,13 +19,13 @@ eligible users.
 - Signals: account age, repository activity, social proof, meaningful profile (bio/README/pins),
   recent public events
 - Threshold: default 3 signals met (configurable)
-- Integration: `Gemini::AvatarImageSuiteService` accepts `require_profile_eligibility` and
+- Integration: `Avatars::AvatarImageSuiteService` accepts `require_profile_eligibility` and
   `eligibility_threshold`. When enabled, the service exits early for ineligible profiles with signal
   breakdown in metadata.
 
 2. Robust prompt generation with fallback
 
-- Service: `Gemini::AvatarPromptService`
+- Service: `Avatars::AvatarPromptService`
 - Primary: attempt avatar description using Gemini vision
 - Fallback: when the LLM result fails or is weak, synthesize a description from stored `Profile`
   context (name, summary, languages, repos, orgs) and proceed to image generation
@@ -48,7 +48,7 @@ REQUIRE_ELIGIBILITY=true ELIGIBILITY_THRESHOLD=4 bundle exec rake "gemini:avatar
 ```
 
 - Code: pass `require_profile_eligibility: true` and optional `eligibility_threshold:` when calling
-  `Gemini::AvatarImageSuiteService`.
+  `Avatars::AvatarImageSuiteService`.
 
 ### Alternatives considered
 

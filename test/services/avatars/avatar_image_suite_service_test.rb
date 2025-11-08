@@ -63,7 +63,7 @@ class AvatarImageSuiteServiceTest < ActiveSupport::TestCase
 
     out_dir = tmp_dir.join("generated")
 
-    result = Gemini::AvatarImageSuiteService.call(
+    result = Avatars::AvatarImageSuiteService.call(
       login: login,
       avatar_path: avatar_path.to_s,
       output_dir: out_dir.to_s,

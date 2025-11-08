@@ -1,6 +1,6 @@
 require "test_helper"
 
-module Github
+module GithubProfile
   class FetchPinnedReposServiceTest < ActiveSupport::TestCase
     test "fetches and serializes pinned repositories from GraphQL API" do
       graphql_response = {
@@ -46,7 +46,7 @@ module Github
         end
       end.new(graphql_response)
 
-      result = Github::FetchPinnedReposService.call(login: "user", client: client)
+      result = GithubProfile::FetchPinnedReposService.call(login: "user", client: client)
 
       assert result.success?
       pinned_repos = result.value
@@ -67,7 +67,7 @@ module Github
         end
       end.new
 
-      result = Github::FetchPinnedReposService.call(login: "user", client: client)
+      result = GithubProfile::FetchPinnedReposService.call(login: "user", client: client)
 
       assert result.success?
       assert_equal [], result.value

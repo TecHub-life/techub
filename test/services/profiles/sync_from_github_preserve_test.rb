@@ -17,8 +17,8 @@ module Profiles
         # omit sections entirely to test no-association rebuild
       }
 
-      Github::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
-        Github::DownloadAvatarService.stub :call, ServiceResult.failure(StandardError.new("skip")) do
+      GithubProfile::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
+        GithubProfile::DownloadAvatarService.stub :call, ServiceResult.failure(StandardError.new("skip")) do
           result = Profiles::SyncFromGithub.call(login: profile.login)
           assert result.success?
           p2 = result.value.reload
@@ -43,8 +43,8 @@ module Profiles
         # no organizations/languages/repos/recent_activity keys
       }
 
-      Github::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
-        Github::DownloadAvatarService.stub :call, ServiceResult.failure(StandardError.new("skip")) do
+      GithubProfile::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
+        GithubProfile::DownloadAvatarService.stub :call, ServiceResult.failure(StandardError.new("skip")) do
           result = Profiles::SyncFromGithub.call(login: profile.login)
           assert result.success?
           p2 = result.value.reload

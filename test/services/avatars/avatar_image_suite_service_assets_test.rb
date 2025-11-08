@@ -39,7 +39,7 @@ class AvatarImageSuiteServiceAssetsTest < ActiveSupport::TestCase
     FileUtils.mkdir_p(avatar.dirname)
     File.binwrite(avatar, "\x89PNG\r\n")
 
-    result = Gemini::AvatarImageSuiteService.call(
+    result = Avatars::AvatarImageSuiteService.call(
       login: login,
       avatar_path: avatar.to_s,
       output_dir: Rails.root.join("tmp", "generated"),

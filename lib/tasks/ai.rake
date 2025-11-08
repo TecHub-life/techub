@@ -18,7 +18,7 @@ namespace :ai do
   task :images, [ :login ] => :environment do |_, args|
     login = args[:login].to_s.downcase
     abort("Usage: rake ai:images[login]") if login.blank?
-    result = Gemini::AvatarImageSuiteService.call(login: login, output_dir: Rails.root.join("public", "generated"))
+    result = Avatars::AvatarImageSuiteService.call(login: login, output_dir: Rails.root.join("public", "generated"))
     if result.success?
       puts "✓ AI images generated for @#{login}"
     else

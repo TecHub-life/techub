@@ -11,7 +11,7 @@ topics. Users can pick from this library instead of (or before) generating custo
 
 ## Sources and prompts
 
-- Use `Gemini::AvatarImageSuiteService` with non-portrait prompts that emphasize abstract symbolic
+- Use `Avatars::AvatarImageSuiteService` with non-portrait prompts that emphasize abstract symbolic
   motifs per topic.
 - Variants: 16:9 and 3:1 prioritized; 1x1 for avatars where appropriate (non-portrait emblematic
   styles only).

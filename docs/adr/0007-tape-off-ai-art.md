@@ -16,7 +16,7 @@ Decision:
 - When disabled, the services immediately return a failure result with a descriptive reason in
   metadata. Upstream callers degrade gracefully without marking the run partial when the module is
   disabled by policy (expected configuration).
-  - `Gemini::AvatarPromptService` synthesizes prompts from profile context when description is
+  - `Avatars::AvatarPromptService` synthesizes prompts from profile context when description is
     unavailable.
 - Replace AI artwork in the product with pre-existing assets:
   - Pre-made avatars under `app/assets/images/avatars-1x1/`.

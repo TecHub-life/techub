@@ -1,4 +1,4 @@
-module Gemini
+module Avatars
   class AvatarImageSuiteService < ApplicationService
     VARIANTS = {
       "1x1" => { aspect_ratio: "1:1", filename: "avatar-1x1.png" },

@@ -12,7 +12,7 @@ class FetchGithubProfileStageTest < ActiveSupport::TestCase
     failure_result = ServiceResult.failure(StandardError.new("user token expired"))
     success_result = ServiceResult.success({ profile: { id: 99, login: "loftwah" } })
 
-    Github::ProfileSummaryService.stub :call, ->(login:, client: nil) do
+    GithubProfile::ProfileSummaryService.stub :call, ->(login:, client: nil) do
       if client
         calls << :user
         failure_result

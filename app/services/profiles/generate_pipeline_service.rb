@@ -52,7 +52,7 @@ module Profiles
         label: "Pull GitHub data",
         service: Pipeline::Stages::FetchGithubProfile,
         options: {},
-        description: "Fetch GitHub profile + repos via Github::ProfileSummaryService (user token first, app token fallback); stores raw payload on the pipeline context for downstream stages.",
+        description: "Fetch GitHub profile + repos via GithubProfile::ProfileSummaryService (user token first, app token fallback); stores raw payload on the pipeline context for downstream stages.",
         produces: %w[github_payload]
       ),
       Stage.new(

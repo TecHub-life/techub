@@ -452,9 +452,10 @@
                   Logs Dataset
                 </a>
               <% end %>
-              <% if @axiom[:metrics_dataset_url].present? %>
-                <a href="<%= @axiom[:metrics_dataset_url] %>" target="_blank" rel="noopener" class="rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
-                  Metrics Dataset
+              <% traces_dataset_url = @axiom[:traces_dataset_url].presence || @axiom[:metrics_dataset_url] %>
+              <% if traces_dataset_url.present? %>
+                <a href="<%= traces_dataset_url %>" target="_blank" rel="noopener" class="rounded border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
+                  Traces Dataset
                 </a>
               <% end %>
             </div>
@@ -481,7 +482,7 @@
                 <span class="rounded bg-slate-100 px-2 py-0.5 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Reason <%= @axiom_status[:forwarding_reason] %></span>
                 <span class="rounded bg-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-100 px-2 py-0.5 text-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-800 dark:bg-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-900/30 dark:text-<%= @axiom_status[:token_present] ? 'emerald' : 'red' %>-300">Token <%= @axiom_status[:token_present] ? 'Present' : 'Missing' %></span>
                 <span class="rounded bg-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-100 px-2 py-0.5 text-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-800 dark:bg-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-900/30 dark:text-<%= @axiom_status[:dataset_present] ? 'emerald' : 'red' %>-300">Logs dataset <%= @axiom_status[:dataset_present] ? 'Set' : 'Unset' %></span>
-                <span class="rounded bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-100 px-2 py-0.5 text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-800 dark:bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-900/30 dark:text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-300">Metrics dataset <%= @axiom_status[:metrics_dataset_present] ? 'Set' : 'Unset' %></span>
+                <span class="rounded bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-100 px-2 py-0.5 text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-800 dark:bg-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-900/30 dark:text-<%= @axiom_status[:metrics_dataset_present] ? 'emerald' : 'slate' %>-300">Traces dataset <%= @axiom_status[:metrics_dataset_present] ? 'Set' : 'Unset' %></span>
                 <% if @axiom_status[:otel_endpoint].present? %>
                   <span class="rounded bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">OTEL endpoint set</span>
                 <% else %>
@@ -550,7 +551,7 @@
                   <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
                   <div class="space-y-1.5">
                     <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dataset</label>
-                    <input type="text" name="dataset" placeholder="<%= (Rails.application.credentials.dig(:axiom, :dataset) rescue nil) || ENV['AXIOM_DATASET'] || 'techub' %>" class="<%= ui_input_class %>">
+                    <input type="text" name="dataset" placeholder="<%= AppConfig.axiom[:dataset] %>" class="<%= ui_input_class %>">
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Body (JSON array or object)</label>

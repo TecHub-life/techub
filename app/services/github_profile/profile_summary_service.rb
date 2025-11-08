@@ -1,4 +1,4 @@
-module Github
+module GithubProfile
   class ProfileSummaryService < ApplicationService
     def initialize(login:, client: nil)
       @login = login
@@ -63,7 +63,7 @@ module Github
       content = Base64.decode64(readme[:content])
 
       # Download images and update content with local paths
-      result = Github::DownloadReadmeImagesService.call(
+      result = GithubProfile::DownloadReadmeImagesService.call(
         readme_content: content,
         login: login
       )
@@ -108,7 +108,7 @@ module Github
     end
 
     def fetch_pinned_repos(github_client)
-      result = Github::FetchPinnedReposService.call(login: login, client: github_client)
+      result = GithubProfile::FetchPinnedReposService.call(login: login, client: github_client)
       result.success? ? result.value : []
     end
 

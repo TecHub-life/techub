@@ -6,8 +6,8 @@ module Profiles
       user = User.create!(github_id: 777, login: "owner")
       payload = { profile: { id: 7001, login: "firstrun", avatar_url: "https://example.com/a.png" } }
 
-      Github::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
-        Github::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/firstrun.png") do
+      GithubProfile::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
+        GithubProfile::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/firstrun.png") do
           assert_enqueued_with(job: Profiles::GeneratePipelineJob, args: [ "firstrun", { trigger_source: "submit_profile_job" } ]) do
             Profiles::SubmitProfileJob.perform_now("firstRun", user.id)
           end
@@ -20,8 +20,8 @@ module Profiles
       prof = Profile.create!(github_id: 7002, login: "second")
       prof.update_columns(last_ai_regenerated_at: Time.current)
 
-      Github::ProfileSummaryService.stub :call, ServiceResult.success({ profile: { id: prof.github_id, login: prof.login, avatar_url: "https://example.com/b.png" } }) do
-        Github::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/second.png") do
+      GithubProfile::ProfileSummaryService.stub :call, ServiceResult.success({ profile: { id: prof.github_id, login: prof.login, avatar_url: "https://example.com/b.png" } }) do
+        GithubProfile::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/second.png") do
           assert_enqueued_with(job: Profiles::GeneratePipelineJob, args: [ "second", { trigger_source: "submit_profile_job" } ]) do
             Profiles::SubmitProfileJob.perform_now("second", user.id)
           end

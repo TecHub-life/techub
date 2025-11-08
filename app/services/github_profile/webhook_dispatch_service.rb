@@ -1,4 +1,4 @@
-module Github
+module GithubProfile
   class WebhookDispatchService < ApplicationService
     HANDLED_EVENTS = {
       "workflow_run" => "Github::WorkflowRunHandlerJob"

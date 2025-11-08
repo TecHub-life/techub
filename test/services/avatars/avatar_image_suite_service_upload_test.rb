@@ -54,7 +54,7 @@ class AvatarImageSuiteServiceUploadTest < ActiveSupport::TestCase
 
     Storage::ServiceProfile.stub :remote_service?, true do
       Storage::ActiveStorageUploadService.stub :call, ServiceResult.success({ public_url: "https://cdn.example/x.png" }) do
-        result = Gemini::AvatarImageSuiteService.call(
+        result = Avatars::AvatarImageSuiteService.call(
           login: login,
           avatar_path: tmp_avatar.to_s,
           output_dir: Rails.root.join("tmp", "generated"),

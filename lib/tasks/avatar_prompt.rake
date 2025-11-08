@@ -9,7 +9,7 @@ namespace :gemini do
   task :avatar_prompt, [ :login, :avatar_path, :style, :provider ] => :environment do |_, args|
     login = args[:login] || ENV["LOGIN"] || "loftwah"
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
-    style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
+    style_profile = args[:style] || ENV["STYLE"] || Avatars::AvatarPromptService::DEFAULT_STYLE_PROFILE
     provider = args[:provider] || ENV["PROVIDER"]
 
     if login.blank? && avatar_path.blank?
@@ -19,7 +19,7 @@ namespace :gemini do
 
     avatar_path ||= Rails.root.join("public", "avatars", "#{login}.png")
 
-    result = Gemini::AvatarPromptService.call(
+    result = Avatars::AvatarPromptService.call(
       avatar_path: avatar_path,
       style_profile: style_profile,
       provider: provider
@@ -65,7 +65,7 @@ namespace :gemini do
   task :avatar_generate, [ :login, :style, :avatar_path, :output_dir, :provider ] => :environment do |_, args|
     login = args[:login] || ENV["LOGIN"] || "loftwah"
 
-    style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
+    style_profile = args[:style] || ENV["STYLE"] || Avatars::AvatarPromptService::DEFAULT_STYLE_PROFILE
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
     output_dir = args[:output_dir] || ENV["OUTPUT_DIR"] || Rails.root.join("public", "generated").to_s
     provider = args[:provider] || ENV["PROVIDER"]
@@ -73,7 +73,7 @@ namespace :gemini do
     require_eligibility = [ "1", "true", "yes" ].include?(ENV["REQUIRE_ELIGIBILITY"].to_s.downcase)
     eligibility_threshold = (ENV["ELIGIBILITY_THRESHOLD"] || Eligibility::GithubProfileScoreService::DEFAULT_THRESHOLD).to_i
 
-    result = Gemini::AvatarImageSuiteService.call(
+    result = Avatars::AvatarImageSuiteService.call(
       login: login,
       avatar_path: avatar_path,
       output_dir: output_dir,
@@ -124,7 +124,7 @@ namespace :gemini do
       verbose = [ "1", "true", "yes" ].include?(ENV["VERBOSE"].to_s.downcase)
       login = args[:login] || ENV["LOGIN"]
       avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
-      style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
+      style_profile = args[:style] || ENV["STYLE"] || Avatars::AvatarPromptService::DEFAULT_STYLE_PROFILE
 
       if login.blank? && avatar_path.blank?
         warn "Usage: rake gemini:avatar_prompt:verify[github_login]"
@@ -141,7 +141,7 @@ namespace :gemini do
           next
         end
         puts "\n=== Avatar prompt via #{provider} ==="
-        result = Gemini::AvatarPromptService.call(
+        result = Avatars::AvatarPromptService.call(
           avatar_path: avatar_path,
           style_profile: style_profile,
           provider: provider
@@ -180,7 +180,7 @@ namespace :gemini do
       verbose = [ "1", "true", "yes" ].include?(ENV["VERBOSE"].to_s.downcase)
       login = args[:login] || ENV["LOGIN"] || "loftwah"
 
-      style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
+      style_profile = args[:style] || ENV["STYLE"] || Avatars::AvatarPromptService::DEFAULT_STYLE_PROFILE
       avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
       output_dir = args[:output_dir] || ENV["OUTPUT_DIR"] || Rails.root.join("public", "generated").to_s
 
@@ -195,7 +195,7 @@ namespace :gemini do
           next
         end
         puts "\n=== Avatar generate via #{provider} ==="
-        result = Gemini::AvatarImageSuiteService.call(
+        result = Avatars::AvatarImageSuiteService.call(
           login: login,
           avatar_path: avatar_path,
           output_dir: output_dir,
@@ -269,7 +269,7 @@ namespace :gemini do
     login = args[:login] || ENV["LOGIN"] || "loftwah"
 
     avatar_path = args[:avatar_path] || ENV["AVATAR_PATH"]
-    style_profile = args[:style] || ENV["STYLE"] || Gemini::AvatarPromptService::DEFAULT_STYLE_PROFILE
+    style_profile = args[:style] || ENV["STYLE"] || Avatars::AvatarPromptService::DEFAULT_STYLE_PROFILE
     output_dir = args[:output_dir] || ENV["OUTPUT_DIR"] || Rails.root.join("tmp", "generated_verify").to_s
 
     Rake::Task["gemini:avatar_prompt:verify"].invoke(login, avatar_path, style_profile)
