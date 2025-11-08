@@ -43,6 +43,7 @@ Quick doctor
 ```bash
 bin/rails axiom:doctor
 ```
+
 - Output now includes the source of each dataset (ENV override vs AppConfig default). If it still
   shows `techub`, check for leftover `AXIOM_DATASET` / `AXIOM_TRACES_DATASET` env vars lingering in
   your shell or `.env`.
@@ -52,6 +53,7 @@ bin/rails axiom:doctor
 ```bash
 bin/rails axiom:runtime_doctor
 ```
+
 - Forwarding is disabled outside production by default; set `AXIOM_ENABLED=1` when you need to run
   this in development/staging.
 
