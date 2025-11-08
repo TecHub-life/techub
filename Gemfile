@@ -29,6 +29,8 @@ gem "rack-cors" # CORS support for API
 gem "opentelemetry-sdk"
 gem "opentelemetry-exporter-otlp"
 gem "opentelemetry-instrumentation-all"
+gem "opentelemetry-metrics-sdk"
+gem "opentelemetry-exporter-otlp-metrics"
 gem "nokogiri"
 gem "ruby-vips", require: false
 

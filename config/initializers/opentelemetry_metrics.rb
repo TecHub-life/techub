@@ -1,9 +1,11 @@
 # OpenTelemetry application metrics (HTTP, DB, Jobs, Process)
 begin
   require "opentelemetry/sdk"
+  require "opentelemetry-metrics-sdk"
   require "active_support/notifications"
 
-  meter = OpenTelemetry.meter_provider.meter("techub.metrics", "1.0")
+  meter = OpenTelemetry.meter_provider.meter("techub.metrics", version: "1.0")
+  rails_env = Rails.env.to_s
 
   # HTTP server metrics (Rails controller layer)
   http_req_total = meter.create_counter(
@@ -30,7 +32,7 @@ begin
       action = payload[:action].to_s
       method = payload[:method].to_s.upcase
       route = payload[:path].to_s
-      attrs = { "http.method" => method, "http.status_code" => status, controller: controller, action: action, route: route, env: Rails.env }
+      attrs = { "http.method" => method, "http.status_code" => status, controller: controller, action: action, route: route, env: rails_env }
       http_req_total.add(1, attributes: attrs)
       http_req_duration.record(duration_ms, attributes: attrs)
       if payload[:exception] || status.to_i >= 500
@@ -58,7 +60,7 @@ begin
       return if name == "SCHEMA" || name == "TRANSACTION"
       duration_ms = ((finish - start) * 1000.0)
       adapter = ActiveRecord::Base.connection_db_config.adapter.to_s rescue "unknown"
-      attrs = { adapter: adapter, name: name, env: Rails.env }
+      attrs = { adapter: adapter, name: name, env: rails_env }
       db_query_total.add(1, attributes: attrs)
       db_query_duration.record(duration_ms, attributes: attrs)
     rescue StandardError
@@ -91,7 +93,7 @@ begin
     begin
       job_class = payload[:job].class.name rescue payload[:job]&.to_s
       queue = payload[:job].queue_name rescue payload[:queue]
-      attrs = { job: job_class.to_s, queue: queue.to_s, env: Rails.env }
+      attrs = { job: job_class.to_s, queue: queue.to_s, env: rails_env }
       job_enqueued_total.add(1, attributes: attrs)
     rescue StandardError
     end
@@ -102,7 +104,7 @@ begin
       duration_ms = ((finish - start) * 1000.0)
       job_class = payload[:job].class.name rescue payload[:job]&.to_s
       queue = payload[:job].queue_name rescue payload[:queue]
-      attrs = { job: job_class.to_s, queue: queue.to_s, env: Rails.env }
+      attrs = { job: job_class.to_s, queue: queue.to_s, env: rails_env }
       job_performed_total.add(1, attributes: attrs)
       job_duration.record(duration_ms, attributes: attrs)
     rescue StandardError
@@ -118,7 +120,7 @@ begin
             block.call
           rescue StandardError
             begin
-              attrs = { job: job.class.name.to_s, queue: job.queue_name.to_s, env: Rails.env }
+              attrs = { job: job.class.name.to_s, queue: job.queue_name.to_s, env: rails_env }
               job_failed_total.add(1, attributes: attrs)
             rescue StandardError
             end
@@ -131,18 +133,13 @@ begin
   end
 
   # Process metrics (observables)
-  meter.create_observable_gauge(
-    "process_resident_memory_bytes",
-    unit: "By",
-    description: "Resident set size (bytes)"
-  ) do |observer|
+  process_memory_callback = lambda do |observer|
     begin
       rss_bytes = nil
       if File.exist?("/proc/self/status")
         File.read("/proc/self/status").each_line do |line|
           if line.start_with?("VmRSS:")
             parts = line.split
-            # VmRSS: <value> kB
             rss_kb = parts[1].to_i
             rss_bytes = rss_kb * 1024
             break
@@ -150,9 +147,21 @@ begin
         end
       end
       rss_bytes ||= (`ps -o rss= -p #{Process.pid}`.to_i * 1024 rescue nil)
-      if rss_bytes
-        observer.observe(rss_bytes, attributes: { env: Rails.env })
-      end
+      observer.observe(rss_bytes, attributes: { env: rails_env }) if rss_bytes
+    rescue StandardError
+    end
+  end
+
+  meter.create_observable_gauge(
+    "process_resident_memory_bytes",
+    unit: "By",
+    description: "Resident set size (bytes)",
+    callback: process_memory_callback
+  )
+
+  thread_count_callback = lambda do |observer|
+    begin
+      observer.observe(Thread.list.count, attributes: { env: rails_env })
     rescue StandardError
     end
   end
@@ -160,13 +169,9 @@ begin
   meter.create_observable_gauge(
     "process_threads",
     unit: "1",
-    description: "Number of Ruby threads"
-  ) do |observer|
-    begin
-      observer.observe(Thread.list.count, attributes: { env: Rails.env })
-    rescue StandardError
-    end
-  end
+    description: "Number of Ruby threads",
+    callback: thread_count_callback
+  )
 rescue LoadError
   # OpenTelemetry not installed; skip
 rescue StandardError => e

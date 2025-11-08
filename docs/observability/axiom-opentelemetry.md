@@ -73,9 +73,9 @@ bin/rails axiom:smoke_all   # alias for axiom:self_test
 This runs the forced StructuredLogger log, emits an OTEL span, and performs a direct ingest call —
 so you cover both datasets plus traces with one command.
 
-- `bin/rails axiom:otel_metrics_smoke` emits a one-off OTEL counter. If the installed
-  `opentelemetry-api/sdk` gems predate the metrics API, the task skips with an explanatory message —
-  upgrade to ≥ 1.2 once Axiom enables OTEL metrics.
+- `bin/rails axiom:otel_metrics_smoke` emits a one-off OTEL counter. It requires the
+  `opentelemetry-metrics-sdk` + `opentelemetry-exporter-otlp-metrics` gems from the Gemfile; without
+  them the task skips with an explanatory message.
 
 ### Log fields
 
@@ -177,6 +177,8 @@ when Axiom flips the switch; until then, metric export attempts simply no-op. Me
 gem "opentelemetry-sdk"
 gem "opentelemetry-exporter-otlp"
 gem "opentelemetry-instrumentation-all"
+gem "opentelemetry-metrics-sdk"
+gem "opentelemetry-exporter-otlp-metrics"
 ```
 
 2. Initialize OTEL (traces + metrics):
@@ -184,7 +186,9 @@ gem "opentelemetry-instrumentation-all"
 ```ruby
 # config/initializers/opentelemetry.rb
 require "opentelemetry/sdk"
+require "opentelemetry-metrics-sdk"
 require "opentelemetry/exporter/otlp"
+require "opentelemetry-exporter-otlp-metrics"
 require "opentelemetry/instrumentation/all"
 
 base = ENV["OTEL_EXPORTER_OTLP_ENDPOINT"].presence || "https://api.axiom.co/v1/traces"
@@ -208,12 +212,12 @@ OpenTelemetry::SDK.configure do |c|
       OpenTelemetry::Exporter::OTLP::Exporter.new(endpoint: traces, headers: traces_headers)
     )
   )
-  reader = OpenTelemetry::SDK::Metrics::Export::PeriodicExportingMetricReader.new(
-    exporter: OpenTelemetry::Exporter::OTLP::MetricExporter.new(
+  reader = OpenTelemetry::SDK::Metrics::Export::PeriodicMetricReader.new(
+    exporter: OpenTelemetry::Exporter::OTLP::Metrics::MetricsExporter.new(
       endpoint: metrics,
       headers: metrics_headers
     ),
-    interval: (ENV["OTEL_METRICS_EXPORT_INTERVAL_MS"].presence || 60000).to_i
+    export_interval_millis: (ENV["OTEL_METRICS_EXPORT_INTERVAL_MS"].presence || 60000).to_i
   )
   c.add_metric_reader(reader)
 end

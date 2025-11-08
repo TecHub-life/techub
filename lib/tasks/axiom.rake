@@ -192,7 +192,7 @@ namespace :axiom do
     begin
       require "opentelemetry/sdk"
       tracer = OpenTelemetry.tracer_provider.tracer("techub.smoke", "1.0")
-      tracer.in_span("otel_smoke", attributes: { "smoke" => true, "env" => Rails.env, "service.name" => "techub" }) do
+      tracer.in_span("otel_smoke", attributes: { "smoke" => true, "env" => Rails.env.to_s, "service.name" => "techub" }) do
         sleep 0.01
       end
       puts "OTEL smoke span emitted — check your Axiom traces UI."
@@ -212,13 +212,13 @@ namespace :axiom do
     begin
       require "opentelemetry/sdk"
       unless OpenTelemetry.respond_to?(:meter_provider)
-        warn "OTEL metrics smoke skipped: current opentelemetry gem does not expose meter APIs. Upgrade opentelemetry-api/sdk >= 1.2 to test metrics."
+        warn "OTEL metrics smoke skipped: OpenTelemetry meter_provider is missing (install opentelemetry-metrics-sdk + otlp metrics exporter)."
         exit 0
       end
-      meter = OpenTelemetry.meter_provider.meter("techub.metrics", "1.0")
+      meter = OpenTelemetry.meter_provider.meter("techub.metrics", version: "1.0")
       counter = meter.create_counter("otel_smoke_metric_total", unit: "1", description: "OTEL metrics smoke counter")
-      counter.add(1, attributes: { env: Rails.env })
-      # Give the PeriodicExportingMetricReader a moment to export on its interval (if short)
+      counter.add(1, attributes: { env: Rails.env.to_s })
+      # Give the PeriodicMetricReader a moment to export on its interval (if short)
       sleep 2
       puts "OTEL metrics smoke emitted — check your Axiom metrics UI for otel_smoke_metric_total."
     rescue LoadError

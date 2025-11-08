@@ -8,7 +8,9 @@ begin
   end
 
   require "opentelemetry/sdk"
+  require "opentelemetry-metrics-sdk"
   require "opentelemetry/exporter/otlp"
+  require "opentelemetry-exporter-otlp-metrics"
   require "opentelemetry/instrumentation/all"
   require "logger"
 
@@ -22,6 +24,7 @@ begin
   base_dataset = axiom_cfg[:dataset]
   metrics_dataset = axiom_cfg[:metrics_dataset]
   traces_dataset = axiom_cfg[:traces_dataset].presence || metrics_dataset.presence || base_dataset
+  metrics_interval_ms = (ENV["OTEL_METRICS_EXPORT_INTERVAL_MS"].presence || 60_000).to_i
 
   # If we lack endpoint or token, skip configuring OTEL entirely to avoid noisy warnings
   if endpoint.present? && token.present?
@@ -36,10 +39,12 @@ begin
     metrics_endpoint = URI.join(base + "/", "v1/metrics").to_s
     ci_run = ActiveModel::Type::Boolean.new.cast(ENV["CI"])
     github_actions = ENV["GITHUB_ACTIONS"] == "true"
+    rails_env = Rails.env.to_s
+    deployment_env = (ENV["OTEL_DEPLOYMENT_ENV"].presence || rails_env).to_s
     resource_attributes = {
-      "techub.rails_env" => Rails.env,
+      "techub.rails_env" => rails_env,
       "techub.app_version" => (ENV["APP_VERSION"].presence || ENV["GIT_SHA"].presence),
-      "deployment.environment" => ENV["OTEL_DEPLOYMENT_ENV"].presence || Rails.env
+      "deployment.environment" => deployment_env
     }
 
     if ci_run || github_actions
@@ -71,7 +76,7 @@ begin
       c.use_all
       if resource_attributes.present?
         ci_resource = OpenTelemetry::SDK::Resources::Resource.create(resource_attributes)
-        c.resource = c.resource ? c.resource.merge(ci_resource) : ci_resource
+        c.resource = ci_resource
       end
       c.add_span_processor(
         OpenTelemetry::SDK::Trace::Export::BatchSpanProcessor.new(
@@ -79,9 +84,9 @@ begin
         )
       )
       begin
-        reader = OpenTelemetry::SDK::Metrics::Export::PeriodicExportingMetricReader.new(
-          exporter: OpenTelemetry::Exporter::OTLP::MetricExporter.new(endpoint: metrics_endpoint, headers: metrics_headers),
-          interval: (ENV["OTEL_METRICS_EXPORT_INTERVAL_MS"].presence || 60_000).to_i
+        reader = OpenTelemetry::SDK::Metrics::Export::PeriodicMetricReader.new(
+          exporter: OpenTelemetry::Exporter::OTLP::Metrics::MetricsExporter.new(endpoint: metrics_endpoint, headers: metrics_headers),
+          export_interval_millis: metrics_interval_ms
         )
         c.add_metric_reader(reader)
       rescue StandardError => e
@@ -90,12 +95,12 @@ begin
     end
 
     begin
-      meter = OpenTelemetry.meter_provider.meter("techub.metrics", "1.0")
+      meter = OpenTelemetry.meter_provider.meter("techub.metrics", version: "1.0")
       heartbeat = meter.create_counter("app_heartbeat_total", unit: "1", description: "Application heartbeat")
       unless defined?(OTEL_HEARTBEAT_THREAD)
         OTEL_HEARTBEAT_THREAD = Thread.new do
           loop do
-            heartbeat.add(1, attributes: { env: Rails.env })
+            heartbeat.add(1, attributes: { env: rails_env })
             sleep 60
           end
         end
