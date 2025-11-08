@@ -55,7 +55,9 @@ module GithubProfile
     attr_reader :login, :client
 
     def fetch_client
-      Github::AppClientService.call
+      return ServiceResult.success(client) if client
+
+      Github::ProfileClientService.call
     end
 
     def fetch_profile_readme(github_client)

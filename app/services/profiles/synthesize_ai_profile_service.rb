@@ -1,8 +1,5 @@
 module Profiles
   class SynthesizeAiProfileService < ApplicationService
-    include Gemini::ResponseHelpers
-    include Gemini::SchemaHelpers
-
     MIN_TAGS = 6
     MAX_TAGS = 6
     TEMPERATURE = 0.7
@@ -24,118 +21,47 @@ module Profiles
 
       ctx = build_context(profile)
       provider = provider_override.presence || Gemini::Configuration.provider
-      client_result = Gemini::ClientService.call(provider: provider)
-      return client_result if client_result.failure?
-      conn = client_result.value
-
       attempts = []
 
-      # First attempt (creative within schema)
-      resp = conn.post(
-        Gemini::Endpoints.text_generate_path(
-          provider: provider,
-          model: Gemini::Configuration.model,
-          project_id: Gemini::Configuration.project_id,
-          location: Gemini::Configuration.location
-        ),
-        build_payload(ctx)
-      )
-      if (200..299).include?(resp.status)
-        attempts << { http_status: resp.status, strict: false }
-        preview = response_text_preview(resp.body)
-      else
-        preview = response_text_preview(resp.body)
-        attempts << { http_status: resp.status, strict: false, error: true, preview: preview }
-        metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(
-          http_status: resp.status,
-          reason: "http_error",
-          body_preview: resp.body.to_s[0, 500]
-        )
-        return failure(StandardError.new("Gemini AI traits request failed"), metadata: metadata)
+      creative_result = request_ai_traits(ctx, provider: provider, strict: false)
+      attempts << attempt_snapshot(creative_result.metadata, strict: false, error: creative_result.failure?)
+
+      if creative_result.failure?
+        metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: creative_result.metadata&.dig(:raw_text))
+          .merge(reason: "provider_error")
+        return failure(creative_result.error || StandardError.new("ai_traits_unavailable"), metadata: metadata)
       end
-      json = extract_json_from_response(resp.body)
-      cleaned = nil
 
-      if json.blank?
-        attempts.last[:empty] = true
-        attempts.last[:preview] = preview if preview.present?
-        if defined?(StructuredLogger)
-          # Enhanced logging to debug extraction failure
-          raw = normalize_to_hash(resp.body)
-          candidates = Array(dig_value(raw, :candidates))
-          first_candidate = candidates.first || {}
-          content = dig_value(first_candidate, :content) || {}
-          parts = Array(dig_value(content, :parts))
-          texts = parts.filter_map { |p| dig_value(p, :text) }.join(" ").strip
-          StructuredLogger.warn(
-            message: "ai_traits_empty_response",
-            login: profile.login,
-            preview: preview,
-            http_status: resp.status,
-            parts_count: parts.length,
-            text_length: texts.length,
-            text_sample: texts[0, 100]
-          )
-        end
-        # Try one strict re-ask before falling back
-        resp_strict = conn.post(
-          Gemini::Endpoints.text_generate_path(
-            provider: provider,
-            model: Gemini::Configuration.model,
-            project_id: Gemini::Configuration.project_id,
-            location: Gemini::Configuration.location
-          ),
-          build_payload(ctx, strict: true)
-        )
-        if (200..299).include?(resp_strict.status)
-          attempts << { http_status: resp_strict.status, strict: true }
-          json2 = extract_json_from_response(resp_strict.body)
-          if json2.present?
-            cleaned = validate_and_normalize(json2)
-            if cleaned.blank? && defined?(StructuredLogger)
-              StructuredLogger.warn(message: "validate_normalize_failed", login: profile.login, json2_keys: json2.keys.sort)
-            end
-          else
-            attempts.last[:empty] = true
-            attempts.last[:preview] = response_text_preview(resp_strict.body) if defined?(StructuredLogger)
-          end
-        else
-          attempts << { http_status: resp_strict.status, strict: true, error: true }
-          attempts.last[:preview] = response_text_preview(resp_strict.body)
+      preview = creative_result.metadata[:raw_text]
+      cleaned = validate_and_normalize(creative_result.value)
+
+      if cleaned.blank?
+        strict_response = request_ai_traits(ctx, provider: provider, strict: true)
+        attempts << attempt_snapshot(strict_response.metadata, strict: true, error: strict_response.failure?)
+        if strict_response.success?
+          strict_cleaned = validate_and_normalize(strict_response.value)
+          cleaned = strict_cleaned if strict_cleaned.present?
         end
 
-        if cleaned.blank?
+        unless cleaned.present?
           metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(reason: "empty_response")
-          return failure(StandardError.new("ai_traits_unavailable"), metadata: metadata)
+          error = strict_response.failure? ? strict_response.error : StandardError.new("ai_traits_unavailable")
+          return failure(error, metadata: metadata)
         end
-      else
-        cleaned = validate_and_normalize(json)
       end
-      # If initial cleaned output violates constraints, attempt a strict re-ask before falling back
+
       unless constraints_ok?(cleaned)
-        # Strict re-ask with lower temperature and explicit correction guidance
-        resp2 = conn.post(
-          Gemini::Endpoints.text_generate_path(
-            provider: provider,
-            model: Gemini::Configuration.model,
-            project_id: Gemini::Configuration.project_id,
-            location: Gemini::Configuration.location
-          ),
-          build_payload(ctx, strict: true)
-        )
-        if (200..299).include?(resp2.status)
-          attempts << { http_status: resp2.status, strict: true }
-          json2 = extract_json_from_response(resp2.body)
-          cleaned2 = validate_and_normalize(json2) if json2.present?
-          cleaned = cleaned2 if cleaned2.present? && constraints_ok?(cleaned2)
-        else
-          attempts << { http_status: resp2.status, strict: true, error: true }
-          attempts.last[:preview] = response_text_preview(resp2.body)
+        strict_response = request_ai_traits(ctx, provider: provider, strict: true)
+        attempts << attempt_snapshot(strict_response.metadata, strict: true, error: strict_response.failure?)
+        if strict_response.success?
+          strict_cleaned = validate_and_normalize(strict_response.value)
+          cleaned = strict_cleaned if strict_cleaned.present? && constraints_ok?(strict_cleaned)
         end
 
         unless cleaned.present? && constraints_ok?(cleaned)
           metadata = ai_metadata(provider: provider, attempts: attempts, ctx: ctx, preview: preview).merge(reason: "constraints")
-          return failure(StandardError.new("ai_traits_invalid"), metadata: metadata)
+          error = strict_response.failure? ? strict_response.error : StandardError.new("ai_traits_invalid")
+          return failure(error, metadata: metadata)
         end
       end
 
@@ -322,22 +248,18 @@ module Profiles
       end
     end
 
-    def build_payload(ctx, strict: false)
+    def request_ai_traits(ctx, provider:, strict: false)
       instruction = strict ? strict_system_prompt : system_prompt
       temp = strict ? 0.25 : TEMPERATURE
-      provider = provider_override.presence || Gemini::Configuration.provider
 
-      adapter = Gemini::Providers::Adapter.for(provider)
-      sys = adapter.system_instruction_hash(instruction)
-      contents = adapter.contents_for_text(ctx.to_json)
-      schema = response_schema_for(provider == "vertex" ? "vertex" : "ai_studio")
-      gen_cfg = adapter.generation_config_hash(
+      Gemini::StructuredOutputService.call(
+        prompt: ctx.to_json,
+        response_schema: response_schema_for(provider),
         temperature: temp,
-        max_tokens: 2300,
-        schema: schema,
-        structured_json: true
+        max_output_tokens: 2300,
+        provider: provider,
+        system_instruction: instruction
       )
-      adapter.envelope(contents: contents, generation_config: gen_cfg, system_instruction: sys)
     end
 
     def system_prompt
@@ -408,67 +330,16 @@ module Profiles
       base
     end
 
-    def extract_structured_json(parts)
-      Array(parts).each do |part|
-        part_hash = part.is_a?(Hash) ? part : part.to_h rescue {}
-        struct = dig_value(part_hash, :structValue) || dig_value(part_hash, :struct_value) || dig_value(part_hash, :jsonValue) || dig_value(part_hash, :json_value)
-        next unless struct.present?
-        return struct if struct.is_a?(Hash)
-      end
-      nil
-    end
-
-    def extract_json_from_response(body)
-      raw = normalize_to_hash(body)
-      # Safely navigate candidates → content → parts without wrapping hashes in arrays incorrectly
-      candidates = Array(dig_value(raw, :candidates))
-      first_candidate = candidates.first || {}
-      content = dig_value(first_candidate, :content) || {}
-      parts = dig_value(content, :parts)
-
-      # Handle case where parts is not an array
-      parts = [ parts ] if parts.is_a?(Hash)
-      parts = [] if parts.nil?
-
-      # First, prefer function-call structured output when present
-      Array(parts).each do |part|
-        fc = dig_value(part, :functionCall) || dig_value(part, :function_call)
-        next unless fc
-        args = dig_value(fc, :args) || dig_value(fc, :arguments)
-        if args.is_a?(Hash)
-          return args
-        elsif args.is_a?(String)
-          parsed = parse_relaxed_json(args)
-          return parsed if parsed.is_a?(Hash)
-        end
-      end
-
-      json = extract_structured_json(parts)
-      texts = Array(parts).filter_map { |p| dig_value(p, :text) }.join(" ").strip
-
-      # Try parsing the text as JSON if no structured response found
-      if json.blank? && texts.present?
-        json = parse_relaxed_json(texts)
-        # If still blank, log for debugging
-        if json.blank? && defined?(StructuredLogger)
-          StructuredLogger.debug(message: "json_extraction_failed", text_preview: texts[0, 200], parts_count: Array(parts).length)
-        end
-      end
-
-      json
-    end
-
-    def response_text_preview(body, limit: 300)
-      raw = normalize_to_hash(body)
-      candidates = Array(dig_value(raw, :candidates))
-      first_candidate = candidates.first || {}
-      content = dig_value(first_candidate, :content) || {}
-      parts = Array(dig_value(content, :parts))
-      text = parts.filter_map { |p| dig_value(p, :text) }.join(" ").to_s.strip
-      return nil if text.blank?
-      text.length > limit ? "#{text[0, limit]}..." : text
-    rescue StandardError
-      nil
+    def attempt_snapshot(metadata, strict:, error: false)
+      meta = metadata || {}
+      {
+        http_status: meta[:http_status],
+        strict: strict,
+        finish_reason: meta[:finish_reason],
+        provider: meta[:provider] || (provider_override.presence || Gemini::Configuration.provider),
+        error: error,
+        preview: meta[:raw_text]
+      }.compact
     end
 
     def validate_and_normalize(h)

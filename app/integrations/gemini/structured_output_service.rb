@@ -5,12 +5,13 @@ module Gemini
 
     DEFAULT_TEMPERATURE = 0.2
 
-    def initialize(prompt:, response_schema:, temperature: DEFAULT_TEMPERATURE, max_output_tokens: 800, provider: nil)
+    def initialize(prompt:, response_schema:, temperature: DEFAULT_TEMPERATURE, max_output_tokens: 800, provider: nil, system_instruction: nil)
       @prompt = prompt
       @response_schema = response_schema
       @temperature = temperature
       @max_output_tokens = max_output_tokens
       @provider_override = provider
+      @system_instruction = system_instruction
     end
 
     def call
@@ -31,13 +32,14 @@ module Gemini
 
       adapter = Gemini::Providers::Adapter.for(provider)
       contents = adapter.contents_for_text(prompt)
-      gen_cfg = adapter.generation_config_hash(
+      generation_config = adapter.generation_config_hash(
         temperature: temperature,
         max_tokens: max_output_tokens,
         schema: response_schema,
         structured_json: true
       )
-      payload = adapter.envelope(contents: contents, generation_config: gen_cfg)
+      instruction = system_instruction.present? ? adapter.system_instruction_hash(system_instruction) : nil
+      payload = adapter.envelope(contents: contents, generation_config: generation_config, system_instruction: instruction)
 
       resp = conn.post(endpoint, payload)
       unless (200..299).include?(resp.status)
@@ -51,22 +53,35 @@ module Gemini
       candidate = Array(dig_value(parsed, :candidates)).first
       content = dig_value(candidate, :content)
       parts = Array(dig_value(content, :parts))
+      finish_reason = dig_value(candidate, :finishReason) || dig_value(candidate, :finish_reason)
 
-      # Prefer structured outputs (function calls or struct/json values); fallback to parsing text
       obj = extract_structured_json(parts)
       if obj.blank?
         json_text = parts.filter_map { |p| dig_value(p, :text) }.join(" ")
         obj = parse_relaxed_json(json_text)
-        return failure(StandardError.new("Invalid structured JSON"), metadata: { provider: provider, raw_preview: json_text.to_s[0, 500] }) unless obj.is_a?(Hash)
+        return failure(
+          StandardError.new("Invalid structured JSON"),
+          metadata: { provider: provider, raw_preview: json_text.to_s[0, 500], http_status: resp.status }
+        ) unless obj.is_a?(Hash)
       end
 
-      success(obj)
+      raw_text = parts.filter_map { |p| dig_value(p, :text) }.join(" ")
+
+      success(
+        obj,
+        metadata: {
+          provider: provider,
+          finish_reason: finish_reason,
+          http_status: resp.status,
+          raw_text: raw_text.presence
+        }.compact
+      )
     rescue Faraday::Error => e
       failure(e)
     end
 
     private
-    attr_reader :prompt, :response_schema, :temperature, :max_output_tokens, :provider_override
+    attr_reader :prompt, :response_schema, :temperature, :max_output_tokens, :provider_override, :system_instruction
 
     def extract_structured_json(parts)
       Array(parts).each do |part|
