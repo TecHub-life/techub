@@ -309,7 +309,8 @@ Purpose: Centralized logs/metrics/traces.
 
 Requirements:
 
-- `axiom.token` in credentials. Override dataset/org/endpoint via env if you need non-default values.
+- `axiom.token` in credentials. Override dataset/org/endpoint via env if you need non-default
+  values.
 
 Behavior if Missing:
 
