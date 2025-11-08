@@ -43,12 +43,17 @@ Quick doctor
 ```bash
 bin/rails axiom:doctor
 ```
+- Output now includes the source of each dataset (ENV override vs AppConfig default). If it still
+  shows `techub`, check for leftover `AXIOM_DATASET` / `AXIOM_TRACES_DATASET` env vars lingering in
+  your shell or `.env`.
 
 - Exercise the StructuredLogger queue and forced/async delivery:
 
 ```bash
 bin/rails axiom:runtime_doctor
 ```
+- Forwarding is disabled outside production by default; set `AXIOM_ENABLED=1` when you need to run
+  this in development/staging.
 
 - Emit StructuredLogger smoke (uses force_axiom):
 
@@ -57,6 +62,18 @@ bin/rails 'axiom:smoke[hello_world]'
 ```
 
 - If you set `AXIOM_METRICS_DATASET`, the doctor also sends a metrics probe event.
+- Primary smoke (structured log + OTEL trace + direct ingest):
+
+```bash
+bin/rails axiom:smoke_all   # alias for axiom:self_test
+```
+
+This runs the forced StructuredLogger log, emits an OTEL span, and performs a direct ingest call —
+so you cover both datasets plus traces with one command.
+
+- `bin/rails axiom:otel_metrics_smoke` emits a one-off OTEL counter. If the installed
+  `opentelemetry-api/sdk` gems predate the metrics API, the task skips with an explanatory message —
+  upgrade to ≥ 1.2 once Axiom enables OTEL metrics.
 
 ### Log fields
 
