@@ -109,5 +109,49 @@ module Gemini
 
       stubs.verify_stubbed_calls
     end
+
+    test "parses structured hash returned directly in text part" do
+      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post("/v1beta/models/gemini-2.5-flash:generateContent") do
+          [
+            200,
+            { "content-type" => "application/json" },
+            {
+              candidates: [
+                {
+                  content: {
+                    parts: [
+                      { text: { "title" => "Hash Mode", "attack" => 88 } }
+                    ]
+                  },
+                  finishReason: "STOP"
+                }
+              ]
+            }
+          ]
+        end
+      end
+
+      conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
+        f.request :json
+        f.response :json
+        f.adapter :test, stubs
+      end
+
+      Gemini::ClientService.stub :call, ServiceResult.success(conn) do
+        Gemini::Configuration.stub :provider, "ai_studio" do
+          schema = { type: "object", properties: { title: { type: "string" }, attack: { type: "integer" } } }
+          result = Gemini::StructuredOutputService.call(
+            prompt: "{}",
+            response_schema: schema
+          )
+
+          assert result.success?
+          assert_equal({ "title" => "Hash Mode", "attack" => 88 }, result.value)
+        end
+      end
+
+      stubs.verify_stubbed_calls
+    end
   end
 end

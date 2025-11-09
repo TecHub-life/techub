@@ -372,6 +372,7 @@ module Profiles
       out["weakness"] = title_cap(out["weakness"].to_s.strip.first(30))
       out["vibe"] = title_cap(out["vibe"].to_s.strip.first(30))
       out["special_move"] = title_cap(out["special_move"].to_s.strip.first(40))
+      out["playing_card"] = normalize_playing_card(out["playing_card"])
       out
     end
 
@@ -400,6 +401,41 @@ module Profiles
       s = t.to_s.downcase.strip
       s = s.gsub(/[^a-z0-9\s-]/, "").gsub(/\s+/, "-")
       s.presence
+    end
+
+    def normalize_playing_card(value)
+      str = value.to_s.strip
+      return nil if str.blank?
+      return str if playing_card_valid?(str)
+
+      rank_match = str.match(/\b(Ace|[2-9]|10|Jack|Queen|King)\b/i)
+      suit_match = str.match(/\b(Clubs?|Diamonds?|Hearts?|Spades?)\b/i) || str.match(/[♣♦♥♠]/)
+      return str unless rank_match && suit_match
+
+      rank_token = rank_match[0]
+      canonical_rank = case rank_token.downcase
+      when "ace" then "Ace"
+      when "jack" then "Jack"
+      when "queen" then "Queen"
+      when "king" then "King"
+      when "10" then "10"
+      else
+        rank_token
+      end
+
+      suit_token = suit_match[0].to_s.downcase
+      suit_symbol = case suit_token
+      when "club", "clubs", "♣" then "♣"
+      when "diamond", "diamonds", "♦" then "♦"
+      when "heart", "hearts", "♥" then "♥"
+      when "spade", "spades", "♠" then "♠"
+      else
+        nil
+      end
+
+      return str unless suit_symbol
+
+      "#{canonical_rank} of #{suit_symbol}"
     end
 
     def fallback_tag
