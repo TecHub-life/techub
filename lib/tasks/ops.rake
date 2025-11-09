@@ -1,3 +1,5 @@
+require "json"
+
 namespace :ops do
   desc "Smoke test Axiom: emit a StructuredLogger event"
   task :axiom_smoke, [ :message ] => :environment do |_, args|
@@ -11,6 +13,25 @@ namespace :ops do
       warn "StructuredLogger not defined"
       exit 1
     end
+  end
+end
+
+namespace :ops do
+  desc "Run integration doctor (SCOPE=gemini,axiom,github,spaces; PROVIDERS=ai_studio,vertex)"
+  task :doctor, [ :scope ] => :environment do |_, args|
+    scopes = args[:scope].to_s.split(",").map(&:strip)
+    scopes = nil if scopes.all?(&:blank?)
+
+    providers = ENV["PROVIDERS"].to_s.split(",").map(&:strip)
+    providers = nil if providers.all?(&:blank?)
+
+    result = Ops::IntegrationDoctorService.call(
+      scopes: scopes,
+      providers: providers
+    )
+
+    puts JSON.pretty_generate(result.metadata)
+    exit(result.success? ? 0 : 1)
   end
 end
 

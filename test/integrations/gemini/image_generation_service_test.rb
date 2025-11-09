@@ -180,6 +180,111 @@ module Gemini
       stubs.verify_stubbed_calls
     end
 
+    test "includes inline image data when reference image is provided" do
+      tmp = Tempfile.new([ "doctor", ".png" ])
+      tmp.binmode
+      tmp.write("ref-bytes")
+      tmp.flush
+
+      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post("/v1beta/models/gemini-2.5-flash-image:generateContent") do |env|
+          body = JSON.parse(env.body)
+          parts = body.dig("contents", 0, "parts")
+          inline = parts.detect { |part| part.key?("inlineData") || part.key?("inline_data") }
+          refute_nil inline, "expected inline image part"
+          payload = inline["inlineData"] || inline["inline_data"]
+          assert_equal "image/png", payload["mimeType"] || payload["mime_type"]
+          assert_equal Base64.strict_encode64("ref-bytes"), payload["data"]
+
+          [
+            200,
+            { "content-type" => "application/json" },
+            {
+              "candidates" => [
+                {
+                  "content" => {
+                    "parts" => [
+                      { "inlineData" => { "mimeType" => "image/png", "data" => SAMPLE_IMAGE_BASE64 } }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        end
+      end
+
+      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
+        f.request :json
+        f.response :json
+        f.adapter :test, stubs
+      end
+
+      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
+        Gemini::Configuration.stub :provider, "ai_studio" do
+          AppSetting.set_bool(:ai_images, true)
+          result = Gemini::ImageGenerationService.call(
+            prompt: "Edit this icon",
+            aspect_ratio: "1:1",
+            reference_image_path: tmp.path
+          )
+
+          assert result.success?
+        ensure
+          AppSetting.set_bool(:ai_images, false)
+        end
+      end
+    ensure
+      tmp.close!
+      stubs.verify_stubbed_calls
+    end
+
+    test "force option bypasses ai_images flag" do
+      stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post("/v1beta/models/gemini-2.5-flash-image:generateContent") do |_env|
+          [
+            200,
+            { "content-type" => "application/json" },
+            {
+              "candidates" => [
+                {
+                  "content" => {
+                    "parts" => [
+                      { "inlineData" => { "mimeType" => "image/png", "data" => SAMPLE_IMAGE_BASE64 } }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        end
+      end
+
+      dummy_conn = Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
+        f.request :json
+        f.response :json
+        f.adapter :test, stubs
+      end
+
+      AppSetting.set_bool(:ai_images, false)
+
+      Gemini::ClientService.stub :call, ServiceResult.success(dummy_conn) do
+        Gemini::Configuration.stub :provider, "ai_studio" do
+          result = Gemini::ImageGenerationService.call(
+            prompt: "Forced",
+            aspect_ratio: "1:1",
+            force: true
+          )
+
+          assert result.success?
+        end
+      end
+
+      stubs.verify_stubbed_calls
+    ensure
+      AppSetting.set_bool(:ai_images, false)
+    end
+
     test "includes aspect ratio hint when enabled" do
       stubs = Faraday::Adapter::Test::Stubs.new do |stub|
         stub.post("/v1beta/models/gemini-2.5-flash-image:generateContent") do |env|

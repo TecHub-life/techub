@@ -43,6 +43,39 @@ module Profiles
       end
     end
 
+    test "normalizes spelled suit playing cards into suit symbols" do
+      payload = {
+        title: "The Emulator Sage",
+        tagline: "Bends silicon stories into code.",
+        short_bio: "Short bio",
+        long_bio: "Long bio" * 10,
+        buff: "Signal Hunter",
+        buff_description: "Finds deep insights in noisy data.",
+        weakness: "Side Quest Collector",
+        weakness_description: "Pursues too many experiments at once.",
+        vibe: "The Creator",
+        vibe_description: "Always building, always tinkering.",
+        special_move: "Bus Master",
+        special_move_description: "Controls cross-domain deliveries with grace.",
+        flavor_text: "Writes emulators for breakfast.",
+        tags: %w[rust embedded-systems testing ci-cd devops graphics],
+        attack: 82,
+        defense: 77,
+        speed: 88,
+        playing_card: "King of Spades",
+        spirit_animal: Motifs::Catalog.spirit_animal_names.first,
+        archetype: Motifs::Catalog.archetype_names.first
+      }
+
+      Gemini::Configuration.stub :provider, "ai_studio" do
+        with_structured_responses([ structured_success(payload) ]) do
+          result = Profiles::SynthesizeAiProfileService.call(profile: @profile)
+          assert result.success?, "expected success, got: #{result.error&.message}"
+          assert_equal "King of ♠", @profile.reload.profile_card.playing_card
+        end
+      end
+    end
+
     test "fills missing tags without introducing duplicates" do
       payload = {
         title: "The Tag Wrangler",

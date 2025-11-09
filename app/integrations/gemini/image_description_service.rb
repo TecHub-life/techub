@@ -29,16 +29,17 @@ module Gemini
     DEFAULT_TEMPERATURE = 0.15
     DEFAULT_MAX_OUTPUT_TOKENS = 400
 
-    def initialize(image_path:, prompt: DEFAULT_PROMPT, temperature: DEFAULT_TEMPERATURE, max_output_tokens: DEFAULT_MAX_OUTPUT_TOKENS, provider: nil)
+    def initialize(image_path:, prompt: DEFAULT_PROMPT, temperature: DEFAULT_TEMPERATURE, max_output_tokens: DEFAULT_MAX_OUTPUT_TOKENS, provider: nil, force: false)
       @image_path = image_path
       @prompt = prompt
       @temperature = temperature
       @max_output_tokens = max_output_tokens
       @provider_override = provider
+      @force = force
     end
 
     def call
-      unless FeatureFlags.enabled?(:ai_image_descriptions)
+      unless force || FeatureFlags.enabled?(:ai_image_descriptions)
         return success(
           nil,
           metadata: {
@@ -132,7 +133,7 @@ module Gemini
 
     private
 
-    attr_reader :image_path, :prompt, :temperature, :max_output_tokens, :provider_override
+    attr_reader :image_path, :prompt, :temperature, :max_output_tokens, :provider_override, :force
 
     def resolve_path(input_path)
       path = Pathname.new(input_path.to_s)

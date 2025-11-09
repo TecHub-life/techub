@@ -57,7 +57,7 @@ module Gemini
 
       obj = extract_structured_json(parts)
       if obj.blank?
-        json_text = parts.filter_map { |p| dig_value(p, :text) }.join(" ")
+        json_text = parts.filter_map { |p| normalize_part_text(p) }.join(" ")
         obj = parse_relaxed_json(json_text)
         return failure(
           StandardError.new("Invalid structured JSON"),
@@ -65,7 +65,7 @@ module Gemini
         ) unless obj.is_a?(Hash)
       end
 
-      raw_text = parts.filter_map { |p| dig_value(p, :text) }.join(" ")
+      raw_text = parts.filter_map { |p| normalize_part_text(p) }.join(" ")
 
       success(
         obj,
@@ -103,8 +103,35 @@ module Gemini
 
         jsonv = dig_value(part_hash, :jsonValue) || dig_value(part_hash, :json_value)
         return jsonv if jsonv.is_a?(Hash)
+
+        text_value = dig_value(part_hash, :text)
+        case text_value
+        when Hash
+          return text_value
+        when String
+          begin
+            parsed = JSON.parse(text_value)
+            return parsed if parsed.is_a?(Hash)
+          rescue JSON::ParserError
+            # ignore and continue scanning
+          end
+        end
       end
       nil
+    end
+
+    def normalize_part_text(part)
+      value = dig_value(part, :text)
+      return nil if value.nil?
+
+      case value
+      when Hash
+        JSON.generate(value)
+      else
+        value.to_s
+      end
+    rescue StandardError
+      value.to_s
     end
 
     def to_ai_studio_type_schema(schema)
