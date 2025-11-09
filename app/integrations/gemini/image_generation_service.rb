@@ -12,7 +12,9 @@ module Gemini
       output_path: nil,
       temperature: DEFAULT_TEMPERATURE,
       mime_type: DEFAULT_MIME_TYPE,
-      provider: nil
+      provider: nil,
+      reference_image_path: nil,
+      force: false
     )
       @prompt = prompt
       @aspect_ratio = aspect_ratio
@@ -20,10 +22,12 @@ module Gemini
       @temperature = temperature
       @mime_type = mime_type
       @provider_override = provider
+      @reference_image_path = reference_image_path.present? ? Pathname.new(reference_image_path) : nil
+      @force = force
     end
 
     def call
-      unless FeatureFlags.enabled?(:ai_images)
+      unless force || FeatureFlags.enabled?(:ai_images)
         return failure(
           StandardError.new("ai_images_disabled"),
           metadata: { reason: "AI image generation is disabled to control costs; using predefined assets." }
@@ -138,7 +142,7 @@ module Gemini
 
     private
 
-    attr_reader :prompt, :aspect_ratio, :output_path, :temperature, :mime_type, :provider_override
+    attr_reader :prompt, :aspect_ratio, :output_path, :temperature, :mime_type, :provider_override, :reference_image_path, :force
 
     # endpoint computed via Gemini::Endpoints
 
@@ -155,9 +159,7 @@ module Gemini
         contents: [
           {
             role: "user",
-            parts: [
-              { text: prompt }
-            ]
+            parts: build_parts
           }
         ],
         generationConfig: cfg
@@ -185,7 +187,7 @@ module Gemini
         contents: [
           {
             role: "user",
-            parts: [ { text: prompt } ]
+            parts: build_parts
           }
         ],
         generationConfig: cfg
@@ -219,6 +221,24 @@ module Gemini
       path = Pathname.new(output_path)
       FileUtils.mkdir_p(path.dirname)
       File.binwrite(path, decoded_bytes)
+    end
+
+    def build_parts
+      parts = [ { text: prompt } ]
+      inline = reference_inline_part
+      parts << inline if inline
+      parts
+    end
+
+    def reference_inline_part
+      return nil unless reference_image_path.present?
+      resolved = reference_image_path
+      unless resolved.exist?
+        raise StandardError, "reference image not found at #{resolved}"
+      end
+      data = Base64.strict_encode64(File.binread(resolved))
+      mime = Marcel::MimeType.for(resolved, name: resolved.basename.to_s) rescue DEFAULT_MIME_TYPE
+      { inline_data: { mime_type: mime, data: data } }
     end
 
     def include_aspect_hint?

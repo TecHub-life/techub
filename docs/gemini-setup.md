@@ -21,6 +21,16 @@ curl -s http://localhost:3000/up/gemini          # text route → expect 200
 curl -s http://localhost:3000/up/gemini/image    # image route → expect 200
 ```
 
+4. Run the integration doctor when you need receipts (text, structured output, image description,
+   text→image, image→image) per provider:
+
+```bash
+bundle exec rails ops:doctor[gemini] PROVIDERS=ai_studio,vertex
+```
+
+The task prints a JSON report documenting each probe (duration, provider, previews) and writes
+resulting images under `tmp/integration_doctor/` for manual inspection.
+
 Docs:
 
 - Gemini image generation (aka nano-banana):

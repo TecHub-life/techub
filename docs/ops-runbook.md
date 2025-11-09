@@ -61,6 +61,27 @@ Practical steps to run, monitor, and debug TecHub locally and in prod.
 - HTTP: `/up` (Rails)
 - Gemini: `/up/gemini` and `/up/gemini/image`
 
+## Integration Doctor
+
+- Run the full integration sweep (Gemini providers, Axiom ingest, GitHub auth/profile fetch, Spaces
+  upload) in one shot:
+
+  ```bash
+  bundle exec rails ops:doctor
+  ```
+
+  - `SCOPE=` limits checks (comma-separated: `gemini,axiom,github,spaces`).
+  - `PROVIDERS=` limits Gemini providers (`ai_studio`, `vertex`). Example: run only AI Studio probes:
+
+    ```bash
+    bundle exec rails ops:doctor[gemini] PROVIDERS=ai_studio
+    ```
+
+  - Reports are JSON with one entry per mechanism (text generation, structured output, image
+    description, text→image, image→image, etc.) including duration, provider, and preview data.
+  - Gemini image outputs are saved under `tmp/integration_doctor/` so you can manually inspect the
+    generated artifacts after each run.
+
 ### Gemini providers
 
 - Provider resolution precedence: credentials `gemini.provider` > env `GEMINI_PROVIDER` > inference
