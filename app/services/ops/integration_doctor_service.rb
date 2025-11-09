@@ -259,10 +259,10 @@ module Ops
 
     def check_spaces
       unless Storage::ServiceProfile.remote_service?
-        return warn_check("spaces.upload", "active_storage_disk_service")
+        return ok("spaces.upload", skipped: true, reason: "active_storage_disk_service")
       end
 
-      Tempfile.create(["integration-doctor", ".txt"]) do |file|
+      Tempfile.create([ "integration-doctor", ".txt" ]) do |file|
         file.write("ops-doctor #{Time.now.utc.iso8601}")
         file.flush
         started = monotonic_time

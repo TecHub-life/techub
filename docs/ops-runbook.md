@@ -71,7 +71,8 @@ Practical steps to run, monitor, and debug TecHub locally and in prod.
   ```
 
   - `SCOPE=` limits checks (comma-separated: `gemini,axiom,github,spaces`).
-  - `PROVIDERS=` limits Gemini providers (`ai_studio`, `vertex`). Example: run only AI Studio probes:
+  - `PROVIDERS=` limits Gemini providers (`ai_studio`, `vertex`). Example: run only AI Studio
+    probes:
 
     ```bash
     bundle exec rails ops:doctor[gemini] PROVIDERS=ai_studio

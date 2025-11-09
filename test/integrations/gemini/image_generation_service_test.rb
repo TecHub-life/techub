@@ -181,7 +181,7 @@ module Gemini
     end
 
     test "includes inline image data when reference image is provided" do
-      tmp = Tempfile.new(["doctor", ".png"])
+      tmp = Tempfile.new([ "doctor", ".png" ])
       tmp.binmode
       tmp.write("ref-bytes")
       tmp.flush
