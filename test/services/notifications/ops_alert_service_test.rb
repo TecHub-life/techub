@@ -58,7 +58,7 @@ module Notifications
     end
 
     test "supports array of recipients from credentials" do
-      Rails.application.credentials.stub(:dig, ["ops@example.com", "ops2@example.com"]) do
+      Rails.application.credentials.stub(:dig, [ "ops@example.com", "ops2@example.com" ]) do
         Rails.env.stub(:development?, true) do
           assert_output(/\[DEV OPS ALERT\]/) do
             result = OpsAlertService.call(

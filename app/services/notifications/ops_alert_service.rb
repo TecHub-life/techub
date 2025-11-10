@@ -126,7 +126,7 @@ module Notifications
       when Array
         value.flat_map { |entry| normalize_alert_value(entry) }
       else
-        [value.to_s]
+        [ value.to_s ]
       end
     end
   end
