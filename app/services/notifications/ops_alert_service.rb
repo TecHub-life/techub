@@ -86,12 +86,13 @@ module Notifications
     end
 
     def alert_recipients
-      env = ENV["ALERT_EMAIL"].to_s.strip
-      creds = (Rails.application.credentials.dig(:mission_control, :jobs, :alert_email) rescue nil).to_s.strip
-
-      list = [ env, creds ].reject(&:blank?).join(",")
-      list.split(/[,
-\s]+/).map(&:strip).reject(&:blank?).uniq
+      [
+        ENV["ALERT_EMAIL"],
+        credentials_alert_email
+      ].flat_map { |value| normalize_alert_value(value) }
+        .map(&:strip)
+        .reject(&:blank?)
+        .uniq
     end
 
     def build_runtime_metadata
@@ -108,6 +109,25 @@ module Notifications
       base = original.is_a?(Hash) ? original.dup : {}
       base["runtime"] = runtime
       base
+    end
+
+    def credentials_alert_email
+      Rails.application.credentials.dig(:mission_control, :jobs, :alert_email)
+    rescue StandardError
+      nil
+    end
+
+    def normalize_alert_value(value)
+      case value
+      when nil
+        []
+      when String
+        value.split(/[,\s]+/)
+      when Array
+        value.flat_map { |entry| normalize_alert_value(entry) }
+      else
+        [value.to_s]
+      end
     end
   end
 end
