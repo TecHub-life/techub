@@ -21,8 +21,11 @@ Notes:
   - failure → ProfilePipelineMailer.failed (deliver_later, deduped per profile/event)
   - partial → no owner email
 - Ops:
-  - partial → OpsAlertMailer.job_failed with metadata indicating partial
-  - failure → OpsAlertMailer.job_failed with error message and metadata
+- partial → OpsAlertMailer.job_failed with metadata indicating partial
+- failure → OpsAlertMailer.job_failed with error message and metadata
+
+> Development environment will log these Ops alerts to `stdout` instead of sending email unless
+> `DEV_OPS_ALERT_EMAILS_ENABLED` is truthy.
 
 ## Resend setup
 
