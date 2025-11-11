@@ -96,10 +96,10 @@ so you cover both datasets plus traces with one command.
 
 ### Dataset field limits & map fields
 
-`otel-logs` lives on Axiom’s free tier, which limits each dataset to 256 fields. When we push
-events rich in custom attributes we can exceed that limit (recently `otel-logs` rejected four
-events for this reason), so incoming data stops being stored until the limit is addressed. The
-recommended solution is to regroup high-dimensional or unpredictable data into map fields.
+`otel-logs` lives on Axiom’s free tier, which limits each dataset to 256 fields. When we push events
+rich in custom attributes we can exceed that limit (recently `otel-logs` rejected four events for
+this reason), so incoming data stops being stored until the limit is addressed. The recommended
+solution is to regroup high-dimensional or unpredictable data into map fields.
 
 Map fields behave like a JSON object inside one named column, so dozens of attributes can be stored
 without adding one schema field per key. They are especially helpful for unpredictable custom
@@ -114,10 +114,10 @@ standard flattened fields for stable, low-cardinality data.
 
 1. **Identify noisy keys** – Inspect rejection payloads or list the current schema via
    `axiom datasets fields list otel-logs | sort` (requires the Axiom CLI) or
-   `bin/rails "axiom:fields:list[otel-logs]"` (uses the new `axiom.master_key`). Note which flattened
-   keys pushed the count beyond 256 — common culprits are `attributes.custom.*`, feature flags, and
-   dynamic headers. Filter with a prefix using `bin/rails "axiom:fields:list[otel-logs,attributes.]"`
-   when you want to focus on one subtree.
+   `bin/rails "axiom:fields:list[otel-logs]"` (uses the new `axiom.master_key`). Note which
+   flattened keys pushed the count beyond 256 — common culprits are `attributes.custom.*`, feature
+   flags, and dynamic headers. Filter with a prefix using
+   `bin/rails "axiom:fields:list[otel-logs,attributes.]"` when you want to focus on one subtree.
 2. **Group high-cardinality attributes** – Decide on parent map names (`attributes.custom`,
    `feature_flags`, `headers`, etc.) that can safely contain those dynamic keys. The goal is one
    schema slot per group instead of hundreds of flattened siblings.
@@ -156,21 +156,21 @@ standard flattened fields for stable, low-cardinality data.
 
 #### Creating map fields
 
-* **UI** – In Axiom’s dataset view go to More → Create map field, give the fully qualified field
+- **UI** – In Axiom’s dataset view go to More → Create map field, give the fully qualified field
   name (e.g., `attributes.custom`) and save. New data ingested into that field won’t count toward
   the dataset’s field limit.
-* **API** – POST to `https://api.axiom.co/v2/datasets/{DATASET_NAME}/mapfields` (replace
-  `{DATASET_NAME}` with `otel-logs` or another dataset) using `Authorization: Bearer API_TOKEN`
-  and a JSON body such as `{"name":"MAP_FIELD"}`.
-* **Vacuuming** – After the collector stops sending flattened fields that you now treat as map
+- **API** – POST to `https://api.axiom.co/v2/datasets/{DATASET_NAME}/mapfields` (replace
+  `{DATASET_NAME}` with `otel-logs` or another dataset) using `Authorization: Bearer API_TOKEN` and
+  a JSON body such as `{"name":"MAP_FIELD"}`.
+- **Vacuuming** – After the collector stops sending flattened fields that you now treat as map
   fields, vacuum the dataset (and trim old rows if needed) so those retired fields stop occupying
   space in the schema.
 
 #### Querying map fields
 
 Access map properties using index notation (`['map_field']['prop']`), dot notation
-(`map_field.prop`), or a mix of both. Always quote identifiers that contain spaces, dots, or
-dashes. Example:
+(`map_field.prop`), or a mix of both. Always quote identifiers that contain spaces, dots, or dashes.
+Example:
 
 ```kusto
 ['otel-demo-traces']

@@ -6,7 +6,8 @@ features.
 ## Axiom (optional)
 
 - axiom.token: Ingest token → maps to ENV `AXIOM_TOKEN`
-- axiom.master_key: Axiom master key for admin APIs (map fields, trimming) → maps to ENV `AXIOM_MASTER_KEY`
+- axiom.master_key: Axiom master key for admin APIs (map fields, trimming) → maps to ENV
+  `AXIOM_MASTER_KEY`
 
 Everything else (datasets, OTEL endpoint, org slug) is non-secret and now lives in `AppConfig.axiom`
 with defaults (`otel-logs` and `otel-traces`). Override via env (`AXIOM_DATASET`,
