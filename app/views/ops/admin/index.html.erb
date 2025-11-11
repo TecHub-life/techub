@@ -591,6 +591,31 @@
                   </button>
                 </form>
               </div>
+
+              <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                <h4 class="text-sm font-semibold mb-2">Worker probe job</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                  Enqueue a background job that logs start/finish events from the worker host—ideal for verifying that Solid Queue + StructuredLogger are reaching Axiom.
+                </p>
+                <form action="<%= ops_axiom_worker_probe_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Note (optional)</label>
+                    <input type="text" name="note" class="<%= ui_input_class %>" placeholder="prod sanity check">
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Force Axiom forwarding</label>
+                    <select name="force" class="<%= "#{ui_select_class} h-auto" %>">
+                      <option value="0" selected>No</option>
+                      <option value="1">Yes</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                    <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                    <span data-submit-form-target="text">Queue worker probe</span>
+                  </button>
+                </form>
+              </div>
             </div>
             <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Tip: Use StructuredLogger for logs into the logs dataset, Direct Ingest to bypass forwarding gates or to target metrics dataset, and OTEL Span to verify traces/attributes and error status.</p>
           </div>

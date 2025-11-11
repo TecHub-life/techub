@@ -6,6 +6,8 @@ module Profiles
       "neon-lit anime portrait"
     end
 
+    FALLBACK_TAG_POOL = %w[developer coder builder maker engineer hacker].freeze
+
     def initialize(profile:, persist: true, theme: "TecHub")
       @profile = profile
       @persist = persist
@@ -97,16 +99,7 @@ module Profiles
       else "builder"
       end
       tags << role
-      # Normalize: lowercase, uniq, drop blanks
-      tags = tags.map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq
-      # Ensure exactly 6 tags to satisfy model validation
-      fallback_pool = %w[developer coder builder maker engineer hacker]
-      fallback_cycle = fallback_pool.cycle
-      while tags.length < 6
-        candidate = fallback_cycle.next
-        tags << candidate unless tags.include?(candidate)
-      end
-      tags = tags.first(6)
+      tags = normalize_tags(tags)
 
       tagline_source = p.summary.to_s
       tagline_source = p.bio.to_s if tagline_source.blank?
@@ -197,6 +190,20 @@ module Profiles
       end
 
       "#{rank} of #{suit}"
+    end
+
+    def normalize_tags(tags)
+      normalized = Array(tags).map { |t| normalize_tag(t) }.compact.uniq
+      fallback_cycle = FALLBACK_TAG_POOL.cycle
+      while normalized.length < 6
+        candidate = fallback_cycle.next
+        normalized << candidate unless normalized.include?(candidate)
+      end
+      normalized.first(6)
+    end
+
+    def normalize_tag(value)
+      value.to_s.downcase.strip.gsub(/[^a-z0-9\s-]/, "").gsub(/\s+/, "-").presence
     end
   end
 end

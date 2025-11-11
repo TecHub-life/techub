@@ -61,7 +61,7 @@ module Profiles
               metadata[:attempts] = last_metadata[:attempts] if last_metadata[:attempts]
               metadata[:provider_attempts] = last_metadata[:provider] if last_metadata[:provider]
             end
-            degraded_with_context(
+            success_with_context(
               context.card,
               metadata: metadata.compact
             )
