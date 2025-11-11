@@ -1,3 +1,5 @@
+require "fileutils"
+
 module Gemini
   class StructuredOutputService < ApplicationService
     include Gemini::ResponseHelpers
@@ -19,6 +21,7 @@ module Gemini
       raise ArgumentError, "response_schema must be a Hash" unless response_schema.is_a?(Hash)
 
       provider = provider_override.presence || Gemini::Configuration.provider
+      last_response_body = nil
       client_result = Gemini::ClientService.call(provider: provider)
       return client_result if client_result.failure?
 
@@ -42,7 +45,14 @@ module Gemini
       payload = adapter.envelope(contents: contents, generation_config: generation_config, system_instruction: instruction)
 
       resp = conn.post(endpoint, payload)
+      last_response_body = resp.body
       unless (200..299).include?(resp.status)
+        record_structured_failure(
+          reason: "http_error",
+          provider: provider,
+          response_body: last_response_body,
+          extras: { http_status: resp.status, endpoint: endpoint }
+        )
         return failure(
           StandardError.new("Gemini structured output failed"),
           metadata: { http_status: resp.status, provider: provider, endpoint: endpoint, body_preview: resp.body.to_s[0, 500] }
@@ -62,7 +72,7 @@ module Gemini
         return failure(
           StandardError.new("Invalid structured JSON"),
           metadata: { provider: provider, raw_preview: json_text.to_s[0, 500], http_status: resp.status }
-        ) unless obj.is_a?(Hash)
+        ) unless record_invalid_json(provider: provider, response_body: last_response_body, preview: json_text, http_status: resp.status, parsed: obj)
       end
 
       raw_text = parts.filter_map { |p| normalize_part_text(p) }.join(" ")
@@ -77,6 +87,10 @@ module Gemini
         }.compact
       )
     rescue Faraday::Error => e
+      record_structured_failure(reason: "http_error", provider: provider, response_body: last_response_body, error: e)
+      failure(e)
+    rescue StandardError => e
+      record_structured_failure(reason: "unexpected_error", provider: provider, response_body: last_response_body, error: e)
       failure(e)
     end
 
@@ -174,6 +188,64 @@ module Gemini
       when "boolean" then "BOOLEAN"
       else value
       end
+    end
+
+    def record_invalid_json(provider:, response_body:, preview:, http_status:, parsed:)
+      return true if parsed.is_a?(Hash)
+
+      record_structured_failure(
+        reason: "invalid_structured_json",
+        provider: provider,
+        response_body: response_body,
+        extras: {
+          raw_preview: preview.to_s[0, 2000],
+          http_status: http_status
+        }
+      )
+      false
+    end
+
+    def record_structured_failure(reason:, provider:, response_body:, error: nil, extras: {})
+      dump_path = write_failure_dump(provider: provider, reason: reason, response_body: response_body, error: error, extras: extras)
+      payload = {
+        message: "gemini_structured_output_failure",
+        reason: reason,
+        provider: provider,
+        error: error&.message,
+        error_class: error&.class&.name,
+        dump_path: dump_path
+      }.merge(extras || {}).compact
+      StructuredLogger.error(
+        payload,
+        component: "integration",
+        event: "integration.Gemini::StructuredOutputService",
+        ops_details: payload.slice(:reason, :provider, :dump_path)
+      )
+    rescue StandardError
+      # best-effort diagnostics; never block primary flow
+    end
+
+    def write_failure_dump(provider:, reason:, response_body:, error:, extras:)
+      return unless response_body.present?
+
+      dir = Rails.root.join("tmp", "gemini_failures")
+      FileUtils.mkdir_p(dir)
+      timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S%L")
+      filename = [ timestamp, provider, reason ].compact.join("_")
+      path = dir.join("#{filename}.json")
+      payload = {
+        provider: provider,
+        reason: reason,
+        captured_at: Time.now.utc.iso8601(3),
+        response_body: response_body,
+        error: error&.message,
+        error_class: error&.class&.name,
+        extras: extras
+      }
+      File.write(path, JSON.pretty_generate(payload))
+      path.to_s
+    rescue StandardError
+      nil
     end
   end
 end

@@ -29,6 +29,16 @@ module Profiles
           result = Profiles::Pipeline::Stages::RecordSubmittedScrape.call(context: @context)
           assert result.success?, "expected stage to skip on invalid url"
         end
+
+        test "unsupported content types skip without degrading" do
+          @profile.update!(submitted_scrape_url: "https://example.com/sample.pdf")
+          stub_result = ServiceResult.failure(StandardError.new("unsupported_content_type"))
+          Profiles::RecordSubmittedScrapeService.stub :call, stub_result do
+            result = Profiles::Pipeline::Stages::RecordSubmittedScrape.call(context: @context)
+            assert result.success?, "expected unsupported content to skip"
+            refute result.degraded?, "unsupported content should not mark stage as degraded"
+          end
+        end
       end
     end
   end

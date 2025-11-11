@@ -463,6 +463,13 @@ module Ops
       end
     end
 
+    def axiom_worker_probe
+      force = ActiveModel::Type::Boolean.new.cast(params[:force])
+      note = params[:note].presence
+      Ops::AxiomProbeJob.perform_later(force_axiom: force, source: "ops_panel", note: note)
+      redirect_to ops_admin_path(anchor: "ai"), notice: "Queued worker probe job"
+    end
+
     def pipeline_doctor
       login = params[:login].to_s.downcase.presence
       host = params[:host].presence

@@ -129,6 +129,7 @@ Rails.application.routes.draw do
     post "/axiom_log_test", to: "admin#axiom_log_test", as: :axiom_log_test
     post "/axiom_direct_ingest", to: "admin#axiom_direct_ingest", as: :axiom_direct_ingest
     post "/axiom_otel_smoke", to: "admin#axiom_otel_smoke", as: :axiom_otel_smoke
+    post "/axiom_worker_probe", to: "admin#axiom_worker_probe", as: :axiom_worker_probe
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all

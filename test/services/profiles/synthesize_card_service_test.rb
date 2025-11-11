@@ -44,4 +44,35 @@ class SynthesizeCardServiceTest < ActiveSupport::TestCase
     assert_equal "TecHub", value[:theme]
     assert_nil @profile.reload.profile_card
   end
+
+  test "normalizes tags to six unique kebab-case entries" do
+    profile = Profile.create!(
+      github_id: 1001,
+      login: "slugger",
+      name: "Slugger Dev",
+      followers: 1,
+      public_repos: 3,
+      github_created_at: 1.year.ago
+    )
+    %w[C++ C# C].each_with_index do |lang, idx|
+      profile.profile_languages.create!(name: lang, count: 100 - idx)
+    end
+    repo = profile.profile_repositories.create!(
+      name: "math-lab",
+      full_name: "slugger/math-lab",
+      repository_type: "top",
+      stargazers_count: 10
+    )
+    repo.repository_topics.create!(name: "C++")
+    repo.repository_topics.create!(name: "C Sharp")
+    profile.create_profile_activity!(total_events: 12)
+
+    result = Profiles::SynthesizeCardService.call(profile: profile, persist: true)
+    assert result.success?, -> { result.error&.message }
+    card = result.value
+    assert_equal 6, card.tags_array.length
+    card.tags_array.each do |tag|
+      assert_match(/\A[a-z0-9]+(?:-[a-z0-9]+){0,2}\z/, tag)
+    end
+  end
 end
