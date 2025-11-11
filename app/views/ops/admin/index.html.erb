@@ -441,7 +441,7 @@
         </div>
 
         <!-- Axiom Observability -->
-        <div class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div id="axiom" class="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Axiom Observability</h2>
           
           <div class="mb-3">
@@ -504,6 +504,210 @@
             <% end %>
             <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Forwarding runs in production when credentials are present, or in other environments when <code>AXIOM_ENABLED=1</code>. Run <code>rake axiom:runtime_doctor</code> to exercise the StructuredLogger queue end-to-end.</p>
           </div>
+
+          <% if @axiom_master_key_present %>
+            <% if @axiom_admin_data[:error].present? %>
+              <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-200">
+                Axiom admin API error: <%= @axiom_admin_data[:error] %>
+                <% if @axiom_admin_data[:error_status] %>
+                  (<%= @axiom_admin_data[:error_status] %>)
+                <% end %>
+              </div>
+            <% else %>
+              <div class="mt-4 grid gap-4 md:grid-cols-2">
+                <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Schema Summary</h4>
+                  <dl class="mt-2 space-y-1 text-sm text-slate-700 dark:text-slate-200">
+                    <div class="flex justify-between gap-4">
+                      <dt>Field count</dt>
+                      <dd><%= @axiom_admin_data[:field_count] %> / <%= @axiom_admin_data[:field_limit] %></dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt>Headroom</dt>
+                      <dd class="<%= @axiom_admin_data[:headroom].to_i < 40 ? 'text-red-600 dark:text-red-300 font-semibold' : '' %>"><%= @axiom_admin_data[:headroom] %> fields</dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt>Last refreshed</dt>
+                      <dd><%= @axiom_admin_data[:last_refreshed_at]&.strftime("%H:%M:%S") || "—" %></dd>
+                    </div>
+                  </dl>
+                </div>
+                <div class="rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Map fields</h4>
+                  <% map_fields = Array(@axiom_admin_data[:map_field_set]) %>
+                  <% if map_fields.any? %>
+                    <div class="mt-2 flex flex-wrap gap-1.5 text-xs">
+                      <% map_fields.sort.each do |field| %>
+                        <span class="rounded bg-slate-100 px-2 py-0.5 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200"><%= field %></span>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">No map fields promoted yet.</p>
+                  <% end %>
+                </div>
+              </div>
+              <div class="mt-4">
+                <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Top fan-out parents</h4>
+                <% fanout = Array(@axiom_admin_data[:top_parents]) %>
+                <% if fanout.any? %>
+                  <div class="mt-2 divide-y divide-slate-100 border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
+                    <% fanout.each do |row| %>
+                      <div class="flex items-center justify-between gap-3 px-3 py-2 text-xs text-slate-700 dark:text-slate-300">
+                        <code class="text-[11px] text-slate-600 dark:text-slate-400"><%= row[:parent] %></code>
+                        <span class="<%= row[:count] >= 25 ? 'text-red-600 dark:text-red-300 font-semibold' : 'text-slate-600 dark:text-slate-300' %>"><%= row[:count] %> fields</span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">No multi-level fan-out detected yet.</p>
+                <% end %>
+              </div>
+
+              <div class="mt-4 grid gap-4 lg:grid-cols-2">
+                <div class="space-y-3 rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Promote map field</h4>
+                  <form action="<%= ops_axiom_create_map_field_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dataset</label>
+                      <input type="text" name="dataset" value="<%= AppConfig.axiom[:dataset] %>" class="<%= ui_input_class %>">
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Field name</label>
+                      <input type="text" name="field_name" placeholder="ops_context.details" class="<%= ui_input_class %>">
+                    </div>
+                    <button type="submit" class="<%= ui_secondary_button_class %>" data-submit-form-target="button">
+                      <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                      <span data-submit-form-target="text">Create map field</span>
+                    </button>
+                  </form>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Use fully qualified parents (e.g., <code>request.headers</code>) to collapse unlimited child keys into a single slot.</p>
+                </div>
+                <div class="space-y-3 rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Trim dataset</h4>
+                  <form action="<%= ops_axiom_trim_dataset_path %>" method="post" class="space-y-3" data-controller="submit-form">
+                    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dataset</label>
+                      <input type="text" name="dataset" value="<%= AppConfig.axiom[:dataset] %>" class="<%= ui_input_class %>">
+                    </div>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Keep last (days)</label>
+                        <select name="max_duration_days" class="<%= "#{ui_select_class} h-auto" %>">
+                          <option value="1">1 day</option>
+                          <option value="7" selected>7 days</option>
+                          <option value="30">30 days</option>
+                          <option value="90">90 days</option>
+                        </select>
+                      </div>
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Custom duration</label>
+                        <input type="text" name="max_duration" placeholder="168h or 30d" class="<%= ui_input_class %>">
+                      </div>
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Optional cutoff time</label>
+                      <input type="datetime-local" name="max_time" class="<%= ui_input_class %>">
+                    </div>
+                    <button type="submit" class="<%= ui_secondary_button_class %>" data-submit-form-target="button">
+                      <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                      <span data-submit-form-target="text">Submit trim job</span>
+                    </button>
+                  </form>
+                  <div class="border-t border-dashed border-slate-200 pt-3 dark:border-slate-700/60">
+                    <form action="<%= ops_axiom_vacuum_dataset_path %>" method="post" data-controller="submit-form">
+                      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                      <input type="hidden" name="dataset" value="<%= AppConfig.axiom[:dataset] %>">
+                      <button type="submit" class="<%= ui_secondary_button_class %>" data-submit-form-target="button">
+                        <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                        <span data-submit-form-target="text">Vacuum fields</span>
+                      </button>
+                    </form>
+                    <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Vacuum frees retired flattened fields. Axiom allows ~1 vacuum per 24h.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-5 border-t border-slate-100 pt-4 dark:border-slate-700/60">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Dataset management</h4>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Create additional datasets for experiments, then wire tokens manually. Active datasets (logs/traces/metrics) are protected from deletion here.</p>
+                  </div>
+                  <form action="<%= ops_axiom_datasets_path %>" method="post" class="grid gap-2 rounded border border-slate-200 p-3 text-sm dark:border-slate-700" data-controller="submit-form">
+                    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                    <div class="space-y-1">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Name</label>
+                      <input type="text" name="name" placeholder="ops-experiments" class="<%= ui_input_class %>">
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Description</label>
+                      <input type="text" name="description" class="<%= ui_input_class %>" placeholder="Playground dataset">
+                    </div>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                      <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kind</label>
+                        <input type="text" name="kind" value="axiom:events:v1" class="<%= ui_input_class %>">
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Retention (days)</label>
+                        <input type="number" name="retention_days" value="30" min="1" class="<%= ui_input_class %>">
+                      </div>
+                    </div>
+                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <input type="checkbox" name="use_retention_period" value="1" checked class="<%= ui_checkbox_class %>">
+                      Use retention period
+                    </label>
+                    <button type="submit" class="<%= ui_primary_button_class %>" data-submit-form-target="button">
+                      <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
+                      <span data-submit-form-target="text">Create dataset</span>
+                    </button>
+                  </form>
+                </div>
+                <div class="mt-4 overflow-x-auto">
+                  <% protected_ids = [ AppConfig.axiom[:dataset], AppConfig.axiom[:metrics_dataset], AppConfig.axiom[:traces_dataset] ].compact %>
+                  <table class="min-w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                    <thead>
+                      <tr class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        <th class="px-2 py-1">Dataset</th>
+                        <th class="px-2 py-1">Kind</th>
+                        <th class="px-2 py-1">Retention</th>
+                        <th class="px-2 py-1">Map fields</th>
+                        <th class="px-2 py-1 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% @axiom_datasets.each do |dataset| %>
+                        <tr class="border-b border-slate-100 last:border-0 dark:border-slate-800">
+                          <td class="px-2 py-1 font-mono text-xs"><%= dataset["name"] %></td>
+                          <td class="px-2 py-1 text-xs"><%= dataset["kind"] %></td>
+                          <td class="px-2 py-1 text-xs"><%= dataset["retentionDays"] %>d</td>
+                          <td class="px-2 py-1 text-xs"><%= Array(dataset["mapFields"]).size %></td>
+                          <td class="px-2 py-1 text-right text-xs">
+                            <% unless protected_ids.include?(dataset["id"]) %>
+                              <%= button_to "Delete", ops_axiom_dataset_path(dataset["id"]), method: :delete, form: { data: { controller: "submit-form" } }, class: "text-red-600 hover:underline dark:text-red-300", data: { turbo: false } %>
+                            <% else %>
+                              <span class="text-slate-400">protected</span>
+                            <% end %>
+                          </td>
+                        </tr>
+                      <% end %>
+                      <% if @axiom_datasets.blank? %>
+                        <tr>
+                          <td colspan="5" class="px-2 py-3 text-center text-xs text-slate-500 dark:text-slate-400">No datasets returned from Axiom.</td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="mt-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+              Add <code>axiom.master_key</code> (or <code>AXIOM_MASTER_KEY</code>) to enable schema management, dataset trim/vacuum, and map-field promotion from the Ops panel.
+            </div>
+          <% end %>
 
           <div>
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Test & Debug</h3>

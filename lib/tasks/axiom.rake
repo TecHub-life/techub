@@ -270,4 +270,101 @@ namespace :axiom do
 
   desc "Primary smoke: structured log + OTEL span + direct ingest (alias for axiom:self_test)"
   task smoke_all: :self_test
+
+  namespace :fields do
+    desc "List dataset fields via the Axiom admin API (requires axiom.master_key). Usage: rake axiom:fields:list[dataset,prefix]"
+    task :list, [ :dataset, :prefix ] => :environment do |_t, args|
+      dataset = args[:dataset].presence || AppConfig.axiom[:dataset]
+      prefix = args[:prefix].presence
+      master_key = AppConfig.axiom[:master_key]
+      base_url = AppConfig.axiom[:base_url]
+
+      if master_key.to_s.strip.empty?
+        warn "Axiom master key missing. Add credentials[:axiom][:master_key] or set AXIOM_MASTER_KEY."
+        exit 1
+      end
+
+      if dataset.to_s.strip.empty?
+        warn "Dataset required. Pass as rake axiom:fields:list[dataset] or set AXIOM_DATASET."
+        exit 1
+      end
+
+      client = Axiom::AdminClient.new(token: master_key, base_url: base_url)
+      fields = client.list_fields(dataset: dataset)
+      name_for = ->(field) { field["name"] || field[:name] || field["fieldName"] || field[:fieldName] || "(unknown)" }
+      status_for = ->(field) { field["status"] || field[:status] || field["state"] || field[:state] }
+      type_for = ->(field) { field["type"] || field[:type] }
+
+      if prefix.present?
+        fields.select! { |field| name_for.call(field).start_with?(prefix) }
+      end
+
+      total = fields.size
+      puts "Dataset: #{dataset}"
+      puts "Field count#{prefix ? " (filtered by '#{prefix}')" : ""}: #{total}"
+
+      status_counts = fields.each_with_object(Hash.new(0)) do |field, counts|
+        status = status_for.call(field)
+        counts[status] += 1 if status
+      end
+      if status_counts.present?
+        formatted = status_counts.map { |status, count| "#{status}=#{count}" }
+        puts "Status counts: #{formatted.join(', ')}"
+      end
+
+      fields.sort_by! { |field| name_for.call(field) }
+      fields.each do |field|
+        name = name_for.call(field)
+        next if name.blank?
+
+        details = []
+        type = type_for.call(field)
+        status = status_for.call(field)
+        last_ingest = field["lastIngestedAt"] || field[:lastIngestedAt] || field["last_ingested_at"]
+        details << "type=#{type}" if type
+        details << "status=#{status}" if status
+        details << "last_ingest=#{last_ingest}" if last_ingest
+
+        line = "- #{name}"
+        line += " (#{details.join(', ')})" if details.any?
+        puts line
+      end
+    rescue Axiom::AdminClient::Error => e
+      warn "Axiom admin API error: #{e.message}"
+      warn e.body if e.body.present?
+      exit 2
+    end
+
+    desc "Create a map field via the admin API. Usage: rake axiom:fields:create_map_field[field_name,dataset]"
+    task :create_map_field, [ :field_name, :dataset ] => :environment do |_t, args|
+      field_name = args[:field_name].to_s
+      dataset = args[:dataset].presence || AppConfig.axiom[:dataset]
+      master_key = AppConfig.axiom[:master_key]
+      base_url = AppConfig.axiom[:base_url]
+
+      if master_key.to_s.strip.empty?
+        warn "Axiom master key missing. Add credentials[:axiom][:master_key] or set AXIOM_MASTER_KEY."
+        exit 1
+      end
+
+      if dataset.to_s.strip.empty?
+        warn "Dataset required. Pass as rake axiom:fields:create_map_field[field_name,dataset] or set AXIOM_DATASET."
+        exit 1
+      end
+
+      if field_name.empty?
+        warn "Field name required. Usage: rake axiom:fields:create_map_field[attributes.custom]"
+        exit 1
+      end
+
+      client = Axiom::AdminClient.new(token: master_key, base_url: base_url)
+      result = client.create_map_field(dataset: dataset, name: field_name)
+      status = result["status"] || result[:status] || "created"
+      puts "Map field '#{field_name}' created on dataset '#{dataset}' (status=#{status})."
+    rescue Axiom::AdminClient::Error => e
+      warn "Axiom admin API error: #{e.message}"
+      warn e.body if e.body.present?
+      exit 2
+    end
+  end
 end

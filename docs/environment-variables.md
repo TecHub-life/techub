@@ -40,7 +40,10 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
   - Home: credentials under `:resend`.
 - Axiom/OTEL:
   - Secret: `AXIOM_TOKEN` — required for OTEL export and dataset ingest (set via credentials or CI
-    secrets).
+    secrets). Production autostarts ingest when the token is present; other environments stay off
+    unless `AXIOM_ENABLED=1`.
+  - Secret: `AXIOM_MASTER_KEY` — optional but recommended; unlocks admin APIs (map fields,
+    trimming/vacuum). Lives in credentials as `axiom.master_key`.
   - Non-secret overrides (defaults live in `AppConfig.axiom` as `otel-logs`/`otel-traces`):
     - `AXIOM_DATASET` — structured logs dataset (default `otel-logs`)
     - `AXIOM_TRACES_DATASET` — OTEL traces dataset (default `otel-traces`)

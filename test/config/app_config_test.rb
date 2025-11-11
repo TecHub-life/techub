@@ -1,7 +1,7 @@
 require "test_helper"
 
 class AppConfigTest < ActiveSupport::TestCase
-  AFFECTED_ENV = %w[AXIOM_TOKEN AXIOM_DATASET AXIOM_ENABLED RAILS_ENV].freeze
+  AFFECTED_ENV = %w[AXIOM_TOKEN AXIOM_DATASET AXIOM_ENABLED RAILS_ENV AXIOM_MASTER_KEY].freeze
 
   setup do
     @env_backup = AFFECTED_ENV.to_h { |key| [ key, ENV[key] ] }
@@ -84,6 +84,15 @@ class AppConfigTest < ActiveSupport::TestCase
 
       assert_equal :missing_token, result[:reason]
       refute result[:allowed]
+    end
+  end
+
+  test "master key falls back to env" do
+    Rails.application.credentials.stub(:dig, nil) do
+      ENV["AXIOM_MASTER_KEY"] = "super-secret"
+      AppConfig.reload!
+
+      assert_equal "super-secret", AppConfig.axiom[:master_key]
     end
   end
 end

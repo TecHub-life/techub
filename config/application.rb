@@ -76,6 +76,7 @@ module AppConfig
   def axiom
     @axiom ||= begin
       token = (Rails.application.credentials.dig(:axiom, :token) rescue nil) || ENV["AXIOM_TOKEN"]
+      master_key = (Rails.application.credentials.dig(:axiom, :master_key) rescue nil) || ENV["AXIOM_MASTER_KEY"]
       dataset = ENV["AXIOM_DATASET"].presence || DEFAULT_AXIOM_LOGS_DATASET
       org = ENV["AXIOM_ORG"].presence || DEFAULT_AXIOM_ORG
       base_url = ENV["AXIOM_BASE_URL"].presence || DEFAULT_AXIOM_BASE_URL
@@ -120,7 +121,8 @@ module AppConfig
         otel_endpoint: otel_endpoint,
         auto_forward: auto_forward,
         enabled: enabled,
-        enabled_source: enabled_source
+        enabled_source: enabled_source,
+        master_key: master_key
       }.freeze
     end
   end

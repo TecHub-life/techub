@@ -142,6 +142,14 @@ module Ops
           otel_endpoint: axiom_cfg[:otel_endpoint],
           queue: queue_stats
         }
+        @axiom_master_key_present = axiom_cfg[:master_key].present?
+        if @axiom_master_key_present
+          @axiom_admin_data = Ops::AxiomAdminService.summary
+          @axiom_datasets = Ops::AxiomAdminService.datasets
+        else
+          @axiom_admin_data = { available: false }
+          @axiom_datasets = []
+        end
       rescue StandardError
         @axiom = { dataset_url: nil, metrics_dataset_url: nil, traces_dataset_url: nil, traces_url: "https://app.axiom.co/traces" }
         @axiom_status = {
@@ -157,6 +165,9 @@ module Ops
           otel_endpoint: nil,
           queue: StructuredLogger.forwarding_stats
         }
+        @axiom_master_key_present = false
+        @axiom_admin_data = { available: false, error: "Axiom configuration unavailable" }
+        @axiom_datasets = []
       end
 
       # Pipeline visibility (read-only manifest)
@@ -470,6 +481,102 @@ module Ops
       redirect_to ops_admin_path(anchor: "ai"), notice: "Queued worker probe job"
     end
 
+    def axiom_create_map_field
+      ensure_axiom_master_key!
+      dataset = params[:dataset].presence || AppConfig.axiom[:dataset]
+      field_name = params[:field_name].to_s.strip
+      if dataset.blank? || field_name.blank?
+        redirect_to ops_admin_path(anchor: "axiom"), alert: "Dataset and field name are required"
+        return
+      end
+
+      axiom_admin_client.create_map_field(dataset: dataset, name: field_name)
+      StructuredLogger.info({ message: "ops_axiom_create_map_field", dataset: dataset, field: field_name }, force_axiom: true) rescue nil
+      redirect_to ops_admin_path(anchor: "axiom"), notice: "Map field '#{field_name}' created on #{dataset}"
+    rescue StandardError => e
+      redirect_to ops_admin_path(anchor: "axiom"), alert: "Map field creation failed: #{e.message}"
+    end
+
+    def axiom_trim_dataset
+      ensure_axiom_master_key!
+      dataset = params[:dataset].presence || AppConfig.axiom[:dataset]
+      duration_param = params[:max_duration].presence
+      duration_param ||= "#{params[:max_duration_days]}d" if params[:max_duration_days].present?
+      duration = Ops::AxiomAdminService.coerce_duration_param(duration_param)
+      if dataset.blank? || duration.blank?
+        redirect_to ops_admin_path(anchor: "axiom"), alert: "Dataset and duration are required"
+        return
+      end
+
+      max_time = parse_max_time(params[:max_time])
+      axiom_admin_client.trim_dataset(dataset: dataset, max_duration: duration, max_time: max_time)
+      StructuredLogger.info({ message: "ops_axiom_trim", dataset: dataset, duration: duration, max_time: max_time }, force_axiom: true) rescue nil
+      redirect_to ops_admin_path(anchor: "axiom"), notice: "Trim request sent (keep #{duration})"
+    rescue StandardError => e
+      redirect_to ops_admin_path(anchor: "axiom"), alert: "Trim failed: #{e.message}"
+    end
+
+    def axiom_vacuum_dataset
+      ensure_axiom_master_key!
+      dataset = params[:dataset].presence || AppConfig.axiom[:dataset]
+      if dataset.blank?
+        redirect_to ops_admin_path(anchor: "axiom"), alert: "Dataset is required"
+        return
+      end
+
+      axiom_admin_client.vacuum_dataset(dataset: dataset)
+      StructuredLogger.info({ message: "ops_axiom_vacuum", dataset: dataset }, force_axiom: true) rescue nil
+      redirect_to ops_admin_path(anchor: "axiom"), notice: "Vacuum requested. Axiom may rate-limit to once per 24h."
+    rescue StandardError => e
+      redirect_to ops_admin_path(anchor: "axiom"), alert: "Vacuum failed: #{e.message}"
+    end
+
+    def axiom_create_dataset
+      ensure_axiom_master_key!
+      name = params[:name].to_s.strip
+      if name.blank?
+        redirect_to ops_admin_path(anchor: "axiom"), alert: "Dataset name is required"
+        return
+      end
+      retention_days = params[:retention_days].to_i
+      retention_days = 30 if retention_days <= 0
+      description = params[:description].to_s
+      kind = params[:kind].presence
+      use_retention = ActiveModel::Type::Boolean.new.cast(params.fetch(:use_retention_period, true))
+
+      dataset = axiom_admin_client.create_dataset(
+        name: name,
+        description: description,
+        retention_days: retention_days,
+        kind: kind,
+        use_retention_period: use_retention
+      )
+      StructuredLogger.info({ message: "ops_axiom_dataset_created", dataset: dataset["name"], retention_days: retention_days }, force_axiom: true) rescue nil
+      redirect_to ops_admin_path(anchor: "axiom"), notice: "Dataset '#{dataset['name']}' created"
+    rescue StandardError => e
+      redirect_to ops_admin_path(anchor: "axiom"), alert: "Dataset creation failed: #{e.message}"
+    end
+
+    def axiom_delete_dataset
+      ensure_axiom_master_key!
+      id = params[:id].to_s
+      if id.blank?
+        redirect_to ops_admin_path(anchor: "axiom"), alert: "Dataset id required"
+        return
+      end
+      protected_ids = [ AppConfig.axiom[:dataset], AppConfig.axiom[:metrics_dataset], AppConfig.axiom[:traces_dataset] ].compact
+      if protected_ids.include?(id)
+        redirect_to ops_admin_path(anchor: "axiom"), alert: "Refusing to delete active dataset '#{id}'. Update AppConfig first."
+        return
+      end
+
+      axiom_admin_client.delete_dataset(id: id)
+      StructuredLogger.info({ message: "ops_axiom_dataset_deleted", dataset: id }, force_axiom: true) rescue nil
+      redirect_to ops_admin_path(anchor: "axiom"), notice: "Dataset '#{id}' deleted"
+    rescue StandardError => e
+      redirect_to ops_admin_path(anchor: "axiom"), alert: "Dataset deletion failed: #{e.message}"
+    end
+
     def pipeline_doctor
       login = params[:login].to_s.downcase.presence
       host = params[:host].presence
@@ -643,6 +750,24 @@ module Ops
 
       content = File.read(path)
       JSON.parse(content, symbolize_names: true)
+    rescue StandardError
+      nil
+    end
+
+    def ensure_axiom_master_key!
+      if AppConfig.axiom[:master_key].to_s.strip.empty?
+        raise StandardError, "Axiom master key missing"
+      end
+    end
+
+    def axiom_admin_client
+      @axiom_admin_client ||= Ops::AxiomAdminService.admin_client
+    end
+
+    def parse_max_time(value)
+      return nil if value.blank?
+      parsed = Time.zone.parse(value.to_s)
+      parsed&.utc&.iso8601
     rescue StandardError
       nil
     end
