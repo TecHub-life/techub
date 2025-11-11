@@ -11,14 +11,12 @@ module StructuredLogger
     AXIOM_FORWARD_QUEUE = Queue.new
   end
 
-  unless defined?(AXIOM_FORWARD_WORKER)
-    AXIOM_FORWARD_WORKER = Thread.new do
-      Thread.current.name = "structured_logger_axiom_forwarder" if Thread.current.respond_to?(:name=)
-      loop do
-        job = AXIOM_FORWARD_QUEUE.pop
-        job.call
-      end
-    end
+  unless defined?(AXIOM_FORWARD_WORKER_MUTEX)
+    AXIOM_FORWARD_WORKER_MUTEX = Mutex.new
+  end
+
+  unless defined?(AXIOM_FORWARD_WORKER_PID)
+    AXIOM_FORWARD_WORKER_PID = Concurrent::AtomicReference.new(nil)
   end
 
   unless defined?(AXIOM_FORWARD_ENQUEUED)
@@ -29,6 +27,42 @@ module StructuredLogger
     AXIOM_FORWARD_LAST_DELIVERY = Concurrent::AtomicReference.new(nil)
     AXIOM_FORWARD_LAST_SKIP = Concurrent::AtomicReference.new(nil)
   end
+
+  def spawn_forward_worker
+    Thread.new do
+      Thread.current.name = "structured_logger_axiom_forwarder" if Thread.current.respond_to?(:name=)
+      loop do
+        job = AXIOM_FORWARD_QUEUE.pop
+        begin
+          job.call
+        rescue StandardError => e
+          AXIOM_FORWARD_LAST_ERROR.set(e.respond_to?(:message) ? "#{e.class.name}: #{e.message}" : e.to_s)
+          AXIOM_FORWARD_LAST_ERROR_AT.set(Time.now.utc.iso8601(3))
+          begin
+            warn "StructuredLogger forwarder error: #{AXIOM_FORWARD_LAST_ERROR.value}" if AppConfig.axiom[:debug]
+          rescue StandardError
+          end
+          sleep 0.25
+        end
+      end
+    end
+  end
+
+  def ensure_forward_worker!
+    AXIOM_FORWARD_WORKER_MUTEX.synchronize do
+      worker = defined?(AXIOM_FORWARD_WORKER) ? AXIOM_FORWARD_WORKER : nil
+      pid = AXIOM_FORWARD_WORKER_PID.value
+      return if worker&.alive? && pid == Process.pid
+
+      remove_const(:AXIOM_FORWARD_WORKER) if defined?(AXIOM_FORWARD_WORKER)
+      const_set(:AXIOM_FORWARD_WORKER, spawn_forward_worker)
+      AXIOM_FORWARD_WORKER_PID.set(Process.pid)
+    end
+  end
+
+  private :spawn_forward_worker, :ensure_forward_worker!
+
+  ensure_forward_worker!
 
   def info(message_or_hash = nil, **extra)
     emit(:info, message_or_hash, extra)
@@ -144,6 +178,8 @@ module StructuredLogger
   end
 
   def forward_to_axiom(payload, force_axiom:)
+    ensure_forward_worker!
+
     axiom_cfg = AppConfig.axiom
     forwarding = AppConfig.axiom_forwarding(force: force_axiom)
     return record_skip(forwarding) if !forwarding[:allowed]
