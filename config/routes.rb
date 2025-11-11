@@ -130,6 +130,11 @@ Rails.application.routes.draw do
     post "/axiom_direct_ingest", to: "admin#axiom_direct_ingest", as: :axiom_direct_ingest
     post "/axiom_otel_smoke", to: "admin#axiom_otel_smoke", as: :axiom_otel_smoke
     post "/axiom_worker_probe", to: "admin#axiom_worker_probe", as: :axiom_worker_probe
+    post "/axiom_map_field", to: "admin#axiom_create_map_field", as: :axiom_create_map_field
+    post "/axiom_trim", to: "admin#axiom_trim_dataset", as: :axiom_trim_dataset
+    post "/axiom_vacuum", to: "admin#axiom_vacuum_dataset", as: :axiom_vacuum_dataset
+    post "/axiom_datasets", to: "admin#axiom_create_dataset", as: :axiom_datasets
+    delete "/axiom_datasets/:id", to: "admin#axiom_delete_dataset", as: :axiom_dataset
     post "/send_test_email", to: "admin#send_test_email", as: :send_test_email
     post "/bulk_retry", to: "admin#bulk_retry", as: :bulk_retry
     post "/bulk_retry_all", to: "admin#bulk_retry_all", as: :bulk_retry_all
