@@ -49,6 +49,8 @@ Created by **Jared Hooker ([@GameDevJared89](https://x.com/GameDevJared89))** an
    bin/dev
    ```
 
+   **Developing background jobs:** `bin/dev` now skips Solid Queue workers and recurring schedulers in development unless you explicitly opt in by setting `DEV_BACKGROUND_JOBS_ENABLED=1` (or `true`) in your `.env`. This keeps noisy recurring workloads off by default. When you need to work on jobs, set the flag, restart `bin/dev`, and the `jobs` process will boot normally.
+
 3. Verify everything with the local CI pipeline:
    ```bash
    bin/ci

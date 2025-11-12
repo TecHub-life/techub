@@ -1,5 +1,18 @@
 #!/usr/bin/env ruby
 
+def truthy?(value)
+  %w[1 true yes on].include?(value.to_s.strip.downcase)
+end
+
+rails_env = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || "development"
+if rails_env == "development" && !truthy?(ENV["DEV_BACKGROUND_JOBS_ENABLED"])
+  $stdout.sync = true
+  warn "DEV_BACKGROUND_JOBS_ENABLED is not set; skipping Solid Queue workers/recurring scheduler. Set it to 1 if you need jobs locally."
+  Signal.trap("TERM") { exit 0 }
+  Signal.trap("INT") { exit 0 }
+  loop { sleep 3600 }
+end
+
 require_relative "../config/environment"
 require "solid_queue/cli"
 
