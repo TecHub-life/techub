@@ -3,6 +3,11 @@ require "digest"
 
 module GithubProfile
   class DownloadReadmeImagesService < ApplicationService
+    BADGE_OR_SVG_HOSTS = %w[
+      github-readme-stats.vercel.app
+      github-readme-streak-stats.herokuapp.com
+    ].freeze
+
     def initialize(readme_content:, login:)
       @readme_content = readme_content
       @login = login
@@ -90,8 +95,10 @@ module GithubProfile
         return nil
       end
 
+      host = uri.host&.downcase
+
       # Skip SVGs and common badge/graph hosts (non-binary and not useful inline)
-      if uri.path.to_s.downcase.end_with?(".svg") || (uri.host == "shields.io" || uri.host&.end_with?(".shields.io")) || uri.host == "github-readme-stats.vercel.app"
+      if uri.path.to_s.downcase.end_with?(".svg") || badge_or_svg_only_host?(host)
         StructuredLogger.debug(message: "Skipping SVG/badge image", url: url) if defined?(StructuredLogger)
         return nil
       end
@@ -122,7 +129,7 @@ module GithubProfile
         content_type = response["content-type"].to_s.downcase
         unless content_type.start_with?("image/") && !content_type.include?("svg")
           # Downgrade to debug for known SVG-only hosts to reduce noise
-          level = (uri.host == "github-readme-stats.vercel.app") ? :debug : :warn
+          level = badge_or_svg_only_host?(host) ? :debug : :warn
           if defined?(StructuredLogger)
             StructuredLogger.send(level, message: "Invalid content type for image download", url: url, content_type: content_type)
           end
@@ -142,6 +149,14 @@ module GithubProfile
     rescue Net::HTTPError, SocketError, Timeout::Error, URI::InvalidURIError => e
       StructuredLogger.warn(message: "Failed to download image", url: url, error: e.message)
       nil
+    end
+
+    def badge_or_svg_only_host?(host)
+      return false if host.blank?
+
+      host == "shields.io" ||
+        host.end_with?(".shields.io") ||
+        BADGE_OR_SVG_HOSTS.include?(host)
     end
 
     def private_ip?(hostname)

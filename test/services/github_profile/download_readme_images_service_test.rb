@@ -113,5 +113,22 @@ module GithubProfile
       assert_not_nil result.value[:content]
       assert_not_nil result.value[:images_downloaded]
     end
+
+    test "skips known svg-only badge hosts" do
+      url = "https://github-readme-streak-stats.herokuapp.com/?user=bryanperris&theme=tokyonight"
+      content = "![test](#{url})"
+
+      stub_request(:get, url)
+
+      result = DownloadReadmeImagesService.call(
+        readme_content: content,
+        login: @login
+      )
+
+      assert result.success?
+      assert_equal content, result.value[:content]
+      assert_equal 0, result.value[:images_downloaded]
+      assert_not_requested(:get, url)
+    end
   end
 end
