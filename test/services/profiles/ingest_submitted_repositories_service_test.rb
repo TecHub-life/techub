@@ -44,6 +44,43 @@ module Profiles
       assert_equal "no_repos_saved", result.metadata[:reason]
     end
 
+    test "uses profile owner access token before app client" do
+      owner = User.create!(github_id: 404, login: "owner", access_token: "owner-token")
+      ProfileOwnership.create!(profile: @profile, user: owner, is_owner: true)
+
+      fake_repo = Struct.new(:full_name, :name, :description, :html_url, :stargazers_count, :forks_count, :language, :created_at, :updated_at, :topics)
+        .new("tester/demo", "demo", "desc", "https://github.com/tester/demo", 5, 1, "Ruby", Time.current, Time.current, [ "rails" ])
+      fake_client = Class.new do
+        def initialize(repo)
+          @repo = repo
+        end
+
+        def repository(full_name)
+          raise "unexpected full_name #{full_name}" unless full_name == @repo.full_name
+          @repo
+        end
+      end.new(fake_repo)
+
+      Github::AppClientService.stub :call, -> { flunk("app client should not be used when owner token exists") } do
+        Octokit::Client.stub :new, ->(**kwargs) {
+          assert_equal "owner-token", kwargs[:access_token]
+          fake_client
+        } do
+          assert_equal 1, ProfileOwnership.where(profile: @profile, is_owner: true).count
+          ownership = @profile.profile_ownerships.includes(:user).first
+          assert ownership.is_owner?
+          assert_equal "owner-token", ownership.user.access_token
+          service = Profiles::IngestSubmittedRepositoriesService.new(profile: @profile, repo_full_names: [ "tester/demo" ])
+          assert_equal fake_client, service.send(:owner_octokit_client)
+
+          result = service.call
+
+          assert result.success?
+          assert_equal 1, result.metadata[:ingested]
+        end
+      end
+    end
+
     test "propagates failure when client acquisition fails" do
       Github::AppClientService.stub :call, ServiceResult.failure(StandardError.new("no_client")) do
         result = Profiles::IngestSubmittedRepositoriesService.call(profile: @profile, repo_full_names: [ "tester/demo" ])

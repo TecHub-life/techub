@@ -10,7 +10,7 @@ module Profiles
       return failure(StandardError.new("no_profile")) unless profile.is_a?(::Profile)
       return success([]) if repo_full_names.empty?
 
-      client_result = client ? ServiceResult.success(client) : Github::AppClientService.call
+      client_result = resolve_client
       return client_result if client_result.failure?
       octo = client_result.value
       created = []
@@ -56,5 +56,25 @@ module Profiles
     private
 
     attr_reader :profile, :repo_full_names, :client
+
+    def resolve_client
+      return ServiceResult.success(client) if client
+      owner_client = owner_octokit_client
+      return ServiceResult.success(owner_client, metadata: { client_source: :profile_owner }) if owner_client
+
+      Github::AppClientService.call
+    end
+
+    def owner_octokit_client
+      return unless profile
+
+      ownership = profile.profile_ownerships.includes(:user).detect { |po| po.is_owner? && po.user&.access_token.present? }
+      return unless ownership&.user
+
+      Octokit::Client.new(access_token: ownership.user.access_token)
+    rescue StandardError => e
+      StructuredLogger.warn(message: "submitted_repo_owner_client_failed", profile_id: profile.id, error: e.message) if defined?(StructuredLogger)
+      nil
+    end
   end
 end
