@@ -12,6 +12,7 @@
     "puppeteer": "^24.28.0"
   },
   "scripts": {
+    "postinstall": "node script/fontawesome_postinstall.js",
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
     "screenshot": "node script/screenshot.js --url http://127.0.0.1:3000/cards/loftwah/og --out tmp/og.png --width 1200 --height 630"
