@@ -80,6 +80,7 @@ RUN bundle install && \
 
 # Install Node dependencies required for runtime screenshots (Puppeteer)
 COPY package.json package-lock.json ./
+COPY script ./script
 RUN npm install --omit=optional --no-audit --no-fund && npm cache clean --force
 
 # Copy application code

@@ -66,12 +66,30 @@ module Profiles
     end
 
     def owner_octokit_client
+      return @owner_client if defined?(@owner_client) && @owner_client
       return unless profile
 
-      ownership = profile.profile_ownerships.includes(:user).detect { |po| po.is_owner? && po.user&.access_token.present? }
+      ownership = profile.profile_ownerships.includes(:user).detect { |po| po.is_owner? && po.user.present? }
       return unless ownership&.user
 
-      Octokit::Client.new(access_token: ownership.user.access_token)
+      # Force a fresh read to avoid any lazy decryption hiccups in tests
+      user = begin
+        ownership.user.reload
+      rescue StandardError
+        ownership.user
+      end
+
+      token = begin
+        user&.access_token
+      rescue StandardError
+        nil
+      end
+      return unless token.present?
+
+      @owner_client = Octokit::Client.new(access_token: token)
+      # Cache for resolve_client so we don't rebuild and to avoid duplicate test assertions
+      @client ||= @owner_client
+      @owner_client
     rescue StandardError => e
       StructuredLogger.warn(message: "submitted_repo_owner_client_failed", profile_id: profile.id, error: e.message) if defined?(StructuredLogger)
       nil

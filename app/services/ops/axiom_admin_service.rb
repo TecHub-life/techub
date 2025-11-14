@@ -7,6 +7,10 @@ module Ops
 
     class << self
       def available?
+        # Do not talk to Axiom in non-production by default, even if env vars are present.
+        # Allow opting-in via AppSetting (:allow_axiom_admin) for local diagnostics.
+        allow = Rails.env.production? || AppSetting.get_bool(:allow_axiom_admin, default: false)
+        return false unless allow
         AppConfig.axiom[:master_key].present? && AppConfig.axiom[:dataset].present?
       end
 
@@ -42,7 +46,7 @@ module Ops
       end
 
       def datasets
-        return [] unless AppConfig.axiom[:master_key].present?
+        return [] unless available?
 
         admin_client.datasets
       rescue StandardError
