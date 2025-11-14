@@ -27,32 +27,44 @@ module Profiles
           trace(:started, variants: variants, host: host)
 
           captures = {}
+          failures = []
           variants.each do |variant|
             trace(:variant_started, variant: variant)
-            asset = Screenshots::CaptureCardJob.perform_now(
-              login: profile.login,
-              variant: variant,
-              host: host,
-              optimize: false
-            )
-            unless asset && asset.respond_to?(:id)
-              trace(:variant_failed, variant: variant, error: "asset_not_recorded")
-              return failure_with_context(StandardError.new("screenshot_failed"), metadata: { variant: variant })
+            begin
+              asset = Screenshots::CaptureCardJob.perform_now(
+                login: profile.login,
+                variant: variant,
+                host: host,
+                optimize: false
+              )
+              if asset && asset.respond_to?(:id)
+                captures[variant] = snapshot_asset(asset)
+                trace(:variant_completed, variant: variant, asset: captures[variant])
+              else
+                trace(:variant_failed, variant: variant, error: "asset_not_recorded")
+                failures << { variant: variant, error: "asset_not_recorded" }
+              end
+            rescue StandardError => e
+              trace(:variant_exception, variant: variant, error: e.message)
+              failures << { variant: variant, error: e.message }
             end
-            captures[variant] = snapshot_asset(asset)
-            trace(:variant_completed, variant: variant, asset: captures[variant])
           end
 
           context.captures = captures
+          meta = { captures: captures.length, variants: captures.keys, assets: captures, failures: failures }
+
+          if failures.any?
+            if captures.any?
+              trace(:completed_degraded, **meta)
+              return degraded_with_context(captures, metadata: meta)
+            else
+              trace(:failed, **meta)
+              return failure_with_context(StandardError.new("screenshot_failed"), metadata: meta)
+            end
+          end
+
           trace(:completed, count: captures.length)
-          success_with_context(
-            captures,
-            metadata: {
-              captures: captures.length,
-              variants: captures.keys,
-              assets: captures
-            }
-          )
+          success_with_context(captures, metadata: meta)
         rescue StandardError => e
           trace(:failed, error: e.message)
           failure_with_context(e)

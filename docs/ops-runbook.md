@@ -193,3 +193,24 @@ kamal app exec -i web -- bin/rails runner 'p Profile.for_login("loftwah").first.
 ```
 
 See `docs/storage.md` for detailed troubleshooting.
+
+### Screenshot Capture Debugging
+
+- The screenshot helper now saves debug artifacts on navigation errors under
+  `public/generated/<login>/debug/<variant>/<timestamp>/`:
+  - `console.json` (console logs, page errors, failed requests)
+  - `error.txt` (navigation error)
+  - `page.html` (DOM snapshot)
+  - `stdout.log` / `stderr.log` from the Node helper
+- Tunables (AppSetting preferred; env fallback):
+  - AppSetting keys:
+    - `screenshot_goto_timeout_ms` (default 60000)
+    - `screenshot_wait_until` one of: `networkidle0`, `networkidle2`, `domcontentloaded` (default
+      `networkidle0`)
+  - Env fallbacks (if AppSetting blank):
+    - `SCREENSHOT_GOTO_TIMEOUT_MS`
+    - `SCREENSHOT_WAIT_UNTIL`
+- The navigator retries with a fallback strategy (`networkidle0` → `domcontentloaded`) before
+  failing.
+- The pipeline treats screenshot stage as degraded if at least one variant succeeds, preventing
+  complete directory exclusion.

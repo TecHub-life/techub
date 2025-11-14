@@ -73,6 +73,8 @@ module Screenshots
       default_type = Rails.env.test? ? "png" : "jpeg"
       @type = %w[jpeg png].include?(type.to_s.downcase) ? type.to_s.downcase : default_type
       @quality = quality.to_i
+      @goto_timeout_ms = fetch_setting_int(:screenshot_goto_timeout_ms, env: "SCREENSHOT_GOTO_TIMEOUT_MS", default: 60_000)
+      @wait_until = normalize_wait_until(fetch_setting(:screenshot_wait_until, env: "SCREENSHOT_WAIT_UNTIL", default: "networkidle0"))
     end
 
     def call
@@ -87,6 +89,12 @@ module Screenshots
       FileUtils.mkdir_p(path.dirname)
 
       script_rel = File.join("script", "screenshot.js")
+      debug_dir = Rails.root.join("public", "generated", login, "debug", variant, Time.now.utc.strftime("%Y%m%dT%H%M%S"))
+      begin
+        FileUtils.mkdir_p(debug_dir)
+      rescue StandardError
+        # best-effort
+      end
       cmd = [
         "node",
         script_rel,
@@ -96,7 +104,11 @@ module Screenshots
         "--height", height.to_s,
         "--wait", wait_ms.to_s,
         "--type", type,
-        "--quality", quality.to_s
+        "--quality", quality.to_s,
+        "--gotoTimeout", @goto_timeout_ms.to_s,
+        "--waitUntil", @wait_until,
+        "--debug", "1",
+        "--debugDir", debug_dir.to_s
       ]
 
       if Rails.env.test?
@@ -106,8 +118,18 @@ module Screenshots
         # Ensure we execute with a fixed working directory and safe argument array
         out_str, err_str, status = Open3.capture3(*cmd, chdir: Rails.root.to_s)
         unless status.success?
-          StructuredLogger.error(message: "screenshot_command_failed", cmd: cmd.join(" "), stdout: out_str, stderr: err_str) if defined?(StructuredLogger)
-          return failure(StandardError.new("Screenshot command failed"), metadata: { cmd: cmd.join(" "), stdout: out_str, stderr: err_str })
+          # Persist stdout/stderr to debug files to avoid shipping large payloads to Axiom
+          begin
+            File.write(File.join(debug_dir, "stdout.log"), out_str.to_s)
+          rescue StandardError
+          end
+          begin
+            File.write(File.join(debug_dir, "stderr.log"), err_str.to_s)
+          rescue StandardError
+          end
+          log_meta = { cmd: cmd.join(" "), debug_dir: debug_dir.to_s, stdout_bytes: out_str.to_s.bytesize, stderr_bytes: err_str.to_s.bytesize, url: url, variant: variant, login: login }
+          StructuredLogger.error(message: "screenshot_command_failed", service: self.class.name, metadata: log_meta) if defined?(StructuredLogger)
+          return failure(StandardError.new("Screenshot command failed"), metadata: log_meta)
         end
       end
 
@@ -121,8 +143,9 @@ module Screenshots
           size_bytes = 0
         end
         if size_bytes.to_i <= 1024
-          StructuredLogger.error(message: "screenshot_empty", login: login, variant: variant, url: url, path: path.to_s, size: size_bytes) if defined?(StructuredLogger)
-          return failure(StandardError.new("screenshot_empty"), metadata: { expected: path.to_s, size: size_bytes, url: url })
+          meta = { login: login, variant: variant, url: url, path: path.to_s, size: size_bytes }
+          StructuredLogger.error(message: "screenshot_empty", service: self.class.name, metadata: meta) if defined?(StructuredLogger)
+          return failure(StandardError.new("screenshot_empty"), metadata: meta)
         end
       end
 
@@ -179,5 +202,28 @@ module Screenshots
     end
 
     # Upload support is governed strictly by Active Storage configuration.
+    def normalize_wait_until(value)
+      str = value.to_s.downcase
+      return "networkidle0" if str.include?("idle0")
+      return "networkidle2" if str.include?("idle2")
+      return "domcontentloaded" if str.include?("dom")
+      "networkidle0"
+    end
+
+    def fetch_setting(key, env:, default: nil)
+      # Prefer application setting; fall back to env; then default
+      begin
+        app_val = AppSetting.get(key, default: nil)
+      rescue StandardError
+        app_val = nil
+      end
+      return app_val if app_val.present?
+      ENV[env].presence || default
+    end
+
+    def fetch_setting_int(key, env:, default: nil)
+      v = fetch_setting(key, env: env, default: default)
+      v.to_i
+    end
   end
 end
