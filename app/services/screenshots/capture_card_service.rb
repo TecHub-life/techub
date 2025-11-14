@@ -127,7 +127,13 @@ module Screenshots
             File.write(File.join(debug_dir, "stderr.log"), err_str.to_s)
           rescue StandardError
           end
-          log_meta = { cmd: cmd.join(" "), debug_dir: debug_dir.to_s, stdout_bytes: out_str.to_s.bytesize, stderr_bytes: err_str.to_s.bytesize, url: url, variant: variant, login: login }
+          # Include tiny previews for tests/dev, but avoid large payloads
+          previews = {}
+          unless Rails.env.production?
+            previews[:stdout] = out_str.to_s[0, 512]
+            previews[:stderr] = err_str.to_s[0, 512]
+          end
+          log_meta = { cmd: cmd.join(" "), debug_dir: debug_dir.to_s, stdout_bytes: out_str.to_s.bytesize, stderr_bytes: err_str.to_s.bytesize, url: url, variant: variant, login: login }.merge(previews)
           StructuredLogger.error(message: "screenshot_command_failed", service: self.class.name, metadata: log_meta) if defined?(StructuredLogger)
           return failure(StandardError.new("Screenshot command failed"), metadata: log_meta)
         end
