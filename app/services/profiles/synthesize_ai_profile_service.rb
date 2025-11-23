@@ -190,6 +190,7 @@ module Profiles
           following: record.following
         },
         summary: record.summary,
+        scraped_content: record.profile_scrapes.order(created_at: :desc).first&.text&.truncate(3000),
         languages: language_ratios(record),
         social_accounts: Array(record.profile_social_accounts).map { |sa| { platform: sa.provider, handle: sa.display_name, url: sa.url } },
         organizations: Array(record.profile_organizations).map { |o| { login: o.login, name: (o.name.presence || o.login) } },
@@ -264,12 +265,14 @@ module Profiles
 
     def system_prompt
       <<~PROMPT.squish
-        You create engaging, third-person developer profiles grounded in provided public data. Follow the constraints exactly.
+        You create engaging, third-person developer profiles grounded in provided public data and any scraped website content. Follow the constraints exactly.
         Only include repositories owned by the user or organizations they belong to. Do not claim employment. Apply overrides as given.
         Provide:
         - title: 2–5 word heroic codename capturing their archetype.
         - tagline: 1-sentence hook (max 16 words) distinct from flavor_text.
         - flavor_text: a punchy quote-style line (max 80 chars).
+        - vibe: 1-3 word description of their coding energy (e.g. "Chaos Engineer", "Pixel Perfect").
+        - vibe_description: A sentence explaining why they have that vibe, referencing their bio or scraped content.
         Choose attack/defense/speed as integers in 60–99, scaled by signals:
         - Attack: followers, repo stars, active repos.
         - Defense: account age, org count, public repos, testing/tooling cues.

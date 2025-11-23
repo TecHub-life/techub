@@ -8,4 +8,18 @@
     The rails/solid stack keeps historical rollups cheap. Recurring jobs precompute the views so the
     UI responds instantly.
   </p>
+
+  <%# Debug Chart for testing chart.js implementation %>
+  <div class="rounded-lg border border-slate-200 dark:border-slate-700 p-6 bg-white dark:bg-slate-900">
+    <h2 class="text-lg font-semibold mb-4">Chart Debug Area</h2>
+    <div class="h-[300px] w-full relative">
+      <canvas
+        data-controller="stats-chart"
+        data-stats-chart-labels-value='["Jan 1", "Jan 2", "Jan 3", "Jan 4", "Jan 5"]'
+        data-stats-chart-data-value='[12, 19, 3, 5, 2]'
+        data-stats-chart-label-value="Debug Data"
+        data-stats-chart-color-value="#ec4899"
+      ></canvas>
+    </div>
+  </div>
 </section>

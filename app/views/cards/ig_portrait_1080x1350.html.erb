@@ -13,48 +13,64 @@
   <% end %>
   <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-black/70 to-black/85"></div>
 
-  <div class="absolute inset-0 grid place-items-center p-8">
-    <div class="w-full max-w-[860px]">
-      <div class="flex items-start justify-between gap-8">
-        <div class="min-w-0">
-          <% name = @profile.display_name %>
-          <% handle = @profile.login %>
-          <h1 class="text-6xl font-extrabold text-white tracking-wide leading-tight text-center sm:text-left"><%= name %></h1>
-          <p class="mt-1 text-3xl font-semibold text-sky-300 text-center sm:text-left">@<%= handle %></p>
-          <% card = @profile.profile_card %>
-          <% if (tag = card&.flavor_text.presence || card&.short_bio.presence).present? %>
-            <p class="mt-4 text-2xl text-slate-200 leading-snug text-center sm:text-left">"<%= tag %>"</p>
-          <% end %>
-          <% repos = Array(@profile.top_repositories).first(3).map { |r| [r.name.to_s, r.stargazers_count.to_i] } %>
-          <% if repos.any? %>
-            <div class="mt-5 flex flex-wrap items-center justify-center sm:justify-start gap-3">
-              <% repos.each do |(rn, stars)| %>
-                <span class="px-4 py-2 rounded-full bg-teal-900/40 border border-teal-700 text-teal-200 text-lg max-w-[380px] break-words">
-                  <%= rn %>
-                  <% if stars > 0 %><span class="ml-1 text-base text-amber-300">★ <%= stars %></span><% end %>
-                </span>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-        <div class="flex-shrink-0">
-          <div class="w-48 h-48 rounded-full p-2 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 shadow-2xl">
-            <div class="w-full h-full rounded-full overflow-hidden bg-gray-800">
-              <img src="<%= avatar_image_url_for(@profile, variant: :card) %>" alt="avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
-            </div>
-          </div>
+  <div class="absolute inset-0 flex flex-col items-center justify-center p-8">
+    <div class="w-full max-w-[860px] text-center">
+      
+      <%# Avatar - Centered & Large %>
+      <div class="mx-auto mb-8 w-64 h-64 rounded-full p-2 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 shadow-2xl">
+        <div class="w-full h-full rounded-full overflow-hidden bg-gray-900">
+          <img src="<%= avatar_image_url_for(@profile, variant: :card) %>" alt="avatar" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
         </div>
       </div>
-      <div class="mt-8 flex items-center justify-center gap-4 text-slate-200">
-        <% followers = @profile.followers.to_i %>
-        <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
-        <% top_lang = @profile.profile_languages.order(count: :desc).limit(1).pluck(:name).first %>
-        <% if top_lang.present? %>
-          <span class="px-4 py-2 rounded-md bg-white/10 border border-white/15 text-xl">💻 <%= top_lang %></span>
-        <% end %>
-        <span class="px-4 py-2 rounded-md bg-white/10 border border-white/15 text-xl">⭐ <%= stars %></span>
-        <span class="px-4 py-2 rounded-md bg-white/10 border border-white/15 text-xl">👥 <%= followers %></span>
+
+      <%# Identity %>
+      <h1 class="text-7xl font-black text-white tracking-tight leading-none mb-2 drop-shadow-lg"><%= @profile.display_name %></h1>
+      <p class="text-4xl font-bold text-sky-400 mb-8">@<%= @profile.login %></p>
+
+      <%# Flavor/Bio %>
+      <% card = @profile.profile_card %>
+      <% if (tag = card&.flavor_text.presence || card&.short_bio.presence).present? %>
+        <p class="text-3xl font-medium text-slate-200 leading-snug px-8 mb-10 italic opacity-90">"<%= tag %>"</p>
+      <% end %>
+
+      <%# Stats Grid %>
+      <div class="grid grid-cols-2 gap-4 max-w-2xl mx-auto mb-10">
+         <% followers = @profile.followers.to_i %>
+         <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
+         <% top_lang = @profile.profile_languages.order(count: :desc).limit(1).pluck(:name).first %>
+
+         <% if top_lang.present? %>
+           <div class="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/10">
+             <span class="text-sm uppercase tracking-widest text-slate-400">Top Lang</span>
+             <span class="text-2xl font-bold text-white"><%= top_lang %></span>
+           </div>
+         <% end %>
+
+         <div class="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/10">
+           <span class="text-sm uppercase tracking-widest text-slate-400">Total Stars</span>
+           <span class="text-2xl font-bold text-amber-300"><%= number_to_human(stars, format: "%n%u", units: { thousand: "K" }) %></span>
+         </div>
+         
+         <div class="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/10">
+           <span class="text-sm uppercase tracking-widest text-slate-400">Followers</span>
+           <span class="text-2xl font-bold text-emerald-300"><%= number_to_human(followers, format: "%n%u", units: { thousand: "K" }) %></span>
+         </div>
+
+         <% if card&.archetype.present? %>
+           <div class="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/10">
+             <span class="text-sm uppercase tracking-widest text-slate-400">Archetype</span>
+             <span class="text-2xl font-bold text-indigo-300"><%= card.archetype %></span>
+           </div>
+         <% end %>
       </div>
+
+      <%# Footer %>
+      <div class="flex justify-center">
+        <div class="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+          <span class="text-sm font-bold text-slate-300 tracking-widest uppercase">techub.life</span>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

@@ -53,8 +53,6 @@ module ProfileShowcaseHelper
     case item
     when ProfileLink
       item.subtitle.presence
-    when ProfileAchievement
-      item.description.presence
     when ProfileExperience
       [ item.organization, item.location ].compact.join(" · ").presence
     end
@@ -72,7 +70,6 @@ module ProfileShowcaseHelper
       lines = []
       range = experience_range(item)
       lines << range if range.present?
-      lines << item.description if item.description.present?
       lines
     else
       []

@@ -62,12 +62,20 @@ class Profile < ApplicationRecord
 
   def active_repositories_filtered
     # Filter active repositories to only show user's own repos or org repos
+    # We perform this in SQL for performance and to return an ActiveRecord::Relation
     user_orgs = organization_logins
-    profile_repositories.where(repository_type: "active").select do |repo|
-      # repo.full_name is in format "owner/repo"
-      owner = repo.full_name.split("/").first
-      owner == login || user_orgs.include?(owner)
-    end
+
+    # Create a pattern list for the owner prefix (user/ or org/)
+    # We use LIKE with the owner prefix. Note: We downcase for case-insensitive comparison
+    # assuming the DB layer might have mixed casing.
+    patterns = [ "#{login.downcase}/%" ] + user_orgs.map { |o| "#{o.downcase}/%" }
+
+    # Construct the SQL clause: (lower(full_name) LIKE 'login/%' OR lower(full_name) LIKE 'org/%' ...)
+    clause = patterns.map { "LOWER(full_name) LIKE ?" }.join(" OR ")
+
+    profile_repositories
+      .where(repository_type: "active")
+      .where(clause, *patterns)
   end
 
   # Language methods

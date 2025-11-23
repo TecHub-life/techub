@@ -12,3 +12,4 @@ db/schema.rb
 storage
 *.rb
 *.rake
+app/assets/stylesheets/fontawesome.css

@@ -55,7 +55,12 @@
   </script>
 <% end %>
 
-<section class="mx-auto max-w-6xl px-4 py-8" data-controller="hidden-items" data-hidden-items-hidden-count-value="<%= @hidden_showcase_count %>" data-hidden-items-analytics-endpoint-value="<%= analytics_showcase_path(format: :json) %>" data-hidden-items-profile-value="<%= @profile.login %>">
+<section class="mx-auto max-w-6xl px-4 py-8" 
+  data-controller="hidden-items profile-view" 
+  data-profile-view-login-value="<%= @profile.login %>"
+  data-hidden-items-hidden-count-value="<%= @hidden_showcase_count %>" 
+  data-hidden-items-analytics-endpoint-value="<%= analytics_showcase_path(format: :json) %>" 
+  data-hidden-items-profile-value="<%= @profile.login %>">
   <% if @profile.present? %>
     <%# TABBED CONTENT SECTION %>
     <div class="mb-6" data-controller="tabs" data-tabs-default-value="profile">

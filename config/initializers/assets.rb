@@ -10,4 +10,4 @@ Rails.application.config.assets.paths << Rails.root.join("app/javascript", "cont
 Rails.application.config.assets.paths << Rails.root.join("node_modules")
 Rails.application.config.assets.paths << Rails.root.join("node_modules", "@fortawesome", "fontawesome-free")
 Rails.application.config.assets.paths << Rails.root.join("app", "assets", "webfonts")
-Rails.application.config.assets.paths << Rails.root.join("app", "assets", "vendor", "fontawesome", "webfonts")
+Rails.application.config.assets.paths << Rails.root.join("app", "assets", "vendor")

@@ -34,6 +34,17 @@ class MyProfilesController < MyProfiles::BaseController
     else
       @ownership_removed_notices = []
     end
+
+    # Fetch view counts for profiles
+    @view_counts = {}
+    if @profiles.any?
+      # Use Ahoy events to count "Viewed Profile" events for these logins
+      # Note: This counts total views, not unique visitors.
+      @view_counts = Ahoy::Event.where(name: "Viewed Profile")
+        .where("properties->>'login' IN (?)", @profiles.map(&:login))
+        .group("properties->>'login'")
+        .count
+    end
   end
 
   def settings

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Configuration
+IMAGE_NAME="ghcr.io/loftwah/techub-base"
+IMAGE_TAG="latest"
+
+# Check for required environment variable
+if [[ -z "${KAMAL_REGISTRY_PASSWORD:-}" ]]; then
+  echo "Error: KAMAL_REGISTRY_PASSWORD is not set."
+  echo "Please export your GitHub PAT (with write:packages scope):"
+  echo "  export KAMAL_REGISTRY_PASSWORD=ghp_..."
+  exit 1
+fi
+
+echo "--- Building Base Image ---"
+echo "Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+
+# 1. Login to Registry
+echo "Logging in to ghcr.io..."
+echo "${KAMAL_REGISTRY_PASSWORD}" | docker login ghcr.io -u loftwah --password-stdin
+
+# 2. Build Image
+echo "Building image (this may take a while)..."
+docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" -f Dockerfile.base .
+
+# 3. Push Image
+echo "Pushing image to registry..."
+docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+
+echo "--- Done! ---"
+echo "Base image updated successfully."
+echo "You can now run 'kamal deploy' normally."
+

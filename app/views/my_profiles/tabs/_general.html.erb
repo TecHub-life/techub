@@ -33,7 +33,7 @@
             </div>
           </div>
 
-          <div class="space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <div>
               <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Buff</p>
               <p class="text-sm font-semibold text-slate-900 dark:text-slate-100"><%= card.buff %></p>
@@ -59,7 +59,7 @@
         </div>
 
         <div class="space-y-4">
-          <div>
+          <div class="rounded-lg bg-indigo-50 p-4 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30">
             <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">Special Move</p>
             <p class="text-sm font-semibold text-indigo-900 dark:text-indigo-100"><%= card.special_move %></p>
             <% if card.special_move_description.present? %>

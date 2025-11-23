@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Sync Font Awesome assets into Propshaft-friendly locations and ensure the
- * main stylesheet imports the package CSS. This mirrors the expectations from
- * `bin/check-fontawesome` and keeps Docker builds reproducible.
+ * Sync Font Awesome assets into Propshaft-friendly locations.
+ * Simplified Strategy:
+ * 1. Webfonts -> app/assets/webfonts
+ * 2. CSS -> app/assets/stylesheets/fontawesome.css
+ *    - Served at /assets/fontawesome.css
+ *    - Relative path `../webfonts/` resolves to /assets/webfonts/ (Correct)
  */
 
 const fs = require('fs')
@@ -20,10 +23,11 @@ if (!fs.existsSync(fontawesomeRoot)) {
 const paths = {
   sourceWebfonts: path.join(fontawesomeRoot, 'webfonts'),
   sourceCss: path.join(fontawesomeRoot, 'css', 'all.min.css'),
-  vendorCss: path.join(projectRoot, 'app', 'assets', 'vendor', 'fontawesome', 'css', 'all.min.css'),
-  vendorWebfonts: path.join(projectRoot, 'app', 'assets', 'vendor', 'fontawesome', 'webfonts'),
+
+  // Target locations
   appWebfonts: path.join(projectRoot, 'app', 'assets', 'webfonts'),
-  publicWebfonts: path.join(projectRoot, 'public', 'webfonts'),
+  appStylesheet: path.join(projectRoot, 'app', 'assets', 'stylesheets', 'fontawesome.css'),
+
   applicationCss: path.join(projectRoot, 'app', 'assets', 'stylesheets', 'application.css'),
 }
 
@@ -45,30 +49,55 @@ function copyDirContents(sourceDir, targetDir) {
   }
 }
 
-function syncWebfonts() {
-  copyDirContents(paths.sourceWebfonts, paths.vendorWebfonts)
+function syncAssets() {
+  // 1. Sync webfonts
+  console.log(`[fontawesome] Copying webfonts to ${paths.appWebfonts}`)
   copyDirContents(paths.sourceWebfonts, paths.appWebfonts)
-  copyDirContents(paths.sourceWebfonts, paths.publicWebfonts)
+
+  // 2. Sync CSS
+  console.log(`[fontawesome] Copying CSS to ${paths.appStylesheet}`)
+  // Ensure parent dir exists (app/assets/stylesheets)
+  ensureDir(path.dirname(paths.appStylesheet))
+  fs.copyFileSync(paths.sourceCss, paths.appStylesheet)
 }
 
-function syncCss() {
-  ensureDir(path.dirname(paths.vendorCss))
-  fs.copyFileSync(paths.sourceCss, paths.vendorCss)
-
+function updateApplicationCss() {
   if (!fs.existsSync(paths.applicationCss)) return
 
-  const importLine = "@import '@fortawesome/fontawesome-free/css/all.min.css';"
-  const css = fs.readFileSync(paths.applicationCss, 'utf8')
+  // New import path
+  const importLine = "@import 'fontawesome.css';"
+
+  // Old variants to clean up
+  const oldImports = [
+    "@import 'fontawesome/css/all.min.css';",
+    "@import '@fortawesome/fontawesome-free/css/all.min.css';",
+    "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');",
+    "@import 'fontawesome/all.min.css';",
+    "@import 'fontawesome/all.css';",
+  ]
+
+  let css = fs.readFileSync(paths.applicationCss, 'utf8')
+
+  // Remove old lines
+  for (const line of oldImports) {
+    if (css.includes(line)) {
+      css = css.replace(line, '').trim()
+    }
+  }
+
+  // Add new line if missing
   if (!css.includes(importLine)) {
     const updated = `${importLine}\n\n${css}`
     fs.writeFileSync(paths.applicationCss, updated)
+  } else {
+    fs.writeFileSync(paths.applicationCss, css)
   }
 }
 
 try {
-  syncWebfonts()
-  syncCss()
-  console.log('[fontawesome] Assets synced.')
+  syncAssets()
+  // updateApplicationCss() - Disabled: we use stylesheet_link_tag in layout instead
+  console.log('[fontawesome] Assets synced locally.')
 } catch (error) {
   console.error('[fontawesome] Failed to sync assets:', error)
   process.exit(1)
