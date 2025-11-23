@@ -28,5 +28,35 @@ module Profiles
         end
       end
     end
+
+    test "normalizes submitted repositories from URLs" do
+      user = User.create!(github_id: 779, login: "owner3")
+      payload = { profile: { id: 7003, login: "url-tester", avatar_url: "https://example.com/c.png" } }
+
+      GithubProfile::ProfileSummaryService.stub :call, ServiceResult.success(payload) do
+        GithubProfile::DownloadAvatarService.stub :call, ServiceResult.success("/avatars/url-tester.png") do
+          Profiles::SubmitProfileJob.perform_now(
+            "url-tester",
+            user.id,
+            submitted_repositories: [
+              "https://github.com/owner/repo1",
+              "http://github.com/owner/repo2",
+              "github.com/owner/repo3",
+              "owner/repo4",
+              "invalid-repo-format"
+            ]
+          )
+        end
+      end
+
+      profile = Profile.find_by(login: "url-tester")
+      repos = profile.profile_repositories.where(repository_type: "submitted").pluck(:full_name)
+
+      assert_includes repos, "owner/repo1"
+      assert_includes repos, "owner/repo2"
+      assert_includes repos, "owner/repo3"
+      assert_includes repos, "owner/repo4"
+      refute_includes repos, "invalid-repo-format"
+    end
   end
 end

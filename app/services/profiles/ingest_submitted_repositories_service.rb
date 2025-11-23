@@ -17,7 +17,19 @@ module Profiles
 
       repo_full_names.each do |full_name|
         begin
-          repo = octo.repository(full_name)
+          # Attempt to clean and validate format to handle legacy bad data (e.g. full URLs)
+          clean_name = full_name
+          if match = full_name.match(%r{(?:github\.com/|^)([\w-]+/[\w.-]+)(?:$|/|\?)})
+            clean_name = match[1]
+            clean_name.sub!(/\.git$/, "")
+          end
+
+          unless clean_name.present? && clean_name.match?(%r{^[\w-]+/[\w.-]+$})
+            StructuredLogger.warn(message: "invalid_submitted_repo_format", full_name: full_name)
+            next
+          end
+
+          repo = octo.repository(clean_name)
           topics = (repo.respond_to?(:topics) && repo.topics) || []
 
           pr = profile.profile_repositories.find_or_initialize_by(full_name: repo.full_name, repository_type: "submitted")

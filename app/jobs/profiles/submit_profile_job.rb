@@ -48,10 +48,13 @@ module Profiles
       url = submitted_scrape_url.to_s.strip
       persisted.update!(submitted_scrape_url: url) if url.present?
 
-      normalized_repos(submitted_repositories).each do |full_name|
+      normalized_repos(submitted_repositories).each do |input|
+        full_name = clean_repo_url(input)
+        next if full_name.blank?
+
         owner, repo = full_name.split("/", 2)
         next if owner.blank? || repo.blank?
-        pr = persisted.profile_repositories.find_or_initialize_by(full_name: "#{owner}/#{repo}", repository_type: "submitted")
+        pr = persisted.profile_repositories.find_or_initialize_by(full_name: full_name, repository_type: "submitted")
         pr.name ||= repo
         pr.save!
       end
@@ -93,6 +96,19 @@ module Profiles
         .map(&:strip)
         .reject(&:blank?)
         .first(4)
+    end
+
+    def clean_repo_url(input)
+      return nil if input.blank?
+      s = input.to_s.strip
+      # Extract owner/repo from URL or string
+      if match = s.match(%r{(?:github\.com/|^)([\w-]+/[\w.-]+)(?:$|/|\?)})
+        result = match[1]
+        result.sub!(/\.git$/, "")
+        result
+      else
+        nil
+      end
     end
   end
 end
