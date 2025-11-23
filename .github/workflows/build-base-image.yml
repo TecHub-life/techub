@@ -17,11 +17,14 @@ jobs:
       packages: write
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}-base
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Lowercase image name
+        run: |
+          echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')-base" >> $GITHUB_ENV
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
