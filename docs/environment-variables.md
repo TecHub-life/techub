@@ -55,6 +55,7 @@ Secrets/Credentials (store in credentials; env only as last‑resort override)
       present; other environments stay off unless this flag is set to `1`.
     - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTLP base endpoint (defaults to `<base_url>/v1/traces`)
     - `OTEL_METRICS_EXPORT_INTERVAL_MS` — metrics export interval (default 60000) for dev forcing.
+    - `AXIOM_INGEST_SAMPLING_RATE` — Optional ingest sampling rate (0.0 to 1.0) for INFO/DEBUG logs. Defaults to 1.0 (100%).
   - Refs: config/initializers/structured_logging.rb, config/initializers/axiom.rb,
     config/initializers/opentelemetry.rb, app/services/axiom/ingest_service.rb,
     .github/workflows/ci.yml, .github/workflows/kamal-deploy.yml.

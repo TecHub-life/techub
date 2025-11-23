@@ -7,6 +7,23 @@ module StructuredLogger
 
   AXIOM_FORWARD_SKIP_KEY = :_axiom_forward_skip
 
+  unless defined?(INGEST_SAMPLING_RATE)
+    # Default to 100% sampling (1.0). Set to e.g. 0.1 for 10% sampling of INFO/DEBUG logs.
+    INGEST_SAMPLING_RATE = (ENV["AXIOM_INGEST_SAMPLING_RATE"].presence || 1.0).to_f
+  end
+
+  # Fields allowed at the top level to avoid hitting Axiom field limits.
+  # All other fields will be nested under 'attributes'.
+  TOP_LEVEL_FIELDS = %i[
+    ts level request_id job_id app_version rails_env app_env
+    deployment_environment user_id ip ua path method
+    trace_id span_id _time ops_context event message
+    ci ci_system ci_pipeline_id ci_pipeline_name ci_pipeline_number
+    ci_job_name ci_repo ci_ref ci_sha ci_actor ci_run_attempt ci_run_url
+    duration status view_runtime db_runtime allocation_count
+    exception error source
+  ].freeze
+
   unless defined?(AXIOM_FORWARD_QUEUE)
     AXIOM_FORWARD_QUEUE = Queue.new
   end
@@ -103,7 +120,12 @@ module StructuredLogger
 
     payload[AXIOM_FORWARD_SKIP_KEY] = true
     Rails.logger.public_send(level, payload)
-    forward_to_axiom(payload, force_axiom: force_axiom)
+
+    should_sample = (level == :info || level == :debug) && !force_axiom
+    if !should_sample || rand <= INGEST_SAMPLING_RATE
+      forward_to_axiom(payload, force_axiom: force_axiom)
+    end
+
     payload
   ensure
     payload.delete(AXIOM_FORWARD_SKIP_KEY) if payload.is_a?(Hash)
@@ -141,7 +163,15 @@ module StructuredLogger
     else
       { message: message_or_hash.inspect }
     end
-    entry(level).merge(base).merge(extras)
+
+    combined = entry(level).merge(base).merge(extras)
+
+    # Split into top-level and attributes to satisfy Axiom field limits
+    payload = combined.slice(*TOP_LEVEL_FIELDS)
+    attributes = combined.except(*TOP_LEVEL_FIELDS)
+
+    payload[:attributes] = attributes if attributes.any?
+    payload
   rescue StandardError
     entry(level).merge(base)
   end
