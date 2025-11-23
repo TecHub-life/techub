@@ -10,9 +10,16 @@ module Profiles
 
       scope.find_each do |p|
         begin
-          totals = p.profile_repositories.pluck(:stargazers_count, :forks_count)
-          stars = totals.sum { |row| row[0].to_i }
-          forks = totals.sum { |row| row[1].to_i }
+          # Optimize aggregation to avoid loading all repo objects into memory
+          stats = p.profile_repositories.pluck(
+            Arel.sql("SUM(stargazers_count)"),
+            Arel.sql("SUM(forks_count)"),
+            Arel.sql("COUNT(*)")
+          ).first
+
+          stars = stats[0].to_i
+          forks = stats[1].to_i
+          repo_cnt = stats[2].to_i
 
           stat = ProfileStat.find_or_initialize_by(profile_id: p.id, stat_date: date)
           stat.followers = p.followers.to_i
@@ -20,7 +27,7 @@ module Profiles
           stat.public_repos = p.public_repos.to_i
           stat.total_stars = stars
           stat.total_forks = forks
-          stat.repo_count = p.profile_repositories.count
+          stat.repo_count = repo_cnt
           stat.captured_at = Time.current
           stat.save!
 

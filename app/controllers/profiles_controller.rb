@@ -54,6 +54,9 @@ class ProfilesController < ApplicationController
     @profile_experiences = @profile.ordered_experiences(include_hidden: true)
     @pinned_showcase_items = @profile.pinned_showcase_items
     @hidden_showcase_count = @profile.hidden_showcase_count
+
+    # Load historical stats for charts (last 30 days)
+    @stats_history = @profile.profile_stats.order(stat_date: :asc).last(30)
   end
 
   def refresh_and_load_profile(username)
