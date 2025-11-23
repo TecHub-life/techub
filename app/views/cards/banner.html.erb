@@ -1,11 +1,17 @@
-<%# 1500x500 banner view used for screenshot capture %>
-<section class="relative h-[<%= (@canvas_h || 500).to_i %>px] w-[<%= (@canvas_w || 1500).to_i %>px] overflow-hidden">
+<%# 1500x500 banner view used for screenshot capture. 
+    Design goals:
+    1. Remove redundant avatar (site context already shows it).
+    2. Focus on "at a glance" value: flavor text, key stats, tech stack.
+    3. Make branding distinct but not overpowering.
+    4. Ensure contrast against busy backgrounds.
+%>
+<section class="relative h-[<%= (@canvas_h || 500).to_i %>px] w-[<%= (@canvas_w || 1500).to_i %>px] overflow-hidden bg-slate-900 font-sans">
   <% card = @profile.profile_card %>
   <%# Prefer library art when AI art is not opted-in %>
   <% if !@profile.ai_art_opt_in %>
     <% bg_url = supporting_art_url_for(profile: @profile, aspect: :banner) %>
   <% else %>
-    <%# Background image selection for banner: prefer avatar_3x1 then card/og %>
+    <%# Background image selection logic... %>
     <% bg_url = nil %>
     <% if (asset = @profile.profile_assets.find_by(kind: 'avatar_3x1')) && asset.public_url.present? %>
       <% bg_url = asset.public_url %>
@@ -22,52 +28,68 @@
       <% bg_url = supporting_art_url_for(profile: @profile, aspect: :banner) %>
     <% end %>
   <% end %>
+
   <% if bg_url.present? %>
-    <img src="<%= bg_url %>" alt="banner" class="absolute inset-0 h-full w-full object-cover opacity-25" />
+    <img src="<%= bg_url %>" alt="banner" class="absolute inset-0 h-full w-full object-cover opacity-40 blur-[2px]" />
   <% else %>
-    <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-sky-600 to-cyan-500 opacity-30"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-indigo-900 via-slate-800 to-slate-900 opacity-100"></div>
   <% end %>
-  <div class="absolute inset-0 bg-black/40"></div>
-  <%# Safe area padding: bring content in from edges %>
-  <div class="absolute inset-0 flex items-center justify-between px-24">
-    <div class="min-w-0">
-      <% name = @profile.display_name %>
-      <% handle = @profile.login %>
-      <% name_size = name.to_s.length > 22 ? "text-3xl" : "text-4xl" %>
-      <div class="<%= name_size %> font-extrabold text-white drop-shadow tracking-wide leading-tight break-words"><%= name %></div>
-      <div class="mt-0.5 text-white/90">@<%= handle %></div>
-      <% if card&.tagline.present? %>
-        <div class="mt-1 text-slate-200 text-sm max-w-[640px] break-words"><%= card.tagline %></div>
-      <% end %>
-      <% repos = Array(@profile.top_repositories).first(3).map { |r| [r.name.to_s, r.stargazers_count.to_i] } %>
-      <% if repos.any? %>
-        <div class="mt-2 flex flex-wrap items-center gap-2">
-          <% repos.each do |(rn, stars)| %>
-            <span class="px-2 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs max-w-[320px] break-words">
-              <%= rn %>
-              <% if stars > 0 %><span class="ml-1 text-[10px] text-amber-300">★ <%= stars %></span><% end %>
-            </span>
-          <% end %>
+  
+  <%# Strong gradient overlay for text readability %>
+  <div class="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/70 to-transparent"></div>
+
+  <div class="absolute inset-0 flex items-center px-16">
+    <div class="w-full max-w-4xl">
+      <%# Identity Block %>
+      <div class="mb-6">
+        <h1 class="text-6xl font-black text-white tracking-tight leading-none mb-2 drop-shadow-lg">
+          <%= @profile.display_name %>
+        </h1>
+        <p class="text-3xl font-bold text-indigo-400">@<%= @profile.login %></p>
+      </div>
+
+      <%# Flavor/Bio - The "Hook" %>
+      <% if (tag = card&.flavor_text.presence || card&.short_bio.presence).present? %>
+        <div class="mb-8 max-w-2xl">
+          <p class="text-2xl font-medium text-slate-200 leading-snug italic border-l-4 border-indigo-500 pl-4">
+            "<%= tag %>"
+          </p>
         </div>
       <% end %>
-      <%# Extra context chips: top language and metrics %>
-      <div class="mt-2 flex items-center gap-2 text-white/95">
-        <% top_lang = @profile.profile_languages.order(count: :desc).limit(1).pluck(:name).first %>
-        <% if top_lang.present? %>
-          <span class="px-2 py-1 rounded-md bg-white/10 border border-white/20 text-[12px]">💻 <%= top_lang %></span>
+
+      <%# Tech Stack & Stats - The "Proof" %>
+      <div class="flex flex-wrap items-center gap-6 text-lg font-semibold text-slate-300">
+        <%# Top Languages %>
+        <% top_langs = @profile.profile_languages.order(count: :desc).limit(3).pluck(:name) %>
+        <% if top_langs.any? %>
+          <div class="flex items-center gap-2">
+            <span class="text-indigo-400">Builds with</span>
+            <span class="text-white"><%= top_langs.join(" · ") %></span>
+          </div>
+          <span class="text-slate-600">•</span>
         <% end %>
+
+        <%# Key Metrics %>
         <% followers = @profile.followers.to_i %>
-        <% stars_total = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
-        <span class="px-2 py-1 rounded-md bg-white/10 border border-white/20 text-[12px]">⭐ <%= stars_total %></span>
-        <span class="px-2 py-1 rounded-md bg-white/10 border border-white/20 text-[12px]">👥 <%= followers %></span>
+        <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
+        
+        <div class="flex items-center gap-4">
+          <% if stars > 0 %>
+             <span class="flex items-center gap-1.5"><span class="text-amber-400">★</span> <%= number_to_human(stars, format: "%n%u", units: { thousand: "K" }) %> Stars</span>
+          <% end %>
+          <% if followers > 0 %>
+             <span class="flex items-center gap-1.5"><span class="text-emerald-400">👥</span> <%= number_to_human(followers, format: "%n%u", units: { thousand: "K" }) %> Followers</span>
+          <% end %>
+        </div>
       </div>
     </div>
-    <div class="flex items-center gap-6">
-      <div class="hidden md:block text-slate-200/85 text-xs tracking-wide">techub.life</div>
-      <div class="h-28 w-28 overflow-hidden rounded-full border-4 border-white/80 shadow-xl">
-        <% avatar_src = avatar_image_url_for(@profile, variant: :banner) %>
-        <img src="<%= avatar_src %>" alt="avatar" class="h-full w-full object-cover" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'" />
-      </div>
+  </div>
+
+  <%# Branding - Visible but anchored %>
+  <div class="absolute bottom-6 right-8">
+    <div class="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+      <span class="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></span>
+      <span class="text-sm font-bold text-white tracking-widest uppercase">techub.life</span>
     </div>
   </div>
 </section>

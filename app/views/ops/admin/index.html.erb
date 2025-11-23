@@ -234,13 +234,10 @@
               <h3 class="text-sm font-semibold mb-2">Re-roll (Selected)</h3>
               <form action="<%= ops_bulk_retry_path %>" method="post" class="space-y-2" data-controller="submit-form">
                 <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
-                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Select profiles</label>
-                <select name="logins[]" multiple size="8" class="<%= "#{ui_select_class} h-auto min-h-[12rem]" %>">
-                  <% Profile.order(:login).limit(500).pluck(:login).each do |login| %>
-                    <option value="<%= login %>">@<%= login %></option>
-                  <% end %>
-                </select>
-                <button type="submit" class="<%= ui_primary_button_class %> w-full" data-submit-form-target="button">
+                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Target Profiles</label>
+                <textarea name="logins" rows="5" class="<%= ui_textarea_class %>" placeholder="loftwah&#10;lindsey"></textarea>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Enter usernames to re-roll (one per line or space separated).</p>
+                <button type="submit" class="<%= ui_primary_button_class %> w-full mt-2" data-submit-form-target="button">
                   <span data-submit-form-target="spinner" class="hidden"><%= ui_spinner_icon %></span>
                   <span data-submit-form-target="text">Re-roll selected profiles</span>
                 </button>

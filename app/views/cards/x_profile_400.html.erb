@@ -1,16 +1,15 @@
-<%# 400x400 – X profile image: centered square avatar with overlay chips. %>
-<div class="relative w-[400px] h-[400px] overflow-hidden bg-slate-900">
+<%# 400x400 – X profile image: centered square avatar with minimal branding. %>
+<div class="relative w-[400px] h-[400px] overflow-hidden bg-slate-900 group">
   <img src="<%= avatar_image_url_for(@profile, variant: :square) %>" alt="<%= @profile.display_name %> avatar" class="absolute inset-0 h-full w-full object-cover object-center" onerror="this.onerror=null; this.src='<%= asset_path("android-chrome-512x512.jpg") %>'">
-  <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/0 to-black/45"></div>
-  <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
-    <div>
-      <div class="px-2 py-1 rounded-md bg-black/55 text-white/95 text-sm font-semibold tracking-wide max-w-[240px] break-words">@<%= @profile.login %></div>
+  
+  <%# Subtle ring border to help it stand out in circles %>
+  <div class="absolute inset-0 border-[6px] border-indigo-500/30 rounded-full scale-[1.02] opacity-80"></div>
+  
+  <%# Optional: Stats overlay (only if really needed, often obscured in circular crops) %>
+  <%# Keeping it minimal as X crops to circle heavily %>
+  <% if @profile.profile_card&.archetype.present? %>
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white text-xs font-bold uppercase tracking-widest shadow-lg">
+      <%= @profile.profile_card.archetype %>
     </div>
-    <div class="flex items-center gap-2">
-      <% followers = @profile.followers.to_i %>
-      <% stars = Array(@profile.top_repositories).sum { |r| r.stargazers_count.to_i } %>
-      <span class="px-2 py-1 rounded-md bg-black/55 text-white/90 text-xs">⭐ <%= stars %></span>
-      <span class="px-2 py-1 rounded-md bg-black/55 text-white/90 text-xs">👥 <%= followers %></span>
-    </div>
-  </div>
+  <% end %>
 </div>
