@@ -23,11 +23,11 @@ if (!fs.existsSync(fontawesomeRoot)) {
 const paths = {
   sourceWebfonts: path.join(fontawesomeRoot, 'webfonts'),
   sourceCss: path.join(fontawesomeRoot, 'css', 'all.min.css'),
-  
+
   // Target locations
   appWebfonts: path.join(projectRoot, 'app', 'assets', 'webfonts'),
   appStylesheet: path.join(projectRoot, 'app', 'assets', 'stylesheets', 'fontawesome.css'),
-  
+
   applicationCss: path.join(projectRoot, 'app', 'assets', 'stylesheets', 'application.css'),
 }
 
@@ -53,7 +53,7 @@ function syncAssets() {
   // 1. Sync webfonts
   console.log(`[fontawesome] Copying webfonts to ${paths.appWebfonts}`)
   copyDirContents(paths.sourceWebfonts, paths.appWebfonts)
-  
+
   // 2. Sync CSS
   console.log(`[fontawesome] Copying CSS to ${paths.appStylesheet}`)
   // Ensure parent dir exists (app/assets/stylesheets)
@@ -66,18 +66,18 @@ function updateApplicationCss() {
 
   // New import path
   const importLine = "@import 'fontawesome.css';"
-  
+
   // Old variants to clean up
   const oldImports = [
     "@import 'fontawesome/css/all.min.css';",
     "@import '@fortawesome/fontawesome-free/css/all.min.css';",
     "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');",
     "@import 'fontawesome/all.min.css';",
-    "@import 'fontawesome/all.css';"
+    "@import 'fontawesome/all.css';",
   ]
-  
+
   let css = fs.readFileSync(paths.applicationCss, 'utf8')
-  
+
   // Remove old lines
   for (const line of oldImports) {
     if (css.includes(line)) {
@@ -96,7 +96,7 @@ function updateApplicationCss() {
 
 try {
   syncAssets()
-  updateApplicationCss()
+  // updateApplicationCss() - Disabled: we use stylesheet_link_tag in layout instead
   console.log('[fontawesome] Assets synced locally.')
 } catch (error) {
   console.error('[fontawesome] Failed to sync assets:', error)
