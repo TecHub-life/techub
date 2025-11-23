@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-DOCKERFILE="$REPO_ROOT_DIR/Dockerfile"
+DOCKERFILE="$REPO_ROOT_DIR/Dockerfile.base"
 
 # Inputs/overrides
 IM_VERSION="${IM_VERSION:-}"
