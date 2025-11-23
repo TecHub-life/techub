@@ -152,10 +152,25 @@
 
       <%# Stats Grid - 2x2 on mobile, single row on medium+ screens %>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-        <a href="https://github.com/<%= profile.login %>?tab=followers" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
-          <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.followers.to_i %></p>
-          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Followers</p>
-        </a>
+        <% 
+           # Use activity score or total contributions if more impressive than followers
+           activity = profile.profile_activity 
+           score = activity&.activity_score.to_i
+           show_score = score > profile.followers.to_i
+        %>
+        
+        <% if show_score %>
+           <div class="rounded-lg border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-indigo-800 dark:from-indigo-950/30 dark:to-slate-900 cursor-help" title="Activity Score based on recent events, streaks, and contributions">
+            <p class="text-2xl sm:text-3xl font-bold text-indigo-700 dark:text-indigo-400"><%= score %></p>
+            <p class="text-xs text-indigo-600/80 dark:text-indigo-400/80 mt-1 font-semibold">Activity Score</p>
+          </div>
+        <% else %>
+          <a href="https://github.com/<%= profile.login %>?tab=followers" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+            <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.followers.to_i %></p>
+            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Followers</p>
+          </a>
+        <% end %>
+
         <a href="https://github.com/<%= profile.login %>?tab=following" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
           <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.following.to_i %></p>
           <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Following</p>
@@ -164,10 +179,20 @@
           <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.public_repos.to_i %></p>
           <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Repos</p>
         </a>
-        <a href="https://gist.github.com/<%= profile.login %>" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
-          <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.public_gists.to_i %></p>
-          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Gists</p>
-        </a>
+        
+        <%# Fourth slot: Total Stars (if any) or Gists %>
+        <% total_stars = profile.profile_repositories.sum(:stargazers_count) %>
+        <% if total_stars > 0 %>
+          <a href="https://github.com/<%= profile.login %>?tab=stars" target="_blank" rel="noopener" class="rounded-lg border border-yellow-200 bg-gradient-to-br from-yellow-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-yellow-900 dark:from-yellow-950/30 dark:to-slate-900">
+            <p class="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-500"><%= total_stars %></p>
+            <p class="text-xs text-yellow-700/80 dark:text-yellow-500/80 mt-1">Total Stars</p>
+          </a>
+        <% else %>
+          <a href="https://gist.github.com/<%= profile.login %>" target="_blank" rel="noopener" class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 text-center transition hover:shadow-md hover:scale-105 dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+            <p class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100"><%= profile.public_gists.to_i %></p>
+            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Gists</p>
+          </a>
+        <% end %>
       </div>
 
       <% if pinned_items.present? %>

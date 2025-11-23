@@ -11,7 +11,6 @@ import {
   Filler,
 } from 'chart.js'
 
-// Register only what we need to keep bundle size reasonable (though importmap loads it all mostly)
 Chart.register(
   LineController,
   LineElement,
@@ -32,10 +31,17 @@ export default class extends Controller {
   }
 
   connect() {
+    console.log('Stats chart connecting...')
+    // Force cache bust
     this.element.style.height = '300px'
     this.element.style.width = '100%'
 
     const ctx = this.element.getContext('2d')
+
+    if (!ctx) {
+      console.error('Could not get 2D context for canvas')
+      return
+    }
 
     // Create gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, 300)
@@ -106,6 +112,7 @@ export default class extends Controller {
         },
       },
     })
+    console.log('Chart created successfully')
   }
 
   disconnect() {

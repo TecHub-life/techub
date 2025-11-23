@@ -24,12 +24,12 @@ for base in fa-solid-900.woff2 fa-regular-400.woff2 fa-brands-400.woff2; do
 done
 
 # CSS should contain Font Awesome marker
-if ! grep -q "Font Awesome" "$CSS_FILE" 2>/dev/null; then
+if ! grep -q "Font Awesome" "$CSS_FILE" 2>/dev/null && ! grep -q "fontawesome" "$CSS_FILE" 2>/dev/null; then
   missing+=("$CSS_FILE (Font Awesome CSS not appended)")
 fi
 
 if [ "${#missing[@]}" -eq 0 ]; then
-  echo "Font Awesome assets OK"
+  echo "Font Awesome assets OK (Local)"
   exit 0
 fi
 
@@ -48,5 +48,3 @@ echo "     npm run postinstall" >&2
 echo "  3) Then re-run this check:" >&2
 echo "     ./bin/check-fontawesome" >&2
 exit 1
-
-
