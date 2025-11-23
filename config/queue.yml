@@ -1,11 +1,20 @@
-default: &default
+default:
+  &default # Keep dispatcher config modest—one dispatcher polling frequently keeps 2-vCPU boxes busy
   dispatchers:
     - polling_interval: 1
       batch_size: 500
   workers:
-    - queues: '*'
-      threads: 3
-      processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
+    # Normal jobs: allow modest concurrency (5 threads) for I/O-bound work without choking 2 cores
+    - name: default
+      queues: '*'
+      threads: 5
+      processes: 1
+      polling_interval: 0.1
+    # Screenshot/Puppeteer jobs: Chromium is memory heavy, so cap to a single concurrent run
+    - name: screenshots
+      queues: 'screenshots'
+      threads: 1
+      processes: 1
       polling_interval: 0.1
 
 development:
