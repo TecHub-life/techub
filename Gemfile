@@ -18,20 +18,20 @@ gem "stimulus-rails"
 gem "tailwindcss-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
-gem "jwt"
+gem "commonmarker" # GitHub-flavored markdown
 gem "faraday", "~> 2.0"
 gem "faraday-retry", "~> 2.0"
+gem "jwt"
 gem "octokit"
-gem "commonmarker" # GitHub-flavored markdown
 gem "rack-cors" # CORS support for API
 
 # Observability: OpenTelemetry tracing (export to Axiom OTLP)
-gem "opentelemetry-sdk"
+gem "nokogiri"
 gem "opentelemetry-exporter-otlp"
+gem "opentelemetry-exporter-otlp-metrics"
 gem "opentelemetry-instrumentation-all"
 gem "opentelemetry-metrics-sdk"
-gem "opentelemetry-exporter-otlp-metrics"
-gem "nokogiri"
+gem "opentelemetry-sdk"
 gem "ruby-vips", require: false
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
@@ -57,6 +57,8 @@ gem "thruster", require: false
 # S3 client for Active Storage (DigitalOcean Spaces compatible)
 gem "aws-sdk-s3"
 
+# Event analytics
+gem "ahoy_matey"
 gem "googleauth"
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
@@ -68,9 +70,6 @@ gem "mission_control-jobs"
 # Email delivery via Resend
 gem "resend"
 
-# Event analytics
-gem "ahoy_matey"
-
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -79,15 +78,14 @@ group :development, :test do
   gem "brakeman", require: false
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
-  gem "rubocop-rails-omakase", require: false
-
   gem "dotenv-rails"
+  gem "rubocop-rails-omakase", require: false
 end
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
-  gem "web-console"
   gem "foreman"
+  gem "web-console"
 end
 
 group :test do
