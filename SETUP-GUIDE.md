@@ -280,21 +280,24 @@ For production deployment, see the Kamal configuration in `config/deploy.yml`. Y
 
 ### Base Image Management
 
-We use a two-stage build process to speed up deployments. The heavy dependencies (Ruby + ImageMagick 7) are in a base image (`ghcr.io/loftwah/techub-base`).
+We use a two-stage build process to speed up deployments. The heavy dependencies (Ruby +
+ImageMagick 7) are in a base image (`ghcr.io/loftwah/techub-base`).
 
 **When to update the base image:**
+
 - You update `Dockerfile.base` (e.g., newer Ruby version, newer ImageMagick).
 - You need to patch system-level dependencies.
 
-**How to update manually:**
-Run the helper script (requires `KAMAL_REGISTRY_PASSWORD` with `write:packages` scope):
+**How to update manually:** Run the helper script (requires `KAMAL_REGISTRY_PASSWORD` with
+`write:packages` scope):
 
 ```bash
 export KAMAL_REGISTRY_PASSWORD=your_github_pat
 bin/build-base
 ```
 
-After updating the base image, run `kamal deploy` normally to pick up the changes in your application.
+After updating the base image, run `kamal deploy` normally to pick up the changes in your
+application.
 
 ## Support
 
