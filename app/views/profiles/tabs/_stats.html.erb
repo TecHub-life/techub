@@ -2,6 +2,110 @@
 <div class="space-y-6">
   <% card = profile.profile_card %>
   <% stats_history = @stats_history || [] %>
+  <% top_langs = @languages.first(5) %>
+  <% 
+    all_topics = @top_repositories.flat_map { |r| r.respond_to?(:topics) ? r.topics : [] }
+    # Fallback if topics attribute is not directly available on the object wrapper, though repository_json uses repository_topics.map(&:name)
+    # Checking controller: repository_json maps topics. 
+    # But here we are likely dealing with ActiveRecord objects. 
+    # Profile#top_repositories includes :repository_topics.
+    all_topics = @top_repositories.flat_map { |r| r.repository_topics.map(&:name) }
+    topic_counts = all_topics.tally.sort_by { |_, count| -count }.first(15)
+  %>
+
+  <%# Languages & Topics Row %>
+  <% 
+    activity = @recent_activity 
+    events = activity&.event_breakdown || {}
+    # Clean up event names for display
+    readable_events = events.map do |type, count|
+      label = type.to_s.gsub('Event', '').underscore.humanize.titleize
+      label = "Code Pushes" if type == "PushEvent"
+      label = "PRs Opened" if type == "PullRequestEvent" 
+      label = "Issues" if type == "IssuesEvent"
+      [label, count]
+    end.sort_by { |_, c| -c }.first(5)
+  %>
+
+  <% if top_langs.any? || topic_counts.any? || readable_events.any? %>
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <%# Languages %>
+      <% if top_langs.any? %>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <svg class="h-4 w-4 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+            Top Languages
+          </h3>
+          <div class="space-y-3">
+            <% total_bytes = top_langs.sum(&:count) %>
+            <% top_langs.each do |lang| %>
+              <% percent = (lang.count.to_f / total_bytes * 100).round(1) %>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="font-medium text-slate-700 dark:text-slate-200"><%= lang.name %></span>
+                  <span class="text-slate-500 dark:text-slate-400"><%= percent %>%</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5">
+                  <div class="bg-cyan-500 h-2.5 rounded-full" style="width: <%= percent %>%"></div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Activity Breakdown %>
+      <% if readable_events.any? %>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <svg class="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+            </svg>
+            Recent Activity (30d)
+          </h3>
+          <div class="space-y-3">
+            <% max_count = readable_events.first&.last.to_f %>
+            <% readable_events.each do |name, count| %>
+              <% percent = (count / max_count * 100).round %>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="font-medium text-slate-700 dark:text-slate-200"><%= name %></span>
+                  <span class="text-slate-500 dark:text-slate-400"><%= count %></span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5">
+                  <div class="bg-emerald-500 h-2.5 rounded-full" style="width: <%= percent %>%"></div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Topics Cloud %>
+      <% if topic_counts.any? %>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <svg class="h-4 w-4 text-fuchsia-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+            </svg>
+            Top Topics
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            <% topic_counts.each do |name, count| %>
+              <%= link_to directory_path(tags: name), class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-fuchsia-300 dark:hover:border-fuchsia-700 hover:text-fuchsia-600 dark:hover:text-fuchsia-400 transition-colors" do %>
+                <span>#<%= name %></span>
+                <% if count > 1 %>
+                  <span class="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700/50 px-1.5 rounded-full"><%= count %></span>
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
   
   <%# Historical Growth Charts %>
   <% if stats_history.any? %>
