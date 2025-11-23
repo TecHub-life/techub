@@ -4,8 +4,7 @@ set -euo pipefail
 # Verify Font Awesome assets exist and provide remediation steps if missing.
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-CSS_FILE="$ROOT_DIR/app/assets/stylesheets/application.css"
-WEBFONTS_DIR_PUBLIC="$ROOT_DIR/public/webfonts"
+CSS_FILE="$ROOT_DIR/app/assets/stylesheets/fontawesome.css"
 WEBFONTS_DIR_APP="$ROOT_DIR/app/assets/webfonts"
 
 missing=()
@@ -17,16 +16,13 @@ require_file() {
   fi
 }
 
-# Required font files (at least these three should exist in both locations for runtime)
+# Required font files (at least these three should exist in app/assets/webfonts)
 for base in fa-solid-900.woff2 fa-regular-400.woff2 fa-brands-400.woff2; do
-  require_file "$WEBFONTS_DIR_PUBLIC/$base"
   require_file "$WEBFONTS_DIR_APP/$base"
 done
 
-# CSS should contain Font Awesome marker
-if ! grep -q "Font Awesome" "$CSS_FILE" 2>/dev/null && ! grep -q "fontawesome" "$CSS_FILE" 2>/dev/null; then
-  missing+=("$CSS_FILE (Font Awesome CSS not appended)")
-fi
+# Check if fontawesome.css exists
+require_file "$CSS_FILE"
 
 if [ "${#missing[@]}" -eq 0 ]; then
   echo "Font Awesome assets OK (Local)"
