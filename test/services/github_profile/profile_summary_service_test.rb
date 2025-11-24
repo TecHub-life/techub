@@ -87,5 +87,18 @@ module GithubProfile
       assert_equal "techub", payload[:top_repositories].first[:name]
       assert payload[:summary].include?("42 stars"), "summary should reference top repo"
     end
+
+    test "handles unauthorized client error" do
+      client = Class.new do
+        def user(_login)
+          raise Octokit::Unauthorized
+        end
+      end.new
+
+      result = GithubProfile::ProfileSummaryService.call(login: "loftwah", client: client)
+
+      assert result.failure?
+      assert_kind_of Octokit::Unauthorized, result.error
+    end
   end
 end
