@@ -7,7 +7,7 @@
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
-ARG BASE_IMAGE=ghcr.io/loftwah/techub-base:latest
+ARG BASE_IMAGE=ghcr.io/techub-life/techub-base:latest
 FROM ${BASE_IMAGE} AS base
 
 # Rails app lives here

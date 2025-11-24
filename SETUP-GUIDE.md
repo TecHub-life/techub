@@ -281,7 +281,7 @@ For production deployment, see the Kamal configuration in `config/deploy.yml`. Y
 ### Base Image Management
 
 We use a two-stage build process to speed up deployments. The heavy dependencies (Ruby +
-ImageMagick 7) are in a base image (`ghcr.io/loftwah/techub-base`).
+ImageMagick 7) are in a base image (`ghcr.io/techub-life/techub-base`).
 
 **When to update the base image:**
 

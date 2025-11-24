@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Configuration
-IMAGE_NAME="ghcr.io/loftwah/techub-base"
+IMAGE_NAME="ghcr.io/techub-life/techub-base"
 IMAGE_TAG="latest"
 
 # Check for required environment variable
