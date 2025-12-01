@@ -9,6 +9,15 @@ module Profiles
           result = GithubProfile::ProfileSummaryService.call(login: login, client: user_octokit_client)
 
           if result.failure? && user_octokit_client.present?
+            # Automatically clear invalid tokens so we don't try them again
+            if result.error.is_a?(Octokit::Unauthorized) || result.error&.message.to_s.include?("401")
+              user = User.find_by(login: login)
+              if user&.access_token.present?
+                user.update(access_token: nil)
+                StructuredLogger.info(message: "cleared_invalid_user_token", login: login)
+              end
+            end
+
             StructuredLogger.warn(
               message: "github_profile_pull_user_client_failed",
               login: login,

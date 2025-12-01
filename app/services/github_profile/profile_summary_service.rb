@@ -46,7 +46,7 @@ module GithubProfile
       )
 
       success(payload)
-    rescue Octokit::NotFound => e
+    rescue Octokit::Error => e
       failure(e)
     end
 

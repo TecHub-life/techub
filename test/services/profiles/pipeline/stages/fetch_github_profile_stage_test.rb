@@ -33,4 +33,28 @@ class FetchGithubProfileStageTest < ActiveSupport::TestCase
       end
     end
   end
+
+  test "clears user token on 401 unauthorized error" do
+    user = User.create!(login: "expired_user", github_id: 12345, access_token: "bad_token")
+    context = Profiles::Pipeline::Context.new(login: user.login, host: "http://127.0.0.1:3000")
+
+    failure_result = ServiceResult.failure(Octokit::Unauthorized.new(GET: "401 - Bad credentials"))
+    success_result = ServiceResult.success({ profile: { id: 12345, login: user.login } })
+
+    GithubProfile::ProfileSummaryService.stub :call, ->(login:, client: nil) do
+      if client
+        failure_result
+      else
+        success_result
+      end
+    end do
+      stage = Profiles::Pipeline::Stages::FetchGithubProfile.new(context: context)
+      result = stage.call
+
+      assert result.success?
+
+      user.reload
+      assert_nil user.access_token, "User access token should be cleared after 401"
+    end
+  end
 end
