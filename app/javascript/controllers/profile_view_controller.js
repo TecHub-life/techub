@@ -9,3 +9,4 @@ export default class extends Controller {
     ahoy.track('Viewed Profile', { login: this.loginValue })
   }
 }
+

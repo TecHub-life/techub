@@ -4,7 +4,7 @@ set -euo pipefail
 # Verify Font Awesome assets exist and provide remediation steps if missing.
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-CSS_FILE="$ROOT_DIR/app/assets/stylesheets/fontawesome.css"
+CSS_FILE="$ROOT_DIR/app/assets/stylesheets/fontawesome.css.erb"
 WEBFONTS_DIR_APP="$ROOT_DIR/app/assets/webfonts"
 
 missing=()
