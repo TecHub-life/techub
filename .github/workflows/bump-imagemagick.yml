@@ -18,7 +18,7 @@ jobs:
         run: bash scripts/bump_imagemagick.sh
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'chore: bump ImageMagick to ${{ env.NEW_IM_VERSION }}'
           branch: chore/bump-imagemagick
