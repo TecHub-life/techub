@@ -6,7 +6,7 @@
  * 1. Webfonts -> app/assets/webfonts
  * 2. CSS -> app/assets/stylesheets/fontawesome.css
  *    - Served at /assets/fontawesome.css
- *    - Relative path `../webfonts/` resolves to /assets/webfonts/ (Correct)
+ *    - Rewrite `../webfonts/` so Propshaft resolves the logical webfont assets
  */
 
 const fs = require('fs')
@@ -59,6 +59,15 @@ function syncAssets() {
   // Ensure parent dir exists (app/assets/stylesheets)
   ensureDir(path.dirname(paths.appStylesheet))
   fs.copyFileSync(paths.sourceCss, paths.appStylesheet)
+  rewriteCssUrls(paths.appStylesheet)
+}
+
+function rewriteCssUrls(cssPath) {
+  const css = fs.readFileSync(cssPath, 'utf8')
+  const updated = css.replace(/\.\.\/webfonts\//g, '')
+  if (updated !== css) {
+    fs.writeFileSync(cssPath, updated)
+  }
 }
 
 function updateApplicationCss() {
