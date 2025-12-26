@@ -20,7 +20,7 @@ gem "tailwindcss-rails"
 gem "jbuilder"
 gem "commonmarker" # GitHub-flavored markdown
 gem "faraday", "~> 2.0"
-gem "faraday-retry", "~> 2.0"
+gem "faraday-retry", "~> 2.4"
 gem "jwt"
 gem "octokit"
 gem "rack-cors" # CORS support for API
