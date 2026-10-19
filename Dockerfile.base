@@ -4,8 +4,8 @@ ARG RUBY_TAG=${RUBY_VERSION}-slim
 
 FROM ${RUBY_BASE}:${RUBY_TAG}
 
-ARG IMAGEMAGICK_VERSION=7.1.1-32
-ARG IMAGEMAGICK_SHA256
+ARG IMAGEMAGICK_VERSION=7.1.2-34
+ARG IMAGEMAGICK_SHA256=f5163a573a1c1bff16358d0a592b2fb168ad0fd3b9dc5ff57dc7820eebc5cf79
 
 # Install base packages (include build tools so dev gems can compile in compose)
 RUN apt-get update -qq && \
